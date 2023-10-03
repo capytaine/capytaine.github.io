@@ -17,7 +17,7 @@
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
-    <jinja2.runtime.BlockReference object at 0x7f63dc6c1090>
+    <jinja2.runtime.BlockReference object at 0x7fbe3d1b8f10>
 
   </head><body>
   
@@ -30,15 +30,13 @@
           <div class="body" role="main">
             
   <h1>Source code for capytaine.bodies.bodies</h1><div class="highlight"><pre>
-<span></span><span class="ch">#!/usr/bin/env python</span>
-<span class="c1"># coding: utf-8</span>
-<span class="sd">&quot;&quot;&quot;Floating bodies to be used in radiation-diffraction problems.&quot;&quot;&quot;</span>
+<span></span><span class="sd">&quot;&quot;&quot;Floating bodies to be used in radiation-diffraction problems.&quot;&quot;&quot;</span>
 <span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin</span>
 <span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">copy</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">accumulate</span><span class="p">,</span> <span class="n">product</span><span class="p">,</span> <span class="n">zip_longest</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">accumulate</span><span class="p">,</span> <span class="n">zip_longest</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
@@ -421,7 +419,7 @@
             <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;Failed to infer the rotation center of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> to compute rigid body hydrostatics.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;Possible fix: add a `rotation_center` attibute to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;Possible fix: add a `rotation_center` attribute to </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
                         <span class="s2">&quot;Note that rigid body hydrostatic methods currently assume that the three rotation dofs have the same rotation center.&quot;</span>
                         <span class="p">)</span> <span class="kn">from</span> <span class="nn">e</span>
 
@@ -519,7 +517,7 @@
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">disp_mass</span><span class="p">(</span><span class="n">rho</span><span class="p">),</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                         <span class="sa">f</span><span class="s2">&quot;Trying to compute the hydrostatic stiffness for dofs </span><span class="si">{</span><span class="n">radiating_dof_name</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">influenced_dof_name</span><span class="si">}</span><span class="s2">&quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;of body </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, which is not neutrally buoyant (mass=</span><span class="si">{</span><span class="n">body</span><span class="o">.</span><span class="n">mass</span><span class="si">}</span><span class="s2">, disp_mass=</span><span class="si">{</span><span class="n">body</span><span class="o">.</span><span class="n">disp_mass</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;of body </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">, which is not neutrally buoyant (mass=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="si">}</span><span class="s2">, disp_mass=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">disp_mass</span><span class="p">(</span><span class="n">rho</span><span class="p">)</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
                         <span class="sa">f</span><span class="s2">&quot;This case has not been implemented in Capytaine. You need either a single rigid body or a neutrally buoyant body.&quot;</span>
                         <span class="p">)</span>
 
@@ -1151,7 +1149,6 @@
     <span class="k">def</span> <span class="nf">minimal_computable_wavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;For accuracy of the resolution, wavelength should not be smaller than this value.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="mi">8</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="o">.</span><span class="n">max</span><span class="p">()</span></div>
-
 
 </pre></div>
 

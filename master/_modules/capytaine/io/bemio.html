@@ -17,7 +17,7 @@
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
-    <jinja2.runtime.BlockReference object at 0x7f63de672110>
+    <jinja2.runtime.BlockReference object at 0x7fbe3ce45fd0>
 
   </head><body>
   
@@ -34,11 +34,7 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
 <span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">newton</span>
-
-<span class="kn">from</span> <span class="nn">capytaine</span> <span class="kn">import</span> <span class="n">__version__</span>
-
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -91,13 +87,13 @@
                 <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span>
                 <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;wave_direction&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span>
                 <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;influenced_dof&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dofs</span>
-                
+
                 <span class="k">if</span> <span class="n">wavenumber</span> <span class="ow">or</span> <span class="n">wavelength</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span> <span class="ow">or</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">:</span>
                         <span class="n">k</span> <span class="o">=</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">]</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">k</span> <span class="o">=</span> <span class="n">newton</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">],</span> <span class="n">x0</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span><span class="o">/</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span>
-                    
+
                     <span class="k">if</span> <span class="n">wavenumber</span><span class="p">:</span>
                         <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;wavenumber&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">k</span>
 
@@ -115,7 +111,7 @@
                     <span class="n">Fexc</span><span class="o">.</span><span class="n">real</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ex</span><span class="o">.</span><span class="n">re</span><span class="p">[:,</span> <span class="n">dir_idx</span><span class="p">,</span> <span class="n">omega_idx</span><span class="p">]</span>
                     <span class="n">Fexc</span><span class="o">.</span><span class="n">imag</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ex</span><span class="o">.</span><span class="n">im</span><span class="p">[:,</span> <span class="n">dir_idx</span><span class="p">,</span> <span class="n">omega_idx</span><span class="p">]</span>
                 <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;diffraction_force&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Fexc</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
-            
+
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">Fexc_fk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ex</span><span class="o">.</span><span class="n">fk</span><span class="o">.</span><span class="n">re</span><span class="p">[:,</span> <span class="n">dir_idx</span><span class="p">,</span> <span class="n">omega_idx</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
                     <span class="k">if</span> <span class="n">from_wamit</span><span class="p">:</span>
@@ -155,7 +151,7 @@
                         <span class="n">k</span> <span class="o">=</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">]</span>
                     <span class="k">else</span><span class="p">:</span>
                         <span class="n">k</span> <span class="o">=</span> <span class="n">newton</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">],</span> <span class="n">x0</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span><span class="o">/</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span>
-                    
+
                     <span class="k">if</span> <span class="n">wavenumber</span><span class="p">:</span>
                         <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;wavenumber&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">k</span>
 
