@@ -17,7 +17,7 @@
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
-    <jinja2.runtime.BlockReference object at 0x7fbe3cc1aed0>
+    <jinja2.runtime.BlockReference object at 0x7f9ce9edb010>
 
   </head><body>
   
@@ -45,7 +45,7 @@
 
 <div class="viewcode-block" id="rao">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.post_pro.rao.html#capytaine.post_pro.rao.rao">[docs]</a>
-<span class="k">def</span> <span class="nf">rao</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">dissipation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stiffness</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">rao</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dissipation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stiffness</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Response Amplitude Operator.</span>
 
 <span class="sd">    Parameters</span>
@@ -55,8 +55,8 @@
 <span class="sd">        This function supposes that variables named &#39;inertia_matrix&#39; and &#39;hydrostatic_stiffness&#39; are in the dataset.</span>
 <span class="sd">        Other variables can be computed by Capytaine, by those two should be manually added to the dataset.</span>
 <span class="sd">    wave_direction: float, optional</span>
-<span class="sd">        The direction of the incoming waves.</span>
-<span class="sd">        Default: 0 radian (x direction)</span>
+<span class="sd">        Select a wave directions for the computation. (Not recommended, kept for legacy.)</span>
+<span class="sd">        Default: all wave directions in the dataset.</span>
 <span class="sd">    dissipation: array, optional</span>
 <span class="sd">        An optional dissipation matrix (e.g. Power Take Off) to be included in the RAO.</span>
 <span class="sd">        Default: none.</span>
@@ -72,29 +72,26 @@
 
     <span class="c1"># ASSEMBLE MATRICES</span>
     <span class="n">H</span> <span class="o">=</span> <span class="n">rao_transfer_function</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">dissipation</span><span class="p">,</span> <span class="n">stiffness</span><span class="p">)</span>
+    <span class="n">fex</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">excitation_force</span>
 
     <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Compute RAO.&quot;</span><span class="p">)</span>
 
-    <span class="n">freq_dims</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">{</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span> <span class="s1">&#39;period&#39;</span><span class="p">,</span> <span class="s1">&#39;wavelength&#39;</span><span class="p">,</span> <span class="s1">&#39;wavenumber&#39;</span><span class="p">}</span>
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">freq_dims</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The dataset provided to compute the RAO should one (and only one) dimension&quot;</span> <span class="o">+</span>
-                         <span class="s2">&quot; among the following: &#39;omega&#39;, &#39;period&#39;, &#39;wavelength&#39; or &#39;wavenumber&#39;</span><span class="se">\n</span><span class="s2">&quot;</span> <span class="o">+</span>
-                         <span class="sa">f</span><span class="s2">&quot;The received dataset has the following dimensions: </span><span class="si">{</span><span class="n">dataset</span><span class="o">.</span><span class="n">dims</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-    <span class="n">main_freq_type</span> <span class="o">=</span> <span class="n">freq_dims</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-
-    <span class="k">if</span> <span class="s1">&#39;excitation_force&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataset</span><span class="p">:</span>
-        <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;excitation_force&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;Froude_Krylov_force&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;diffraction_force&#39;</span><span class="p">]</span>
-    <span class="n">excitation</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;excitation_force&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">wave_direction</span><span class="o">=</span><span class="n">wave_direction</span><span class="p">)</span>
-
     <span class="c1"># SOLVE LINEAR SYSTEMS</span>
-    <span class="c1"># Reorder dimensions of the arrays to be sure to solve the right system.</span>
-    <span class="n">H</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">main_freq_type</span><span class="p">,</span> <span class="s1">&#39;radiating_dof&#39;</span><span class="p">,</span> <span class="s1">&#39;influenced_dof&#39;</span><span class="p">)</span>
-    <span class="n">excitation</span> <span class="o">=</span> <span class="n">excitation</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="n">main_freq_type</span><span class="p">,</span>  <span class="s1">&#39;influenced_dof&#39;</span><span class="p">)</span>
+    <span class="c1"># Match dimensions of the arrays to be sure to solve the right systems.</span>
+    <span class="n">H</span><span class="p">,</span> <span class="n">fex</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">broadcast</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">fex</span><span class="p">,</span> <span class="n">exclude</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;radiating_dof&quot;</span><span class="p">,</span> <span class="s2">&quot;influenced_dof&quot;</span><span class="p">])</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="s1">&#39;radiating_dof&#39;</span><span class="p">,</span> <span class="s1">&#39;influenced_dof&#39;</span><span class="p">)</span>
+    <span class="n">fex</span> <span class="o">=</span> <span class="n">fex</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="o">...</span><span class="p">,</span>  <span class="s1">&#39;influenced_dof&#39;</span><span class="p">)</span>
 
-    <span class="c1"># Solve the linear systems (one for each value of omega)</span>
-    <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">excitation</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">wave_direction</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># Legacy behavior for backward compatibility</span>
+        <span class="n">H</span> <span class="o">=</span> <span class="n">H</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">wave_direction</span><span class="o">=</span><span class="n">wave_direction</span><span class="p">)</span>
+        <span class="n">fex</span> <span class="o">=</span> <span class="n">fex</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">wave_direction</span><span class="o">=</span><span class="n">wave_direction</span><span class="p">)</span>
 
-    <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">main_freq_type</span><span class="p">],</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;radiating_dof&#39;</span><span class="p">]],</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="n">main_freq_type</span><span class="p">,</span> <span class="s1">&#39;radiating_dof&#39;</span><span class="p">])</span></div>
+    <span class="c1"># Solve and add coordinates</span>
+    <span class="n">rao_dims</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">H</span><span class="o">.</span><span class="n">dims</span> <span class="k">if</span> <span class="n">d</span> <span class="o">!=</span> <span class="s1">&#39;influenced_dof&#39;</span><span class="p">]</span>
+    <span class="n">rao_coords</span> <span class="o">=</span> <span class="p">{</span><span class="n">c</span><span class="p">:</span> <span class="n">H</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">c</span><span class="p">]</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">H</span><span class="o">.</span><span class="n">coords</span> <span class="k">if</span> <span class="n">c</span> <span class="o">!=</span> <span class="s1">&#39;influenced_dof&#39;</span><span class="p">}</span>
+    <span class="n">rao</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">H</span><span class="p">,</span> <span class="n">fex</span><span class="p">),</span> <span class="n">coords</span><span class="o">=</span><span class="n">rao_coords</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="n">rao_dims</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">rao</span></div>
 
 </pre></div>
 
