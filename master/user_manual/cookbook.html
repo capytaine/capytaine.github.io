@@ -18,7 +18,7 @@
     <link rel="next" title="Developer manual" href="../developer_manual/index.html" />
     <link rel="prev" title="Conventions and differences to other codes" href="conventions.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
-    <jinja2.runtime.BlockReference object at 0x7f3d1849b5d0>
+    <jinja2.runtime.BlockReference object at 0x7f39fad3c6d0>
 
   </head><body>
   
@@ -81,27 +81,24 @@ of the Github repository.</p>
 rigid-body degrees of freedom and then plots the added mass.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
 
-<span class="c1"># Set up logging</span>
-<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
-                    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">cpt</span><span class="o">.</span><span class="n">set_logging</span><span class="p">()</span>
 
 <span class="c1"># Initialize floating body by generating a geometric mesh</span>
 <span class="n">cylinder</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
         <span class="n">mesh</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">mesh_horizontal_cylinder</span><span class="p">(</span>
             <span class="n">length</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
             <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span>
-            <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+            <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">)</span>
             <span class="p">))</span>
 
 <span class="c1"># Automatically add the six degrees of freedom of a rigid body</span>
 <span class="n">cylinder</span><span class="o">.</span><span class="n">add_all_rigid_body_dofs</span><span class="p">()</span>
 
 <span class="c1"># Define the range of frequencies as a Numpy array</span>
-<span class="n">omega_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+<span class="n">omega_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 
 <span class="c1"># Set up the problems: we will solve a radiation problem for each</span>
 <span class="c1"># degree of freedom of the body and for each frequency in the</span>
@@ -116,9 +113,7 @@ rigid-body degrees of freedom and then plots the added mass.</p>
 
 <span class="c1"># Solve all radiation problems</span>
 <span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
-<span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">pb</span><span class="p">)</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">problems</span><span class="p">)]</span>
-<span class="c1"># The &#39;sorted&#39; function ensures that the problems are sequentially</span>
-<span class="c1"># treated in an optimal order.</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
 
 <span class="c1"># Gather the computed added mass into a labelled array.</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
@@ -206,13 +201,10 @@ The diffraction force on the “x-shear” dof is zero when the wave comes from 
 <p>This example runs the same simulation for several water depth and plot the results.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
 
-<span class="c1"># Set up logging</span>
-<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
-                    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">cpt</span><span class="o">.</span><span class="n">set_logging</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
 
 <span class="c1"># Initialize floating body by generating a geometric mesh</span>
 <span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_horizontal_cylinder</span><span class="p">(</span>
@@ -422,13 +414,11 @@ This script compares them both with analytical expression for a simple geometric
 3D animation.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-
 <span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
 <span class="kn">from</span> <span class="nn">capytaine.bem.airy_waves</span> <span class="kn">import</span> <span class="n">airy_waves_free_surface_elevation</span>
 <span class="kn">from</span> <span class="nn">capytaine.ui.vtk.animation</span> <span class="kn">import</span> <span class="n">Animation</span>
 
-<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">cpt</span><span class="o">.</span><span class="n">set_logging</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
 
 <span class="c1"># Generate the mesh of a sphere</span>
 
@@ -477,16 +467,14 @@ This script compares them both with analytical expression for a simple geometric
 such as the one used on the main page of this documentation.
 This script requires the mesh of the ship <code class="code docutils literal notranslate"><span class="pre">boat_200.mar</span></code>. It can be
 downloaded from: <a class="reference external" href="https://raw.githubusercontent.com/capytaine/capytaine/master/docs/user_manual/examples/boat_200.mar">https://raw.githubusercontent.com/capytaine/capytaine/master/docs/user_manual/examples/boat_200.mar</a></p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
-
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">pi</span> <span class="k">as</span> <span class="n">π</span>
 
 <span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
 <span class="kn">from</span> <span class="nn">capytaine.bem.airy_waves</span> <span class="kn">import</span> <span class="n">airy_waves_free_surface_elevation</span>
 <span class="kn">from</span> <span class="nn">capytaine.ui.vtk</span> <span class="kn">import</span> <span class="n">Animation</span>
 
-<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(levelname)-8s</span><span class="s1">: </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="n">cpt</span><span class="o">.</span><span class="n">set_logging</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
 
 <span class="n">bem_solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
 
@@ -547,16 +535,14 @@ downloaded from: <a class="reference external" href="https://raw.githubuserconte
 <section id="kochin-function">
 <h3><a class="toc-backref" href="#id12" role="doc-backlink">Kochin function</a><a class="headerlink" href="#kochin-function" title="Link to this heading">¶</a></h3>
 <p>This example computes the Kochin function for a surging buoy and plot the results.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
-
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">pi</span>
 <span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 
 <span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
 
-<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="n">cpt</span><span class="o">.</span><span class="n">set_logging</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
 
 <span class="c1"># SET UP THE MESH</span>
 <span class="n">buoy</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
@@ -701,13 +687,11 @@ half.</p>
 this floating body.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
 <span class="kn">import</span> <span class="nn">capytaine.io.xarray</span>
 
-<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
-                    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">cpt</span><span class="o">.</span><span class="n">set_logging</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
 
 <span class="c1"># Profile of the axisymmetric body</span>
 <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
@@ -758,16 +742,13 @@ this floating body.</p>
 <section id="convergence-study">
 <h3><a class="toc-backref" href="#id17" role="doc-backlink">Convergence study</a><a class="headerlink" href="#convergence-study" title="Link to this heading">¶</a></h3>
 <p>This example runs a mesh convergence study for a submerged cylinder.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">pi</span>
 <span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
 
-<span class="c1"># Set up logging</span>
-<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
-                    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">cpt</span><span class="o">.</span><span class="n">set_logging</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">make_cylinder</span><span class="p">(</span><span class="n">resolution</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Make cylinder with a mesh of a given resolution in panels/meter.&quot;&quot;&quot;</span>
@@ -845,15 +826,12 @@ this floating body.</p>
 <section id="compare-two-implementations-of-the-green-function">
 <h3><a class="toc-backref" href="#id19" role="doc-backlink">Compare two implementations of the Green function</a><a class="headerlink" href="#compare-two-implementations-of-the-green-function" title="Link to this heading">¶</a></h3>
 <p>This is an example of comparison of two implementations of the Green function.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
 
-<span class="c1"># Set up logging</span>
-<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
-                    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="n">cpt</span><span class="o">.</span><span class="n">set_logging</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
 
 <span class="c1"># Generate body</span>
 <span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_horizontal_cylinder</span><span class="p">(</span>
