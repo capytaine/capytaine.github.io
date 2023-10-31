@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7f837b4a6110>
+    <jinja2.runtime.BlockReference object at 0x7fd727b00140>
 
   </head><body>
   
@@ -40,6 +40,8 @@
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
+<span class="kn">from</span> <span class="nn">capytaine.bem.solver</span> <span class="kn">import</span> <span class="n">BEMSolver</span>
+<span class="kn">from</span> <span class="nn">capytaine.io.xarray</span> <span class="kn">import</span> <span class="n">assemble_dataset</span>
 <span class="kn">from</span> <span class="nn">capytaine.io.mesh_writers</span> <span class="kn">import</span> <span class="n">write_MAR</span>
 <span class="kn">from</span> <span class="nn">capytaine.bodies.bodies</span> <span class="kn">import</span> <span class="n">FloatingBody</span>
 <span class="kn">from</span> <span class="nn">capytaine.bem.problems_and_results</span> <span class="kn">import</span> <span class="n">DiffractionProblem</span><span class="p">,</span> <span class="n">RadiationProblem</span>
@@ -297,6 +299,7 @@
                     <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
 
 
+
 <div class="viewcode-block" id="export_hydrostatics">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.legacy.html#capytaine.io.legacy.export_hydrostatics">[docs]</a>
 <span class="k">def</span> <span class="nf">export_hydrostatics</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">,</span> <span class="n">bodies</span><span class="p">):</span>
@@ -336,6 +339,25 @@
             <span class="n">hydrostatics_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Hydrostatics_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.dat&quot;</span><span class="p">)</span>
             <span class="n">kh_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;KH_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.dat&quot;</span><span class="p">)</span>
             <span class="n">hydrostatics_writer</span><span class="p">(</span><span class="n">hydrostatics_file_path</span><span class="p">,</span> <span class="n">kh_file_path</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="run_cal_file">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.legacy.html#capytaine.io.legacy.run_cal_file">[docs]</a>
+<span class="k">def</span> <span class="nf">run_cal_file</span><span class="p">(</span><span class="n">paramfile</span><span class="p">):</span>
+    <span class="n">problems</span> <span class="o">=</span> <span class="n">import_cal_file</span><span class="p">(</span><span class="n">paramfile</span><span class="p">)</span>
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">BEMSolver</span><span class="p">()</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+    <span class="n">results_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">paramfile</span><span class="p">),</span> <span class="s1">&#39;results&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">results_directory</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">FileExistsError</span><span class="p">:</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The output directory (</span><span class="si">{</span><span class="n">results_directory</span><span class="si">}</span><span class="s2">) already exists. You might be overwriting existing data.&quot;</span><span class="p">)</span>
+
+    <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Write results in legacy tecplot format.&quot;</span><span class="p">)</span>
+    <span class="n">write_dataset_as_tecplot_files</span><span class="p">(</span><span class="n">results_directory</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
 
 </pre></div>
 
