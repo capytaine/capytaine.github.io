@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7fd7271a3350>
+    <jinja2.runtime.BlockReference object at 0x7fcf82843170>
 
   </head><body>
   
@@ -56,6 +56,7 @@
 <span class="kn">from</span> <span class="nn">capytaine.io.xarray</span> <span class="kn">import</span> <span class="n">problems_from_dataset</span><span class="p">,</span> <span class="n">assemble_dataset</span><span class="p">,</span> <span class="n">kochin_data_array</span>
 <span class="kn">from</span> <span class="nn">capytaine.tools.optional_imports</span> <span class="kn">import</span> <span class="n">silently_import_optional_dependency</span>
 <span class="kn">from</span> <span class="nn">capytaine.tools.lists_of_points</span> <span class="kn">import</span> <span class="n">_normalize_points</span><span class="p">,</span> <span class="n">_normalize_free_surface_points</span>
+<span class="kn">from</span> <span class="nn">capytaine.tools.symbolic_multiplication</span> <span class="kn">import</span> <span class="n">supporting_symbolic_multiplication</span>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -133,7 +134,8 @@
             <span class="n">problem</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span>
         <span class="p">)</span>
-        <span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">linear_solver</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">boundary_condition</span><span class="p">)</span>
+        <span class="n">linear_solver</span> <span class="o">=</span> <span class="n">supporting_symbolic_multiplication</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">linear_solver</span><span class="p">)</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="n">linear_solver</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">boundary_condition</span><span class="p">)</span>
         <span class="n">potential</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">sources</span>
         <span class="n">pressure</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">omega</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="n">potential</span>
 

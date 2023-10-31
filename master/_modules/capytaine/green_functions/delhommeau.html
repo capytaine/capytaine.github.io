@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7fd7271a3410>
+    <jinja2.runtime.BlockReference object at 0x7fcf809c0470>
 
   </head><body>
   
@@ -232,6 +232,8 @@
 <span class="sd">            the matrices :math:`S` and :math:`K`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
+        <span class="n">wavenumber</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">wavenumber</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">:</span> <span class="c1"># No free surface, only a single Rankine source term</span>
 
             <span class="n">a_exp</span><span class="p">,</span> <span class="n">lamda_exp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Dummy arrays that won&#39;t actually be used by the fortran code.</span>
@@ -250,15 +252,15 @@
                 <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
 
         <span class="k">else</span><span class="p">:</span>  <span class="c1"># Finite water_depth</span>
-            <span class="n">a_exp</span><span class="p">,</span> <span class="n">lamda_exp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_best_exponential_decomposition</span><span class="p">(</span>
-                <span class="n">wavenumber</span><span class="o">*</span><span class="n">water_depth</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">wavenumber</span><span class="o">*</span><span class="n">water_depth</span><span class="p">),</span>
-                <span class="n">wavenumber</span><span class="o">*</span><span class="n">water_depth</span><span class="p">,</span>
-            <span class="p">)</span>
             <span class="k">if</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">NotImplementedError</span>
             <span class="k">elif</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">NotImplementedError</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="n">a_exp</span><span class="p">,</span> <span class="n">lamda_exp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_best_exponential_decomposition</span><span class="p">(</span>
+                    <span class="n">wavenumber</span><span class="o">*</span><span class="n">water_depth</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">wavenumber</span><span class="o">*</span><span class="n">water_depth</span><span class="p">),</span>
+                    <span class="n">wavenumber</span><span class="o">*</span><span class="n">water_depth</span><span class="p">,</span>
+                <span class="p">)</span>
                 <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">CollectionOfMeshes</span><span class="p">):</span>
