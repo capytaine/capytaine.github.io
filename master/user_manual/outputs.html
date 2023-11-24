@@ -19,7 +19,7 @@
     <link rel="prev" title="Resolution" href="resolution.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7f0bd76af5f0>
+    <jinja2.runtime.BlockReference object at 0x7f4ba5503a40>
 
   </head><body>
   
@@ -129,7 +129,8 @@ As a workaround, the complex-valued array can be saved as a bigger real-valued a
 </pre></div>
 </div>
 <p>The dataset can then be reloaded by:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">capytaine.io.xarray</span> <span class="kn">import</span> <span class="n">merge_complex_values</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="kn">from</span> <span class="nn">capytaine.io.xarray</span> <span class="kn">import</span> <span class="n">merge_complex_values</span>
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">merge_complex_values</span><span class="p">(</span><span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="s2">&quot;path/to/dataset.nc&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -142,9 +143,11 @@ They can be stored in xarray either as NetCDF string objects, which can be writt
 The issue is that the xarray library sometimes changes from one to the other without warnings.
 It leads to the error <code class="code docutils literal notranslate"><span class="pre">ValueError:</span> <span class="pre">unsupported</span> <span class="pre">dtype</span> <span class="pre">for</span> <span class="pre">netCDF4</span> <span class="pre">variable:</span> <span class="pre">object</span></code> when trying to export a dataset.</p>
 <p>This can be fixed by explicitly converting the strings to the right format when exporting the dataset:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span><span class="o">.</span><span class="n">to_netcdf</span><span class="p">(</span><span class="s2">&quot;dataset.nc&quot;</span><span class="p">,</span>
-                  <span class="n">encoding</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;radiating_dof&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;U&#39;</span><span class="p">},</span>
-                            <span class="s1">&#39;influenced_dof&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;U&#39;</span><span class="p">}})</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">separate_complex_values</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">to_netcdf</span><span class="p">(</span>
+  <span class="s2">&quot;dataset.nc&quot;</span><span class="p">,</span>
+  <span class="n">encoding</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;radiating_dof&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;U&#39;</span><span class="p">},</span>
+            <span class="s1">&#39;influenced_dof&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;U&#39;</span><span class="p">}}</span>
+<span class="p">)</span>
 </pre></div>
 </div>
 <p>See also <a class="reference external" href="https://github.com/capytaine/capytaine/issues/2">this Github issue</a>.</p>
