@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7f4ba4c52e10>
+    <jinja2.runtime.BlockReference object at 0x7fbe64a7dc70>
 
   </head><body>
   
@@ -69,11 +69,14 @@
 <span class="sd">        description.</span>
 <span class="sd">    name : str, optional</span>
 <span class="sd">        The name of the mesh. If None, the mesh is given an automatic name based on its internal ID.</span>
+<span class="sd">    quadrature_method: None or str or Quadpy quadrature, optional</span>
+<span class="sd">        The method used to compute quadrature points in each cells.</span>
+<span class="sd">        By default: None, that is a one-point first order scheme is used.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">_ids</span> <span class="o">=</span> <span class="n">count</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># A counter for automatic naming of new meshes.</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">faces</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">faces</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">quadrature_method</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="n">vertices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">vertices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
@@ -91,6 +94,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">faces</span> <span class="o">=</span> <span class="n">faces</span>  <span class="c1"># Not a direct assignment, goes through the setter method below.</span>
 
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New mesh: </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">quadrature_method</span> <span class="o">=</span> <span class="n">quadrature_method</span>
 
     <span class="k">def</span> <span class="nf">__short_str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(..., name=</span><span class="se">\&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">)&quot;</span><span class="p">)</span>
@@ -373,30 +378,22 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">quadrature_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="s1">&#39;quadrature&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;quadrature&#39;</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Default: first order quadrature</span>
-            <span class="k">return</span> <span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">faces_centers</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>  <span class="c1"># Points</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">faces_areas</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>        <span class="c1"># Weights</span>
-            <span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">quadrature_method</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="s1">&#39;quadrature_method&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;quadrature_method&#39;</span><span class="p">]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="s1">&#39;quadrature&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">compute_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quadrature_method</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;quadrature&#39;</span><span class="p">]</span>
 
 <div class="viewcode-block" id="Mesh.compute_quadrature">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.compute_quadrature">[docs]</a>
     <span class="k">def</span> <span class="nf">compute_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">heal_triangles</span><span class="p">()</span>
         <span class="n">all_faces</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">[:,</span> <span class="p">:],</span> <span class="p">:]</span>
-        <span class="n">points</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="n">compute_quadrature_on_faces</span><span class="p">(</span><span class="n">all_faces</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_centers</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+            <span class="n">weights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_areas</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">points</span><span class="p">,</span> <span class="n">weights</span> <span class="o">=</span> <span class="n">compute_quadrature_on_faces</span><span class="p">(</span><span class="n">all_faces</span><span class="p">,</span> <span class="n">method</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;quadrature&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">weights</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;quadrature_method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">quadrature_method</span> <span class="o">=</span> <span class="n">method</span>
         <span class="k">return</span> <span class="n">points</span><span class="p">,</span> <span class="n">weights</span></div>
 
 
