@@ -19,7 +19,7 @@
     <link rel="prev" title="Setting up a problem" href="problem_setup.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7ff5d4c4cfb0>
+    <jinja2.runtime.BlockReference object at 0x7f6c26c8e120>
 
   </head><body>
   
@@ -112,7 +112,7 @@ precision of the low-rank matrices.</p>
 <section id="solving-the-problem">
 <h2>Solving the problem<a class="headerlink" href="#solving-the-problem" title="Link to this heading">¶</a></h2>
 <p>Once the solver has been initialized, it can be used to solve problems with the <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a> method:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;indirect&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The optional argument <code class="code docutils literal notranslate"><span class="pre">keep_details</span></code> (default value: <code class="code docutils literal notranslate"><span class="pre">True</span></code>)
@@ -121,6 +121,12 @@ result object. These data are necessary for some post-processing such as the
 computation of the Kochin function or the reconstruction of the free surface
 elevation. However, when only the force on the body is of interest, they can be
 discarded to save space in memory.</p>
+<p>The optional argument <code class="code docutils literal notranslate"><span class="pre">method</span></code> (default value: <code class="code docutils literal notranslate"><span class="pre">indirect</span></code>)
+controls the approach employed to solve for the potential velocity solutions.
+Two methods are implemented including 1) direct method (source-and-dipole formulation),
+and 2) indirect method (source formulation). The direct method appears to be slightly
+more accurate on some test cases but only allows for the computation of the forces
+on the floating body. Any other post-processing requires the indirect method.</p>
 <p>A list of problems can be solved at once in an optimal order with:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">list_of_results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">list_of_problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>

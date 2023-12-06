@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7ff5dda1e840>
+    <jinja2.runtime.BlockReference object at 0x7f6c1e85dd90>
 
   </head><body>
   
@@ -206,7 +206,7 @@
 
 <div class="viewcode-block" id="Delhommeau.evaluate">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau.evaluate">[docs]</a>
-    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;The main method of the class, called by the engine to assemble the influence matrices.</span>
 
 <span class="sd">        Parameters</span>
@@ -222,6 +222,8 @@
 <span class="sd">            constant depth of water (default: :math:`+\infty`)</span>
 <span class="sd">        wavenumber: float, optional</span>
 <span class="sd">            wavenumber (default: 1.0)</span>
+<span class="sd">        adjoint_double_layer: bool, optional</span>
+<span class="sd">            compute double layer for direct method (F) or adjoint double layer for indirect method (T) matrices (default: True)</span>
 <span class="sd">        early_dot_product: boolean, optional</span>
 <span class="sd">            if False, return K as a (n, m, 3) array storing ∫∇G</span>
 <span class="sd">            if True, return K as a (n, m) array storing ∫∇G·n</span>
@@ -264,11 +266,17 @@
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">CollectionOfMeshes</span><span class="p">):</span>
             <span class="n">collocation_points</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_centers</span>
             <span class="n">nb_collocation_points</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">nb_faces</span>
-            <span class="n">early_dot_product_normals</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_normals</span>
+            <span class="k">if</span> <span class="p">(</span> <span class="n">adjoint_double_layer</span> <span class="o">==</span> <span class="kc">False</span> <span class="p">):</span>
+                <span class="n">early_dot_product_normals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nb_collocation_points</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>  <span class="c1"># Should not be used</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">early_dot_product_normals</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_normals</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span><span class="mi">2</span> <span class="ow">and</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c1"># This is used when computing potential or velocity at given points in postprocessing</span>
             <span class="n">collocation_points</span> <span class="o">=</span> <span class="n">mesh1</span>
             <span class="n">nb_collocation_points</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">early_dot_product_normals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nb_collocation_points</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>  <span class="c1"># Hopefully unused</span>
+            <span class="n">early_dot_product_normals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nb_collocation_points</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>  <span class="c1"># Should not be used</span>
+            <span class="k">if</span> <span class="p">(</span> <span class="n">adjoint_double_layer</span> <span class="o">==</span> <span class="kc">False</span> <span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Using a list of points as collocation points is not supported in computing adjoint double layer matrices.&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unrecognized input for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.evaluate&quot;</span><span class="p">)</span>
 
@@ -293,7 +301,7 @@
             <span class="n">coeffs</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span><span class="p">,</span>
             <span class="n">lamda_exp</span><span class="p">,</span> <span class="n">a_exp</span><span class="p">,</span>
-            <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">,</span>
+            <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">,</span>
             <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
         <span class="p">)</span>
 

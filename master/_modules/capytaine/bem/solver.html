@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7ff5d4dfa270>
+    <jinja2.runtime.BlockReference object at 0x7f6c2745cb30>
 
   </head><body>
   
@@ -111,13 +111,15 @@
 
 <div class="viewcode-block" id="BEMSolver.solve">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve">[docs]</a>
-    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;indirect&#39;</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve the linear potential flow problem.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        problem: LinearPotentialFlowProblem</span>
 <span class="sd">            the problem to be solved</span>
+<span class="sd">        method: string, optional</span>
+<span class="sd">            select boundary integral approach indirect (i.e.Nemoh)/direct (i.e.WAMIT) (default: indirect)</span>
 <span class="sd">        keep_details: bool, optional</span>
 <span class="sd">            if True, store the sources and the potential on the floating body in the output object</span>
 <span class="sd">            (default: True)</span>
@@ -133,14 +135,26 @@
 
         <span class="k">if</span> <span class="n">_check_wavelength</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength</span><span class="p">([</span><span class="n">problem</span><span class="p">])</span>
 
-        <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
-            <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
-            <span class="n">problem</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span>
-        <span class="p">)</span>
         <span class="n">linear_solver</span> <span class="o">=</span> <span class="n">supporting_symbolic_multiplication</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">linear_solver</span><span class="p">)</span>
-        <span class="n">sources</span> <span class="o">=</span> <span class="n">linear_solver</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">boundary_condition</span><span class="p">)</span>
-        <span class="n">potential</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">sources</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;direct&#39;</span><span class="p">):</span>
+          <span class="n">S</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
+              <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+              <span class="n">problem</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">False</span>
+          <span class="p">)</span>
+
+          <span class="n">potential</span> <span class="o">=</span> <span class="n">linear_solver</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">S</span> <span class="o">@</span> <span class="n">problem</span><span class="o">.</span><span class="n">boundary_condition</span><span class="p">)</span>
+          <span class="n">sources</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+          <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
+              <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+              <span class="n">problem</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span>
+              <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span>
+          <span class="p">)</span>
+
+          <span class="n">sources</span> <span class="o">=</span> <span class="n">linear_solver</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">boundary_condition</span><span class="p">)</span>
+          <span class="n">potential</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">sources</span>
+
         <span class="n">pressure</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">omega</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="n">potential</span>
 
         <span class="n">forces</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">integrate_pressure</span><span class="p">(</span><span class="n">pressure</span><span class="p">)</span>
@@ -157,7 +171,7 @@
 
 <div class="viewcode-block" id="BEMSolver.solve_all">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve_all">[docs]</a>
-    <span class="k">def</span> <span class="nf">solve_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problems</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">progress_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">solve_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problems</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;indirect&#39;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">progress_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve several problems.</span>
 <span class="sd">        Optional keyword arguments are passed to `BEMSolver.solve`.</span>
 
@@ -165,6 +179,8 @@
 <span class="sd">        ----------</span>
 <span class="sd">        problems: list of LinearPotentialFlowProblem</span>
 <span class="sd">            several problems to be solved</span>
+<span class="sd">        method: string, optional</span>
+<span class="sd">            select boundary integral approach indirect (i.e.Nemoh)/direct (i.e.WAMIT) (default: indirect)</span>
 <span class="sd">        n_jobs: int, optional (default: 1)</span>
 <span class="sd">            the number of jobs to run in parallel using the optional dependency `joblib`</span>
 <span class="sd">            By defaults: do not use joblib and solve sequentially.</span>
@@ -182,14 +198,14 @@
             <span class="n">problems</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">progress_bar</span><span class="p">:</span>
                 <span class="n">problems</span> <span class="o">=</span> <span class="n">track</span><span class="p">(</span><span class="n">problems</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">problems</span><span class="p">),</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Solving BEM problems&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">pb</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">problems</span><span class="p">]</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">pb</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">problems</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">joblib</span> <span class="o">=</span> <span class="n">silently_import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;joblib&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">joblib</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting the `n_jobs` argument to </span><span class="si">{</span><span class="n">n_jobs</span><span class="si">}</span><span class="s2"> requires the missing optional dependency &#39;joblib&#39;.&quot;</span><span class="p">)</span>
             <span class="n">groups_of_problems</span> <span class="o">=</span> <span class="n">LinearPotentialFlowProblem</span><span class="o">.</span><span class="n">_group_for_parallel_resolution</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
             <span class="n">parallel</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">Parallel</span><span class="p">(</span><span class="n">return_as</span><span class="o">=</span><span class="s2">&quot;generator&quot;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
-            <span class="n">groups_of_results</span> <span class="o">=</span> <span class="n">parallel</span><span class="p">(</span><span class="n">joblib</span><span class="o">.</span><span class="n">delayed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solve_all</span><span class="p">)(</span><span class="n">grp</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">progress_bar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">grp</span> <span class="ow">in</span> <span class="n">groups_of_problems</span><span class="p">)</span>
+            <span class="n">groups_of_results</span> <span class="o">=</span> <span class="n">parallel</span><span class="p">(</span><span class="n">joblib</span><span class="o">.</span><span class="n">delayed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solve_all</span><span class="p">)(</span><span class="n">grp</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">progress_bar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">grp</span> <span class="ow">in</span> <span class="n">groups_of_problems</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">progress_bar</span><span class="p">:</span>
                 <span class="n">groups_of_results</span> <span class="o">=</span> <span class="n">track</span><span class="p">(</span><span class="n">groups_of_results</span><span class="p">,</span>
                                           <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">groups_of_problems</span><span class="p">),</span>
@@ -227,7 +243,7 @@
 
 <div class="viewcode-block" id="BEMSolver.fill_dataset">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset">[docs]</a>
-    <span class="k">def</span> <span class="nf">fill_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">bodies</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">fill_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">bodies</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;indirect&#39;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve a set of problems defined by the coordinates of an xarray dataset.</span>
 
 <span class="sd">        Parameters</span>
@@ -237,6 +253,8 @@
 <span class="sd">        bodies : FloatingBody or list of FloatingBody</span>
 <span class="sd">            The body or bodies involved in the problems</span>
 <span class="sd">            They should all have different names.</span>
+<span class="sd">        method: string, optional</span>
+<span class="sd">            select boundary integral approach indirect (i.e.Nemoh)/direct (i.e.WAMIT) (default: indirect)</span>
 <span class="sd">        n_jobs: int, optional (default: 1)</span>
 <span class="sd">            the number of jobs to run in parallel using the optional dependency `joblib`</span>
 <span class="sd">            By defaults: do not use joblib and solve sequentially.</span>
@@ -251,12 +269,12 @@
                  <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">}</span>
         <span class="n">problems</span> <span class="o">=</span> <span class="n">problems_from_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">bodies</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;theta&#39;</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
-            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
             <span class="n">kochin</span> <span class="o">=</span> <span class="n">kochin_data_array</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">])</span>
             <span class="n">dataset</span> <span class="o">=</span> <span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">dataset</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kochin</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
             <span class="n">dataset</span> <span class="o">=</span> <span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">dataset</span></div>
 
@@ -286,8 +304,8 @@
         <span class="n">points</span><span class="p">,</span> <span class="n">output_shape</span> <span class="o">=</span> <span class="n">_normalize_points</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">keep_mesh</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;The values of the sources of </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2"> cannot been found.</span>
-<span class="s2">            They probably have not been stored by the solver because the option keep_details=True have not been set.</span>
-<span class="s2">            Please re-run the resolution with this option.&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="s2">            They probably have not been stored by the solver because the option keep_details=True have not been set or the direct method has been used.</span>
+<span class="s2">            Please re-run the resolution with the indirect method and keep_details=True.&quot;&quot;&quot;</span><span class="p">)</span>
 
         <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">)</span>
         <span class="n">potential</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span>  <span class="c1"># Sum the contributions of all panels in the mesh</span>
@@ -320,8 +338,8 @@
 
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;The values of the sources of </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2"> cannot been found.</span>
-<span class="s2">            They probably have not been stored by the solver because the option keep_details=True have not been set.</span>
-<span class="s2">            Please re-run the resolution with this option.&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="s2">            They probably have not been stored by the solver because the option keep_details=True have not been set or the direct method has been used.</span>
+<span class="s2">            Please re-run the resolution with the indirect method and keep_details=True.&quot;&quot;&quot;</span><span class="p">)</span>
 
         <span class="n">_</span><span class="p">,</span> <span class="n">gradG</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span>
                                                 <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -417,8 +435,8 @@
 
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;The values of the sources of </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2"> cannot been found.</span>
-<span class="s2">            They probably have not been stored by the solver because the option keep_details=True have not been set.</span>
-<span class="s2">            Please re-run the resolution with this option.&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="s2">            They probably have not been stored by the solver because the option keep_details=True have not been set or the direct method has been used.</span>
+<span class="s2">            Please re-run the resolution with the indirect method and keep_details=True.&quot;&quot;&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">chunk_size</span> <span class="o">&gt;</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">:</span>
             <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_S_matrix</span><span class="p">(</span>
