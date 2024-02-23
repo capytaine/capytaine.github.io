@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7fbbdf96b860>
+    <jinja2.runtime.BlockReference object at 0x7fb5a9739610>
 
   </head><body>
   
@@ -49,7 +49,7 @@
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="n">_default_parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;rho&#39;</span><span class="p">:</span> <span class="mf">1000.0</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">:</span> <span class="mf">9.81</span><span class="p">,</span> <span class="s1">&#39;omega&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">,</span>
-                      <span class="s1">&#39;free_surface&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;water_depth&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">,</span>
+                      <span class="s1">&#39;free_surface&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;water_depth&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
                       <span class="s1">&#39;wave_direction&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">}</span>
 
 
@@ -66,9 +66,9 @@
 <span class="sd">    body: FloatingBody, optional</span>
 <span class="sd">        The body interacting with the waves</span>
 <span class="sd">    free_surface: float, optional</span>
-<span class="sd">        The position of the free surface (accepted values: 0 and np.infty)</span>
+<span class="sd">        The position of the free surface (accepted values: 0 and np.inf)</span>
 <span class="sd">    water_depth: float, optional</span>
-<span class="sd">        The depth of water in m (default: np.infty)</span>
+<span class="sd">        The depth of water in m (default: np.inf)</span>
 <span class="sd">    sea_bottom: float, optional</span>
 <span class="sd">        The position of the sea bottom (deprecated: please prefer setting water_depth)</span>
 <span class="sd">    omega: float, optional</span>
@@ -124,13 +124,13 @@
             <span class="n">provided_freq_type</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">frequency_data</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="n">provided_freq_type</span><span class="p">])</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">provided_freq_type</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span> <span class="s1">&#39;wavenumber&#39;</span><span class="p">})</span>
-            <span class="ow">or</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="n">provided_freq_type</span><span class="p">])</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span> <span class="ow">and</span> <span class="n">provided_freq_type</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;period&#39;</span><span class="p">,</span> <span class="s1">&#39;wavelength&#39;</span><span class="p">})):</span>
+            <span class="ow">or</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="n">provided_freq_type</span><span class="p">])</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="n">provided_freq_type</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;period&#39;</span><span class="p">,</span> <span class="s1">&#39;wavelength&#39;</span><span class="p">})):</span>
                 <span class="n">omega</span> <span class="o">=</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
                 <span class="n">wavenumber</span> <span class="o">=</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
                 <span class="n">period</span> <span class="o">=</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="s2">&quot;∞&quot;</span><span class="p">)</span>
                 <span class="n">wavelength</span> <span class="o">=</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="s2">&quot;∞&quot;</span><span class="p">)</span>
         <span class="k">elif</span> <span class="p">((</span><span class="nb">float</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="n">provided_freq_type</span><span class="p">])</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">provided_freq_type</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;period&#39;</span><span class="p">,</span> <span class="s1">&#39;wavelength&#39;</span><span class="p">})</span>
-            <span class="ow">or</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="n">provided_freq_type</span><span class="p">])</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span> <span class="ow">and</span> <span class="n">provided_freq_type</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span> <span class="s1">&#39;wavenumber&#39;</span><span class="p">})):</span>
+            <span class="ow">or</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="n">provided_freq_type</span><span class="p">])</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="n">provided_freq_type</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span> <span class="s1">&#39;wavenumber&#39;</span><span class="p">})):</span>
                 <span class="n">omega</span> <span class="o">=</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="s2">&quot;∞&quot;</span><span class="p">)</span>
                 <span class="n">wavenumber</span> <span class="o">=</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="s2">&quot;∞&quot;</span><span class="p">)</span>
                 <span class="n">period</span> <span class="o">=</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
@@ -145,7 +145,7 @@
                     <span class="n">period</span> <span class="o">=</span> <span class="n">frequency_data</span><span class="p">[</span><span class="s1">&#39;period&#39;</span><span class="p">]</span>
                     <span class="n">omega</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">period</span>
 
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_depth</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_depth</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
                     <span class="n">wavenumber</span> <span class="o">=</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">wavenumber</span> <span class="o">=</span> <span class="n">newton</span><span class="p">(</span><span class="k">lambda</span> <span class="n">k</span><span class="p">:</span> <span class="n">k</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">k</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">water_depth</span><span class="p">)</span> <span class="o">-</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
@@ -167,13 +167,13 @@
     <span class="k">def</span> <span class="nf">_check_data</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Sanity checks on the data.&quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_surface</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">}:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_surface</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">}:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Free surface is </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">free_surface</span><span class="si">}</span><span class="s2">. &quot;</span>
                 <span class="s2">&quot;Only z=0 and z=∞ are accepted values for the free surface position.&quot;</span>
             <span class="p">)</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_depth</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_depth</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="s2">&quot;Problems with a sea bottom but no free surface have not been implemented.&quot;</span>
             <span class="p">)</span>
@@ -181,7 +181,7 @@
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_depth</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;`water_depth` should be strictly positive (provided water depth: </span><span class="si">{self.water_depth}</span><span class="s2">).&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="p">)</span> <span class="ow">in</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">}</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_depth</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="p">)</span> <span class="ow">in</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">}</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_depth</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                     <span class="sa">f</span><span class="s2">&quot;Default Green function allows for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">provided_freq_type</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">provided_freq_type</span><span class="p">))</span><span class="si">}</span><span class="s2"> only for infinite depth (provided water depth: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">water_depth</span><span class="si">}</span><span class="s2">).&quot;</span>
             <span class="p">)</span>
@@ -333,7 +333,7 @@
                          <span class="s2">&quot;The wave direction in Capytaine is defined in radians and not in degrees, so the result might not be what you expect. &quot;</span>
                          <span class="s2">&quot;If you were actually giving an angle in radians, use the modulo operator to give a value between -2π and 2π to disable this warning.&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="p">)</span> <span class="ow">in</span> <span class="p">{</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">}:</span>
+        <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="p">)</span> <span class="ow">in</span> <span class="p">{</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">}:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DiffractionProblem does not support zero or infinite frequency.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
