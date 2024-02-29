@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7fb5a787f050>
+    <jinja2.runtime.BlockReference object at 0x7f9662c11cd0>
 
   </head><body>
   
@@ -43,6 +43,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">sl</span>
 <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">ssl</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">accumulate</span><span class="p">,</span> <span class="n">chain</span>
 
 <span class="kn">from</span> <span class="nn">capytaine.matrices.block</span> <span class="kn">import</span> <span class="n">BlockMatrix</span>
 <span class="kn">from</span> <span class="nn">capytaine.matrices.block_toeplitz</span> <span class="kn">import</span> <span class="n">BlockSymmetricToeplitzMatrix</span><span class="p">,</span> <span class="n">BlockCirculantMatrix</span>
@@ -181,10 +182,10 @@
 <span class="k">def</span> <span class="nf">solve_gmres</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
     <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Solve with GMRES for </span><span class="si">{</span><span class="n">A</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">LOG</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">LOG</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">):</span>
         <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
         <span class="n">x</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">gmres</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">counter</span><span class="p">)</span>
-        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;End of GMRES after </span><span class="si">{</span><span class="n">counter</span><span class="o">.</span><span class="n">nb_iter</span><span class="si">}</span><span class="s2"> iterations.&quot;</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;End of GMRES after </span><span class="si">{</span><span class="n">counter</span><span class="o">.</span><span class="n">nb_iter</span><span class="si">}</span><span class="s2"> iterations.&quot;</span><span class="p">)</span>
 
     <span class="k">else</span><span class="p">:</span>
         <span class="n">x</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">gmres</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
@@ -206,6 +207,90 @@
 
     <span class="k">if</span> <span class="n">info</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No convergence of the GMRES. Error code: </span><span class="si">{</span><span class="n">info</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span></div>
+
+
+
+<span class="c1"># PRECONDITIONED SOLVER</span>
+
+<span class="k">def</span> <span class="nf">_block_Jacobi_coarse_corr</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">x0</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">RA</span><span class="p">,</span> <span class="n">AcLU</span><span class="p">,</span> <span class="n">DLU</span><span class="p">,</span> <span class="n">diag_shapes</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs a single step of the block-Jacobi method with coarse correction.</span>
+<span class="sd">    Can be used as a preconditioner for matrix A.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    A: BlockMatrix</span>
+<span class="sd">        System matrix</span>
+<span class="sd">    b: array</span>
+<span class="sd">        System right hand side vector</span>
+<span class="sd">    x0: array</span>
+<span class="sd">        Initial guess of the solution</span>
+<span class="sd">    R: array</span>
+<span class="sd">        Coarse space restriction matrix</span>
+<span class="sd">    RA: array</span>
+<span class="sd">        Precomputed product of R and A</span>
+<span class="sd">    AcLU: list</span>
+<span class="sd">        LU decomposition data of the coarse system matrix Ac (output of</span>
+<span class="sd">        scipy.linalg.lu_factor)</span>
+<span class="sd">    DLU: list</span>
+<span class="sd">        List of LU decomposition data for the diagonal blocks of A</span>
+<span class="sd">    diag_shapes: list</span>
+<span class="sd">        List of shapes of diagonal blocks</span>
+<span class="sd">    n: integer</span>
+<span class="sd">        Size of the coarse problem (e.g. number of bodies simulated)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    array</span>
+<span class="sd">        Action of a step of the method on vector x0</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># x_ps = x after the pre-smoothing step (block-Jacobi)</span>
+    <span class="n">x_ps</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+
+    <span class="c1"># the diagonal blocks of A have already been put to zero in build_matrices</span>
+    <span class="c1"># they are not needed anymore</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">b</span> <span class="o">-</span> <span class="n">A</span><span class="nd">@x0</span>
+    <span class="c1"># loop over diagonal blocks</span>
+    <span class="k">for</span> <span class="n">kk</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">local_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">diag_shapes</span><span class="p">[:</span><span class="n">kk</span><span class="p">]),</span> <span class="nb">sum</span><span class="p">(</span><span class="n">diag_shapes</span><span class="p">[:</span><span class="n">kk</span><span class="o">+</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">local_rhs</span> <span class="o">=</span> <span class="n">q</span><span class="p">[</span><span class="n">local_slice</span><span class="p">]</span>
+        <span class="n">local_sol</span> <span class="o">=</span> <span class="n">sl</span><span class="o">.</span><span class="n">lu_solve</span><span class="p">(</span><span class="n">DLU</span><span class="p">[</span><span class="n">kk</span><span class="p">],</span> <span class="n">local_rhs</span><span class="p">,</span> <span class="n">check_finite</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">x_ps</span><span class="p">[</span><span class="n">local_slice</span><span class="p">]</span> <span class="o">=</span> <span class="n">local_sol</span>
+
+    <span class="n">r_c</span> <span class="o">=</span> <span class="n">R</span><span class="nd">@b</span> <span class="o">-</span> <span class="n">RA</span><span class="nd">@x_ps</span> <span class="c1">#restricted residual</span>
+    <span class="n">e_c</span> <span class="o">=</span> <span class="n">sl</span><span class="o">.</span><span class="n">lu_solve</span><span class="p">(</span><span class="n">AcLU</span><span class="p">,</span> <span class="n">r_c</span><span class="p">,</span> <span class="n">check_finite</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="c1"># update</span>
+    <span class="k">return</span> <span class="n">x_ps</span> <span class="o">+</span> <span class="n">R</span><span class="o">.</span><span class="n">T</span><span class="nd">@e_c</span>
+
+<div class="viewcode-block" id="solve_precond_gmres">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.linear_solvers.html#capytaine.matrices.linear_solvers.solve_precond_gmres">[docs]</a>
+<span class="k">def</span> <span class="nf">solve_precond_gmres</span><span class="p">(</span><span class="n">A_and_precond_data</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Implementation of the preconditioner presented in</span>
+<span class="sd">    `&lt;https://doi.org/10.1007/978-3-031-50769-4_14&gt;`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">A</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="n">RA</span><span class="p">,</span> <span class="n">AcLU</span><span class="p">,</span> <span class="n">DLU</span><span class="p">,</span> <span class="n">diag_shapes</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">PinvA</span> <span class="o">=</span> <span class="n">A_and_precond_data</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">Pinvb</span> <span class="o">=</span> <span class="n">_block_Jacobi_coarse_corr</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">),</span> <span class="n">R</span><span class="p">,</span> <span class="n">RA</span><span class="p">,</span> <span class="n">AcLU</span><span class="p">,</span> <span class="n">DLU</span><span class="p">,</span> <span class="n">diag_shapes</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span>
+
+    <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Solve with GMRES for </span><span class="si">{</span><span class="n">A</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">LOG</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">):</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">gmres</span><span class="p">(</span><span class="n">PinvA</span><span class="p">,</span> <span class="n">Pinvb</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">counter</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;End of GMRES after </span><span class="si">{</span><span class="n">counter</span><span class="o">.</span><span class="n">nb_iter</span><span class="si">}</span><span class="s2"> iterations.&quot;</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">gmres</span><span class="p">(</span><span class="n">PinvA</span><span class="p">,</span> <span class="n">Pinvb</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">info</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No convergence of the GMRES after </span><span class="si">{</span><span class="n">info</span><span class="si">}</span><span class="s2"> iterations.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;This can be due to overlapping panels or irregular frequencies.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;In the latter case, using a direct solver can help (https://github.com/mancellin/capytaine/issues/30).&quot;</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">x</span></div>
 

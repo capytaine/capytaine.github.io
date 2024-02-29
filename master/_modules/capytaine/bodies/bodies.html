@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7fb5aa0bc110>
+    <jinja2.runtime.BlockReference object at 0x7f9664217170>
 
   </head><body>
   
@@ -1148,7 +1148,57 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">minimal_computable_wavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;For accuracy of the resolution, wavelength should not be smaller than this value.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="mi">8</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="o">.</span><span class="n">max</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="mi">8</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+<div class="viewcode-block" id="FloatingBody.cluster_bodies">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.cluster_bodies">[docs]</a>
+    <span class="k">def</span> <span class="nf">cluster_bodies</span><span class="p">(</span><span class="o">*</span><span class="n">bodies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Builds a hierarchical clustering from a group of bodies</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bodies: list</span>
+<span class="sd">            a list of bodies</span>
+<span class="sd">        name: str, optional</span>
+<span class="sd">            a name for the new body</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        FloatingBody</span>
+<span class="sd">            Array built from the provided bodies</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">scipy.cluster.hierarchy</span> <span class="kn">import</span> <span class="n">linkage</span><span class="p">,</span> <span class="n">dendrogram</span>
+        <span class="n">nb_buoys</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bodies</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">center_of_buoyancy</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The center of buoyancy of each body needs to be known for clustering&quot;</span><span class="p">)</span>
+        <span class="n">buoys_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">body</span><span class="o">.</span><span class="n">center_of_buoyancy</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">])[:,:</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="n">ln_matrix</span> <span class="o">=</span> <span class="n">linkage</span><span class="p">(</span><span class="n">buoys_positions</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;centroid&#39;</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">)</span>
+
+        <span class="n">node_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">bodies</span><span class="p">)</span>  <span class="c1"># list of nodes of the tree: the first nodes are single bodies</span>
+
+        <span class="c1"># Join the bodies, with an ordering consistent with the dendrogram.</span>
+        <span class="c1"># Done by reading the linkage matrix: its i-th row contains the labels</span>
+        <span class="c1"># of the two nodes that are merged to form the (n + i)-th node</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ln_matrix</span><span class="p">)):</span>
+            <span class="n">node_tag</span> <span class="o">=</span> <span class="n">ii</span> <span class="o">+</span> <span class="n">nb_buoys</span> <span class="c1"># the first nb_buoys tags are already taken</span>
+            <span class="n">merge_left</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ln_matrix</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">merge_right</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ln_matrix</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
+            <span class="c1"># The new node is the parent of merge_left and merge_right</span>
+            <span class="n">new_node_ls</span> <span class="o">=</span> <span class="p">[</span><span class="n">node_list</span><span class="p">[</span><span class="n">merge_left</span><span class="p">],</span> <span class="n">node_list</span><span class="p">[</span><span class="n">merge_right</span><span class="p">]]</span>
+            <span class="n">new_node</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="o">.</span><span class="n">join_bodies</span><span class="p">(</span><span class="o">*</span><span class="n">new_node_ls</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;node_</span><span class="si">{:d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node_tag</span><span class="p">))</span>
+            <span class="n">node_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
+
+        <span class="c1"># The last node is the parent of all others</span>
+        <span class="n">all_buoys</span> <span class="o">=</span> <span class="n">new_node</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">all_buoys</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+
+        <span class="k">return</span> <span class="n">all_buoys</span></div>
+</div>
 
 </pre></div>
 

@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7fb5a81c45f0>
+    <jinja2.runtime.BlockReference object at 0x7f9662bbc7d0>
 
   </head><body>
   
@@ -408,6 +408,19 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">NotImplemented</span>
 
+    <span class="k">def</span> <span class="fm">__rmatmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;BlockMatrix&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;BlockMatrix&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># Other is a matrix</span>
+            <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Actually a column vector</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rmatvec</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Other is a vector</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rmatvec</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
 <div class="viewcode-block" id="BlockMatrix.astype">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix.astype">[docs]</a>
     <span class="k">def</span> <span class="nf">astype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">:</span>
@@ -633,9 +646,23 @@
         <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span></div>
-</div>
 
         <span class="c1"># plt.show()</span>
+
+
+<div class="viewcode-block" id="BlockMatrix.access_block_by_path">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix.access_block_by_path">[docs]</a>
+    <span class="k">def</span> <span class="nf">access_block_by_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Access a diagonal block in a block matrix from the path of the</span>
+<span class="sd">        corresponding leaf</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">this_block</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+            <span class="n">this_block</span> <span class="o">=</span> <span class="n">this_block</span><span class="o">.</span><span class="n">all_blocks</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">this_block</span></div>
+</div>
+
 </pre></div>
 
           </div>
