@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7f7a7490a3f0>
+    <jinja2.runtime.BlockReference object at 0x7f89b45c0680>
 
   </head><body>
   
@@ -300,27 +300,42 @@
 
 
 
+<span class="k">def</span> <span class="nf">_hydrostatics_writer</span><span class="p">(</span><span class="n">hydrostatics_file_path</span><span class="p">,</span> <span class="n">kh_file_path</span><span class="p">,</span> <span class="n">body</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write the Hydrostatics.dat and KH.dat files&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">hydrostatics_file_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hf</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">line</span> <span class="o">=</span>  <span class="sa">f</span><span class="s1">&#39;XF = </span><span class="si">{</span><span class="n">body</span><span class="o">.</span><span class="n">center_of_buoyancy</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="si">:</span><span class="s1">7.4f</span><span class="si">}</span><span class="s1"> - XG = </span><span class="si">{</span><span class="n">body</span><span class="o">.</span><span class="n">center_of_mass</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="si">:</span><span class="s1">7.4f</span><span class="si">}</span><span class="s1"> </span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="n">hf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Displacement = </span><span class="si">{</span><span class="n">body</span><span class="o">.</span><span class="n">volume</span><span class="si">:</span><span class="s1">1.6E</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">hf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="n">hf</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">kh_file_path</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%1.6E</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
 <div class="viewcode-block" id="export_hydrostatics">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.legacy.html#capytaine.io.legacy.export_hydrostatics">[docs]</a>
 <span class="k">def</span> <span class="nf">export_hydrostatics</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">,</span> <span class="n">bodies</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Determine filenames (following Nemoh convention) and call the .dat file writer&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Export rigid body hydrostatics in Nemoh&#39;s format (KH.dat and Hydrostatics.dat).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    hydrostatics_directory: string</span>
+<span class="sd">        Path to the directory in which the data will be written (two files per body)</span>
+<span class="sd">    bodies: FloatingBody or list of FloatingBody</span>
+<span class="sd">        The body or the list of bodies. Each body is assumed to be a single</span>
+<span class="sd">        rigid body with 6 dofs. Each FloatingBody object is expected to have an</span>
+<span class="sd">        `inertia_matrix` and a `hydrostatic_stiffness` parameter.</span>
+
+<span class="sd">    Return</span>
+<span class="sd">    ------</span>
+<span class="sd">    None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">):</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;Exporting problem in already existing directory: </span><span class="si">{</span><span class="n">hydrostatics_directory</span><span class="si">}</span>
 <span class="s2">             You might be overwriting existing files!&quot;&quot;&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">)</span>
-
-    <span class="k">def</span> <span class="nf">hydrostatics_writer</span><span class="p">(</span><span class="n">hydrostatics_file_path</span><span class="p">,</span> <span class="n">kh_file_path</span><span class="p">,</span> <span class="n">body</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Write the Hydrostatics.dat and KH.dat files&quot;&quot;&quot;</span>
-        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">hydrostatics_file_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hf</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
-                <span class="n">line</span> <span class="o">=</span>  <span class="sa">f</span><span class="s1">&#39;XF = </span><span class="si">{</span><span class="n">body</span><span class="o">.</span><span class="n">center_of_buoyancy</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="si">:</span><span class="s1">7.4f</span><span class="si">}</span><span class="s1"> - XG = </span><span class="si">{</span><span class="n">body</span><span class="o">.</span><span class="n">center_of_mass</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="si">:</span><span class="s1">7.4f</span><span class="si">}</span><span class="s1"> </span><span class="se">\n</span><span class="s1">&#39;</span>
-                <span class="n">hf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-            <span class="n">line</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Displacement = </span><span class="si">{</span><span class="n">body</span><span class="o">.</span><span class="n">volume</span><span class="si">:</span><span class="s1">1.6E</span><span class="si">}</span><span class="s1">&#39;</span>
-            <span class="n">hf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
-            <span class="n">hf</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
-        <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">kh_file_path</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%1.6E</span><span class="s1">&#39;</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bodies</span><span class="p">,</span> <span class="n">FloatingBody</span><span class="p">):</span>
         <span class="n">bodies</span> <span class="o">=</span> <span class="p">[</span><span class="n">bodies</span><span class="p">]</span>
@@ -333,12 +348,12 @@
         <span class="n">body</span> <span class="o">=</span> <span class="n">bodies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="n">hydrostatics_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">,</span> <span class="n">hydrostatics_file_name</span><span class="p">)</span>
         <span class="n">kh_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">,</span> <span class="n">kh_file_name</span><span class="p">)</span>
-        <span class="n">hydrostatics_writer</span><span class="p">(</span><span class="n">hydrostatics_file_path</span><span class="p">,</span> <span class="n">kh_file_path</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
+        <span class="n">_hydrostatics_writer</span><span class="p">(</span><span class="n">hydrostatics_file_path</span><span class="p">,</span> <span class="n">kh_file_path</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bodies</span><span class="p">):</span>
             <span class="n">hydrostatics_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Hydrostatics_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.dat&quot;</span><span class="p">)</span>
             <span class="n">kh_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;KH_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.dat&quot;</span><span class="p">)</span>
-            <span class="n">hydrostatics_writer</span><span class="p">(</span><span class="n">hydrostatics_file_path</span><span class="p">,</span> <span class="n">kh_file_path</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span></div>
+            <span class="n">_hydrostatics_writer</span><span class="p">(</span><span class="n">hydrostatics_file_path</span><span class="p">,</span> <span class="n">kh_file_path</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span></div>
 
 
 

@@ -19,7 +19,7 @@
     <link rel="prev" title="Resolution" href="resolution.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7f7a72fee030>
+    <jinja2.runtime.BlockReference object at 0x7f89b4479af0>
 
   </head><body>
   
@@ -165,26 +165,30 @@ It leads to the error <code class="code docutils literal notranslate"><span clas
 <p>For convenience, the radiation and diffraction data have been stored in separate files.
 Since this export method poorly supports complex number, the <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.separate_complex_values" title="capytaine.io.xarray.separate_complex_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">separate_complex_values</span></code></a> has been used to transform them to a pair of real numbers, as discussed for NetCDF export above.</p>
 </section>
-<section id="saving-the-hydrostatics-data">
-<h2>Saving the hydrostatics data<a class="headerlink" href="#saving-the-hydrostatics-data" title="Link to this heading">¶</a></h2>
-<p>In order to save the following hydrostatics information:</p>
+<section id="saving-the-hydrostatics-data-of-rigid-body-ies-in-nemoh-s-format">
+<h2>Saving the hydrostatics data of rigid body(ies) in Nemoh’s format<a class="headerlink" href="#saving-the-hydrostatics-data-of-rigid-body-ies-in-nemoh-s-format" title="Link to this heading">¶</a></h2>
+<p>For a rigid body, or a set of several rigid bodies, the following information can be saved as written by Nemoh’s and read by BEMIO to produce <code class="code docutils literal notranslate"><span class="pre">.h5</span></code> files for WEC-Sim:</p>
 <ul class="simple">
 <li><p>Hydrostatic stiffness matrix,</p></li>
 <li><p>Centre of gravity,</p></li>
 <li><p>Centre of buoyancy,</p></li>
 <li><p>Displacement volume</p></li>
 </ul>
-<p>There are two files that can be written using the <a class="reference internal" href="../developer_manual/api/capytaine.io.legacy.html#module-capytaine.io.legacy" title="capytaine.io.legacy"><code class="xref py py-mod docutils literal notranslate"><span class="pre">capytaine.io.legacy</span></code></a> module:</p>
+<p>They are stored in two files (<code class="code docutils literal notranslate"><span class="pre">Hydrostatics.dat</span></code> and <code class="code docutils literal notranslate"><span class="pre">KH.dat</span></code>) for each body, using the following syntax:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">capytaine.io.legacy</span> <span class="kn">import</span> <span class="n">export_hydrostatics</span>
-<span class="n">export_hydrostatics</span><span class="p">(</span><span class="s2">&quot;directory_to_save_hydrostatics_data&quot;</span><span class="p">,</span> <span class="n">bodies</span><span class="p">)</span>
+<span class="n">export_hydrostatics</span><span class="p">(</span><span class="s2">&quot;directory_to_save_hydrostatics_data&quot;</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Where <code class="code docutils literal notranslate"><span class="pre">bodies</span></code> can be a single <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code> object or a list of <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code> objects.</p>
-<p><a class="reference internal" href="../developer_manual/api/capytaine.io.legacy.html#capytaine.io.legacy.export_hydrostatics" title="capytaine.io.legacy.export_hydrostatics"><code class="xref py py-func docutils literal notranslate"><span class="pre">export_hydrostatics</span></code></a> writes the <code class="code docutils literal notranslate"><span class="pre">Hydrostatics.dat</span></code> and <code class="code docutils literal notranslate"><span class="pre">KH.dat</span></code> files in the original Nemoh format. These <code class="code docutils literal notranslate"><span class="pre">.dat</span></code> files can be used by BEMIO to produce <code class="code docutils literal notranslate"><span class="pre">.h5</span></code> files for WEC-Sim.</p>
+<p>for a single rigid body or, e.g.,:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">capytaine.io.legacy</span> <span class="kn">import</span> <span class="n">export_hydrostatics</span>
+<span class="n">export_hydrostatics</span><span class="p">(</span><span class="s2">&quot;directory_to_save_hydrostatics_data&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">body_1</span><span class="p">,</span> <span class="n">body_2</span><span class="p">,</span> <span class="n">body_3</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>for several rigid bodies.</p>
 <p>In order to use this function, please ensure that the body’s centre of gravity has been defined correctly and the following methods have been called on the <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code> object before passing it to <a class="reference internal" href="../developer_manual/api/capytaine.io.legacy.html#capytaine.io.legacy.export_hydrostatics" title="capytaine.io.legacy.export_hydrostatics"><code class="xref py py-func docutils literal notranslate"><span class="pre">export_hydrostatics</span></code></a>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">body</span><span class="o">.</span><span class="n">add_all_rigid_body_dofs</span><span class="p">()</span>
-<span class="n">body</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">()</span>
-<span class="n">body</span><span class="o">.</span><span class="n">compute_hydrostatics</span><span class="p">()</span>
+<span class="n">body</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">()</span>
+<span class="n">body</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
