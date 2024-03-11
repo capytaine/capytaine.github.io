@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7f89b428a990>
+    <jinja2.runtime.BlockReference object at 0x7fd2dd143b60>
 
   </head><body>
   
@@ -135,27 +135,40 @@
 
         <span class="k">if</span> <span class="n">_check_wavelength</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength</span><span class="p">([</span><span class="n">problem</span><span class="p">])</span>
 
+        <span class="k">if</span> <span class="n">problem</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">omega</span><span class="p">,</span> <span class="n">wavenumber</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">encounter_omega</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">encounter_wavenumber</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">omega</span><span class="p">,</span> <span class="n">wavenumber</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">omega</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">wavenumber</span>
+
         <span class="n">linear_solver</span> <span class="o">=</span> <span class="n">supporting_symbolic_multiplication</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">linear_solver</span><span class="p">)</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;direct&#39;</span><span class="p">):</span>
-          <span class="n">S</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
-              <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
-              <span class="n">problem</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span>
-              <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">False</span>
-          <span class="p">)</span>
+            <span class="k">if</span> <span class="n">problem</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Direct solver is not able to solve problems with forward speed.&quot;</span><span class="p">)</span>
 
-          <span class="n">potential</span> <span class="o">=</span> <span class="n">linear_solver</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">S</span> <span class="o">@</span> <span class="n">problem</span><span class="o">.</span><span class="n">boundary_condition</span><span class="p">)</span>
-          <span class="n">sources</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">S</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
+                    <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+                    <span class="n">problem</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">False</span>
+                    <span class="p">)</span>
+
+            <span class="n">potential</span> <span class="o">=</span> <span class="n">linear_solver</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">S</span> <span class="o">@</span> <span class="n">problem</span><span class="o">.</span><span class="n">boundary_condition</span><span class="p">)</span>
+            <span class="n">pressure</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="n">potential</span>
+            <span class="n">sources</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
-          <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
-              <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
-              <span class="n">problem</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span>
-              <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span>
-          <span class="p">)</span>
+            <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
+                    <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+                    <span class="n">problem</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
 
-          <span class="n">sources</span> <span class="o">=</span> <span class="n">linear_solver</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">boundary_condition</span><span class="p">)</span>
-          <span class="n">potential</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">sources</span>
-
-        <span class="n">pressure</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">omega</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="n">potential</span>
+            <span class="n">sources</span> <span class="o">=</span> <span class="n">linear_solver</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">boundary_condition</span><span class="p">)</span>
+            <span class="n">potential</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">sources</span>
+            <span class="n">pressure</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="n">potential</span>
+            <span class="k">if</span> <span class="n">problem</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">make_results_container</span><span class="p">(</span><span class="n">sources</span><span class="o">=</span><span class="n">sources</span><span class="p">)</span>
+                <span class="c1"># Temporary result object to compute the ∇Φ term</span>
+                <span class="n">nabla_phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_potential_gradient</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+                <span class="n">pressure</span> <span class="o">+=</span> <span class="n">problem</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">*</span> <span class="n">nabla_phi</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
 
         <span class="n">forces</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">integrate_pressure</span><span class="p">(</span><span class="n">pressure</span><span class="p">)</span>
 
@@ -307,11 +320,23 @@
 <span class="s2">            They probably have not been stored by the solver because the option keep_details=True have not been set or the direct method has been used.</span>
 <span class="s2">            Please re-run the resolution with the indirect method and keep_details=True.&quot;&quot;&quot;</span><span class="p">)</span>
 
-        <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">)</span>
+        <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">encounter_wavenumber</span><span class="p">)</span>
         <span class="n">potential</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span>  <span class="c1"># Sum the contributions of all panels in the mesh</span>
         <span class="k">return</span> <span class="n">potential</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span></div>
 
 
+    <span class="k">def</span> <span class="nf">_compute_potential_gradient</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
+        <span class="n">points</span><span class="p">,</span> <span class="n">output_shape</span> <span class="o">=</span> <span class="n">_normalize_points</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">keep_mesh</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;The values of the sources of </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2"> cannot been found.</span>
+<span class="s2">            They probably have not been stored by the solver because the option keep_details=True have not been set.</span>
+<span class="s2">            Please re-run the resolution with this option.&quot;&quot;&quot;</span><span class="p">)</span>
+
+        <span class="n">_</span><span class="p">,</span> <span class="n">gradG</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">encounter_wavenumber</span><span class="p">,</span>
+                                                <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="n">velocities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijk,j-&gt;ik&#39;</span><span class="p">,</span> <span class="n">gradG</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span><span class="p">)</span>  <span class="c1"># Sum the contributions of all panels in the mesh</span>
+        <span class="k">return</span> <span class="n">velocities</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">*</span><span class="n">output_shape</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
 
 <div class="viewcode-block" id="BEMSolver.compute_velocity">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.compute_velocity">[docs]</a>
@@ -334,18 +359,10 @@
 <span class="sd">        ------</span>
 <span class="sd">        Exception: if the :code:`LinearPotentialFlowResult` object given as input does not contain the source distribution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">points</span><span class="p">,</span> <span class="n">output_shape</span> <span class="o">=</span> <span class="n">_normalize_points</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">keep_mesh</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;The values of the sources of </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2"> cannot been found.</span>
-<span class="s2">            They probably have not been stored by the solver because the option keep_details=True have not been set or the direct method has been used.</span>
-<span class="s2">            Please re-run the resolution with the indirect method and keep_details=True.&quot;&quot;&quot;</span><span class="p">)</span>
-
-        <span class="n">_</span><span class="p">,</span> <span class="n">gradG</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span>
-                                                <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-        <span class="n">velocities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijk,j-&gt;ik&#39;</span><span class="p">,</span> <span class="n">gradG</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span><span class="p">)</span>  <span class="c1"># Sum the contributions of all panels in the mesh</span>
-        <span class="k">return</span> <span class="n">velocities</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">*</span><span class="n">output_shape</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span></div>
-
+        <span class="n">nabla_phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_potential_gradient</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">nabla_phi</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="n">result</span><span class="o">.</span><span class="n">forward_speed</span>
+        <span class="k">return</span> <span class="n">nabla_phi</span></div>
 
 
 <div class="viewcode-block" id="BEMSolver.compute_pressure">
@@ -369,7 +386,13 @@
 <span class="sd">        ------</span>
 <span class="sd">        Exception: if the :code:`LinearPotentialFlowResult` object given as input does not contain the source distribution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">result</span><span class="o">.</span><span class="n">omega</span> <span class="o">*</span> <span class="n">result</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_potential</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">pressure</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">result</span><span class="o">.</span><span class="n">encounter_omega</span> <span class="o">*</span> <span class="n">result</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_potential</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+            <span class="n">nabla_phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_potential_gradient</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+            <span class="n">pressure</span> <span class="o">+=</span> <span class="n">result</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="n">result</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">*</span> <span class="n">nabla_phi</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">pressure</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">result</span><span class="o">.</span><span class="n">omega</span> <span class="o">*</span> <span class="n">result</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_potential</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pressure</span></div>
 
 
 
@@ -396,7 +419,13 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">points</span><span class="p">,</span> <span class="n">output_shape</span> <span class="o">=</span> <span class="n">_normalize_free_surface_points</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">keep_mesh</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-        <span class="n">fs_elevation</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">result</span><span class="o">.</span><span class="n">omega</span><span class="o">/</span><span class="n">result</span><span class="o">.</span><span class="n">g</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_potential</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">fs_elevation</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="n">result</span><span class="o">.</span><span class="n">g</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">result</span><span class="o">.</span><span class="n">encounter_omega</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_potential</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+            <span class="n">nabla_phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_potential_gradient</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+            <span class="n">fs_elevation</span> <span class="o">+=</span> <span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="n">result</span><span class="o">.</span><span class="n">g</span> <span class="o">*</span> <span class="n">result</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">*</span> <span class="n">nabla_phi</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">fs_elevation</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">/</span><span class="n">result</span><span class="o">.</span><span class="n">g</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">result</span><span class="o">.</span><span class="n">omega</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_potential</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+
         <span class="k">return</span> <span class="n">fs_elevation</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span></div>
 
 
@@ -489,6 +518,9 @@
 <span class="sd">        ------</span>
 <span class="sd">        Exception: if the :code:`Result` object given as input does not contain the source distribution.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;For free surface elevation with forward speed, please use the `compute_free_surface_elevation` method.&quot;</span><span class="p">)</span>
+
         <span class="n">fs_elevation</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">result</span><span class="o">.</span><span class="n">omega</span><span class="o">/</span><span class="n">result</span><span class="o">.</span><span class="n">g</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_potential_on_mesh</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">keep_details</span><span class="p">:</span>
             <span class="n">result</span><span class="o">.</span><span class="n">fs_elevation</span><span class="p">[</span><span class="n">free_surface</span><span class="p">]</span> <span class="o">=</span> <span class="n">fs_elevation</span>

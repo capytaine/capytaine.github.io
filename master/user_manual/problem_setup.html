@@ -20,7 +20,7 @@
     <link rel="prev" title="Hydrostatics" href="hydrostatics.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7f89b3fde390>
+    <jinja2.runtime.BlockReference object at 0x7fd2df170920>
 
   </head><body>
   
@@ -100,13 +100,17 @@ The table below gives their definitions and their default values.</p>
 </tr>
 <tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">wave_direction</span></code></p></td>
 <td><p>Direction of the incoming waves (rad)
-(only for diffraction)</p></td>
+(for diffraction or forward speed)</p></td>
 <td><p><span class="math notranslate nohighlight">\(0.0\)</span> rad <a class="footnote-reference brackets" href="#id4" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a></p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">radiating_dof</span></code></p></td>
 <td><p>Name of radiating dof
 (only for radiation)</p></td>
 <td><p>first one found</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">forward_speed</span></code></p></td>
+<td><p>Speed of the body in the <span class="math notranslate nohighlight">\(x\)</span> direction (m/s)</p></td>
+<td><p><span class="math notranslate nohighlight">\(0.0\)</span> m/s</p></td>
 </tr>
 </tbody>
 </table>
@@ -155,9 +159,17 @@ retrieved by multiplying the result by the desired value.</p>
 </table>
 <p>If no frequency is provided, a frequency <code class="code docutils literal notranslate"><span class="pre">omega</span> <span class="pre">=</span> <span class="pre">1.0</span></code> rad/s is used by default.
 Once the problem has been initialized, the other parameters can be retrieved as:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">wavenumber</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">omega</span>
 <span class="n">problem</span><span class="o">.</span><span class="n">period</span>
-<span class="c1"># ...</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">wavelength</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">wavenumber</span>
+</pre></div>
+</div>
+<p>When forward speed is non zero, the encounter frequency is computed and can be retrieved as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">encounter_omega</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">encounter_period</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">encounter_wavelength</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">encounter_wavenumber</span>
 </pre></div>
 </div>
 <p>In some cases (radiation problems in infinite depth), setting the frequency to

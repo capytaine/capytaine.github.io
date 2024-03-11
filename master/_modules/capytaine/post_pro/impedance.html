@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7f89b447b740>
+    <jinja2.runtime.BlockReference object at 0x7fd2dd141e80>
 
   </head><body>
   
@@ -70,9 +70,12 @@
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="s1">&#39;hydrostatic_stiffness&#39;</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Computing the impedance matrix requires an `hydrostatic_stiffness` matrix to be defined in the hydrodynamical dataset&#39;</span><span class="p">)</span>
 
-    <span class="c1"># ASSEMBLE MATRICES</span>
-    <span class="n">omega</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;omega&#39;</span><span class="p">]</span>  <span class="c1"># Range of frequencies in the dataset</span>
+    <span class="k">if</span> <span class="s1">&#39;encounter_omega&#39;</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;encounter_omega&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;omega&#39;</span><span class="p">]</span>
 
+    <span class="c1"># ASSEMBLE MATRICES</span>
     <span class="n">H</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;inertia_matrix&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">])</span>
          <span class="o">-</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">omega</span><span class="o">*</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;radiation_damping&#39;</span><span class="p">]</span>
          <span class="o">+</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;hydrostatic_stiffness&#39;</span><span class="p">])</span>
@@ -120,7 +123,11 @@
 <span class="sd">    xarray DataArray</span>
 <span class="sd">        The impedance as an array depending of omega and the degrees of freedom.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">])</span> <span class="o">*</span> <span class="n">rao_transfer_function</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">dissipation</span><span class="p">,</span> <span class="n">stiffness</span><span class="p">)</span></div>
+    <span class="k">if</span> <span class="s1">&#39;encounter_omega&#39;</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;encounter_omega&#39;</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;omega&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">omega</span><span class="p">)</span> <span class="o">*</span> <span class="n">rao_transfer_function</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">dissipation</span><span class="p">,</span> <span class="n">stiffness</span><span class="p">)</span></div>
 
 </pre></div>
 
