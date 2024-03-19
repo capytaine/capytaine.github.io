@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7fd2dd6cf620>
+    <jinja2.runtime.BlockReference object at 0x7f752b22fda0>
 
   </head><body>
   
@@ -161,6 +161,9 @@
                                      <span class="n">forward_speed</span><span class="o">=</span><span class="n">forward_speed</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="n">rho</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="n">g</span><span class="p">)</span>
                 <span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">wave_direction_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Dataset contains non-zero forward speed (forward_speed=</span><span class="si">%.2f</span><span class="s2">) but no wave_direction has been provided. Wave direction of 0 rad (x-axis) has been assumed.&quot;</span><span class="p">,</span> <span class="n">forward_speed</span><span class="p">)</span>
+                    <span class="n">wave_direction_range</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">]</span>
                 <span class="k">for</span> <span class="n">wave_direction</span> <span class="ow">in</span> <span class="n">wave_direction_range</span><span class="p">:</span>
                     <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                         <span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body_range</span><span class="p">[</span><span class="n">body_name</span><span class="p">],</span> <span class="o">**</span><span class="p">{</span><span class="n">freq_type</span><span class="p">:</span> <span class="n">freq</span><span class="p">},</span>
