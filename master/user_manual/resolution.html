@@ -13,13 +13,14 @@
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/proof.js?v=41e9dd12"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Outputs" href="outputs.html" />
     <link rel="prev" title="Setting up a problem" href="problem_setup.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7f8712160b90>
+    <jinja2.runtime.BlockReference object at 0x7f8ba9cf6c90>
 
   </head><body>
   
@@ -45,9 +46,43 @@
 <h3>Green function<a class="headerlink" href="#green-function" title="Link to this heading">¶</a></h3>
 <p>A class used to evaluate the Green function, deriving from <a class="reference internal" href="../developer_manual/api/capytaine.green_functions.abstract_green_function.html#capytaine.green_functions.abstract_green_function.AbstractGreenFunction" title="capytaine.green_functions.abstract_green_function.AbstractGreenFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractGreenFunction</span></code></a>.
 Two of them are available in the present version:</p>
-<dl class="simple">
+<dl>
 <dt><a class="reference internal" href="../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau" title="capytaine.green_functions.delhommeau.Delhommeau"><code class="xref py py-class docutils literal notranslate"><span class="pre">Delhommeau</span></code></a> (Default)</dt><dd><p>The method implemented in Nemoh (see <a class="reference internal" href="../theory_manual/bibliography.html#del87" id="id1"><span>[Del87]</span></a> and <a class="reference internal" href="../theory_manual/bibliography.html#del89" id="id2"><span>[Del89]</span></a>).
 See the documentation for details on the available options.</p>
+<p>In Capytaine (and Nemoh), the integral of the wave term
+<span class="math notranslate nohighlight">\(\mathcal{G}(r, z)\)</span> (and its derivative <span class="math notranslate nohighlight">\(\frac{\partial
+\mathcal{G}}{\partial r}\)</span>) are approximated using surrogate models, which
+take the form of a tabulation of these function values for a grid of
+<span class="math notranslate nohighlight">\((r, z)\)</span>, precomputed at the initialization of the program. A
+third-order Lagrange polynomial interpolation is employed to obtain the
+values between the precomputed values.</p>
+<p>In version 1 of Capytaine (as in version 2 of Nemoh), the tabulation ranges
+of <span class="math notranslate nohighlight">\(r\)</span> and <span class="math notranslate nohighlight">\(z\)</span> are set as <span class="math notranslate nohighlight">\([0, 100]\)</span> with <span class="math notranslate nohighlight">\(328\)</span>
+discretization values and <span class="math notranslate nohighlight">\([-16, 0]\)</span> with <span class="math notranslate nohighlight">\(46\)</span> discretization
+values, respectively. In the new version, these can be user-defined with the
+following options:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+
+<span class="c1"># Legacy (previous version)</span>
+<span class="n">gf</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">Delhommeau</span><span class="p">(</span><span class="n">tabulation_nr</span><span class="o">=</span><span class="mi">324</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                    <span class="n">tabulation_nz</span><span class="o">=</span><span class="mi">46</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="o">=-</span><span class="mi">16</span><span class="p">,</span>
+                    <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="mi">251</span><span class="p">,</span>
+                    <span class="n">tabulation_method</span><span class="o">=</span><span class="s2">&quot;legacy&quot;</span><span class="p">)</span>
+
+<span class="c1"># Default in Capytaine 2.1</span>
+<span class="n">gf</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">Delhommeau</span><span class="p">(</span><span class="n">tabulation_nr</span><span class="o">=</span><span class="mi">676</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                    <span class="n">tabulation_nz</span><span class="o">=</span><span class="mi">372</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="o">=-</span><span class="mi">251</span><span class="p">,</span>
+                    <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+                    <span class="n">tabulation_method</span><span class="o">=</span><span class="s2">&quot;scaled_nemoh3&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In version 2.1, the default numbers of <span class="math notranslate nohighlight">\(r\)</span> and <span class="math notranslate nohighlight">\(z\)</span> values have
+been increased to <span class="math notranslate nohighlight">\(676\)</span> and <span class="math notranslate nohighlight">\(372\)</span>, respectively. While the range
+of <span class="math notranslate nohighlight">\(r\)</span> is kept the same, the z range has been extended to
+<span class="math notranslate nohighlight">\([-251, 0]\)</span>. The option <code class="code docutils literal notranslate"><span class="pre">tabulation_method</span></code> is used to switched
+between the new distribution of points inspired by Nemoh version 3 or the
+<code class="code docutils literal notranslate"><span class="pre">&quot;legacy&quot;</span></code> approach. The <code class="code docutils literal notranslate"><span class="pre">tabulation_nb_integration_points</span></code>
+controls the accuracy of the precomputed tabulation points themselves.</p>
 </dd>
 <dt><a class="reference internal" href="../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.XieDelhommeau" title="capytaine.green_functions.delhommeau.XieDelhommeau"><code class="xref py py-class docutils literal notranslate"><span class="pre">XieDelhommeau</span></code></a></dt><dd><p>A variant of the above, more accurate near the free surface (see <a class="reference internal" href="../theory_manual/bibliography.html#x18" id="id3"><span>[X18]</span></a>).
 Accepts the same options as <a class="reference internal" href="../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau" title="capytaine.green_functions.delhommeau.Delhommeau"><code class="xref py py-class docutils literal notranslate"><span class="pre">Delhommeau</span></code></a></p>
