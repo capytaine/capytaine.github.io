@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7f8ba9eff3b0>
+    <jinja2.runtime.BlockReference object at 0x7f61f6a343b0>
 
   </head><body>
   
@@ -51,6 +51,17 @@
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
+<span class="n">_default_parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">tabulation_nr</span><span class="o">=</span><span class="mi">676</span><span class="p">,</span>
+    <span class="n">tabulation_rmax</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span>
+    <span class="n">tabulation_nz</span><span class="o">=</span><span class="mi">372</span><span class="p">,</span>
+    <span class="n">tabulation_zmin</span><span class="o">=-</span><span class="mf">251.0</span><span class="p">,</span>
+    <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
+    <span class="n">tabulation_method</span><span class="o">=</span><span class="s2">&quot;scaled_nemoh3&quot;</span><span class="p">,</span>
+    <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="s2">&quot;fortran&quot;</span><span class="p">,</span>
+    <span class="n">floating_point_precision</span><span class="o">=</span><span class="s2">&quot;float64&quot;</span>
+<span class="p">)</span>
+
 
 <div class="viewcode-block" id="Delhommeau">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau">[docs]</a>
@@ -60,32 +71,47 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    tabulation_nr: int, optional</span>
-<span class="sd">        Number of tabulation points for horizontal distance.</span>
-<span class="sd">        If 0 is given, the no tabulation is used.</span>
-<span class="sd">        Default: 676, as in Nemoh v3.</span>
+<span class="sd">        Number of tabulation points for horizontal coordinate.</span>
+<span class="sd">        If 0 is given, no tabulation is used at all.</span>
+<span class="sd">        Default: 676</span>
 <span class="sd">    tabulation_rmax: float, optional</span>
-<span class="sd">        Maximum value of r range for the tabulation.</span>
-<span class="sd">        Default: 100, as in Nemoh v3.</span>
+<span class="sd">        Maximum value of r range for the tabulation. (Minimum is zero.)</span>
+<span class="sd">        Only used with the :code:`&quot;scaled_nemoh3&quot;` method.</span>
+<span class="sd">        Default: 100.0</span>
 <span class="sd">    tabulation_nz: int, optional</span>
-<span class="sd">        Number of tabulation points for vertical distance.</span>
-<span class="sd">        If 0 is given, the no tabulation is used.</span>
-<span class="sd">        Default: 124, as in Nemoh v3.</span>
+<span class="sd">        Number of tabulation points for vertical coordinate.</span>
+<span class="sd">        If 0 is given, no tabulation is used at all.</span>
+<span class="sd">        Default: 372</span>
 <span class="sd">    tabulation_zmin: float, optional</span>
-<span class="sd">        Minimum value of z range for the tabulation.</span>
-<span class="sd">        Default: -251, as in Nemoh v3.</span>
+<span class="sd">        Minimum value of z range for the tabulation. (Maximum is zero.)</span>
+<span class="sd">        Only used with the :code:`&quot;scaled_nemoh3&quot;` method.</span>
+<span class="sd">        Default: -251.0</span>
 <span class="sd">    tabulation_nb_integration_points: int, optional</span>
-<span class="sd">        Number of points for the numerical integration w.r.t. :math:`theta` of Delhommeau&#39;s integrals</span>
-<span class="sd">        Default: 251, as in Nemoh.</span>
+<span class="sd">        Number of points for the numerical integration w.r.t. :math:`theta` of</span>
+<span class="sd">        Delhommeau&#39;s integrals</span>
+<span class="sd">        Default: 1000</span>
+<span class="sd">    tabulation_method: string, optional</span>
+<span class="sd">        Either :code:`&quot;legacy&quot;` or :code:`&quot;scaled_nemoh3&quot;`, which are the two</span>
+<span class="sd">        methods currently implemented.</span>
+<span class="sd">        Default: :code:`&quot;scaled_nemoh3&quot;`</span>
 <span class="sd">    finite_depth_prony_decomposition_method: string, optional</span>
-<span class="sd">        The implementation of the Prony decomposition used to compute the finite water_depth Green function.</span>
-<span class="sd">        Accepted values: :code:`&#39;fortran&#39;` for Nemoh&#39;s implementation (by default), :code:`&#39;python&#39;` for an experimental Python implementation.</span>
+<span class="sd">        The implementation of the Prony decomposition used to compute the</span>
+<span class="sd">        finite water_depth Green function. Accepted values: :code:`&#39;fortran&#39;`</span>
+<span class="sd">        for Nemoh&#39;s implementation (by default), :code:`&#39;python&#39;` for an</span>
+<span class="sd">        experimental Python implementation.</span>
 <span class="sd">        See :func:`find_best_exponential_decomposition`.</span>
 <span class="sd">    floating_point_precision: string, optional</span>
-<span class="sd">        Either :code:`&#39;float32&#39;` for single precision computations or :code:`&#39;float64&#39;` for double precision computations.</span>
+<span class="sd">        Either :code:`&#39;float32&#39;` for single precision computations or</span>
+<span class="sd">        :code:`&#39;float64&#39;` for double precision computations.</span>
 <span class="sd">        Default: :code:`&#39;float64&#39;`.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
+<span class="sd">    fortran_core:</span>
+<span class="sd">        Compiled Fortran module with functions used to compute the Green</span>
+<span class="sd">        function.</span>
+<span class="sd">    tabulation_method_index: int</span>
+<span class="sd">        Integer passed to Fortran code to describe which method is used.</span>
 <span class="sd">    tabulated_r_range: numpy.array of shape (tabulation_nr,) and type floating_point_precision</span>
 <span class="sd">    tabulated_z_range: numpy.array of shape (tabulation_nz,) and type floating_point_precision</span>
 <span class="sd">        Coordinates of the tabulation points.</span>
@@ -97,14 +123,14 @@
 
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
-                 <span class="n">tabulation_nr</span><span class="o">=</span><span class="mi">676</span><span class="p">,</span>
-                 <span class="n">tabulation_rmax</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
-                 <span class="n">tabulation_nz</span><span class="o">=</span><span class="mi">124</span><span class="p">,</span>
-                 <span class="n">tabulation_zmin</span><span class="o">=-</span><span class="mi">251</span><span class="p">,</span>
-                 <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="mi">251</span><span class="p">,</span>
-                 <span class="n">tabulation_method</span><span class="o">=</span><span class="s1">&#39;scaled_nemoh3&#39;</span><span class="p">,</span>
-                 <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="s1">&#39;fortran&#39;</span><span class="p">,</span>
-                 <span class="n">floating_point_precision</span><span class="o">=</span><span class="s1">&#39;float64&#39;</span><span class="p">,</span>
+                 <span class="n">tabulation_nr</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_nr&quot;</span><span class="p">],</span>
+                 <span class="n">tabulation_rmax</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_rmax&quot;</span><span class="p">],</span>
+                 <span class="n">tabulation_nz</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_nz&quot;</span><span class="p">],</span>
+                 <span class="n">tabulation_zmin</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_zmin&quot;</span><span class="p">],</span>
+                 <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_nb_integration_points&quot;</span><span class="p">],</span>
+                 <span class="n">tabulation_method</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_method&quot;</span><span class="p">],</span>
+                 <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;finite_depth_prony_decomposition_method&quot;</span><span class="p">],</span>
+                 <span class="n">floating_point_precision</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;floating_point_precision&quot;</span><span class="p">],</span>
                  <span class="p">):</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">floating_point_precision</span> <span class="o">=</span> <span class="n">floating_point_precision</span>
@@ -125,8 +151,11 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{</span>
             <span class="s1">&#39;green_function&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
             <span class="s1">&#39;tabulation_nr&#39;</span><span class="p">:</span> <span class="n">tabulation_nr</span><span class="p">,</span>
+            <span class="s1">&#39;tabulation_rmax&#39;</span><span class="p">:</span> <span class="n">tabulation_rmax</span><span class="p">,</span>
             <span class="s1">&#39;tabulation_nz&#39;</span><span class="p">:</span> <span class="n">tabulation_nz</span><span class="p">,</span>
+            <span class="s1">&#39;tabulation_zmin&#39;</span><span class="p">:</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
             <span class="s1">&#39;tabulation_nb_integration_points&#39;</span><span class="p">:</span> <span class="n">tabulation_nb_integration_points</span><span class="p">,</span>
+            <span class="s1">&#39;tabulation_method&#39;</span><span class="p">:</span> <span class="n">tabulation_method</span><span class="p">,</span>
             <span class="s1">&#39;finite_depth_prony_decomposition_method&#39;</span><span class="p">:</span> <span class="n">finite_depth_prony_decomposition_method</span><span class="p">,</span>
             <span class="s1">&#39;floating_point_precision&#39;</span><span class="p">:</span> <span class="n">floating_point_precision</span><span class="p">,</span>
         <span class="p">}</span>
@@ -137,17 +166,24 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span>
 
     <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">params</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;tabulation_nz=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">[</span><span class="s1">&#39;tabulation_nz&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">params</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;, tabulation_nr=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">[</span><span class="s1">&#39;tabulation_nr&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">params</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;, tabulation_nb_integration_points=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">[</span><span class="s1">&#39;tabulation_nb_integration_points&#39;</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="n">params</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;, floating_point_precision=</span><span class="se">\&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">[</span><span class="s1">&#39;floating_point_precision&#39;</span><span class="p">]</span><span class="si">}</span><span class="se">\&#39;</span><span class="s2">&quot;</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">params</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="c1"># Print only the non-default values.</span>
+        <span class="n">to_be_printed</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_default_parameters</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">!=</span> <span class="n">_default_parameters</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
+                <span class="n">to_be_printed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">to_be_printed</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
 
     <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+        <span class="c1"># Same as __str__ except all values are printed even when they are the</span>
+        <span class="c1"># default value.</span>
+        <span class="n">to_be_printed</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_default_parameters</span><span class="p">:</span>
+                <span class="n">to_be_printed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">to_be_printed</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
 
     <span class="k">def</span> <span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
-        <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">())</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">())</span>
 
     <span class="k">def</span> <span class="nf">_create_or_load_tabulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span>
                                    <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
