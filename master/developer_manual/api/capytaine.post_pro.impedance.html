@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>capytaine.post_pro.impedance module &#8212; capytaine 2.2.dev documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=12dfc556" />
+    <link rel="stylesheet" type="text/css" href="../../_static/proof.css?v=e9a64e30" />
+    <script src="../../_static/documentation_options.js?v=8476ffaa"></script>
+    <script src="../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/proof.js?v=41e9dd12"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="capytaine.post_pro.rao module" href="capytaine.post_pro.rao.html" />
+    <link rel="prev" title="capytaine.post_pro.kochin module" href="capytaine.post_pro.kochin.html" />
+    <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <jinja2.runtime.BlockReference object at 0x7f9e00f85a60>
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-capytaine.post_pro.impedance">
+<span id="capytaine-post-pro-impedance-module"></span><h1>capytaine.post_pro.impedance module<a class="headerlink" href="#module-capytaine.post_pro.impedance" title="Link to this heading">¶</a></h1>
+<p>Computation of the impendance matrix.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="capytaine.post_pro.impedance.impedance">
+<span class="sig-prename descclassname"><span class="pre">capytaine.post_pro.impedance.</span></span><span class="sig-name descname"><span class="pre">impedance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dissipation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stiffness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/post_pro/impedance.html#impedance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.post_pro.impedance.impedance" title="Link to this definition">¶</a></dt>
+<dd><p>Complex-valued mechanical impedance matrix.
+See Falnes for more theoretical details:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>@book{falnes2002ocean,
+      title={Ocean Waves and Oscillating Systems: Linear Interactions Including Wave-Energy Extraction},
+      author={Falnes, J.},
+      isbn={9781139431934},
+      url={https://books.google.com/books?id=bl1FyQjCklgC},
+      year={2002},
+      publisher={Cambridge University Press}
+}
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>xarray Dataset</em>) – The hydrodynamical dataset.
+This function supposes that variables named ‘inertia_matrix’ and ‘hydrostatic_stiffness’ are in the dataset.
+Other variables can be computed by Capytaine, by those two should be manually added to the dataset.</p></li>
+<li><p><strong>dissipation</strong> (<em>array, optional</em>) – An optional dissipation matrix (e.g. Power Take Off) to be included in the impedance.
+Default: none.</p></li>
+<li><p><strong>stiffness</strong> (<em>array, optional</em>) – An optional stiffness matrix (e.g. mooring stiffness) to be included in the impedance.
+Default: none.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The impedance as an array depending of omega and the degrees of freedom.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xarray DataArray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="capytaine.post_pro.impedance.rao_transfer_function">
+<span class="sig-prename descclassname"><span class="pre">capytaine.post_pro.impedance.</span></span><span class="sig-name descname"><span class="pre">rao_transfer_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dissipation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stiffness</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/post_pro/impedance.html#rao_transfer_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.post_pro.impedance.rao_transfer_function" title="Link to this definition">¶</a></dt>
+<dd><p>Complex-valued matrix used for the computation of the RAO.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>xarray Dataset</em>) – The hydrodynamical dataset.
+This function supposes that variables named ‘inertia_matrix’ and ‘hydrostatic_stiffness’ are in the dataset.
+Other variables can be computed by Capytaine, by those two should be manually added to the dataset.</p></li>
+<li><p><strong>dissipation</strong> (<em>array, optional</em>) – An optional dissipation matrix (e.g. Power Take Off) to be included in the transfer function.
+Default: none.</p></li>
+<li><p><strong>stiffness</strong> (<em>array, optional</em>) – An optional stiffness matrix (e.g. mooring stiffness) to be included in the transfer function.
+Default: none.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The matrix as an array depending of omega and the degrees of freedom.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xarray DataArray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../installation.html">Installation for developers</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../overview.html">Overview of the modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">API documentation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Developer manual</a><ul>
+  <li><a href="../overview.html">Overview of the modules</a><ul>
+      <li>Previous: <a href="capytaine.post_pro.kochin.html" title="previous chapter">capytaine.post_pro.kochin module</a></li>
+      <li>Next: <a href="capytaine.post_pro.rao.html" title="next chapter">capytaine.post_pro.rao module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/developer_manual/api/capytaine.post_pro.impedance.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2022, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../../_sources/developer_manual/api/capytaine.post_pro.impedance.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

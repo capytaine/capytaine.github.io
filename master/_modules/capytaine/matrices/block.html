@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>capytaine.matrices.block &#8212; capytaine 2.2.dev documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=12dfc556" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css?v=e9a64e30" />
+    <script src="../../../_static/documentation_options.js?v=8476ffaa"></script>
+    <script src="../../../_static/doctools.js?v=888ff710"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/proof.js?v=41e9dd12"></script>
+    <script src="https://unpkg.com/mermaid@10.2.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <jinja2.runtime.BlockReference object at 0x7f9e02040b90>
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.matrices.block</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;This module implements block matrices to be used in Hierarchical Toeplitz matrices.</span>
+
+<span class="sd">It takes inspiration from the following works:</span>
+
+<span class="sd">* `openHmx module from Gypsilab by Matthieu Aussal (GPL licensed) &lt;https://github.com/matthieuaussal/gypsilab&gt;`_</span>
+<span class="sd">* `HierarchicalMatrices by Markus Neumann (GPL licensed) &lt;https://github.com/maekke97/HierarchicalMatrices&gt;`_</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Iterable</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">cycle</span><span class="p">,</span> <span class="n">accumulate</span><span class="p">,</span> <span class="n">chain</span><span class="p">,</span> <span class="n">product</span>
+<span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Iterator</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">capytaine.matrices.low_rank</span> <span class="kn">import</span> <span class="n">LowRankMatrix</span>
+<span class="kn">from</span> <span class="nn">capytaine.tools.optional_imports</span> <span class="kn">import</span> <span class="n">import_optional_dependency</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BlockMatrix">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix">[docs]</a>
+<span class="k">class</span> <span class="nc">BlockMatrix</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A (2D) matrix, stored as a set of submatrices (or blocks).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    blocks: list of list of matrices</span>
+<span class="sd">        The blocks of the block matrix.</span>
+<span class="sd">    check: bool, optional</span>
+<span class="sd">        Should the code perform sanity checks on the inputs? (default: True)</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    shape: pair of ints</span>
+<span class="sd">        shape of the full matrix</span>
+<span class="sd">    nb_blocks: pair of ints</span>
+<span class="sd">        number of blocks in each directions.</span>
+<span class="sd">        Example::</span>
+
+<span class="sd">            AAAABB</span>
+<span class="sd">            AAAABB  -&gt;  nb_blocks = (1, 2)</span>
+<span class="sd">            AAAABB</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ndim</span> <span class="o">=</span> <span class="mi">2</span>  <span class="c1"># Other dimensions have not been implemented.</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span><span class="p">,</span> <span class="n">_stored_block_shapes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stored_nb_blocks</span> <span class="o">=</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stored_nb_blocks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">[</span><span class="n">i</span><span class="p">])):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">blocks</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">_stored_block_shapes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stored_block_shapes</span> <span class="o">=</span> <span class="p">([</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]],</span>
+                                         <span class="p">[</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># To avoid going down the tree if it is already known.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_stored_block_shapes</span> <span class="o">=</span> <span class="n">_stored_block_shapes</span>
+
+        <span class="c1"># Block shape of the full matrix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_nb_blocks</span><span class="p">()</span>
+
+        <span class="c1"># Total shape of the full matrix</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_shape</span><span class="p">()</span>
+
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New block matrix: %s&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">check</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_dimensions_of_blocks</span><span class="p">()</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_dtype</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_compute_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># In a dedicated routine because it will be overloaded by subclasses.</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stored_block_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stored_block_shapes</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_compute_nb_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_nb_blocks</span>
+
+    <span class="k">def</span> <span class="nf">_check_dimensions_of_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check that the dimensions of the blocks are consistent.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">line</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_blocks</span><span class="p">:</span>
+            <span class="n">block_height</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">line</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">block_height</span><span class="p">:</span>  <span class="c1"># Same height on a given line</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_blocks</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">block_width</span> <span class="o">=</span> <span class="n">col</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">col</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">block_width</span><span class="p">:</span>  <span class="c1"># Same width on a given column</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="k">def</span> <span class="nf">_check_dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Check that the type of the blocks are consistent.&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">dtype</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+    <span class="c1"># ACCESSING DATA</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The type of data of all of the subblocks.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">all_blocks</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The matrix of matrices. For a full block matrix, all the blocks are stored in memory.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">block_shapes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">],</span> <span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The shapes of the blocks composing the BlockMatrix.</span>
+
+<span class="sd">        Example::</span>
+
+<span class="sd">            AAAABB</span>
+<span class="sd">            AAAABB  -&gt;  block_shapes = ([3], [4, 2])</span>
+<span class="sd">            AAAABB</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_block_shapes</span>
+
+    <span class="k">def</span> <span class="nf">_stored_block_positions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">global_frame</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n">Iterable</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]]]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The position of each blocks in the matrix as a generator.</span>
+<span class="sd">        The list is used by subclasses where the same block may appear several times in different positions.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        global_frame: Tuple[int], optional</span>
+<span class="sd">            the coordinate of the top right corner. Default: 0, 0.</span>
+
+<span class="sd">        Example::</span>
+
+<span class="sd">            AAAABB</span>
+<span class="sd">            AAAABB  -&gt;  list(matrix._stored_block_positions) = [[(0,0)], [(0, 4)], [(2, 0)], [(2, 4)]]</span>
+<span class="sd">            CCCCDD</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">x_acc</span> <span class="o">=</span> <span class="n">accumulate</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">y_acc</span> <span class="o">=</span> <span class="n">accumulate</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_shapes</span><span class="p">[</span><span class="mi">1</span><span class="p">][:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="k">return</span> <span class="p">([(</span><span class="n">global_frame</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">x</span><span class="p">,</span> <span class="n">global_frame</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">y</span><span class="p">)]</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="n">x_acc</span><span class="p">,</span> <span class="n">y_acc</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_put_in_full_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">full_matrix</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Copy the content of the block matrix in a matrix, which is modified in place.&quot;&quot;&quot;</span>
+        <span class="n">all_blocks_in_flat_iterator</span> <span class="o">=</span> <span class="p">(</span><span class="n">block</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">line</span><span class="p">)</span>
+        <span class="n">positions_of_all_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_block_positions</span><span class="p">(</span><span class="n">global_frame</span><span class="o">=</span><span class="n">where</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">positions_of_the_block</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">all_blocks_in_flat_iterator</span><span class="p">,</span> <span class="n">positions_of_all_blocks</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">):</span>
+                <span class="n">position_of_first_appearance</span> <span class="o">=</span> <span class="n">positions_of_the_block</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">frame_of_first_appearance</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">position_of_first_appearance</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">position_of_first_appearance</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                                             <span class="nb">slice</span><span class="p">(</span><span class="n">position_of_first_appearance</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">position_of_first_appearance</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                <span class="n">block</span><span class="o">.</span><span class="n">_put_in_full_matrix</span><span class="p">(</span><span class="n">full_matrix</span><span class="p">,</span> <span class="n">where</span><span class="o">=</span><span class="n">position_of_first_appearance</span><span class="p">)</span>
+
+                <span class="k">for</span> <span class="n">position</span> <span class="ow">in</span> <span class="n">positions_of_the_block</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>  <span class="c1"># For the other appearances, only copy the first appearance</span>
+                    <span class="n">block_frame</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                                   <span class="nb">slice</span><span class="p">(</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                    <span class="n">full_matrix</span><span class="p">[</span><span class="n">block_frame</span><span class="p">]</span> <span class="o">=</span> <span class="n">full_matrix</span><span class="p">[</span><span class="n">frame_of_first_appearance</span><span class="p">]</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">full_block</span> <span class="o">=</span> <span class="n">block</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">else</span> <span class="n">block</span><span class="o">.</span><span class="n">full_matrix</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">position</span> <span class="ow">in</span> <span class="n">positions_of_the_block</span><span class="p">:</span>
+                    <span class="n">block_frame</span> <span class="o">=</span> <span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">position</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                                   <span class="nb">slice</span><span class="p">(</span><span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">position</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                    <span class="n">full_matrix</span><span class="p">[</span><span class="n">block_frame</span><span class="p">]</span> <span class="o">=</span> <span class="n">full_block</span>
+
+<div class="viewcode-block" id="BlockMatrix.full_matrix">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix.full_matrix">[docs]</a>
+    <span class="k">def</span> <span class="nf">full_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Flatten the block structure and return a full matrix.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">dtype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="n">full_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_put_in_full_matrix</span><span class="p">(</span><span class="n">full_matrix</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">full_matrix</span></div>
+
+
+    <span class="k">def</span> <span class="nf">__array__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">full_matrix</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BlockMatrix.no_toeplitz">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix.no_toeplitz">[docs]</a>
+    <span class="k">def</span> <span class="nf">no_toeplitz</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Recursively replace the block toeplitz matrices by usual block matrices.</span>
+<span class="sd">        WARNING: the block matrices may still contain several references to the same block.&quot;&quot;&quot;</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="p">[[</span><span class="n">block</span><span class="o">.</span><span class="n">no_toeplitz</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span> <span class="k">else</span> <span class="n">block</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">line</span><span class="p">]</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_blocks</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">BlockMatrix</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span> <span class="nf">__deepcopy__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">memo</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+        <span class="n">blocks</span> <span class="o">=</span> <span class="p">[[</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">line</span><span class="p">]</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">]</span>
+        <span class="c1"># The call to deepcopy does not use the memo on purpose:</span>
+        <span class="c1"># the goal is to replace references to the same block by references to different copies of the block.</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">stored_data_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the number of entries actually stored in memory.&quot;&quot;&quot;</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+                    <span class="n">size</span> <span class="o">+=</span> <span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">size</span> <span class="o">+=</span> <span class="n">block</span><span class="o">.</span><span class="n">stored_data_size</span>
+        <span class="k">return</span> <span class="n">size</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">density</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">stored_data_size</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">prod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sparcity</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">density</span>
+
+    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Temporary</span>
+        <span class="k">return</span> <span class="nb">id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+    <span class="c1"># TRANSFORMING DATA</span>
+
+    <span class="k">def</span> <span class="nf">_apply_unary_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Callable</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function applying a function recursively on all submatrices.&quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Apply op </span><span class="si">{</span><span class="n">op</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="p">[[</span><span class="n">op</span><span class="p">(</span><span class="n">block</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">line</span><span class="p">]</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">_stored_block_shapes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_stored_block_shapes</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_apply_binary_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function applying a binary operator recursively on all submatrices.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">nb_blocks</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Apply op </span><span class="si">{</span><span class="n">op</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2"> and </span><span class="si">{</span><span class="n">other</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="p">[</span><span class="n">op</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">other_block</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">other_block</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">other_line</span><span class="p">)]</span>
+                <span class="k">for</span> <span class="n">line</span><span class="p">,</span> <span class="n">other_line</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">)</span>
+            <span class="p">]</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">_stored_block_shapes</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_stored_block_shapes</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">add</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_binary_op</span><span class="p">(</span><span class="n">add</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__radd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">+</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="fm">__neg__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">neg</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_unary_op</span><span class="p">(</span><span class="n">neg</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__sub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">sub</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_binary_op</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__rsub__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">sub</span>
+        <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">_apply_binary_op</span><span class="p">(</span><span class="n">sub</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__mul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;BlockMatrix&#39;</span><span class="p">,</span> <span class="n">Number</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Number</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_unary_op</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">other</span><span class="o">*</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">mul</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_binary_op</span><span class="p">(</span><span class="n">mul</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__rmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;BlockMatrix&#39;</span><span class="p">,</span> <span class="n">Number</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span> <span class="o">*</span> <span class="n">other</span>
+
+    <span class="k">def</span> <span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;BlockMatrix&#39;</span><span class="p">,</span> <span class="n">Number</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Number</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_unary_op</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">/</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">truediv</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_binary_op</span><span class="p">(</span><span class="n">truediv</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__rtruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;BlockMatrix&#39;</span><span class="p">,</span> <span class="n">Number</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">numbers</span> <span class="kn">import</span> <span class="n">Number</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Number</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_unary_op</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">other</span><span class="o">/</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_binary_op</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">y</span><span class="o">/</span><span class="n">x</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BlockMatrix.matvec">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix.matvec">[docs]</a>
+    <span class="k">def</span> <span class="nf">matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Matrix vector product.</span>
+<span class="sd">        Named as such to be used as scipy LinearOperator.&quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Multiplication of </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2"> with a full vector of size </span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">other</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">line_heights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">line_positions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">accumulate</span><span class="p">(</span><span class="n">chain</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">line_heights</span><span class="p">)))</span>
+        <span class="n">col_widths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_shapes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">col_positions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">accumulate</span><span class="p">(</span><span class="n">chain</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">col_widths</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">line</span><span class="p">,</span> <span class="n">line_position</span><span class="p">,</span> <span class="n">line_height</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_blocks</span><span class="p">,</span> <span class="n">line_positions</span><span class="p">,</span> <span class="n">line_heights</span><span class="p">):</span>
+            <span class="n">line_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">line_position</span><span class="p">,</span> <span class="n">line_position</span><span class="o">+</span><span class="n">line_height</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">col_position</span><span class="p">,</span> <span class="n">col_width</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">col_positions</span><span class="p">,</span> <span class="n">col_widths</span><span class="p">):</span>
+                <span class="n">col_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">col_position</span><span class="p">,</span> <span class="n">col_position</span><span class="o">+</span><span class="n">col_width</span><span class="p">)</span>
+                <span class="n">result</span><span class="p">[</span><span class="n">line_slice</span><span class="p">]</span> <span class="o">+=</span> <span class="n">block</span> <span class="o">@</span> <span class="n">other</span><span class="p">[</span><span class="n">col_slice</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="BlockMatrix.rmatvec">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix.rmatvec">[docs]</a>
+    <span class="k">def</span> <span class="nf">rmatvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Vector matrix product.</span>
+<span class="sd">        Named as such to be used as scipy LinearOperator.&quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Multiplication of a full vector of size </span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2"> with </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">other</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">line_heights</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">line_positions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">accumulate</span><span class="p">(</span><span class="n">chain</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">line_heights</span><span class="p">)))</span>
+        <span class="n">col_widths</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_shapes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">col_positions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">accumulate</span><span class="p">(</span><span class="n">chain</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="n">col_widths</span><span class="p">)))</span>
+        <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">col_position</span><span class="p">,</span> <span class="n">col_width</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">all_blocks</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">col_positions</span><span class="p">,</span> <span class="n">col_widths</span><span class="p">):</span>
+            <span class="n">col_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">col_position</span><span class="p">,</span> <span class="n">col_position</span><span class="o">+</span><span class="n">col_width</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">line_position</span><span class="p">,</span> <span class="n">line_height</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">col</span><span class="p">,</span> <span class="n">line_positions</span><span class="p">,</span> <span class="n">line_heights</span><span class="p">):</span>
+                <span class="n">line_slice</span> <span class="o">=</span> <span class="nb">slice</span><span class="p">(</span><span class="n">line_position</span><span class="p">,</span> <span class="n">line_position</span><span class="o">+</span><span class="n">line_height</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">):</span>
+                    <span class="n">result</span><span class="p">[</span><span class="n">col_slice</span><span class="p">]</span> <span class="o">+=</span> <span class="n">block</span><span class="o">.</span><span class="n">rmatvec</span><span class="p">(</span><span class="n">other</span><span class="p">[</span><span class="n">line_slice</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">result</span><span class="p">[</span><span class="n">col_slice</span><span class="p">]</span> <span class="o">+=</span> <span class="n">other</span><span class="p">[</span><span class="n">line_slice</span><span class="p">]</span> <span class="o">@</span> <span class="n">block</span>
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+<div class="viewcode-block" id="BlockMatrix.matmat">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix.matmat">[docs]</a>
+    <span class="k">def</span> <span class="nf">matmat</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Matrix-matrix product.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_shapes</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">block_shapes</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Multiplication of %s with %s&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+            <span class="n">own_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_blocks</span>
+            <span class="n">other_blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">all_blocks</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">new_matrix</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">own_line</span> <span class="ow">in</span> <span class="n">own_blocks</span><span class="p">:</span>
+                <span class="n">new_line</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">other_col</span> <span class="ow">in</span> <span class="n">other_blocks</span><span class="p">:</span>
+                    <span class="n">new_line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">own_block</span> <span class="o">@</span> <span class="n">other_block</span> <span class="k">for</span> <span class="n">own_block</span><span class="p">,</span> <span class="n">other_block</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">own_line</span><span class="p">,</span> <span class="n">other_col</span><span class="p">)))</span>
+                <span class="n">new_matrix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_line</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">BlockMatrix</span><span class="p">(</span><span class="n">new_matrix</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Multiplication of </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2"> with a full matrix of shape </span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="c1"># Cut the matrix and recursively call itself to use the code above.</span>
+            <span class="kn">from</span> <span class="nn">capytaine.matrices.builders</span> <span class="kn">import</span> <span class="n">cut_matrix</span>
+            <span class="n">cut_other</span> <span class="o">=</span> <span class="n">cut_matrix</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_shapes</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]],</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">(</span><span class="bp">self</span> <span class="o">@</span> <span class="n">cut_other</span><span class="p">)</span><span class="o">.</span><span class="n">full_matrix</span><span class="p">()</span></div>
+
+
+    <span class="k">def</span> <span class="fm">__matmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;BlockMatrix&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;BlockMatrix&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># Other is a matrix</span>
+            <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Actually a column vector</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">matmat</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Other is a vector</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">matvec</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="fm">__rmatmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;BlockMatrix&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="s1">&#39;BlockMatrix&#39;</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># Other is a matrix</span>
+            <span class="k">if</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Actually a column vector</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rmatvec</span><span class="p">(</span><span class="n">other</span><span class="o">.</span><span class="n">flatten</span><span class="p">())</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">NotImplemented</span>
+        <span class="k">elif</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># Other is a vector</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rmatvec</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+<div class="viewcode-block" id="BlockMatrix.astype">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix.astype">[docs]</a>
+    <span class="k">def</span> <span class="nf">astype</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_unary_op</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">dtype</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="BlockMatrix.fft_of_list">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix.fft_of_list">[docs]</a>
+    <span class="k">def</span> <span class="nf">fft_of_list</span><span class="p">(</span><span class="o">*</span><span class="n">block_matrices</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the fft of a list of block matrices of the same type and shape.</span>
+<span class="sd">        The output is a list of block matrices of the same shape as the input ones.</span>
+<span class="sd">        The fft is computed element-wise, so the block structure does not cause any mathematical difficulty.</span>
+<span class="sd">        Returns an array of BlockMatrices.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">class_of_matrices</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">block_matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">nb_blocks</span> <span class="o">=</span> <span class="n">block_matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_stored_nb_blocks</span>
+
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FFT of </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">block_matrices</span><span class="p">)</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">class_of_matrices</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2"> (stored blocks = </span><span class="si">{</span><span class="n">nb_blocks</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">check</span><span class="p">:</span>
+            <span class="c1"># Check the validity of the shapes of the matrices given as input</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">block_matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span>
+            <span class="k">assert</span> <span class="p">[</span><span class="n">nb_blocks</span> <span class="o">==</span> <span class="n">matrix</span><span class="o">.</span><span class="n">_stored_nb_blocks</span> <span class="k">for</span> <span class="n">matrix</span> <span class="ow">in</span> <span class="n">block_matrices</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+            <span class="k">assert</span> <span class="p">[</span><span class="n">shape</span> <span class="o">==</span> <span class="n">matrix</span><span class="o">.</span><span class="n">shape</span> <span class="k">for</span> <span class="n">matrix</span> <span class="ow">in</span> <span class="n">block_matrices</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+            <span class="k">assert</span> <span class="p">[</span><span class="n">class_of_matrices</span> <span class="o">==</span> <span class="nb">type</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span> <span class="k">for</span> <span class="n">matrix</span> <span class="ow">in</span> <span class="n">block_matrices</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+
+        <span class="c1"># Initialize a vector of block matrices without values in the blocks.</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">block_matrices</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">block_matrices</span><span class="p">)):</span>
+            <span class="n">result</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">class_of_matrices</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">nb_blocks</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">object</span><span class="p">),</span>
+                                          <span class="n">_stored_block_shapes</span><span class="o">=</span><span class="n">block_matrices</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">_stored_block_shapes</span><span class="p">,</span>
+                                          <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i_block</span><span class="p">,</span> <span class="n">j_block</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nb_blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">])):</span>
+            <span class="n">list_of_i_j_blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">block_matrices</span><span class="p">[</span><span class="n">i_matrix</span><span class="p">]</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">[</span><span class="n">i_block</span><span class="p">,</span> <span class="n">j_block</span><span class="p">]</span>
+                                  <span class="k">for</span> <span class="n">i_matrix</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">block_matrices</span><span class="p">))]</span>
+
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">LowRankMatrix</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">list_of_i_j_blocks</span><span class="p">):</span>
+                <span class="n">list_of_i_j_blocks</span> <span class="o">=</span> <span class="p">[</span><span class="n">block</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="k">else</span> <span class="n">block</span><span class="o">.</span><span class="n">full_matrix</span><span class="p">()</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">list_of_i_j_blocks</span><span class="p">]</span>
+                <span class="n">fft_of_blocks</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">list_of_i_j_blocks</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">fft_of_blocks</span> <span class="o">=</span> <span class="n">BlockMatrix</span><span class="o">.</span><span class="n">fft_of_list</span><span class="p">(</span><span class="o">*</span><span class="n">list_of_i_j_blocks</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">matrix</span><span class="p">,</span> <span class="n">computed_block</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">fft_of_blocks</span><span class="p">):</span>
+                <span class="n">matrix</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">[</span><span class="n">i_block</span><span class="p">,</span> <span class="n">j_block</span><span class="p">]</span> <span class="o">=</span> <span class="n">computed_block</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+
+    <span class="c1"># COMPARISON AND REDUCTION</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix[bool]&#39;</span><span class="p">:</span>
+        <span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">eq</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_binary_op</span><span class="p">(</span><span class="n">eq</span><span class="p">,</span> <span class="n">other</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__invert__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Boolean not (~)&quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">operator</span> <span class="kn">import</span> <span class="n">invert</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_unary_op</span><span class="p">(</span><span class="n">invert</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s1">&#39;BlockMatrix&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;BlockMatrix[bool]&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">~</span><span class="p">(</span><span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BlockMatrix.all">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix.all">[docs]</a>
+    <span class="k">def</span> <span class="nf">all</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">block</span><span class="o">.</span><span class="n">all</span><span class="p">():</span>
+                    <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="BlockMatrix.any">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix.any">[docs]</a>
+    <span class="k">def</span> <span class="nf">any</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">block</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+                    <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="BlockMatrix.min">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix.min">[docs]</a>
+    <span class="k">def</span> <span class="nf">min</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">min</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">line</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BlockMatrix.max">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix.max">[docs]</a>
+    <span class="k">def</span> <span class="nf">max</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Number</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">line</span><span class="p">)</span></div>
+
+
+    <span class="c1"># DISPLAYING DATA</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">str_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">blocks_str</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_blocks</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">line</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">):</span>
+                    <span class="n">blocks_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="o">.</span><span class="n">str_shape</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">LowRankMatrix</span><span class="p">):</span>
+                    <span class="n">blocks_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{}</span><span class="s2">×</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">blocks_str</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;?×?&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">blocks_str</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">×</span><span class="si">{}</span><span class="s2">×[&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span><span class="p">)</span> <span class="o">+</span> <span class="n">blocks_str</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;]&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">blocks_str</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">blocks_str</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span><span class="p">)</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">blocks_str</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;_str&#39;</span><span class="p">):</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">str_shape</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+                <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;dtype=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dtype</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_str</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(&quot;</span> <span class="o">+</span> <span class="s2">&quot;, &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_str</span>
+
+    <span class="k">def</span> <span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">())</span>
+
+    <span class="n">display_color</span> <span class="o">=</span> <span class="n">cycle</span><span class="p">([</span><span class="sa">f</span><span class="s1">&#39;C</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s1">&#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">10</span><span class="p">)])</span>
+
+    <span class="k">def</span> <span class="nf">_patches</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">global_frame</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span>
+                 <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function for displaying the shape of the matrix.</span>
+<span class="sd">        Recursively returns a list of rectangles representing the sub-blocks of the matrix.</span>
+
+<span class="sd">        Uses BlockMatrix.display_color to assign color to the blocks.</span>
+<span class="sd">        By default, it cycles through matplotlib default colors.</span>
+<span class="sd">        But if display_color is redefined as a callable, it is called with the block as argument.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        global_frame: tuple of ints</span>
+<span class="sd">            coordinates of the origin in the top left corner.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of matplotlib.patches.Rectangle</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">matplotlib_patches</span> <span class="o">=</span> <span class="n">import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;matplotlib.patches&quot;</span><span class="p">,</span> <span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+        <span class="n">Rectangle</span> <span class="o">=</span> <span class="n">matplotlib_patches</span><span class="o">.</span><span class="n">Rectangle</span>
+
+        <span class="n">all_blocks_in_flat_iterator</span> <span class="o">=</span> <span class="p">(</span><span class="n">block</span> <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_blocks</span> <span class="k">for</span> <span class="n">block</span> <span class="ow">in</span> <span class="n">line</span><span class="p">)</span>
+        <span class="n">positions_of_all_blocks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stored_block_positions</span><span class="p">(</span><span class="n">global_frame</span><span class="o">=</span><span class="n">global_frame</span><span class="p">)</span>
+        <span class="n">patches</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">positions_of_the_block</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">all_blocks_in_flat_iterator</span><span class="p">,</span> <span class="n">positions_of_all_blocks</span><span class="p">):</span>
+            <span class="n">position_of_first_appearance</span> <span class="o">=</span> <span class="n">positions_of_the_block</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="c1"># Exchange coordinates: row index i -&gt; y, column index j -&gt; x</span>
+            <span class="n">position_of_first_appearance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">position_of_first_appearance</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">position_of_first_appearance</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">):</span>
+                <span class="n">patches_of_this_block</span> <span class="o">=</span> <span class="n">block</span><span class="o">.</span><span class="n">_patches</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">position_of_first_appearance</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">position_of_first_appearance</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">display_color</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">):</span>
+                    <span class="n">color</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">display_color</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">display_color</span><span class="p">):</span>
+                    <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">display_color</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">color</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+                <span class="n">patches_of_this_block</span> <span class="o">=</span> <span class="p">[</span><span class="n">Rectangle</span><span class="p">(</span><span class="n">position_of_first_appearance</span><span class="p">,</span>
+                                                   <span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">block</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                   <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="n">color</span><span class="p">)]</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">LowRankMatrix</span><span class="p">):</span>
+
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">display_color</span><span class="p">,</span> <span class="n">Iterator</span><span class="p">):</span>
+                    <span class="n">color</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">display_color</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">callable</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">display_color</span><span class="p">):</span>
+                    <span class="n">color</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">display_color</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">color</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span>
+
+                <span class="n">patches_of_this_block</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="c1"># Left block</span>
+                    <span class="n">Rectangle</span><span class="p">(</span><span class="n">position_of_first_appearance</span><span class="p">,</span>
+                              <span class="n">block</span><span class="o">.</span><span class="n">left_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">block</span><span class="o">.</span><span class="n">left_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                              <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="n">color</span><span class="p">),</span>
+                    <span class="c1"># Top block</span>
+                    <span class="n">Rectangle</span><span class="p">(</span><span class="n">position_of_first_appearance</span><span class="p">,</span>
+                              <span class="n">block</span><span class="o">.</span><span class="n">right_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">block</span><span class="o">.</span><span class="n">right_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                              <span class="n">edgecolor</span><span class="o">=</span><span class="s1">&#39;k&#39;</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="n">color</span><span class="p">),</span>
+                    <span class="c1"># Rest of the matrix</span>
+                    <span class="n">Rectangle</span><span class="p">(</span><span class="n">position_of_first_appearance</span><span class="p">,</span>
+                              <span class="n">block</span><span class="o">.</span><span class="n">right_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">block</span><span class="o">.</span><span class="n">left_matrix</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                              <span class="n">facecolor</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">),</span>
+                <span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+            <span class="n">patches</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">patches_of_this_block</span><span class="p">)</span>
+
+            <span class="c1"># For the other appearances, copy the patches of the first appearance</span>
+            <span class="k">for</span> <span class="n">block_position</span> <span class="ow">in</span> <span class="n">positions_of_the_block</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                <span class="n">block_position</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">block_position</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">block_position</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+                <span class="k">for</span> <span class="n">patch</span> <span class="ow">in</span> <span class="n">patches_of_this_block</span><span class="p">:</span>  <span class="c1"># A block can be made of several patches.</span>
+                    <span class="n">shift</span> <span class="o">=</span> <span class="n">block_position</span> <span class="o">-</span> <span class="n">position_of_first_appearance</span>
+                    <span class="n">patch_position</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">patch</span><span class="o">.</span><span class="n">get_xy</span><span class="p">())</span> <span class="o">+</span> <span class="n">shift</span>
+                    <span class="n">patches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Rectangle</span><span class="p">(</span><span class="n">patch_position</span><span class="p">,</span> <span class="n">patch</span><span class="o">.</span><span class="n">get_width</span><span class="p">(),</span> <span class="n">patch</span><span class="o">.</span><span class="n">get_height</span><span class="p">(),</span>
+                                             <span class="n">facecolor</span><span class="o">=</span><span class="n">patch</span><span class="o">.</span><span class="n">get_facecolor</span><span class="p">(),</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.2</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">patches</span>
+
+<div class="viewcode-block" id="BlockMatrix.plot_shape">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix.plot_shape">[docs]</a>
+    <span class="k">def</span> <span class="nf">plot_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot the structure of the matrix using matplotlib.&quot;&quot;&quot;</span>
+        <span class="n">matplotlib</span> <span class="o">=</span> <span class="n">import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
+        <span class="n">plt</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">pyplot</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">patch</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_patches</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">add_patch</span><span class="p">(</span><span class="n">patch</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">axis</span><span class="p">(</span><span class="s1">&#39;equal&#39;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span><span class="o">.</span><span class="n">invert_yaxis</span><span class="p">()</span></div>
+
+        <span class="c1"># plt.show()</span>
+
+
+<div class="viewcode-block" id="BlockMatrix.access_block_by_path">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.block.html#capytaine.matrices.block.BlockMatrix.access_block_by_path">[docs]</a>
+    <span class="k">def</span> <span class="nf">access_block_by_path</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Access a diagonal block in a block matrix from the path of the</span>
+<span class="sd">        corresponding leaf</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">this_block</span> <span class="o">=</span> <span class="bp">self</span>
+        <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">path</span><span class="p">:</span>
+            <span class="n">this_block</span> <span class="o">=</span> <span class="n">this_block</span><span class="o">.</span><span class="n">all_blocks</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="n">index</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">this_block</span></div>
+</div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2022, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

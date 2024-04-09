@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial &#8212; capytaine 2.2.dev documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=12dfc556" />
+    <link rel="stylesheet" type="text/css" href="../_static/proof.css?v=e9a64e30" />
+    <script src="../_static/documentation_options.js?v=8476ffaa"></script>
+    <script src="../_static/doctools.js?v=888ff710"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/proof.js?v=41e9dd12"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Meshes and floating bodies" href="mesh.html" />
+    <link rel="prev" title="Quickstart" href="quickstart.html" />
+    <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    <jinja2.runtime.BlockReference object at 0x7f9e03a74410>
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="tutorial">
+<h1>Tutorial<a class="headerlink" href="#tutorial" title="Link to this heading">¶</a></h1>
+<section id="main-concepts">
+<h2>Main concepts<a class="headerlink" href="#main-concepts" title="Link to this heading">¶</a></h2>
+<dl>
+<dt><a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh" title="capytaine.meshes.meshes.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mesh</span></code></a></dt><dd><p>The mesh of a floating body in its averaged position. It is stored as a
+instance of the <code class="code docutils literal notranslate"><span class="pre">Mesh</span></code> class.</p>
+<p>The mesh is defined as a list of vertices (a vertex is a triplet of real-valued coordinates)
+and a list of faces (a face is a quadruplet of indices of vertices). By default, faces are
+assumed to be quadrangular. Triangular faces are supported as quadrangles with two identical
+vertices.</p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">Mesh</span></code> class also stores some data computed from the vertices and the faces such as
+the faces normals, the faces centers and the faces areas.</p>
+</dd>
+<dt><strong>Dof</strong></dt><dd><p>A degree of freedom (or dof) defines a small motion or deformation of the floating body
+around its average position. It is stored as a vector at the center of each faces of the mesh.</p>
+<p>Degrees of freedom appears in two forms in the code:
+<code class="code docutils literal notranslate"><span class="pre">radiating_dof</span></code> denotes an actual motion of the body, whereas
+<code class="code docutils literal notranslate"><span class="pre">influenced_dof</span></code> denotes a component of a (generalized) force.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>For mathematicians in the field of Galerkin Boundary Element Method, the concept
+of degree of freedom might have a different meaning (a basis function of the Galerkin
+decomposition). Here, the degrees of freedom are the physical degrees of freedom of the
+floating body, typically the rigid body translations and rotations.</p>
+</div>
+</dd>
+<dt><a class="reference internal" href="../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody" title="capytaine.bodies.bodies.FloatingBody"><code class="xref py py-class docutils literal notranslate"><span class="pre">FloatingBody</span></code></a></dt><dd><p>A <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code> is mainly the reunion of a <code class="code docutils literal notranslate"><span class="pre">Mesh</span></code> and some degrees of freedom.</p>
+<p>The degree of freedom of the body are referred by a name (e.g. <cite>Heave</cite>).
+They should stay in the order in which they have been defined, but <a class="reference external" href="https://github.com/capytaine/capytaine/issues/4">the code
+does not strictly guarantee it</a>.
+Accessing them by name rather than by index should be preferred.</p>
+<p>Beside the mesh and the dofs, some other physical information can be
+stored in a <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code> instance, such as the mass and the
+position of the center of mass. This information is only required for
+some specific actions (see <a class="reference internal" href="hydrostatics.html"><span class="doc">Hydrostatics</span></a>) and can be left unspecified
+in many cases.</p>
+</dd>
+<dt><a class="reference internal" href="../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.LinearPotentialFlowProblem" title="capytaine.bem.problems_and_results.LinearPotentialFlowProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearPotentialFlowProblem</span></code></a></dt><dd><p>A problem is a collection of several parameters: a <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code>, the wave angular frequency
+<span class="math notranslate nohighlight">\(\omega\)</span>, the water depth <span class="math notranslate nohighlight">\(h\)</span>, the water density <span class="math notranslate nohighlight">\(\rho\)</span> and the gravity
+acceleration <span class="math notranslate nohighlight">\(g\)</span>.</p>
+<p>The abstract class <code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowProblem</span></code> has two child classes:
+<a class="reference internal" href="../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.RadiationProblem" title="capytaine.bem.problems_and_results.RadiationProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">RadiationProblem</span></code></a> (that requires also the name of the dof that is radiating) and
+<a class="reference internal" href="../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.DiffractionProblem" title="capytaine.bem.problems_and_results.DiffractionProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">DiffractionProblem</span></code></a> (that requires the angle of the incoming wave field <span class="math notranslate nohighlight">\(\beta\)</span>).</p>
+<p>Most of the parameters are optional. A default value is used when they are not provided (see the page <a class="reference internal" href="problem_setup.html"><span class="doc">Setting up a problem</span></a>).</p>
+</dd>
+<dt><a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver" title="capytaine.bem.solver.BEMSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">Solver</span></code></a></dt><dd><p>The core of the code. It has a <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a> method that takes a
+<code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowProblem</span></code> as input and returns a <code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowResult</span></code>.
+It calls a class computing the Green function and a class to build the matrices.
+See <a class="reference internal" href="resolution.html"><span class="doc">Resolution</span></a> for details.</p>
+</dd>
+<dt><a class="reference internal" href="../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.LinearPotentialFlowResult" title="capytaine.bem.problems_and_results.LinearPotentialFlowResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearPotentialFlowResult</span></code></a></dt><dd><p>The class storing the results is similar to the class storing a problem, with some
+supplementary data such as <code class="code docutils literal notranslate"><span class="pre">result.added_masses</span></code> and <code class="code docutils literal notranslate"><span class="pre">result.radiation_dampings</span></code>
+for radiation problems and <code class="code docutils literal notranslate"><span class="pre">result.forces</span></code> for diffraction problems.
+The forces are stored as a dictionary associating the name of a degree of freedom to a value.
+The value is the integral of the force along this degree of freedom.
+For example, to retrieve the components of the force vector on a rigid body in Cartesian coordinates, check the
+value of the force with respect to <code class="code docutils literal notranslate"><span class="pre">Surge</span></code>, <code class="code docutils literal notranslate"><span class="pre">Sway</span></code> and <code class="code docutils literal notranslate"><span class="pre">Heave</span></code>.</p>
+</dd>
+</dl>
+</section>
+<section id="step-by-step-example">
+<h2>Step-by-step example<a class="headerlink" href="#step-by-step-example" title="Link to this heading">¶</a></h2>
+<p>Launch an interactive Python console such as <code class="code docutils literal notranslate"><span class="pre">ipython</span></code> and import the Capytaine package:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+</pre></div>
+</div>
+<p>To get more details about what Capytaine is doing, use the <code class="code docutils literal notranslate"><span class="pre">set_logging</span></code> function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cpt</span><span class="o">.</span><span class="n">set_logging</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Replace <code class="code docutils literal notranslate"><span class="pre">'INFO'</span></code> by <code class="code docutils literal notranslate"><span class="pre">'DEBUG'</span></code> to get more information on everything that is happening
+inside the solver. On the other hand, if you set the level to <code class="code docutils literal notranslate"><span class="pre">'WARNING'</span></code>, only important
+warnings will be printed out by the solver (this is the default behavior when
+<code class="code docutils literal notranslate"><span class="pre">set_logging</span></code> has not been called).</p>
+<section id="load-a-mesh">
+<h3>Load a mesh<a class="headerlink" href="#load-a-mesh" title="Link to this heading">¶</a></h3>
+<p>For this tutorial we will use one of the mesh generators included into Capytaine for simple
+geometric shapes:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sphere</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;my sphere&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Users can also import mesh from various file formats as shown in the <a class="reference internal" href="mesh.html"><span class="doc">Meshes and floating bodies</span></a>
+section of the documentation. The mesh is stored as a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">Mesh</span></code> object. You can for instance access of
+coordinates of some of the vertices, faces centers or faces normal vectors using
+the following syntax:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sphere</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:</span><span class="mi">10</span><span class="p">]</span>  <span class="c1"># First ten vertices.</span>
+<span class="n">sphere</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>  <span class="c1"># Center of the sixth face (Python arrays start at 0).</span>
+<span class="n">sphere</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>  <span class="c1"># Normal vector of the sixth face.</span>
+</pre></div>
+</div>
+<p>If <cite>vtk</cite> has been installed, the mesh can be displayed in 3D using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">sphere</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="defining-a-floating-body">
+<h3>Defining a floating body<a class="headerlink" href="#defining-a-floating-body" title="Link to this heading">¶</a></h3>
+<p>Before solving a diffraction or radiation problem, we need to define the degrees of freedom (dofs) of our body.
+In Capytaine, this is done by creating a <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code> object:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">sphere</span><span class="p">,</span>
+                        <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">)),</span>
+                        <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The new body defined here will have the six degrees of freedom of a rigid body.
+The <code class="code docutils literal notranslate"><span class="pre">rotation_center</span></code> is used for the definition of the rotation dofs.
+The <code class="code docutils literal notranslate"><span class="pre">center_of_mass</span></code> is used for some hydrostatics properties but not required for the diffraction-radiation problems.</p>
+<p>The degrees of freedoms are stored in the <code class="code docutils literal notranslate"><span class="pre">dofs</span></code> dictionary. To access the name of the dofs of a body, you can use for instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="c1"># dict_keys([&#39;Surge&#39;, &#39;Sway&#39;, &#39;Heave&#39;, &#39;Roll&#39;, &#39;Pitch&#39;, &#39;Yaw&#39;])</span>
+</pre></div>
+</div>
+<p>Dofs can also be defined manually, for instance to model a flexible body. For this purpose, one has to define a list a vectors where each vector is the displacement of the body at the center of a face:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="s2">&quot;x-shear&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">z</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">sphere</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="c1"># dict_keys([&#39;Surge&#39;, &#39;Sway&#39;, &#39;Heave&#39;, &#39;Roll&#39;, &#39;Pitch&#39;, &#39;Yaw&#39;, &#39;x-shear&#39;])</span>
+</pre></div>
+</div>
+</section>
+<section id="hydrostatics">
+<h3>Hydrostatics<a class="headerlink" href="#hydrostatics" title="Link to this heading">¶</a></h3>
+<p>Capytaine can directly perform some hydrostatic computations. You can get parameters such as volume, wet surface area, waterplane area, center of buoyancy, metacentric radius and height, hydrostatic stiffness and inertia matrix for any given <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hydrostatics</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">compute_hydrostatics</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="mf">1025.0</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">hydrostatics</span><span class="p">[</span><span class="s2">&quot;disp_volume&quot;</span><span class="p">])</span>
+<span class="c1"># 3.82267415555807</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">hydrostatics</span><span class="p">[</span><span class="s2">&quot;hydrostatic_stiffness&quot;</span><span class="p">])</span>
+<span class="c1"># &lt;xarray.DataArray &#39;hydrostatic_stiffness&#39; (influenced_dof: 7, radiating_dof: 7)&gt;</span>
+<span class="c1"># [...]</span>
+<span class="c1"># Coordinates:</span>
+<span class="c1">#   * influenced_dof  (influenced_dof) &lt;U7 &#39;Surge&#39; &#39;Sway&#39; ... &#39;Yaw&#39; &#39;x-shear&#39;</span>
+<span class="c1">#   * radiating_dof   (radiating_dof) &lt;U7 &#39;Surge&#39; &#39;Sway&#39; ... &#39;Yaw&#39; &#39;x-shear&#39;</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">hydrostatics</span><span class="p">[</span><span class="s2">&quot;inertia_matrix&quot;</span><span class="p">])</span>
+<span class="c1"># &lt;xarray.DataArray &#39;inertia_matrix&#39; (influenced_dof: 7, radiating_dof: 7)&gt;</span>
+<span class="c1"># [...]</span>
+<span class="c1"># Coordinates:</span>
+<span class="c1">#   * influenced_dof  (influenced_dof) &lt;U7 &#39;Surge&#39; &#39;Sway&#39; ... &#39;Yaw&#39; &#39;x-shear&#39;</span>
+<span class="c1">#   * radiating_dof   (radiating_dof) &lt;U7 &#39;Surge&#39; &#39;Sway&#39; ... &#39;Yaw&#39; &#39;x-shear&#39;</span>
+</pre></div>
+</div>
+<p>The matrices here are <span class="math notranslate nohighlight">\(7 \times 7\)</span> matrices as we have defined seven dofs for our sphere.
+The matrices are stored as <code class="code docutils literal notranslate"><span class="pre">DataArray</span></code> from the <a class="reference external" href="https://xarray.dev/">xarray</a> package (see below for an example of usage).
+Note that the inertia matrix can only be computed for rigid bodies (assuming constant density). The matrix was filled with <code class="code docutils literal notranslate"><span class="pre">NaN</span></code> for the generalized dof <code class="code docutils literal notranslate"><span class="pre">x-shear</span></code>.</p>
+</section>
+<section id="defining-linear-potential-flow-problems">
+<h3>Defining linear potential flow problems.<a class="headerlink" href="#defining-linear-potential-flow-problems" title="Link to this heading">¶</a></h3>
+<p>Let us define a radiation problem for the heave of our sphere:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">inf</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">inf</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mf">9.81</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The argument <code class="code docutils literal notranslate"><span class="pre">radiating_dof</span></code> must be the name of one of the dofs of the floating body given as the
+<code class="code docutils literal notranslate"><span class="pre">body</span></code> argument. The wave angular frequency has been set arbitrarily as <span class="math notranslate nohighlight">\(\omega = 1 \, \text{rad/s}\)</span>.
+The water depth is infinite, the gravity acceleration is <span class="math notranslate nohighlight">\(g = 9.81 \, \text{m/s}^2\)</span> and the water density has
+been chosen as <span class="math notranslate nohighlight">\(\rho = 1000 \, \text{kg/m}^3\)</span>. These last parameters are actually optional.
+Since we are using their default value, we could have defined the radiation problem as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Besides, one can give a <code class="code docutils literal notranslate"><span class="pre">period</span></code>, a <code class="code docutils literal notranslate"><span class="pre">wavelength</span></code> or a <code class="code docutils literal notranslate"><span class="pre">wavenumber</span></code> to specify the frequency:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">,</span> <span class="n">wavelength</span><span class="o">=</span><span class="mf">60.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Some more parameters are automatically computed, such as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">)</span>
+<span class="c1"># 0.1019367991845056</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">period</span><span class="p">)</span>
+<span class="c1"># 6.283185307179586</span>
+</pre></div>
+</div>
+<p>Capytaine also implement a <code class="code docutils literal notranslate"><span class="pre">DiffractionProblem</span></code> class which does not take a <code class="code docutils literal notranslate"><span class="pre">radiating_dof</span></code> argument but instead requires a <code class="code docutils literal notranslate"><span class="pre">wave_direction</span></code> in radians:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">diffraction_problem</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="solve-the-problem">
+<h3>Solve the problem<a class="headerlink" href="#solve-the-problem" title="Link to this heading">¶</a></h3>
+<p>Let us initialize the BEM solver:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>Solver settings could have been given at this point, but in this tutorial, we will use the default settings.
+Let us now solve the problem we defined earlier:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a> method returns a result object. The result object contains all of the data from
+the problem it comes from:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">omega</span><span class="p">)</span>
+<span class="c1"># 1.0</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="c1"># &quot;my buoy&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">radiating_dof</span><span class="p">)</span>
+<span class="c1"># &quot;Heave&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">period</span><span class="p">)</span>
+<span class="c1"># 6.283185307179586</span>
+</pre></div>
+</div>
+<p>Of course, it also stores some output data. Since we solved a radiation problem, we can now access
+the added mass and radiation damping:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">added_masses</span><span class="p">)</span>
+<span class="c1"># {&#39;Surge&#39;: -2.2737367544323206e-13, &#39;Sway&#39;: 2.8421709430404007e-13, &#39;Heave&#39;: 2207.842170942399, &#39;Roll&#39;: -5.3290705182007514e-14, &#39;Pitch&#39;: 1.3289369604763124e-13, &#39;Yaw&#39;: -4.0933040491086855e -15, &#39;x-shear&#39;: 1.3677947663381929e-13}</span>
+</pre></div>
+</div>
+<p>The <code class="code docutils literal notranslate"><span class="pre">added_masses</span></code> dictionary stores the resulting force on each of the “influenced dofs” of the body.
+In this example, the radiating dof is heave and the reaction force in the
+<span class="math notranslate nohighlight">\(x\)</span> direction (<code class="code docutils literal notranslate"><span class="pre">result.added_masses['Surge']</span></code>) is negligible with
+respect to the one in the <span class="math notranslate nohighlight">\(z\)</span> direction
+(<code class="code docutils literal notranslate"><span class="pre">result.added_masses['Heave']</span></code>).</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">radiation_dampings</span><span class="p">)</span>
+<span class="c1"># {&#39;Surge&#39;: -9.103828801926284e-15, &#39;Sway&#39;: 0.0, &#39;Heave&#39;: 13.623038091677039, &#39;Roll&#39;: -1.7486012 637846216e-15, &#39;Pitch&#39;: 3.4937330806172895e-15, &#39;Yaw&#39;: 9.7897500502683e-17, &#39;x-shear&#39;: 7.271960811294775e-15}</span>
+</pre></div>
+</div>
+<p>The same thing hold for the diffraction problem:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">diffraction_result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">diffraction_problem</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">diffraction_result</span><span class="o">.</span><span class="n">forces</span><span class="p">)</span>
+<span class="c1"># {&#39;Surge&#39;: (1.2789769243681803e-13+2.1760371282653068e-13j), &#39;Sway&#39;: (5.9629097739514805-1923.8976950141728j), &#39;Heave&#39;: (-1802.7102076027684-10.957655022820937j), &#39;Roll&#39;: (-0.010382265075485009+4.15060693393701j), &#39;Pitch&#39;: (-7.799316747991725e-14+2.8310687127941492e-14j), &#39;Yaw&#39;: (-1.2477555116385028e-15+7.261633298807041e-14j), &#39;x-shear&#39;: (-8.43769498715119e-14-2.0972112935169207e-13j)}</span>
+</pre></div>
+</div>
+</section>
+<section id="gather-results-in-arrays">
+<h3>Gather results in arrays<a class="headerlink" href="#gather-results-in-arrays" title="Link to this heading">¶</a></h3>
+<p>Let us compute the added mass and radiation damping for all the dofs of our body:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">all_radiation_problems</span> <span class="o">=</span> <span class="p">[</span><span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">]</span>
+<span class="n">all_radiation_results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">all_radiation_problems</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here, we used <code class="code docutils literal notranslate"><span class="pre">solve_all</span></code> instead of <code class="code docutils literal notranslate"><span class="pre">solve</span></code> since we are passing a
+list of problems and not a single one. Note that this resolution should be
+faster than the first one. The solver has stored some intermediate data for
+this body at this wave frequency and will reuse it to solve the new problems.</p>
+<p>The results can be gathered together as follow:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">([</span><span class="n">diffraction_result</span><span class="p">]</span> <span class="o">+</span> <span class="n">all_radiation_results</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The new object is a NetCDF-like dataset from the xarray package. It is storing the added mass and
+radiation damping from the result objects in an organized way. In our example, it is basically two
+7×7 matrices. The matrices can be accessed for instance in the following way:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">radiating_dof</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Surge&quot;</span><span class="p">,</span> <span class="s2">&quot;Heave&quot;</span><span class="p">],</span> <span class="n">influenced_dof</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Surge&quot;</span><span class="p">,</span> <span class="s2">&quot;Heave&quot;</span><span class="p">],</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You’ll probably want to solve problems for a wide range of parameters without
+defining each test individually. This can be done with the <code class="code docutils literal notranslate"><span class="pre">fill_dataset</span></code>
+method of the solver. See <a class="reference internal" href="problem_setup.html"><span class="doc">Setting up a problem</span></a>.</p>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation for users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mesh.html">Meshes and floating bodies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hydrostatics.html">Hydrostatics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="problem_setup.html">Setting up a problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resolution.html">Resolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="outputs.html">Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="post_pro.html">Post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conventions.html">Conventions and differences to other codes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html">Cookbook</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">User manual</a><ul>
+      <li>Previous: <a href="quickstart.html" title="previous chapter">Quickstart</a></li>
+      <li>Next: <a href="mesh.html" title="next chapter">Meshes and floating bodies</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_manual/tutorial.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2022, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.2.6</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../_sources/user_manual/tutorial.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
