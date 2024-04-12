@@ -18,7 +18,7 @@
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7f9e020a0740>
+    <jinja2.runtime.BlockReference object at 0x7fcbe12a9580>
 
   </head><body>
   
@@ -57,7 +57,7 @@
     <span class="n">tabulation_nz</span><span class="o">=</span><span class="mi">372</span><span class="p">,</span>
     <span class="n">tabulation_zmin</span><span class="o">=-</span><span class="mf">251.0</span><span class="p">,</span>
     <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
-    <span class="n">tabulation_method</span><span class="o">=</span><span class="s2">&quot;scaled_nemoh3&quot;</span><span class="p">,</span>
+    <span class="n">tabulation_grid_shape</span><span class="o">=</span><span class="s2">&quot;scaled_nemoh3&quot;</span><span class="p">,</span>
     <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="s2">&quot;fortran&quot;</span><span class="p">,</span>
     <span class="n">floating_point_precision</span><span class="o">=</span><span class="s2">&quot;float64&quot;</span>
 <span class="p">)</span>
@@ -90,7 +90,7 @@
 <span class="sd">        Number of points for the numerical integration w.r.t. :math:`theta` of</span>
 <span class="sd">        Delhommeau&#39;s integrals</span>
 <span class="sd">        Default: 1000</span>
-<span class="sd">    tabulation_method: string, optional</span>
+<span class="sd">    tabulation_grid_shape: string, optional</span>
 <span class="sd">        Either :code:`&quot;legacy&quot;` or :code:`&quot;scaled_nemoh3&quot;`, which are the two</span>
 <span class="sd">        methods currently implemented.</span>
 <span class="sd">        Default: :code:`&quot;scaled_nemoh3&quot;`</span>
@@ -110,7 +110,7 @@
 <span class="sd">    fortran_core:</span>
 <span class="sd">        Compiled Fortran module with functions used to compute the Green</span>
 <span class="sd">        function.</span>
-<span class="sd">    tabulation_method_index: int</span>
+<span class="sd">    tabulation_grid_shape_index: int</span>
 <span class="sd">        Integer passed to Fortran code to describe which method is used.</span>
 <span class="sd">    tabulated_r_range: numpy.array of shape (tabulation_nr,) and type floating_point_precision</span>
 <span class="sd">    tabulated_z_range: numpy.array of shape (tabulation_nz,) and type floating_point_precision</span>
@@ -128,7 +128,7 @@
                  <span class="n">tabulation_nz</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_nz&quot;</span><span class="p">],</span>
                  <span class="n">tabulation_zmin</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_zmin&quot;</span><span class="p">],</span>
                  <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_nb_integration_points&quot;</span><span class="p">],</span>
-                 <span class="n">tabulation_method</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_method&quot;</span><span class="p">],</span>
+                 <span class="n">tabulation_grid_shape</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_grid_shape&quot;</span><span class="p">],</span>
                  <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;finite_depth_prony_decomposition_method&quot;</span><span class="p">],</span>
                  <span class="n">floating_point_precision</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;floating_point_precision&quot;</span><span class="p">],</span>
                  <span class="p">):</span>
@@ -137,12 +137,12 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;capytaine.green_functions.libs.</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fortran_core_basename</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">floating_point_precision</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_method</span> <span class="o">=</span> <span class="n">tabulation_method</span>
-        <span class="n">fortran_indices_for_methods</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="s1">&#39;legacy&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">legacy_method</span><span class="p">,</span>
-                <span class="s1">&#39;scaled_nemoh3&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">scaled_nemoh3_method</span><span class="p">,</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape</span> <span class="o">=</span> <span class="n">tabulation_grid_shape</span>
+        <span class="n">fortran_enum</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;legacy&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">legacy_grid</span><span class="p">,</span>
+                <span class="s1">&#39;scaled_nemoh3&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">scaled_nemoh3_grid</span><span class="p">,</span>
                               <span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_method_index</span> <span class="o">=</span> <span class="n">fortran_indices_for_methods</span><span class="p">[</span><span class="n">tabulation_method</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape_index</span> <span class="o">=</span> <span class="n">fortran_enum</span><span class="p">[</span><span class="n">tabulation_grid_shape</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_create_or_load_tabulation</span><span class="p">(</span><span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span> <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span> <span class="n">tabulation_nb_integration_points</span><span class="p">)</span>
 
@@ -155,7 +155,7 @@
             <span class="s1">&#39;tabulation_nz&#39;</span><span class="p">:</span> <span class="n">tabulation_nz</span><span class="p">,</span>
             <span class="s1">&#39;tabulation_zmin&#39;</span><span class="p">:</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
             <span class="s1">&#39;tabulation_nb_integration_points&#39;</span><span class="p">:</span> <span class="n">tabulation_nb_integration_points</span><span class="p">,</span>
-            <span class="s1">&#39;tabulation_method&#39;</span><span class="p">:</span> <span class="n">tabulation_method</span><span class="p">,</span>
+            <span class="s1">&#39;tabulation_grid_shape&#39;</span><span class="p">:</span> <span class="n">tabulation_grid_shape</span><span class="p">,</span>
             <span class="s1">&#39;finite_depth_prony_decomposition_method&#39;</span><span class="p">:</span> <span class="n">finite_depth_prony_decomposition_method</span><span class="p">,</span>
             <span class="s1">&#39;floating_point_precision&#39;</span><span class="p">:</span> <span class="n">floating_point_precision</span><span class="p">,</span>
         <span class="p">}</span>
@@ -199,7 +199,7 @@
 
         <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;tabulation_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">.npz&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core_basename</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">floating_point_precision</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_method</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape</span><span class="p">,</span>
             <span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span> <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
             <span class="n">tabulation_nb_integration_points</span>
         <span class="p">)</span>
@@ -215,10 +215,10 @@
         <span class="k">else</span><span class="p">:</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Precomputing tabulation, it may take a few seconds.&quot;</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">default_r_spacing</span><span class="p">(</span>
-                    <span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_method_index</span>
+                    <span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape_index</span>
                     <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">default_z_spacing</span><span class="p">(</span>
-                    <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_method_index</span>
+                    <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape_index</span>
                     <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">construct_tabulation</span><span class="p">(</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span><span class="p">,</span> <span class="n">tabulation_nb_integration_points</span>
@@ -395,7 +395,7 @@
             <span class="o">*</span><span class="n">mesh2</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">,</span>
             <span class="n">wavenumber</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span>
             <span class="n">coeffs</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_method_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span><span class="p">,</span>
             <span class="n">lamda_exp</span><span class="p">,</span> <span class="n">a_exp</span><span class="p">,</span>
             <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">,</span>
             <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
