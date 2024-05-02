@@ -20,7 +20,7 @@
     <link rel="prev" title="Resolution" href="resolution.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7fc0cc907890>
+    <jinja2.runtime.BlockReference object at 0x7f5c91043500>
 
   </head><body>
   
@@ -210,6 +210,52 @@ It leads to the error <code class="code docutils literal notranslate"><span clas
 </div>
 <p>See also <a class="reference external" href="https://github.com/capytaine/capytaine/issues/2">this Github issue</a>.</p>
 </section>
+</section>
+<section id="saving-the-rotation-center-of-rigid-bodies">
+<h2>Saving the rotation center of rigid bodies<a class="headerlink" href="#saving-the-rotation-center-of-rigid-bodies" title="Link to this heading">¶</a></h2>
+<p>Some software downstream of Capytaine, such as <a class="reference external" href="https://github.com/BEMRosetta/BEMRosetta">BEMRosetta</a>, require the NetCDF file to store the rotation center of each body.
+While this is not yet done automatically by Capytaine, it can be added to the dataset manually as in the following example, which is an extension of the <a class="reference internal" href="quickstart.html"><span class="doc">Quickstart</span></a> example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+
+<span class="n">body_1</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
+            <span class="n">mesh</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;my_sphere&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+<span class="n">body_1</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="n">body_1</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">()</span>
+<span class="n">body_1</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">body_1</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
+<span class="c1"># If you have several rigid bodies, copy the code above to define &quot;body_2&quot;, &quot;body_3&quot;, etc.</span>
+
+<span class="n">list_of_bodies</span> <span class="o">=</span> <span class="p">[</span><span class="n">body_1</span><span class="p">]</span>  <span class="c1"># Replace &quot;[body_1]&quot; by &quot;[body_1, body_2, body_3]&quot; for multibody problem.</span>
+
+<span class="n">all_bodies</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="o">.</span><span class="n">join_bodies</span><span class="p">(</span><span class="o">*</span><span class="n">list_of_bodies</span><span class="p">)</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+
+<span class="c1"># Set up parameters</span>
+<span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">({</span>
+        <span class="s2">&quot;omega&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>  <span class="c1"># Can also specify &quot;period&quot;, &quot;wavelength&quot; or &quot;wavenumber&quot;</span>
+        <span class="s2">&quot;wave_direction&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="s2">&quot;radiating_dof&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_bodies</span><span class="o">.</span><span class="n">dofs</span><span class="p">),</span>
+        <span class="p">})</span>
+
+<span class="c1"># Do the resolution</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">all_bodies</span><span class="p">)</span>
+
+<span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;rigid_body_component&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">body</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">list_of_bodies</span><span class="p">]</span>
+<span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;rotation_center&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s2">&quot;rigid_body_component&quot;</span><span class="p">,</span> <span class="s2">&quot;point_coordinates&quot;</span><span class="p">],</span> <span class="p">[</span><span class="n">body</span><span class="o">.</span><span class="n">rotation_center</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">list_of_bodies</span><span class="p">])</span>
+<span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;center_of_mass&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s2">&quot;rigid_body_component&quot;</span><span class="p">,</span> <span class="s2">&quot;point_coordinates&quot;</span><span class="p">],</span> <span class="p">[</span><span class="n">body</span><span class="o">.</span><span class="n">center_of_mass</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">list_of_bodies</span><span class="p">])</span>
+
+<span class="c1"># Export to NetCDF file</span>
+<span class="kn">from</span> <span class="nn">capytaine.io.xarray</span> <span class="kn">import</span> <span class="n">separate_complex_values</span>
+<span class="n">separate_complex_values</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">to_netcdf</span><span class="p">(</span><span class="s2">&quot;dataset.nc&quot;</span><span class="p">,</span>
+                                           <span class="n">encoding</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;radiating_dof&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;U&#39;</span><span class="p">},</span>
+                                                     <span class="s1">&#39;influenced_dof&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;U&#39;</span><span class="p">}})</span>
+</pre></div>
+</div>
+<p>The support for this in Capytaine should be improved in the future.</p>
 </section>
 <section id="exporting-to-excel">
 <h2>Exporting to Excel<a class="headerlink" href="#exporting-to-excel" title="Link to this heading">¶</a></h2>
