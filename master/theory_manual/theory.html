@@ -22,7 +22,7 @@
     <link rel="prev" title="Theory manual" href="index.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7fca80926f00>
+    <jinja2.runtime.BlockReference object at 0x7fc0cc905ee0>
 
   </head><body>
   
@@ -587,44 +587,133 @@ For this purpose, the <code class="docutils literal notranslate"><span class="pr
 <h2><a class="toc-backref" href="#id44" role="doc-backlink">Post-processing</a><a class="headerlink" href="#post-processing" title="Link to this heading">¶</a></h2>
 <section id="forces-on-body-surfaces">
 <h3><a class="toc-backref" href="#id45" role="doc-backlink">Forces on body surfaces</a><a class="headerlink" href="#forces-on-body-surfaces" title="Link to this heading">¶</a></h3>
-<p>Forces acting on body surfaces are computed by integration of the pressure field. They can be decomposed into three contributions:</p>
+<p>Forces acting on body surfaces are computed by integration of the pressure field.</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-38">
+<span class="eqno">(66)<a class="headerlink" href="#equation-theory-manual-theory-38" title="Link to this equation">¶</a></span>\[F_i = \int_\Gamma p(x) \, n(x) \cdot \delta\!r_i(x) \, dx = j \omega \rho \int_\Gamma \Phi(x) \, n(x) \cdot \delta\!r_i(x) \, dx\]</div>
+<p>where <span class="math notranslate nohighlight">\(p = j \omega \rho \Phi\)</span> stands for the complex-valued pressure fields in frequency-domain, <span class="math notranslate nohighlight">\(n\)</span> is the normal vector on the hull <span class="math notranslate nohighlight">\(\Gamma\)</span> (oriented towards the fluid in Capytaine, see <a class="reference internal" href="../user_manual/conventions.html"><span class="doc">Conventions and differences to other codes</span></a>) and <span class="math notranslate nohighlight">\(\delta\!r_i\)</span> is the local displacement of the hull of the degree of freedom <span class="math notranslate nohighlight">\(i\)</span>.</p>
+<p>For a single rigid body, the degrees of freedom reads:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Dof</p></th>
+<th class="head"><p>Local hull displacement</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Surge</p></td>
+<td><p><span class="math notranslate nohighlight">\(\delta\!r(x) = (1, 0, 0)\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Sway</p></td>
+<td><p><span class="math notranslate nohighlight">\(\delta\!r(x) = (0, 1, 0)\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>Heave</p></td>
+<td><p><span class="math notranslate nohighlight">\(\delta\!r(x) = (0, 0, 1)\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Roll</p></td>
+<td><p><span class="math notranslate nohighlight">\(\delta\!r(x) = (1, 0, 0) \times (x-x_0, y-y_0, z-z_0)\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>Pitch</p></td>
+<td><p><span class="math notranslate nohighlight">\(\delta\!r(x) = (0, 1, 0) \times (x-x_0, y-y_0, z-z_0)\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p>Yaw</p></td>
+<td><p><span class="math notranslate nohighlight">\(\delta\!r(x) = (0, 0, 1) \times (x-x_0, y-y_0, z-z_0)\)</span></p></td>
+</tr>
+</tbody>
+</table>
+<p>where <span class="math notranslate nohighlight">\((x_0, y_0, z_0)\)</span> is the rotation center and <span class="math notranslate nohighlight">\(\times\)</span> denotes the cross product.</p>
+<p>The potential field can be decomposed into three contributions, and so does the resulting force:</p>
 <ol class="arabic simple">
-<li><p>The Froude-Krylov forces <span class="math notranslate nohighlight">\(F_{FK, i}\)</span>, from the integration of the incident wave field pressure (incoming plane waves); <span class="math notranslate nohighlight">\(i\)</span> denotes the i-th degree of freedom</p></li>
-<li><p>The diffraction forces <span class="math notranslate nohighlight">\(F_{D, i}\)</span>, from the integration of the diffracted wave field (all bodies held fixed)</p></li>
-<li><p>The radiation forces <span class="math notranslate nohighlight">\(F_{R, ij}\)</span>, from the result of the radiation problem with radiating degree of freedom <span class="math notranslate nohighlight">\(j\)</span> and influenced degree of freedom <span class="math notranslate nohighlight">\(i\)</span></p></li>
+<li><p>The Froude-Krylov forces <span class="math notranslate nohighlight">\(F_{FK}\)</span>, from the integration of the
+incident wave field pressure (incoming plane waves). In Capytaine, the
+incident wave pressure can be retrieved with the
+<code class="xref py py-func docutils literal notranslate"><span class="pre">airy_wave_pressure()</span></code> function.</p></li>
+<li><p>The diffraction forces <span class="math notranslate nohighlight">\(F_{D}\)</span>, from the integration of the diffracted
+wave field (all bodies held fixed).</p></li>
+<li><p>The radiation forces <span class="math notranslate nohighlight">\(F_{R}\)</span>, which is itself a linear combination of
+the forces exerted by the fluid on the body in response to a motion of each
+degree of freedom.</p></li>
 </ol>
+<p>The component <span class="math notranslate nohighlight">\(i\)</span> of the radiation force <span class="math notranslate nohighlight">\(F_{R}\)</span> is further rewritten as</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-39">
+<span class="eqno">(67)<a class="headerlink" href="#equation-theory-manual-theory-39" title="Link to this equation">¶</a></span>\[F_{R, i} = \sum_k \left[\omega^2 A_{ik} + j \omega B_{ik}\right] X_k\]</div>
+<p>where <span class="math notranslate nohighlight">\(A_{ik}\)</span> is the added mass matrix, <span class="math notranslate nohighlight">\(B_{ik}\)</span> is the radiation
+damping matrix and <span class="math notranslate nohighlight">\(X_k\)</span> is the amplitude of the motion of the body along
+the degree of freedom <span class="math notranslate nohighlight">\(k\)</span>.</p>
+<p>In other words, one has</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-40">
+<span class="eqno">(68)<a class="headerlink" href="#equation-theory-manual-theory-40" title="Link to this equation">¶</a></span>\[\begin{split}A_{ik} &amp; = \frac{1}{\omega^2} \Re \left[ j \omega \rho \int_\Gamma \Phi_k(x) \, n(x) \cdot \delta \! r_i(x) \, dx \right] \\
+       &amp; = - \frac{\rho}{\omega} \int_\Gamma \Im [\Phi_k(x)] \, n(x) \cdot \delta \! r_i(x) \, dx\end{split}\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-41">
+<span class="eqno">(69)<a class="headerlink" href="#equation-theory-manual-theory-41" title="Link to this equation">¶</a></span>\[\begin{split}B_{ik} &amp; = \frac{1}{\omega} \Im \left[ j \omega \rho \int_\Gamma \Phi_k(x) \, n(x) \cdot \delta \! r_i(x) \, dx \right] \\
+       &amp; = \rho \int_\Gamma \Re [\Phi_k(x)] \, n(x) \cdot \delta \! r_i(x) \, dx\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\Phi_k\)</span> is the potential field computed with the normal velocity on the hull <span class="math notranslate nohighlight">\(\frac{\partial \Phi_k}{\partial n} = -j \omega \delta \! r_k \cdot n\)</span>.
+In Capytaine’s wording, the degree of freedom <span class="math notranslate nohighlight">\(k\)</span> defining the normal velocity on the hull is called <code class="docutils literal notranslate"><span class="pre">radiating_dof</span></code>, while the degree of freedom <span class="math notranslate nohighlight">\(i\)</span> used in the integration of the force is the <code class="docutils literal notranslate"><span class="pre">influenced_dof</span></code>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>From Green second identity</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-42">
+<span class="eqno">(70)<a class="headerlink" href="#equation-theory-manual-theory-42" title="Link to this equation">¶</a></span>\[\int_\Gamma \left[ \Phi_i \frac{\partial \Phi_k}{\partial n} - \Phi_k \frac{\partial \Phi_i}{\partial n}\right] dx = 0\]</div>
+<p>one has, when using the definition of the normal velocity of the radiation problem above,</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-43">
+<span class="eqno">(71)<a class="headerlink" href="#equation-theory-manual-theory-43" title="Link to this equation">¶</a></span>\[\iint_{\Gamma} \Phi_i \; \delta\!r_k \cdot n = \iint_{\Gamma} \Phi_k \; \delta\!r_i \cdot n\]</div>
+<p>from which we can deduce the symmetry of the added mass matrix and the radiation dampings matrix.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As an alternative to <span class="math notranslate nohighlight">\(\frac{\partial \Phi_k}{\partial n} = -j \omega
+\delta \! r_k \cdot n\)</span>, some software such as the version 1 of Capytaine use
+<span class="math notranslate nohighlight">\(\frac{\partial \tilde \Phi_k}{\partial n} = \delta \! r_k \cdot n\)</span>,
+that is <span class="math notranslate nohighlight">\(\tilde \Phi_k = \frac{\Phi_k}{-j \omega}\)</span>.</p>
+<p>It leads to the following definition of the added mass and radiation damping</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-44">
+<span class="eqno">(72)<a class="headerlink" href="#equation-theory-manual-theory-44" title="Link to this equation">¶</a></span>\[\begin{split}A_{ik} &amp; = \frac{1}{\omega^2} \Re \left[ j \omega \rho \int_\Gamma (- j \omega \tilde \Phi_k(x)) \, n(x) \cdot \delta \! r_j(x) \, dx \right] \\
+       &amp; = \rho \int_\Gamma \Re [\tilde \Phi_k(x)] \, n(x) \cdot \delta \! r_j(x) \, dx\end{split}\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-45">
+<span class="eqno">(73)<a class="headerlink" href="#equation-theory-manual-theory-45" title="Link to this equation">¶</a></span>\[\begin{split}B_{ik} &amp; = \frac{1}{\omega} \Im \left[ j \omega \rho \int_\Gamma (- j \omega \tilde \Phi_k(x)) \, n(x) \cdot \delta \! r_j(x) \, dx \right] \\
+       &amp; = \rho \omega \int_\Gamma \Im [\tilde \Phi_k(x)] \, n(x) \cdot \delta \! r_j(x) \, dx\end{split}\]</div>
+<p>This form is convenient since the all the <span class="math notranslate nohighlight">\(\omega\)</span> in the expression
+of the added mass disappears, which make it possible to compute the value of
+the added mass at frequency such as zero or infinity.</p>
+<p>However, the implementation of <span class="math notranslate nohighlight">\(\tilde \Phi\)</span> in version 1 of Capytaine
+was not consistent with the use of <span class="math notranslate nohighlight">\(\Phi\)</span> for diffraction problem and
+it was easy to forget the missing <span class="math notranslate nohighlight">\(-j\omega\)</span> for some post-processing
+of <span class="math notranslate nohighlight">\(\tilde \Phi\)</span> for radiation problems.</p>
+<p>In version 2.0 of Capytaine, <span class="math notranslate nohighlight">\(\Phi\)</span> is used everywhere instead of
+<span class="math notranslate nohighlight">\(\tilde \Phi\)</span>.
+Since version 2.1, another method has been implemented to take into account
+the cancelling of the <span class="math notranslate nohighlight">\(\omega\)</span> in the expression of the added mass
+allowing to compute the added mass at zero and infinite frequency.</p>
+</div>
 </section>
 <section id="dynamic-coupling-and-impedance">
 <h3><a class="toc-backref" href="#id46" role="doc-backlink">Dynamic coupling and impedance</a><a class="headerlink" href="#dynamic-coupling-and-impedance" title="Link to this heading">¶</a></h3>
 <p>Consider a body or a system of bodies. The general linear equation of motion can be expressed in time domain as</p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-theory-38">
-<span class="eqno">(66)<a class="headerlink" href="#equation-theory-manual-theory-38" title="Link to this equation">¶</a></span>\[M_{ij} \ddot{x}_j + C_{ij} \dot{x}_j + K_{ij} x_j = F_i,\]</div>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-46">
+<span class="eqno">(74)<a class="headerlink" href="#equation-theory-manual-theory-46" title="Link to this equation">¶</a></span>\[M_{ij} \ddot{x}_j + C_{ij} \dot{x}_j + K_{ij} x_j = F_i,\]</div>
 <p>and in frequency domain, with the assumed time dependence <span class="math notranslate nohighlight">\(x(t) = \mathrm{Re} \left( X e^{-j \omega t} \right)\)</span>,</p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-theory-39">
-<span class="eqno">(67)<a class="headerlink" href="#equation-theory-manual-theory-39" title="Link to this equation">¶</a></span>\[\left[-\omega^2M_{ij} - j \omega C_{ij} + K_{ij}\right] X_j = F_i,\]</div>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-47">
+<span class="eqno">(75)<a class="headerlink" href="#equation-theory-manual-theory-47" title="Link to this equation">¶</a></span>\[\left[-\omega^2M_{ij} - j \omega C_{ij} + K_{ij}\right] X_j = F_i,\]</div>
 <p>where <span class="math notranslate nohighlight">\(M_{ij}\)</span> is the inertia matrix, accounting for the mass distribution, <span class="math notranslate nohighlight">\(C_{ij}\)</span> is the mechanical damping matrix, <span class="math notranslate nohighlight">\(K_{ij}\)</span> is the stiffness matrix which comprises mechanical and hydrostatic effects, and <span class="math notranslate nohighlight">\(F_i\)</span> are generic external forces.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The hydrostatic contribution to matrix <span class="math notranslate nohighlight">\(K_{ij}\)</span> accounts for a variation of hydrostatic force in direction <span class="math notranslate nohighlight">\(i\)</span> due to a unit motion in direction <span class="math notranslate nohighlight">\(j\)</span>. It is a geometric property of the body.</p>
 </div>
-<p>Forces <span class="math notranslate nohighlight">\(F_i\)</span> can be decomposed as</p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-theory-40">
-<span class="eqno">(68)<a class="headerlink" href="#equation-theory-manual-theory-40" title="Link to this equation">¶</a></span>\[F_i = F_{FK, i} + F_{D, i} + F_{R, i}\]</div>
-<p>and <span class="math notranslate nohighlight">\(F_{R, i}\)</span> can be further rewritten as</p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-theory-41">
-<span class="eqno">(69)<a class="headerlink" href="#equation-theory-manual-theory-41" title="Link to this equation">¶</a></span>\[F_{R, i} = \left[\omega^2 A_{ij} + j\omega B_{ij}\right] X_j\]</div>
-<p>where <span class="math notranslate nohighlight">\(A_{ij}\)</span> is the added mass matrix and <span class="math notranslate nohighlight">\(B_{ij}\)</span> is the radiation damping matrix; these properties are thus obtained from the real and imaginary parts of the radiation force. The full system becomes</p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-theory-42">
-<span class="eqno">(70)<a class="headerlink" href="#equation-theory-manual-theory-42" title="Link to this equation">¶</a></span>\[\left[-\omega^2 (M_{ij} + A_{ij}) - j \omega (C_{ij} + B_{ij}) + K_{ij}\right] X_j = F_{FK, i} + F_{D, i}\]</div>
+<p>As seen above, forces <span class="math notranslate nohighlight">\(F_i\)</span> can be decomposed as</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-48">
+<span class="eqno">(76)<a class="headerlink" href="#equation-theory-manual-theory-48" title="Link to this equation">¶</a></span>\[F_i = F_{FK, i} + F_{D, i} + F_{R, i}\]</div>
+<p>The full system becomes</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-49">
+<span class="eqno">(77)<a class="headerlink" href="#equation-theory-manual-theory-49" title="Link to this equation">¶</a></span>\[\left[-\omega^2 (M_{ij} + A_{ij}) - j \omega (C_{ij} + B_{ij}) + K_{ij}\right] X_j = F_{FK, i} + F_{D, i}\]</div>
 <p>that is</p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-theory-43">
-<span class="eqno">(71)<a class="headerlink" href="#equation-theory-manual-theory-43" title="Link to this equation">¶</a></span>\[H X = F_{ex}\]</div>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-50">
+<span class="eqno">(78)<a class="headerlink" href="#equation-theory-manual-theory-50" title="Link to this equation">¶</a></span>\[H X = F_{ex}\]</div>
 <p>where <span class="math notranslate nohighlight">\(H\)</span> denotes the following transfer function matrix</p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-theory-44">
-<span class="eqno">(72)<a class="headerlink" href="#equation-theory-manual-theory-44" title="Link to this equation">¶</a></span>\[H_{ij} = \left[-\omega^2 (M_{ij} + A_{ij}) - j \omega (C_{ij} + B_{ij}) + K_{ij}\right]\]</div>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-51">
+<span class="eqno">(79)<a class="headerlink" href="#equation-theory-manual-theory-51" title="Link to this equation">¶</a></span>\[H_{ij} = \left[-\omega^2 (M_{ij} + A_{ij}) - j \omega (C_{ij} + B_{ij}) + K_{ij}\right]\]</div>
 <p>and <span class="math notranslate nohighlight">\(F_{ex}\)</span> denotes the excitation force.</p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-theory-45">
-<span class="eqno">(73)<a class="headerlink" href="#equation-theory-manual-theory-45" title="Link to this equation">¶</a></span>\[F_{ex, i} = F_{FK, i} + F_{D, i}.\]</div>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-52">
+<span class="eqno">(80)<a class="headerlink" href="#equation-theory-manual-theory-52" title="Link to this equation">¶</a></span>\[F_{ex, i} = F_{FK, i} + F_{D, i}.\]</div>
 <p>The oscillation amplitude is obtained by solving the complex-valued linear system.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -634,14 +723,14 @@ For this purpose, the <code class="docutils literal notranslate"><span class="pr
 <section id="free-surface-elevation">
 <h3><a class="toc-backref" href="#id47" role="doc-backlink">Free surface elevation</a><a class="headerlink" href="#free-surface-elevation" title="Link to this heading">¶</a></h3>
 <p>The potential at the reference surface <span class="math notranslate nohighlight">\(z = 0\)</span> can be connected to the free surface elevation by the dynamic condition</p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-theory-46">
-<span class="eqno">(74)<a class="headerlink" href="#equation-theory-manual-theory-46" title="Link to this equation">¶</a></span>\[\dfrac{\partial \phi}{\partial t} = - g \eta\]</div>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-53">
+<span class="eqno">(81)<a class="headerlink" href="#equation-theory-manual-theory-53" title="Link to this equation">¶</a></span>\[\dfrac{\partial \phi}{\partial t} = - g \eta\]</div>
 <p>which, in frequency domain, is</p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-theory-47">
-<span class="eqno">(75)<a class="headerlink" href="#equation-theory-manual-theory-47" title="Link to this equation">¶</a></span>\[\eta = \dfrac{j \omega}{g} \Phi\]</div>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-54">
+<span class="eqno">(82)<a class="headerlink" href="#equation-theory-manual-theory-54" title="Link to this equation">¶</a></span>\[\eta = \dfrac{j \omega}{g} \Phi\]</div>
 <p>For a fully coupled problem (bodies free to oscillate, i.e. diffraction and radiation combined), the free surface elevation can be computed as</p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-theory-48">
-<span class="eqno">(76)<a class="headerlink" href="#equation-theory-manual-theory-48" title="Link to this equation">¶</a></span>\[\eta = \eta_{\text{incident}} + \eta_{\text{diffracted}} + \sum_i \eta_{\text{radiated}, i} X_i.\]</div>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-55">
+<span class="eqno">(83)<a class="headerlink" href="#equation-theory-manual-theory-55" title="Link to this equation">¶</a></span>\[\eta = \eta_{\text{incident}} + \eta_{\text{diffracted}} + \sum_i \eta_{\text{radiated}, i} X_i.\]</div>
 </section>
 <section id="far-field-coefficients">
 <h3><a class="toc-backref" href="#id48" role="doc-backlink">Far-field coefficients</a><a class="headerlink" href="#far-field-coefficients" title="Link to this heading">¶</a></h3>
@@ -711,7 +800,7 @@ For this purpose, the <code class="docutils literal notranslate"><span class="pr
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &#169;2022, Matthieu Ancellin.
+      &#169;2024, Matthieu Ancellin.
       
       |
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>

@@ -13,13 +13,14 @@
     <script src="../_static/doctools.js?v=9a2dae69"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/proof.js?v=41e9dd12"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Post-processing" href="post_pro.html" />
     <link rel="prev" title="Resolution" href="resolution.html" />
     <script defer data-domain="ancell.in/capytaine" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
-    <jinja2.runtime.BlockReference object at 0x7fca80f48050>
+    <jinja2.runtime.BlockReference object at 0x7fc0cc907890>
 
   </head><body>
   
@@ -33,6 +34,63 @@
             
   <section id="outputs">
 <h1>Outputs<a class="headerlink" href="#outputs" title="Link to this heading">¶</a></h1>
+<section id="outputs-stored-in-linearpotentialflowresult">
+<h2>Outputs stored in LinearPotentialFlowResult<a class="headerlink" href="#outputs-stored-in-linearpotentialflowresult" title="Link to this heading">¶</a></h2>
+<p>Each <code class="docutils literal notranslate"><span class="pre">LinearPotentialFlowResult</span></code> object contains all the data defined for the
+corresponding problem:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="mf">3.14</span><span class="p">)</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">period</span><span class="p">)</span>
+<span class="c1"># 1.0</span>
+</pre></div>
+</div>
+<p>They also contain a supplementary attribute named <code class="docutils literal notranslate"><span class="pre">forces</span></code>, containing the
+computed forces on the body:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">forces</span><span class="p">)</span>
+<span class="c1"># {&#39;Surge&#39;: (23941.728129534735+9487.048661471363j), &#39;Sway&#39;: (-2.010438038269058e-09-2.8862814360763878e-09j), ...}</span>
+</pre></div>
+</div>
+<p>The force is stored as Python dictionary associating a complex value in SI
+units to the name of the influenced degree of freedom.
+In other words, in the example code above, the <span class="math notranslate nohighlight">\(x\)</span>-component of the force
+vector has magnitude 23941 Newton at <span class="math notranslate nohighlight">\(t =0\)</span>, while the
+<span class="math notranslate nohighlight">\(y\)</span>-component of the force vector is negligible at all time.</p>
+<p>For radiation problems, the result object also contain <code class="docutils literal notranslate"><span class="pre">added_mass</span></code> and
+<code class="docutils literal notranslate"><span class="pre">radiation_damping</span></code> attributes, with the same shape of a Python dictionary.</p>
+<p>It the solver was called with <code class="docutils literal notranslate"><span class="pre">keep_details=True</span></code>, the result object also
+contains the potential and pressure fields on each face of the mesh of the hull:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">potential</span><span class="p">)</span>
+<span class="c1"># [-1.72534485e-03+0.14128629j -3.98932611e-03+0.33387497j</span>
+<span class="c1">#  -6.54135830e-03+0.54208628j ... -2.09853806e+00-0.56106653j</span>
+<span class="c1">#  -2.18441640e+00-0.58402701j -2.22777755e+00-0.59562008j]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">pressure</span><span class="p">)</span>
+<span class="c1"># [-1.72534485e-03+0.14128629j -3.98932611e-03+0.33387497j</span>
+<span class="c1">#  -6.54135830e-03+0.54208628j ... -2.09853806e+00-0.56106653j</span>
+<span class="c1">#  -2.18441640e+00-0.58402701j -2.22777755e+00-0.59562008j]</span>
+</pre></div>
+</div>
+<p>These magnitudes are stored in an one-dimensionnal array as long as the number
+of faces of the mesh, and stored in the same order as the faces in the <code class="docutils literal notranslate"><span class="pre">Mesh</span></code>
+object. In other words, <code class="docutils literal notranslate"><span class="pre">result.pressure[3]</span></code> contains the pressure on the
+face of center <code class="docutils literal notranslate"><span class="pre">body.mesh.faces_centers[3]</span></code>.</p>
+<p>Recall that the potential and the pressure are related by <span class="math notranslate nohighlight">\(p = j \rho
+\omega \Phi\)</span>, where <span class="math notranslate nohighlight">\(\rho\)</span> is the fluid density and <span class="math notranslate nohighlight">\(\omega\)</span> is the
+angular frequency.</p>
+<p>The potential, the pressure and the velocity in the rest of the fluid can be
+computed in post-processing as described in <a class="reference internal" href="post_pro.html"><span class="doc">Post-processing</span></a>.</p>
+<p>When using the indirect boundary integral equation (by default), the result
+object with details also contains the distribution of sources <span class="math notranslate nohighlight">\(\sigma\)</span> on
+the hull, under the same form as the potential above:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">sources</span><span class="p">)</span>
+<span class="c1"># [  0.0281344 -0.35719578j   0.06715056-1.34127138j</span>
+<span class="c1">#    0.10891061-2.26921669j ... -13.58069557+2.13219904j</span>
+<span class="c1">#  -14.13645749+2.21945488j -14.41706935+2.26351156j]</span>
+</pre></div>
+</div>
+</section>
 <section id="building-a-dataset-from-linearpotentialflowresult">
 <h2>Building a dataset from LinearPotentialFlowResult<a class="headerlink" href="#building-a-dataset-from-linearpotentialflowresult" title="Link to this heading">¶</a></h2>
 <p>If you have a list of <code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowResult</span></code>, you can assemble
@@ -276,7 +334,7 @@ Since this export method poorly supports complex number, the <a class="reference
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &#169;2022, Matthieu Ancellin.
+      &#169;2024, Matthieu Ancellin.
       
       |
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.3.7</a>
