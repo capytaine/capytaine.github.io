@@ -1,0 +1,600 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>capytaine.bem.nemoh &#8212; capytaine 1.0.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../../_static/proof.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.bem.nemoh</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;Solver for the BEM problem based on Nemoh&#39;s Green function.</span>
+
+<span class="sd">Example</span>
+<span class="sd">-------</span>
+
+<span class="sd">::</span>
+
+<span class="sd">    problem = RadiationProblem(...)</span>
+<span class="sd">    result = Nemoh().solve(problem)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="k">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">lru_cache</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+
+<span class="kn">from</span> <span class="nn">capytaine.matrices</span> <span class="k">import</span> <span class="n">linear_solvers</span>
+<span class="kn">from</span> <span class="nn">capytaine.matrices.builders</span> <span class="k">import</span> <span class="n">identity_like</span>
+<span class="kn">from</span> <span class="nn">capytaine.bem.hierarchical_toeplitz_matrices</span> <span class="k">import</span> <span class="n">hierarchical_toeplitz_matrices</span>
+<span class="kn">from</span> <span class="nn">capytaine.bem.prony_decomposition</span> <span class="k">import</span> <span class="n">find_best_exponential_decomposition</span>
+<span class="kn">import</span> <span class="nn">capytaine.bem.NemohCore</span> <span class="k">as</span> <span class="nn">NemohCore</span>
+<span class="kn">from</span> <span class="nn">capytaine.io.xarray</span> <span class="k">import</span> <span class="n">problems_from_dataset</span><span class="p">,</span> <span class="n">assemble_dataset</span><span class="p">,</span> <span class="n">kochin_data_array</span>
+
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># Caching the tabulation of the integrals for Delhommeau&#39;s Green function.</span>
+<span class="n">tabulated_integrals</span> <span class="o">=</span> <span class="n">lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)(</span><span class="n">NemohCore</span><span class="o">.</span><span class="n">initialize_green_wave</span><span class="o">.</span><span class="n">initialize_tabulated_integrals</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Nemoh"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.nemoh.html#capytaine.bem.nemoh.Nemoh">[docs]</a><span class="k">class</span> <span class="nc">Nemoh</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Solver for the BEM problem based on Nemoh&#39;s Green function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tabulation_nb_integration_points: int, optional</span>
+<span class="sd">        Number of points for the evaluation of the tabulated elementary integrals w.r.t. :math:`theta`</span>
+<span class="sd">        used for the computation of the Green function (default: 251)</span>
+<span class="sd">    finite_depth_prony_decomposition_method: string, optional</span>
+<span class="sd">        The implementation of the Prony decomposition used to compute the finite depth Green function.</span>
+<span class="sd">    use_symmetries: bool, optional</span>
+<span class="sd">        if True, use the symmetries of the meshes when computing matrices and solving linear system</span>
+<span class="sd">    ACA_distance: float, optional</span>
+<span class="sd">        Above this distance, the ACA is used to approximate the matrix with a low-rank block.</span>
+<span class="sd">    ACA_tol: float, optional</span>
+<span class="sd">        The tolerance of the ACA when building a low-rank matrix.</span>
+<span class="sd">    cache_rankine_matrices: bool, optional</span>
+<span class="sd">        If True, cache intermediate matrices when computing the influence matrices,</span>
+<span class="sd">        if False, cache only the final result.</span>
+<span class="sd">    matrix_cache_size: int, optional</span>
+<span class="sd">        number of matrices to keep in cache</span>
+<span class="sd">    linear_solver: str or function, optional</span>
+<span class="sd">        Setting of the numerical solver for linear problems Ax = b.</span>
+<span class="sd">        It can be set with the name of a preexisting solver (available: &quot;direct&quot; [default], &quot;gmres&quot;, &quot;store_lu&quot;)</span>
+<span class="sd">        or by passing directly a solver function.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tabulated_integrals: 3-ple of arrays</span>
+<span class="sd">        Tabulated integrals for the computation of the Green function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">defaults_settings</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+        <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="mi">251</span><span class="p">,</span>
+        <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="s1">&#39;fortran&#39;</span><span class="p">,</span>
+        <span class="n">linear_solver</span><span class="o">=</span><span class="s1">&#39;gmres&#39;</span><span class="p">,</span>
+        <span class="n">hierarchical_matrices</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">ACA_distance</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">,</span>
+        <span class="n">ACA_tol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span>
+        <span class="n">matrix_cache_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+        <span class="n">cache_rankine_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">available_linear_solvers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;direct&#39;</span><span class="p">:</span> <span class="n">linear_solvers</span><span class="o">.</span><span class="n">solve_directly</span><span class="p">,</span>
+                                <span class="s1">&#39;gmres&#39;</span><span class="p">:</span> <span class="n">linear_solvers</span><span class="o">.</span><span class="n">solve_gmres</span><span class="p">}</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span><span class="p">):</span>
+
+        <span class="c1"># Check that all the given settings are relevant.</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">settings</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">defaults_settings</span><span class="p">:</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Unrecognized solver option: </span><span class="si">{key}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">defaults_settings</span><span class="p">,</span> <span class="o">**</span><span class="n">settings</span><span class="p">}</span>  <span class="c1"># Complete settings with default settings</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">settings</span> <span class="o">=</span> <span class="n">settings</span>  <span class="c1"># Keep a copy for saving in output dataset</span>
+
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Initialize Nemoh&#39;s Green function.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span> <span class="o">=</span> <span class="n">tabulated_integrals</span><span class="p">(</span><span class="mi">328</span><span class="p">,</span> <span class="mi">46</span><span class="p">,</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;tabulation_nb_integration_points&#39;</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;linear_solver&#39;</span><span class="p">]</span> <span class="ow">in</span> <span class="n">Nemoh</span><span class="o">.</span><span class="n">available_linear_solvers</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">linear_solver</span> <span class="o">=</span> <span class="n">Nemoh</span><span class="o">.</span><span class="n">available_linear_solvers</span><span class="p">[</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;linear_solver&#39;</span><span class="p">]]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">linear_solver</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;linear_solver&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;matrix_cache_size&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;cache_rankine_matrices&#39;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;hierarchical_matrices&#39;</span><span class="p">]:</span>
+                <span class="c1"># If the rankine matrix is cached, the recursive decomposition of the matrix</span>
+                <span class="c1"># has to be done before the caching.</span>
+                <span class="c1"># Otherwise, only the latest blocks of the matrices would be cached,</span>
+                <span class="c1"># which is not the expected behavior.</span>
+                <span class="c1"># It follows that the decomposition has to be done twice:</span>
+                <span class="c1"># once for the Rankine part and once for the wave part.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices_rankine</span> <span class="o">=</span> <span class="n">hierarchical_toeplitz_matrices</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices_rankine</span><span class="p">,</span>
+                    <span class="n">ACA_tol</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;ACA_tol&#39;</span><span class="p">],</span>
+                    <span class="n">ACA_distance</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;ACA_distance&#39;</span><span class="p">],</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices_wave</span> <span class="o">=</span> <span class="n">hierarchical_toeplitz_matrices</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices_wave</span><span class="p">,</span>
+                    <span class="n">ACA_tol</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;ACA_tol&#39;</span><span class="p">],</span>
+                    <span class="n">ACA_distance</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;ACA_distance&#39;</span><span class="p">],</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span>
+                <span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices_rankine</span> <span class="o">=</span> <span class="n">lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;matrix_cache_size&#39;</span><span class="p">])(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_matrices_rankine</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span> <span class="o">=</span> <span class="n">lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;matrix_cache_size&#39;</span><span class="p">])(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;hierarchical_matrices&#39;</span><span class="p">]:</span>
+                <span class="c1"># If the rankine matrix is not cached, the recursive decomposition of the matrix</span>
+                <span class="c1"># can be done at the top level.</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span> <span class="o">=</span> <span class="n">hierarchical_toeplitz_matrices</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">,</span>
+                    <span class="n">ACA_tol</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;ACA_tol&#39;</span><span class="p">],</span>
+                    <span class="n">ACA_distance</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;ACA_distance&#39;</span><span class="p">],</span>
+                    <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;matrix_cache_size&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span> <span class="o">=</span> <span class="n">lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;matrix_cache_size&#39;</span><span class="p">])(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Nemoh.exportable_settings"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.nemoh.html#capytaine.bem.nemoh.Nemoh.exportable_settings">[docs]</a>    <span class="k">def</span> <span class="nf">exportable_settings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;hierarchical_matrices&#39;</span><span class="p">]:</span>
+            <span class="k">del</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;ACA_distance&#39;</span><span class="p">]</span>
+            <span class="k">del</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;ACA_tol&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;matrix_cache_size&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;cache_rankine_matrices&#39;</span><span class="p">]</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;linear_solver&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;linear_solver&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">settings</span></div>
+
+<div class="viewcode-block" id="Nemoh.solve"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.nemoh.html#capytaine.bem.nemoh.Nemoh.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Solve the BEM problem using Nemoh.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        problem: LinearPotentialFlowProblem</span>
+<span class="sd">            the problem to be solved</span>
+<span class="sd">        keep_details: bool, optional</span>
+<span class="sd">            if True, store the sources and the potential on the floating body in the output object</span>
+<span class="sd">            (default: True)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        LinearPotentialFlowResult</span>
+<span class="sd">            an object storing the problem data and its results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Solve </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="n">problem</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">problem</span><span class="o">.</span><span class="n">wavelength</span> <span class="o">&lt;</span> <span class="mi">8</span><span class="o">*</span><span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="o">.</span><span class="n">max</span><span class="p">():</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Resolution of the mesh (8×max_radius={8*problem.body.mesh.faces_radiuses.max():.2e}) &quot;</span>
+                        <span class="n">f</span><span class="s2">&quot;might be insufficient for this wavelength (wavelength=</span><span class="si">{problem.wavelength:.2e}</span><span class="s2">)!&quot;</span><span class="p">)</span>
+
+        <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
+            <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+            <span class="n">free_surface</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">sea_bottom</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">wavenumber</span>
+        <span class="p">)</span>
+
+        <span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear_solver</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">boundary_condition</span><span class="p">)</span>
+        <span class="n">potential</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">sources</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">make_results_container</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">keep_details</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">sources</span> <span class="o">=</span> <span class="n">sources</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">potential</span> <span class="o">=</span> <span class="n">potential</span>
+
+        <span class="k">for</span> <span class="n">influenced_dof_name</span><span class="p">,</span> <span class="n">influenced_dof_vectors</span> <span class="ow">in</span> <span class="n">problem</span><span class="o">.</span><span class="n">influenced_dofs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Scalar product on each face:</span>
+            <span class="n">influenced_dof_normal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">influenced_dof_vectors</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># Sum over all faces:</span>
+            <span class="n">integrated_potential</span> <span class="o">=</span> <span class="o">-</span> <span class="n">problem</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">potential</span> <span class="o">*</span> <span class="n">influenced_dof_normal</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">)</span>
+            <span class="c1"># Store result:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">store_force</span><span class="p">(</span><span class="n">influenced_dof_name</span><span class="p">,</span> <span class="n">integrated_potential</span><span class="p">)</span>
+            <span class="c1"># Depending of the type of problem, the force will be kept as a complex-valued Froude-Krylov force</span>
+            <span class="c1"># or stored as a couple of added mass and radiation damping coefficients.</span>
+
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Done!&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="Nemoh.solve_all"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.nemoh.html#capytaine.bem.nemoh.Nemoh.solve_all">[docs]</a>    <span class="k">def</span> <span class="nf">solve_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problems</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Solve several problems.</span>
+<span class="sd">        Optional keyword arguments are passed to `Nemoh.solve`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        problems: list of LinearPotentialFlowProblem</span>
+<span class="sd">            several problems to be solved</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of LinearPotentialFlowResult</span>
+<span class="sd">            the solved problems</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">problem</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">problems</span><span class="p">)]</span></div>
+
+<div class="viewcode-block" id="Nemoh.fill_dataset"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.nemoh.html#capytaine.bem.nemoh.Nemoh.fill_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">fill_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">bodies</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Solve a set of problems defined by the coordinates of an xarray dataset.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset : xarray Dataset</span>
+<span class="sd">            dataset containing the problems parameters: frequency, radiating_dof, water_depth, ...</span>
+<span class="sd">        bodies : list of FloatingBody</span>
+<span class="sd">            the bodies involved in the problems</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        xarray Dataset</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;start_of_computation&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                 <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">()}</span>
+        <span class="n">problems</span> <span class="o">=</span> <span class="n">problems_from_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">bodies</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;theta&#39;</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">kochin</span> <span class="o">=</span> <span class="n">kochin_data_array</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">])</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;kochin&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kochin</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dataset</span></div>
+
+    <span class="c1">#######################</span>
+    <span class="c1">#  Building matrices  #</span>
+    <span class="c1">#######################</span>
+
+<div class="viewcode-block" id="Nemoh.build_matrices"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.nemoh.html#capytaine.bem.nemoh.Nemoh.build_matrices">[docs]</a>    <span class="k">def</span> <span class="nf">build_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="o">=-</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Build the S and K influence matrices between mesh1 and mesh2.</span>
+<span class="sd">        In brief, it calls `build_matrices_rankine` and `build_matrices_wave` and sum their outputs.</span>
+<span class="sd">        It also adds :math:`\mathbb{I}/2` matrix to :math:`V` to get :math:`K`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mesh1: Mesh or CollectionOfMeshes</span>
+<span class="sd">            mesh of the receiving body (where the potential is measured)</span>
+<span class="sd">        mesh2: Mesh or CollectionOfMeshes</span>
+<span class="sd">            mesh of the source body (over which the source distribution is integrated)</span>
+<span class="sd">        free_surface: float, optional</span>
+<span class="sd">            position of the free surface (default: :math:`z = 0`)</span>
+<span class="sd">        sea_bottom: float, optional</span>
+<span class="sd">            position of the sea bottom (default: :math:`z = -\infty`)</span>
+<span class="sd">        wavenumber: float, optional</span>
+<span class="sd">            wavenumber (default: 1.0)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        couple of matrix-like objects (either 2D arrays or BlockMatrix objects)</span>
+<span class="sd">            couple of influence matrices</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Evaluating matrix of </span><span class="si">{mesh1.name}</span><span class="s2"> on {&#39;itself&#39; if mesh2 is mesh1 else mesh2.name} &quot;</span>
+                  <span class="n">f</span><span class="s2">&quot;for depth={free_surface-sea_bottom} and wavenumber=</span><span class="si">{wavenumber}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="n">Srankine</span><span class="p">,</span> <span class="n">Vrankine</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices_rankine</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="n">free_surface</span> <span class="o">-</span> <span class="n">sea_bottom</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span> <span class="ow">and</span> <span class="n">wavenumber</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">))):</span>
+            <span class="c1"># No more terms in the Green function</span>
+            <span class="k">return</span> <span class="n">Srankine</span><span class="p">,</span> <span class="n">Vrankine</span> <span class="o">+</span> <span class="n">identity_like</span><span class="p">(</span><span class="n">Vrankine</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+
+        <span class="n">Swave</span><span class="p">,</span> <span class="n">Vwave</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices_wave</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">)</span>
+
+        <span class="c1"># The real valued matrices Srankine and Vrankine are automatically recasted as complex in the sum.</span>
+        <span class="n">Swave</span> <span class="o">+=</span> <span class="n">Srankine</span>
+        <span class="k">if</span> <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">:</span>
+            <span class="n">Vwave</span> <span class="o">+=</span> <span class="n">Vrankine</span> <span class="o">+</span> <span class="n">identity_like</span><span class="p">(</span><span class="n">Vrankine</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">Vwave</span> <span class="o">+=</span> <span class="n">Vrankine</span>
+        <span class="k">return</span> <span class="n">Swave</span><span class="p">,</span> <span class="n">Vwave</span></div>
+
+<div class="viewcode-block" id="Nemoh.build_matrices_rankine"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.nemoh.html#capytaine.bem.nemoh.Nemoh.build_matrices_rankine">[docs]</a>    <span class="k">def</span> <span class="nf">build_matrices_rankine</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="o">=-</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Build the Rankine part of the S and V influence matrices between mesh1 and mesh2.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mesh1: Mesh or CollectionOfMeshes</span>
+<span class="sd">            mesh of the receiving body (where the potential is measured)</span>
+<span class="sd">        mesh2: Mesh or CollectionOfMeshes</span>
+<span class="sd">            mesh of the source body (over which the source distribution is integrated)</span>
+<span class="sd">        free_surface: float, optional</span>
+<span class="sd">            position of the free surface (default: :math:`z = 0`)</span>
+<span class="sd">        sea_bottom: float, optional</span>
+<span class="sd">            position of the sea bottom (default: :math:`z = -\infty`)</span>
+<span class="sd">        wavenumber: float, optional</span>
+<span class="sd">            wavenumber (default: 1.0)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        couple of real-valued matrix-like objects (either 2D arrays or BlockMatrix objects)</span>
+<span class="sd">            couple of influence matrices</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># RANKINE TERM</span>
+
+        <span class="n">S</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">NemohCore</span><span class="o">.</span><span class="n">green_rankine</span><span class="o">.</span><span class="n">build_matrices_rankine_source</span><span class="p">(</span>
+            <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">,</span>
+            <span class="n">mesh2</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span>      <span class="n">mesh2</span><span class="o">.</span><span class="n">faces</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">,</span>
+            <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">,</span>   <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="p">,</span>
+                                 <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">:</span>
+            <span class="c1"># No free surface, no more terms in the Green function</span>
+            <span class="k">return</span> <span class="n">S</span><span class="p">,</span> <span class="n">V</span>
+
+        <span class="c1"># REFLECTION TERM</span>
+
+        <span class="k">def</span> <span class="nf">reflect_vector</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">y</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="k">return</span> <span class="n">y</span>
+
+        <span class="k">if</span> <span class="n">free_surface</span> <span class="o">-</span> <span class="n">sea_bottom</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">:</span>
+            <span class="c1"># INFINITE DEPTH</span>
+            <span class="k">def</span> <span class="nf">reflect_point</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="c1"># y[:, 2] = 2*free_surface - x[:, 2]</span>
+                <span class="n">y</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="n">y</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">2</span><span class="o">*</span><span class="n">free_surface</span>
+                <span class="k">return</span> <span class="n">y</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># FINITE DEPTH</span>
+            <span class="k">def</span> <span class="nf">reflect_point</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                <span class="n">y</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="c1"># y[:, 2] = 2*sea_bottom - x[:, 2]</span>
+                <span class="n">y</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="n">y</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">2</span><span class="o">*</span><span class="n">sea_bottom</span>
+                <span class="k">return</span> <span class="n">y</span>
+
+        <span class="n">Srefl</span><span class="p">,</span> <span class="n">Vrefl</span> <span class="o">=</span> <span class="n">NemohCore</span><span class="o">.</span><span class="n">green_rankine</span><span class="o">.</span><span class="n">build_matrices_rankine_source</span><span class="p">(</span>
+            <span class="n">reflect_point</span><span class="p">(</span><span class="n">mesh1</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">),</span> <span class="n">reflect_vector</span><span class="p">(</span><span class="n">mesh1</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">),</span>
+            <span class="n">mesh2</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span>      <span class="n">mesh2</span><span class="o">.</span><span class="n">faces</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">,</span>
+            <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">,</span>   <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="p">,</span>
+                                 <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">free_surface</span> <span class="o">-</span> <span class="n">sea_bottom</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span> <span class="ow">or</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">S</span> <span class="o">+=</span> <span class="n">Srefl</span>
+            <span class="n">V</span> <span class="o">+=</span> <span class="n">Vrefl</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">S</span> <span class="o">-=</span> <span class="n">Srefl</span>
+            <span class="n">V</span> <span class="o">-=</span> <span class="n">Vrefl</span>
+
+        <span class="k">return</span> <span class="n">S</span><span class="p">,</span> <span class="n">V</span></div>
+
+<div class="viewcode-block" id="Nemoh.build_matrices_wave"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.nemoh.html#capytaine.bem.nemoh.Nemoh.build_matrices_wave">[docs]</a>    <span class="k">def</span> <span class="nf">build_matrices_wave</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">):</span>
+        <span class="sa">r</span><span class="sd">&quot;&quot;&quot;Build the wave part of the influence matrices between mesh1 and mesh2.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mesh1: Mesh or CollectionOfMeshes</span>
+<span class="sd">            mesh of the receiving body (where the potential is measured)</span>
+<span class="sd">        mesh2: Mesh or CollectionOfMeshes</span>
+<span class="sd">            mesh of the source body (over which the source distribution is integrated)</span>
+<span class="sd">        free_surface: float, optional</span>
+<span class="sd">            position of the free surface (default: :math:`z = 0`)</span>
+<span class="sd">        sea_bottom: float, optional</span>
+<span class="sd">            position of the sea bottom (default: :math:`z = -\infty`)</span>
+<span class="sd">        wavenumber: float, optional</span>
+<span class="sd">            wavenumber (default: 1.0)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        couple of complex-valued matrix-like objects (either 2D arrays or BlockMatrix objects)</span>
+<span class="sd">            couple of influence matrices</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">depth</span> <span class="o">=</span> <span class="n">free_surface</span> <span class="o">-</span> <span class="n">sea_bottom</span>
+        <span class="k">if</span> <span class="n">depth</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">NemohCore</span><span class="o">.</span><span class="n">green_wave</span><span class="o">.</span><span class="n">build_matrices_wave_source</span><span class="p">(</span>
+                <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">,</span>
+                <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">,</span>
+                <span class="n">wavenumber</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span>
+                <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span><span class="p">,</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span>  <span class="c1"># Dummy arrays that won&#39;t actually be used by the fortran code.</span>
+                <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">a_exp</span><span class="p">,</span> <span class="n">lamda_exp</span> <span class="o">=</span> <span class="n">find_best_exponential_decomposition</span><span class="p">(</span>
+                <span class="n">wavenumber</span><span class="o">*</span><span class="n">depth</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">wavenumber</span><span class="o">*</span><span class="n">depth</span><span class="p">),</span>
+                <span class="n">wavenumber</span><span class="o">*</span><span class="n">depth</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">settings</span><span class="p">[</span><span class="s1">&#39;finite_depth_prony_decomposition_method&#39;</span><span class="p">],</span>
+            <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">NemohCore</span><span class="o">.</span><span class="n">green_wave</span><span class="o">.</span><span class="n">build_matrices_wave_source</span><span class="p">(</span>
+                <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">,</span>
+                <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">,</span>
+                <span class="n">wavenumber</span><span class="p">,</span> <span class="n">depth</span><span class="p">,</span>
+                <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span><span class="p">,</span>
+                <span class="n">lamda_exp</span><span class="p">,</span> <span class="n">a_exp</span><span class="p">,</span>
+                <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span>
+                <span class="p">)</span></div>
+
+    <span class="c1">#######################</span>
+    <span class="c1">#  Compute potential  #</span>
+    <span class="c1">#######################</span>
+
+<div class="viewcode-block" id="Nemoh.get_potential_on_mesh"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.nemoh.html#capytaine.bem.nemoh.Nemoh.get_potential_on_mesh">[docs]</a>    <span class="k">def</span> <span class="nf">get_potential_on_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the potential on a mesh for the potential field of a previously solved problem.</span>
+<span class="sd">        Since the interaction matrix does not need to be computed in full to compute the matrix-vector product,</span>
+<span class="sd">        only a few lines are evaluated at a time to reduce the memory cost of the operation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result : LinearPotentialFlowResult</span>
+<span class="sd">            the return of Nemoh&#39;s solver</span>
+<span class="sd">        mesh : Mesh or CollectionOfMeshes</span>
+<span class="sd">            a mesh</span>
+<span class="sd">        chunk_size: int, optional</span>
+<span class="sd">            Number of lines to compute in the matrix.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        array of shape (mesh.nb_faces,)</span>
+<span class="sd">            potential on the faces of the mesh</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        Exception: if the :code:`Result` object given as input does not contain the source distribution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Compute potential on </span><span class="si">{mesh.name}</span><span class="s2"> for </span><span class="si">{result}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;&quot;&quot;The values of the sources of </span><span class="si">{result}</span><span class="s2"> cannot been found.</span>
+<span class="s2">            They probably have not been stored by the solver because the option keep_details=True have not been set.</span>
+<span class="s2">            Please re-run the resolution with this option.&quot;&quot;&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">chunk_size</span> <span class="o">&gt;</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">:</span>
+            <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
+                <span class="n">mesh</span><span class="p">,</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+                <span class="n">free_surface</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span>
+                <span class="n">sea_bottom</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">sea_bottom</span><span class="p">,</span>
+                <span class="n">wavenumber</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">wavenumber</span>
+            <span class="p">)</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">):</span>
+                <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
+                    <span class="n">mesh</span><span class="o">.</span><span class="n">extract_faces</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="n">chunk_size</span><span class="p">))),</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+                    <span class="n">free_surface</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span>
+                    <span class="n">sea_bottom</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">sea_bottom</span><span class="p">,</span>
+                    <span class="n">wavenumber</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">wavenumber</span>
+                <span class="p">)</span>
+                <span class="n">phi</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">chunk_size</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span>
+
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Done computing potential on </span><span class="si">{mesh.name}</span><span class="s2"> for </span><span class="si">{result}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">phi</span></div>
+
+<div class="viewcode-block" id="Nemoh.get_free_surface_elevation"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.nemoh.html#capytaine.bem.nemoh.Nemoh.get_free_surface_elevation">[docs]</a>    <span class="k">def</span> <span class="nf">get_free_surface_elevation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the elevation of the free surface on a mesh for a previously solved problem.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result : LinearPotentialFlowResult</span>
+<span class="sd">            the return of Nemoh&#39;s solver</span>
+<span class="sd">        free_surface : FreeSurface</span>
+<span class="sd">            a meshed free surface</span>
+<span class="sd">        keep_details : bool, optional</span>
+<span class="sd">            if True, keep the free surface elevation in the LinearPotentialFlowResult (default:False)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        array of shape (free_surface.nb_faces,)</span>
+<span class="sd">            the free surface elevation on each faces of the meshed free surface</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        Exception: if the :code:`Result` object given as input does not contain the source distribution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fs_elevation</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">result</span><span class="o">.</span><span class="n">omega</span><span class="o">/</span><span class="n">result</span><span class="o">.</span><span class="n">g</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_potential_on_mesh</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">keep_details</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">fs_elevation</span><span class="p">[</span><span class="n">free_surface</span><span class="p">]</span> <span class="o">=</span> <span class="n">fs_elevation</span>
+        <span class="k">return</span> <span class="n">fs_elevation</span></div></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,598 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Cookbook &#8212; capytaine 0.6 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/proof.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="../_static/proof.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Developer manual" href="../developer_manual/index.html" />
+    <link rel="prev" title="Outputs" href="outputs.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="cookbook">
+<h1><a class="toc-backref" href="#id1">Cookbook</a><a class="headerlink" href="#cookbook" title="Permalink to this headline">¶</a></h1>
+<p>This page contains several examples of Capytaine’s features.</p>
+<div class="contents topic" id="content">
+<p class="topic-title first">Content</p>
+<ul class="simple">
+<li><a class="reference internal" href="#cookbook" id="id1">Cookbook</a><ul>
+<li><a class="reference internal" href="#base-examples" id="id2">Base examples</a><ul>
+<li><a class="reference internal" href="#added-mass-of-a-rigid-body" id="id3">Added mass of a rigid body</a></li>
+<li><a class="reference internal" href="#custom-degree-of-freedom" id="id4">Custom degree of freedom</a></li>
+<li><a class="reference internal" href="#influence-of-the-water-depth" id="id5">Influence of the water depth</a></li>
+<li><a class="reference internal" href="#simulation-with-several-bodies" id="id6">Simulation with several bodies</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#intermediate-examples" id="id7">Intermediate examples</a><ul>
+<li><a class="reference internal" href="#symmetric-body" id="id8">Symmetric body</a></li>
+<li><a class="reference internal" href="#axisymmetric-body" id="id9">Axisymmetric body</a></li>
+<li><a class="reference internal" href="#animated-free-surface-elevation" id="id10">Animated free surface elevation</a></li>
+<li><a class="reference internal" href="#kochin-function" id="id11">Kochin function</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#advanced-examples" id="id12">Advanced examples</a><ul>
+<li><a class="reference internal" href="#plot-the-influence-matrix" id="id13">Plot the influence matrix</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="section" id="base-examples">
+<h2><a class="toc-backref" href="#id2">Base examples</a><a class="headerlink" href="#base-examples" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="added-mass-of-a-rigid-body">
+<h3><a class="toc-backref" href="#id3">Added mass of a rigid body</a><a class="headerlink" href="#added-mass-of-a-rigid-body" title="Permalink to this headline">¶</a></h3>
+<p>This example generates the mesh of an horizontal cylinder, solves radiation problems for the six
+rigid-body degrees of freedom and then plots the added mass.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">capytaine</span> <span class="kn">import</span> <span class="n">Nemoh</span><span class="p">,</span> <span class="n">RadiationProblem</span><span class="p">,</span> <span class="n">assemble_dataset</span>
+<span class="kn">from</span> <span class="nn">capytaine.geometric_bodies</span> <span class="kn">import</span> <span class="n">HorizontalCylinder</span>
+
+<span class="c1"># Set up logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                    <span class="n">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Initialize floating body by generating a geometric mesh</span>
+<span class="n">cylinder</span> <span class="o">=</span> <span class="n">HorizontalCylinder</span><span class="p">(</span>
+    <span class="n">length</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>  <span class="c1"># Dimensions</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span>        <span class="c1"># Position</span>
+    <span class="n">nr</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>   <span class="c1"># Fineness of the mesh</span>
+<span class="p">)</span>
+
+<span class="c1"># Automatically add the six degrees of freedom of a rigid body</span>
+<span class="n">cylinder</span><span class="o">.</span><span class="n">add_all_rigid_body_dofs</span><span class="p">()</span>
+
+<span class="c1"># Define the range of frequencies as a Numpy array</span>
+<span class="n">omega_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+
+<span class="c1"># Set up the problems: we will solve a radiation problem for each</span>
+<span class="c1"># degree of freedom of the body and for each frequency in the</span>
+<span class="c1"># frequency range.</span>
+<span class="n">problems</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">cylinder</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">cylinder</span><span class="o">.</span><span class="n">dofs</span>
+    <span class="k">for</span> <span class="n">omega</span> <span class="ow">in</span> <span class="n">omega_range</span>
+<span class="p">]</span>
+<span class="c1"># Water density, gravity and water depth have not been specified.</span>
+<span class="c1"># Default values are used.</span>
+
+<span class="c1"># Solve all radiation problems with Nemoh</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">Nemoh</span><span class="p">()</span>
+<span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">pb</span><span class="p">)</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">problems</span><span class="p">)]</span>
+<span class="c1"># The &#39;sorted&#39; function ensures that the problems are sequentially</span>
+<span class="c1"># treated in an optimal order.</span>
+
+<span class="c1"># Gather the computed added mass into a labelled array.</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+<span class="c1"># Plot the added mass of each dofs as a function of the frequency</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">cylinder</span><span class="o">.</span><span class="n">dofs</span><span class="p">:</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+        <span class="n">omega_range</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span> <span class="n">influenced_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">),</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span>
+        <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;omega&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;added mass&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="custom-degree-of-freedom">
+<h3><a class="toc-backref" href="#id4">Custom degree of freedom</a><a class="headerlink" href="#custom-degree-of-freedom" title="Permalink to this headline">¶</a></h3>
+<p>This example defines arbitrary degrees of freedom for a sphere and solves a diffraction problem.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">capytaine</span> <span class="kn">import</span> <span class="n">Nemoh</span><span class="p">,</span> <span class="n">DiffractionProblem</span>
+<span class="kn">from</span> <span class="nn">capytaine.geometric_bodies</span> <span class="kn">import</span> <span class="n">Sphere</span>
+
+<span class="c1"># Initialize floating body</span>
+<span class="n">sphere</span> <span class="o">=</span> <span class="n">Sphere</span><span class="p">(</span>
+    <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>          <span class="c1"># Dimension</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span>   <span class="c1"># Position</span>
+    <span class="n">nphi</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>  <span class="c1"># Fineness of the mesh</span>
+<span class="p">)</span>
+
+<span class="c1"># DEFINE THE DOFS</span>
+
+<span class="c1"># Manually defined heave,</span>
+<span class="c1"># that is a vertical unit vector for all faces.</span>
+<span class="n">sphere</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="s2">&quot;Heave&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+    <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">face</span> <span class="ow">in</span> <span class="n">sphere</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Bulging of the sphere,</span>
+<span class="c1"># that is a deformation vector normal to the body at all faces.</span>
+<span class="c1"># We can simply point to the normal vectors of the mesh for that.</span>
+<span class="n">sphere</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="s2">&quot;Bulge&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sphere</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_normals</span>
+
+<span class="c1"># Shearing of the sphere in the x direction.</span>
+<span class="c1"># The deformation vector on a face is computed from the position of the face.</span>
+<span class="n">sphere</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="s2">&quot;x-shear&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+    <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">z</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">sphere</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># SOLVE DIFFRACTION PROBLEMS</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">Nemoh</span><span class="p">()</span>
+
+<span class="c1"># Solve the problem for β=0 (incoming wave in the x direction).</span>
+<span class="n">problem_1</span> <span class="o">=</span> <span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">sphere</span><span class="p">,</span> <span class="n">angle</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">result_1</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem_1</span><span class="p">)</span>
+
+<span class="c1"># Solve the problem for β=π/2 (incoming wave in the y direction).</span>
+<span class="n">problem_2</span> <span class="o">=</span> <span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">sphere</span><span class="p">,</span> <span class="n">angle</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">result_2</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem_2</span><span class="p">)</span>
+
+<span class="c1"># Print the generalized diffraction forces</span>
+<span class="c1"># for the three dofs we defined</span>
+<span class="c1"># for both values of the angle β.</span>
+<span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="p">[</span><span class="n">result_1</span><span class="p">,</span> <span class="n">result_2</span><span class="p">]:</span>
+    <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Angle: {result.angle:.2f}&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">sphere</span><span class="o">.</span><span class="n">dofs</span><span class="p">:</span>
+        <span class="n">force</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">forces</span><span class="p">[</span><span class="n">dof</span><span class="p">]</span>
+        <span class="k">print</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;{dof}: {np.abs(force):.2f}·exp({np.angle(force):.2f}i) N&quot;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">()</span>
+
+</pre></div>
+</div>
+<p>The diffraction force on the “Heave” and “Bulge” dofs should be the same for both incoming wave directions.
+The diffraction force on the “x-shear” dof is zero when the wave comes from the y direction.</p>
+</div>
+<div class="section" id="influence-of-the-water-depth">
+<h3><a class="toc-backref" href="#id5">Influence of the water depth</a><a class="headerlink" href="#influence-of-the-water-depth" title="Permalink to this headline">¶</a></h3>
+<p>This example runs the same simulation for several water depth and plot the results.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">capytaine</span> <span class="kn">import</span> <span class="n">Nemoh</span><span class="p">,</span> <span class="n">RadiationProblem</span><span class="p">,</span> <span class="n">assemble_dataset</span>
+<span class="kn">from</span> <span class="nn">capytaine.geometric_bodies</span> <span class="kn">import</span> <span class="n">HorizontalCylinder</span>
+
+<span class="c1"># Set up logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                    <span class="n">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Initialize floating body by generating a geometric mesh</span>
+<span class="n">cylinder</span> <span class="o">=</span> <span class="n">HorizontalCylinder</span><span class="p">(</span>
+    <span class="n">length</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>  <span class="c1"># Dimensions</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span>        <span class="c1"># Position</span>
+    <span class="n">nr</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>   <span class="c1"># Fineness of the mesh</span>
+<span class="p">)</span>
+
+<span class="c1"># Define a degree of freedom. The keyword &quot;Heave&quot;</span>
+<span class="c1"># is recognized by the code and the vertical translation</span>
+<span class="c1"># motion is automatically defined.</span>
+<span class="n">cylinder</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+
+<span class="c1"># Define the range of water depth</span>
+<span class="n">depth_range</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">+</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">]</span>
+
+<span class="c1"># Set up the problems: we will solve a radiation problem for each</span>
+<span class="c1"># water depth:</span>
+<span class="n">problems</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">cylinder</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="o">=-</span><span class="n">depth</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">depth</span> <span class="ow">in</span> <span class="n">depth_range</span>
+<span class="p">]</span>
+<span class="c1"># Water density, gravity and radiating dof have not been specified.</span>
+<span class="c1"># Default values are used. (For the radiating dof, the default value</span>
+<span class="c1"># is usually the first one that have been defined. Here only one have</span>
+<span class="c1"># been defined.)</span>
+
+<span class="c1"># Solve all radiation problems with Nemoh</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">Nemoh</span><span class="p">()</span>
+<span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">pb</span><span class="p">)</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">problems</span><span class="p">)]</span>
+
+<span class="c1"># Gather the computed added mass into a labelled array.</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+<span class="c1"># Plot the added mass of each dofs as a function of the water depth.</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">depth_range</span><span class="p">,</span>
+    <span class="n">data</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">omega</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">,</span> <span class="n">influenced_dof</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">),</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;s&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;water depth&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;added mass&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="simulation-with-several-bodies">
+<h3><a class="toc-backref" href="#id6">Simulation with several bodies</a><a class="headerlink" href="#simulation-with-several-bodies" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding: utf-8</span>
+
+<span class="kn">from</span> <span class="nn">capytaine.geometric_bodies.sphere</span> <span class="kn">import</span> <span class="n">Sphere</span>
+<span class="kn">from</span> <span class="nn">capytaine.geometric_bodies.cylinder</span> <span class="kn">import</span> <span class="n">HorizontalCylinder</span>
+<span class="kn">from</span> <span class="nn">capytaine.problems</span> <span class="kn">import</span> <span class="n">DiffractionProblem</span><span class="p">,</span> <span class="n">RadiationProblem</span>
+<span class="kn">from</span> <span class="nn">capytaine.Nemoh</span> <span class="kn">import</span> <span class="n">Nemoh</span>
+<span class="kn">from</span> <span class="nn">capytaine.results</span> <span class="kn">import</span> <span class="n">assemble_dataset</span>
+
+<span class="c1"># Define the first body</span>
+<span class="n">sphere</span> <span class="o">=</span> <span class="n">Sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">),</span>
+                <span class="n">ntheta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">nphi</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sphere_1&quot;</span><span class="p">)</span>
+<span class="n">sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
+<span class="n">sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+
+<span class="c1"># Define the second body</span>
+<span class="n">other_sphere</span> <span class="o">=</span> <span class="n">Sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                      <span class="n">ntheta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">nphi</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                      <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sphere_2&quot;</span><span class="p">)</span>
+<span class="n">other_sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
+<span class="n">other_sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+
+<span class="c1"># Define the third body</span>
+<span class="n">cylinder</span> <span class="o">=</span> <span class="n">HorizontalCylinder</span><span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                              <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.0</span><span class="p">),</span>
+                              <span class="n">nx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">nr</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                              <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cylinder&quot;</span><span class="p">)</span>
+<span class="n">cylinder</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
+<span class="n">cylinder</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+
+<span class="c1"># Combine the three individual bodies into a single body.</span>
+<span class="n">all_bodies</span> <span class="o">=</span> <span class="n">cylinder</span> <span class="o">+</span> <span class="n">sphere</span> <span class="o">+</span> <span class="n">other_sphere</span>
+<span class="c1">#</span>
+<span class="c1"># Note that the + operation is associative, that is &quot;(cylinder + sphere) + other_sphere&quot;</span>
+<span class="c1"># is equivalent to &quot;cylinder + (sphere + other_sphere)&quot;.</span>
+<span class="c1"># It is also commutative, up to some internal details which are usually not relevant.</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Merged body name:&quot;</span><span class="p">,</span> <span class="n">all_bodies</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s2">&quot;Merged body dofs:&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_bodies</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+<span class="c1"># The merged body can be used to define the problems in the usual way</span>
+<span class="n">problems</span> <span class="o">=</span> <span class="p">[</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">all_bodies</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">all_bodies</span><span class="o">.</span><span class="n">dofs</span><span class="p">]</span>
+<span class="n">problems</span> <span class="o">+=</span> <span class="p">[</span><span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">all_bodies</span><span class="p">,</span> <span class="n">angle</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)]</span>
+
+<span class="c1"># Solves the problem</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">Nemoh</span><span class="p">()</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+<span class="k">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="intermediate-examples">
+<h2><a class="toc-backref" href="#id7">Intermediate examples</a><a class="headerlink" href="#intermediate-examples" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="symmetric-body">
+<h3><a class="toc-backref" href="#id8">Symmetric body</a><a class="headerlink" href="#symmetric-body" title="Permalink to this headline">¶</a></h3>
+<p>This example loads a mesh from a file, keeps only a part of it and defines a symmetric body from this
+half.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">capytaine</span> <span class="kn">import</span> <span class="n">FloatingBody</span>
+<span class="kn">from</span> <span class="nn">capytaine.tools.geometry</span> <span class="kn">import</span> <span class="n">xOz_Plane</span>
+<span class="kn">from</span> <span class="nn">capytaine.mesh.mesh_clipper</span> <span class="kn">import</span> <span class="n">MeshClipper</span>
+<span class="kn">from</span> <span class="nn">capytaine.mesh.symmetries</span> <span class="kn">import</span> <span class="n">ReflectionSymmetry</span>
+
+<span class="c1"># Load a mesh from a file.</span>
+<span class="n">original_mesh</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s2">&quot;example.dat&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mesh</span>
+
+<span class="c1"># METHOD 1</span>
+<span class="c1"># Get the indices of the panels such that the center is in the half-space y &gt; 0.</span>
+<span class="n">indices_of_some_faces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">original_mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">half_mesh</span> <span class="o">=</span> <span class="n">original_mesh</span><span class="o">.</span><span class="n">extract_faces</span><span class="p">(</span><span class="n">indices_of_some_faces</span><span class="p">)</span>
+
+<span class="c1"># METHOD 2</span>
+<span class="c1"># Clip the mesh</span>
+<span class="n">half_mesh</span> <span class="o">=</span> <span class="n">MeshClipper</span><span class="p">(</span><span class="n">original_mesh</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="n">xOz_Plane</span><span class="p">)</span><span class="o">.</span><span class="n">clipped_mesh</span>
+
+<span class="c1"># Define a new body by reflecting the half mesh across the xOz plane.</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="p">(</span><span class="n">ReflectionSymmetry</span><span class="p">(</span><span class="n">half_mesh</span><span class="p">,</span> <span class="n">xOz_Plane</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;symmetric_body&quot;</span><span class="p">)</span>
+
+<span class="c1"># Display the body with VTK.</span>
+<span class="n">body</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="axisymmetric-body">
+<h3><a class="toc-backref" href="#id9">Axisymmetric body</a><a class="headerlink" href="#axisymmetric-body" title="Permalink to this headline">¶</a></h3>
+<p>This example generates an axisymmetric mesh from a profile function and solves radiation problems for
+this floating body.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">capytaine</span> <span class="kn">import</span> <span class="p">(</span><span class="n">FloatingBody</span><span class="p">,</span> <span class="n">AxialSymmetry</span><span class="p">,</span> <span class="n">Nemoh</span><span class="p">,</span>
+                       <span class="n">RadiationProblem</span><span class="p">,</span> <span class="n">assemble_dataset</span><span class="p">)</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                    <span class="n">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Profile of the axisymmetric body</span>
+<span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mf">0.1</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">16</span><span class="p">)</span>
+
+<span class="c1"># Generate the mesh and display it with VTK.</span>
+<span class="n">buoy</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="p">(</span>
+    <span class="n">AxialSymmetry</span><span class="o">.</span><span class="n">from_profile</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">z_range</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span> <span class="n">nphi</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">buoy</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+<span class="n">buoy</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># Set up problems</span>
+<span class="n">omega_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+<span class="n">problems</span> <span class="o">=</span> <span class="p">[</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">buoy</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s1">&#39;Heave&#39;</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">omega</span> <span class="ow">in</span> <span class="n">omega_range</span><span class="p">]</span>
+
+<span class="c1"># Solve the problems</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">Nemoh</span><span class="p">()</span>
+<span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">pb</span><span class="p">)</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">problems</span><span class="p">)]</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+<span class="c1"># Plot results</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">omega_range</span><span class="p">,</span>
+    <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">radiating_dof</span><span class="o">=</span><span class="s1">&#39;Heave&#39;</span><span class="p">,</span>
+                              <span class="n">influenced_dof</span><span class="o">=</span><span class="s1">&#39;Heave&#39;</span><span class="p">),</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Added mass&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">omega_range</span><span class="p">,</span>
+    <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;radiation_damping&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">radiating_dof</span><span class="o">=</span><span class="s1">&#39;Heave&#39;</span><span class="p">,</span>
+                                     <span class="n">influenced_dof</span><span class="o">=</span><span class="s1">&#39;Heave&#39;</span><span class="p">),</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Radiation damping&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;omega&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="animated-free-surface-elevation">
+<h3><a class="toc-backref" href="#id10">Animated free surface elevation</a><a class="headerlink" href="#animated-free-surface-elevation" title="Permalink to this headline">¶</a></h3>
+<p>This example solves a diffraction problem, it computes the free surface elevation and shows it as a
+3D animation.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">capytaine</span> <span class="kn">import</span> <span class="n">Nemoh</span><span class="p">,</span> <span class="n">DiffractionProblem</span><span class="p">,</span> <span class="n">RadiationProblem</span>
+<span class="kn">from</span> <span class="nn">capytaine.geometric_bodies</span> <span class="kn">import</span> <span class="n">Sphere</span><span class="p">,</span> <span class="n">FreeSurface</span>
+<span class="kn">from</span> <span class="nn">capytaine.ui.vtk.animation</span> <span class="kn">import</span> <span class="n">Animation</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Generate the mesh of a sphere</span>
+<span class="n">full_sphere</span> <span class="o">=</span> <span class="n">Sphere</span><span class="p">(</span>
+    <span class="n">radius</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>  <span class="c1"># Size and positions</span>
+    <span class="n">ntheta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">nphi</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>          <span class="c1"># Fineness of the mesh</span>
+<span class="p">)</span>
+<span class="n">full_sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+
+<span class="c1"># Keep only the immersed part of the mesh</span>
+<span class="n">sphere</span> <span class="o">=</span> <span class="n">full_sphere</span><span class="o">.</span><span class="n">keep_immersed_part</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+
+<span class="c1"># Set up and solve problem</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">Nemoh</span><span class="p">(</span><span class="n">use_symmetries</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="n">diffraction_problem</span> <span class="o">=</span> <span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">sphere</span><span class="p">,</span> <span class="n">angle</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="n">diffraction_result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">diffraction_problem</span><span class="p">)</span>
+
+<span class="n">radiation_problem</span> <span class="o">=</span> <span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">sphere</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="n">radiation_result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">radiation_problem</span><span class="p">)</span>
+
+<span class="c1"># Define a mesh of the free surface and compute the free surface elevation</span>
+<span class="n">free_surface</span> <span class="o">=</span> <span class="n">FreeSurface</span><span class="p">(</span><span class="n">x_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="n">y_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="n">nx</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+<span class="n">diffraction_elevation_at_faces</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">get_free_surface_elevation</span><span class="p">(</span><span class="n">diffraction_result</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">)</span>
+<span class="n">radiation_elevation_at_faces</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">get_free_surface_elevation</span><span class="p">(</span><span class="n">radiation_result</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">)</span>
+
+<span class="c1"># Add incoming waves</span>
+<span class="n">diffraction_elevation_at_faces</span> <span class="o">=</span> <span class="n">diffraction_elevation_at_faces</span> <span class="o">+</span> <span class="n">free_surface</span><span class="o">.</span><span class="n">incoming_waves</span><span class="p">(</span><span class="n">diffraction_result</span><span class="p">)</span>
+
+<span class="c1"># Run the animations</span>
+<span class="n">animation</span> <span class="o">=</span> <span class="n">Animation</span><span class="p">(</span><span class="n">loop_duration</span><span class="o">=</span><span class="n">diffraction_result</span><span class="o">.</span><span class="n">period</span><span class="p">)</span>
+<span class="n">animation</span><span class="o">.</span><span class="n">add_body</span><span class="p">(</span><span class="n">full_sphere</span><span class="p">,</span> <span class="n">faces_motion</span><span class="o">=</span><span class="bp">None</span><span class="p">)</span>
+<span class="n">animation</span><span class="o">.</span><span class="n">add_free_surface</span><span class="p">(</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">faces_elevation</span><span class="o">=</span><span class="mf">0.5</span><span class="o">*</span><span class="n">diffraction_elevation_at_faces</span><span class="p">)</span>
+<span class="n">animation</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">camera_position</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">))</span>
+<span class="c1"># animation.save(&quot;path/to/the/video/file.ogv&quot;, camera_position=(-30, -30, 30))</span>
+
+<span class="n">animation</span> <span class="o">=</span> <span class="n">Animation</span><span class="p">(</span><span class="n">loop_duration</span><span class="o">=</span><span class="n">radiation_result</span><span class="o">.</span><span class="n">period</span><span class="p">)</span>
+<span class="n">animation</span><span class="o">.</span><span class="n">add_body</span><span class="p">(</span><span class="n">full_sphere</span><span class="p">,</span> <span class="n">faces_motion</span><span class="o">=</span><span class="n">full_sphere</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="s2">&quot;Heave&quot;</span><span class="p">])</span>
+<span class="n">animation</span><span class="o">.</span><span class="n">add_free_surface</span><span class="p">(</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">faces_elevation</span><span class="o">=</span><span class="mf">3.0</span><span class="o">*</span><span class="n">radiation_elevation_at_faces</span><span class="p">)</span>
+<span class="n">animation</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">camera_position</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">))</span>
+<span class="c1"># animation.save(&quot;path/to/the/video/file.ogv&quot;, camera_position=(-30, -30, 30)</span>
+
+</pre></div>
+</div>
+</div>
+<div class="section" id="kochin-function">
+<h3><a class="toc-backref" href="#id11">Kochin function</a><a class="headerlink" href="#kochin-function" title="Permalink to this headline">¶</a></h3>
+<p>TODO</p>
+</div>
+</div>
+<div class="section" id="advanced-examples">
+<h2><a class="toc-backref" href="#id12">Advanced examples</a><a class="headerlink" href="#advanced-examples" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="plot-the-influence-matrix">
+<h3><a class="toc-backref" href="#id13">Plot the influence matrix</a><a class="headerlink" href="#plot-the-influence-matrix" title="Permalink to this headline">¶</a></h3>
+<p>This example plots the influence matrix for an horizontal cylinder.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">capytaine</span> <span class="kn">import</span> <span class="n">Nemoh</span>
+<span class="kn">from</span> <span class="nn">capytaine.geometric_bodies</span> <span class="kn">import</span> <span class="n">HorizontalCylinder</span>
+
+<span class="c1"># Generate the mesh of a cylinder</span>
+<span class="n">cylinder</span> <span class="o">=</span> <span class="n">HorizontalCylinder</span><span class="p">(</span>
+    <span class="n">length</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>  <span class="c1"># Dimensions</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span>        <span class="c1"># Position</span>
+    <span class="n">nr</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>     <span class="c1"># Fineness of the mesh</span>
+<span class="p">)</span>
+
+<span class="c1"># Use Nemoh to compute the influence matrices</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">Nemoh</span><span class="p">()</span>
+<span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span><span class="n">cylinder</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">cylinder</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+
+<span class="c1"># Plot the absolute value of the matrix V</span>
+<span class="c1">#</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">full_matrix</span><span class="p">()))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;$|S|$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation for users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inputs.html">Inputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="problem_setup.html">Setting up a problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resolution.html">Resolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="outputs.html">Outputs</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Cookbook</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">User manual</a><ul>
+      <li>Previous: <a href="outputs.html" title="previous chapter">Outputs</a></li>
+      <li>Next: <a href="../developer_manual/index.html" title="next chapter">Developer manual</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_manual/cookbook.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/user_manual/cookbook.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

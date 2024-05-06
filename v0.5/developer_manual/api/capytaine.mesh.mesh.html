@@ -1,0 +1,521 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>capytaine.mesh.mesh module &#8212; capytaine 0.5 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/proof.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/proof.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="capytaine.mesh.mesh_clipper module" href="capytaine.mesh.mesh_clipper.html" />
+    <link rel="prev" title="capytaine.mesh package" href="capytaine.mesh.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-capytaine.mesh.mesh">
+<span id="capytaine-mesh-mesh-module"></span><h1>capytaine.mesh.mesh module<a class="headerlink" href="#module-capytaine.mesh.mesh" title="Permalink to this headline">¶</a></h1>
+<p>This module concerns mesh data structures.</p>
+<p>Based on Meshmagick by Francois Rongere (EC Nantes).</p>
+<dl class="class">
+<dt id="capytaine.mesh.mesh.Mesh">
+<em class="property">class </em><code class="descclassname">capytaine.mesh.mesh.</code><code class="descname">Mesh</code><span class="sig-paren">(</span><em>vertices=None</em>, <em>faces=None</em>, <em>name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="capytaine.tools.geometry.html#capytaine.tools.geometry.Abstract3DObject" title="capytaine.tools.geometry.Abstract3DObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">capytaine.tools.geometry.Abstract3DObject</span></code></a></p>
+<p>A class to handle unstructured meshes.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>vertices</strong> (<em>array_like of shape (nv, 3)</em>) – Array of mesh vertices coordinates. Each line of the array represents one vertex
+coordinates</li>
+<li><strong>faces</strong> (<em>array_like of shape (nf, 4)</em>) – Arrays of mesh connectivities for faces. Each line of the array represents indices of
+vertices that form the face, expressed in counterclockwise order to ensure outward normals
+description.</li>
+<li><strong>name</strong> (<em>str, optional</em>) – The mesh’s name. If None, mesh is given an automatic name based on its internal ID.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.as_set_of_faces">
+<code class="descname">as_set_of_faces</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.as_set_of_faces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.as_set_of_faces" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.axis_aligned_bbox">
+<code class="descname">axis_aligned_bbox</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.axis_aligned_bbox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the axis aligned bounding box of the mesh.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(xmin, xmax, ymin, ymax, zmin, zmax)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)">tuple</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.boundaries">
+<code class="descname">boundaries</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.boundaries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a list that stores lists of boundary connected vertices.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.copy">
+<code class="descname">copy</code><span class="sig-paren">(</span><em>name=None</em><span class="sig-paren">)</span> &#x2192; capytaine.mesh.mesh.Mesh<a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a copy of the current mesh instance.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>name</strong> (<em>string, optional</em>) – a name for the new mesh</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">mesh instance copy</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="#capytaine.mesh.mesh.Mesh" title="capytaine.mesh.mesh.Mesh">Mesh</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.extract_faces">
+<code class="descname">extract_faces</code><span class="sig-paren">(</span><em>id_faces_to_extract</em>, <em>return_index=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.extract_faces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.extract_faces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extracts a new mesh from a selection of faces ids</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>id_faces_to_extract</strong> (<em>ndarray</em>) – Indices of faces that have to be extracted</li>
+<li><strong>return_index</strong> (<em>bool</em>) – Flag to output old indices</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">A new Mesh instance composed of the extracted faces</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#capytaine.mesh.mesh.Mesh" title="capytaine.mesh.mesh.Mesh">Mesh</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.faces">
+<code class="descname">faces</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.faces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the faces connectivity array of the mesh.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.faces_areas">
+<code class="descname">faces_areas</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.faces_areas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the array of faces areas of the mesh.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.faces_centers">
+<code class="descname">faces_centers</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.faces_centers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the array of faces centers of the mesh.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.faces_normals">
+<code class="descname">faces_normals</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.faces_normals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the array of faces normals of the mesh.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.faces_radiuses">
+<code class="descname">faces_radiuses</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.faces_radiuses" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the array of faces radiuses of the mesh.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.ff">
+<code class="descname">ff</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.ff" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the face / faces connectivity dictionary.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.flip_normals">
+<code class="descname">flip_normals</code><span class="sig-paren">(</span><em>*args</em>, <em>inplace=True</em>, <em>name=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.flip_normals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="staticmethod">
+<dt id="capytaine.mesh.mesh.Mesh.from_set_of_faces">
+<em class="property">static </em><code class="descname">from_set_of_faces</code><span class="sig-paren">(</span><em>set_of_faces</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.from_set_of_faces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.from_set_of_faces" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.get_face">
+<code class="descname">get_face</code><span class="sig-paren">(</span><em>face_id</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.get_face"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.get_face" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the face described by its vertices connectivity.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>face_id</strong> (<em>int</em>) – Face id</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">If the face is a triangle, the array has 3 components, else it has 4 (quadrangle)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">ndarray</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.get_surface_integrals">
+<code class="descname">get_surface_integrals</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; numpy.ndarray<a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.get_surface_integrals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.get_surface_integrals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the mesh surface integrals.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.heal_mesh">
+<code class="descname">heal_mesh</code><span class="sig-paren">(</span><em>*args</em>, <em>inplace=True</em>, <em>name=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.heal_mesh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.heal_normals">
+<code class="descname">heal_normals</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.heal_normals"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.heal_normals" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.heal_triangles">
+<code class="descname">heal_triangles</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.heal_triangles"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.heal_triangles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.is_triangle">
+<code class="descname">is_triangle</code><span class="sig-paren">(</span><em>face_id</em><span class="sig-paren">)</span> &#x2192; bool<a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.is_triangle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.is_triangle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns if a face is a triangle</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>face_id</strong> (<em>int</em>) – Face id</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.join_meshes">
+<code class="descname">join_meshes</code><span class="sig-paren">(</span><em>*</em>, <em>name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.join_meshes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.join_meshes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.keep_immersed_part">
+<code class="descname">keep_immersed_part</code><span class="sig-paren">(</span><em>*args</em>, <em>inplace=True</em>, <em>name=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.keep_immersed_part" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.max_edge_length">
+<code class="descname">max_edge_length</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.max_edge_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>The mesh’s maximum edge length</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.mean_edge_length">
+<code class="descname">mean_edge_length</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.mean_edge_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>The mesh’s mean edge length</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.merge">
+<code class="descname">merge</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.merge" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dummy method to be generalized for collections of meshes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.merge_duplicates">
+<code class="descname">merge_duplicates</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.merge_duplicates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.merge_duplicates" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.min_edge_length">
+<code class="descname">min_edge_length</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.min_edge_length" title="Permalink to this definition">¶</a></dt>
+<dd><p>The mesh’s minimum edge length</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.mirror">
+<code class="descname">mirror</code><span class="sig-paren">(</span><em>*args</em>, <em>inplace=True</em>, <em>name=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.mirror" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.nb_boundaries">
+<code class="descname">nb_boundaries</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.nb_boundaries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of boundaries in the mesh.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.nb_faces">
+<code class="descname">nb_faces</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.nb_faces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of faces in the mesh.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.nb_quadrangles">
+<code class="descname">nb_quadrangles</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.nb_quadrangles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of quadrangles in the mesh.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.nb_triangles">
+<code class="descname">nb_triangles</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.nb_triangles" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of triangles in the mesh.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.nb_vertices">
+<code class="descname">nb_vertices</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.nb_vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the number of vertices in the mesh.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.quadrangles_ids">
+<code class="descname">quadrangles_ids</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.quadrangles_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the array of ids of quadrangle shaped faces.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.remove_degenerated_faces">
+<code class="descname">remove_degenerated_faces</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.remove_degenerated_faces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.remove_degenerated_faces" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.remove_unused_vertices">
+<code class="descname">remove_unused_vertices</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.remove_unused_vertices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.remove_unused_vertices" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.rotate">
+<code class="descname">rotate</code><span class="sig-paren">(</span><em>*args</em>, <em>inplace=True</em>, <em>name=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.rotate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.show">
+<code class="descname">show</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.show"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.show" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.show_matplotlib">
+<code class="descname">show_matplotlib</code><span class="sig-paren">(</span><em>ax=None</em>, <em>normal_vectors=False</em>, <em>scale_normal_vector=None</em>, <em>saveas=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.show_matplotlib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.show_matplotlib" title="Permalink to this definition">¶</a></dt>
+<dd><p>Poor man’s viewer with matplotlib.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>ax</strong> (<em>matplotlib axis</em>) – The 3d axis in which to plot the mesh. If not provided, create a new one.</li>
+<li><strong>normal_vector</strong> (<em>bool</em>) – If True, print normal vector.</li>
+<li><strong>scale_normal_vector</strong> (<em>array of shape (nb_faces, )</em>) – Scale separately each of the normal vectors.</li>
+<li><strong>saveas</strong> (<em>str</em>) – file path where to save the image</li>
+<li><strong>Other parameters are passed to Poly3DCollection.</strong></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.show_vtk">
+<code class="descname">show_vtk</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.show_vtk"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.show_vtk" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shows the mesh in the meshmagick viewer</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.squared_axis_aligned_bbox">
+<code class="descname">squared_axis_aligned_bbox</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.squared_axis_aligned_bbox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a squared axis aligned bounding box of the mesh.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">(xmin, xmax, ymin, ymax, zmin, zmax)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)">tuple</a></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">This method differs from <cite>axis_aligned_bbox()</cite> by the fact that
+the bounding box that is returned is squared but have the same center as the <cite>axis_aligned_bbox()</cite>.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.to_meshmagick">
+<code class="descname">to_meshmagick</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.to_meshmagick"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.to_meshmagick" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the Mesh object as a Mesh object from meshmagick.
+Mostly for debugging.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.translate">
+<code class="descname">translate</code><span class="sig-paren">(</span><em>*args</em>, <em>inplace=True</em>, <em>name=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.translate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.tree_view">
+<code class="descname">tree_view</code><span class="sig-paren">(</span><em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh.html#Mesh.tree_view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.tree_view" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dummy method to be generalized for collections of meshes.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.triangles_ids">
+<code class="descname">triangles_ids</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.triangles_ids" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the array of ids of triangle shaped faces.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh.Mesh.triangulate_quadrangles">
+<code class="descname">triangulate_quadrangles</code><span class="sig-paren">(</span><em>*args</em>, <em>inplace=True</em>, <em>name=None</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.triangulate_quadrangles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.vertices">
+<code class="descname">vertices</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the vertices array coordinate of the mesh.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.vf">
+<code class="descname">vf</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.vf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the vertex / faces connectivity dictionary.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.volume">
+<code class="descname">volume</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.volume" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the mesh enclosed volume.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh.Mesh.vv">
+<code class="descname">vv</code><a class="headerlink" href="#capytaine.mesh.mesh.Mesh.vv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the vertex / vertex connectivity dictionary.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../installation.html">Installation for developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../code_structure.html">Code structure</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html">API documentation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Developer manual</a><ul>
+  <li><a href="modules.html">API documentation</a><ul>
+  <li><a href="capytaine.html">capytaine package</a><ul>
+  <li><a href="capytaine.mesh.html">capytaine.mesh package</a><ul>
+      <li>Previous: <a href="capytaine.mesh.html" title="previous chapter">capytaine.mesh package</a></li>
+      <li>Next: <a href="capytaine.mesh.mesh_clipper.html" title="next chapter">capytaine.mesh.mesh_clipper module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/developer_manual/api/capytaine.mesh.mesh.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.7</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="../../_sources/developer_manual/api/capytaine.mesh.mesh.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

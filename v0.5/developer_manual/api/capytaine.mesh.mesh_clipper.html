@@ -1,0 +1,393 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>capytaine.mesh.mesh_clipper module &#8212; capytaine 0.5 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/proof.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/proof.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="capytaine.mesh.mesh_properties module" href="capytaine.mesh.mesh_properties.html" />
+    <link rel="prev" title="capytaine.mesh.mesh module" href="capytaine.mesh.mesh.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-capytaine.mesh.mesh_clipper">
+<span id="capytaine-mesh-mesh-clipper-module"></span><h1>capytaine.mesh.mesh_clipper module<a class="headerlink" href="#module-capytaine.mesh.mesh_clipper" title="Permalink to this headline">¶</a></h1>
+<p>This module holds a tools to clip meshes against a plane.</p>
+<p>Based on Meshmagick by Francois Rongere (EC Nantes).</p>
+<dl class="class">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper">
+<em class="property">class </em><code class="descclassname">capytaine.mesh.mesh_clipper.</code><code class="descname">MeshClipper</code><span class="sig-paren">(</span><em>source_mesh, plane=Plane(normal=[0. 0. 1.], point=[0. 0. 0.]), vicinity_tol=0.001, assert_closed_boundaries=False, verbose=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh_clipper.html#MeshClipper"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A class to perform mesh clipping operations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>source_mesh</strong> (<em>Mesh</em>) – The mesh to be clipped.</li>
+<li><strong>plane</strong> (<em>Plane, optional</em>) – The clipping plane. By default, the plane is the Oxy plane.</li>
+<li><strong>vicinity_tol</strong> (<em>float, optional</em>) – The absolute tolerance to consider en vertex is on the plane. Default is 1e-3.</li>
+<li><strong>assert_closed_boundaries</strong> (<em>bool, optional</em>) – False by default. When True, the mesh clipper will raise an exception if intersections with the clipping
+plane are not closed. It may be caused by a non-watertight mesh.</li>
+<li><strong>verbose</strong> (<em>bool, optional</em>) – False by default. If True, some messages on operations that are handled are printed.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.assert_closed_boundaries">
+<code class="descname">assert_closed_boundaries</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.assert_closed_boundaries" title="Permalink to this definition">¶</a></dt>
+<dd><p>Do we assert the boundaries have to be closed</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.assert_closed_boundaries_off">
+<code class="descname">assert_closed_boundaries_off</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh_clipper.html#MeshClipper.assert_closed_boundaries_off"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.assert_closed_boundaries_off" title="Permalink to this definition">¶</a></dt>
+<dd><p>Switches OFF the flag for closed boundary assertion while clipping.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.assert_closed_boundaries_on">
+<code class="descname">assert_closed_boundaries_on</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh_clipper.html#MeshClipper.assert_closed_boundaries_on"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.assert_closed_boundaries_on" title="Permalink to this definition">¶</a></dt>
+<dd><p>Switches ON the flag for closed boundary assertion while clipping.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.clipped_crown_mesh">
+<code class="descname">clipped_crown_mesh</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.clipped_crown_mesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>A new mesh that is obtained by clipping the crown_mesh.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="capytaine.mesh.mesh.html#capytaine.mesh.mesh.Mesh" title="capytaine.mesh.mesh.Mesh">Mesh</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.clipped_mesh">
+<code class="descname">clipped_mesh</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.clipped_mesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>The resulting clipped mesh</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.closed_polygons">
+<code class="descname">closed_polygons</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.closed_polygons" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of closed boundary polygons obtained after clipping.</p>
+<p>This is a list of lists. The enclosed lists are ordered IDs list that form a closed polygon, described in the
+counter-clockwise order with respect to the mesh (oriented following the clipping plane’s normal).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<ul class="last simple">
+<li>The first vertex is repeated at the end of the list. By definition, these polygons are lying on the clipping
+plane.</li>
+<li>Vertices IDs are corresponding to the IDs of the clipped_crown_mesh, not those of the clipped_mesh.</li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.closed_polygons_vertices">
+<code class="descname">closed_polygons_vertices</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.closed_polygons_vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of closed boundary polygons obtained after clipping.</p>
+<p>This is a list of lists. The enclosed lists are ordered vertices coordinates of the closed polygons. By
+definition, these polygons are lying on the clipping plane.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.crown_mesh">
+<code class="descname">crown_mesh</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.crown_mesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>A new mesh only having the faces that cut the plane</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="capytaine.mesh.mesh.html#capytaine.mesh.mesh.Mesh" title="capytaine.mesh.mesh.Mesh">Mesh</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.lower_mesh">
+<code class="descname">lower_mesh</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.lower_mesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>A new mesh composed of the faces that entirely lie under the clipping plane.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="capytaine.mesh.mesh.html#capytaine.mesh.mesh.Mesh" title="capytaine.mesh.mesh.Mesh">Mesh</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.nb_closed_polygons">
+<code class="descname">nb_closed_polygons</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.nb_closed_polygons" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of closed polygons obtained after clipping</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.nb_open_lines">
+<code class="descname">nb_open_lines</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.nb_open_lines" title="Permalink to this definition">¶</a></dt>
+<dd><p>The number of open lines obtained after clipping.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)">int</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.open_lines">
+<code class="descname">open_lines</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.open_lines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of open boundary lines obtained after clipping.</p>
+<p>This is a list of lists. The enclosed lists are ordered vertices IDs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a></td>
+</tr>
+</tbody>
+</table>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<ul class="last simple">
+<li>The vertices IDs correspond to the IDs of clipped_crown_mesh, not clipped_mesh.</li>
+</ul>
+</div>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.open_lines_vertices">
+<code class="descname">open_lines_vertices</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.open_lines_vertices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of open boundary lines obtained after clipping.</p>
+<p>This is a list of lists. The enclosed lists are ordered vertices IDs.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)">list</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.plane">
+<code class="descname">plane</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.plane" title="Permalink to this definition">¶</a></dt>
+<dd><p>The clipping plane</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.source_mesh">
+<code class="descname">source_mesh</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.source_mesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>The mesh we work with</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.upper_mesh">
+<code class="descname">upper_mesh</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.upper_mesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>A new mesh only having the faces lying entirely up the plane</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="capytaine.mesh.mesh.html#capytaine.mesh.mesh.Mesh" title="capytaine.mesh.mesh.Mesh">Mesh</a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.verbose">
+<code class="descname">verbose</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.verbose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the current verbosity</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.verbose_off">
+<code class="descname">verbose_off</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh_clipper.html#MeshClipper.verbose_off"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.verbose_off" title="Permalink to this definition">¶</a></dt>
+<dd><p>Switches OFF the verbosity of the clipper.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.verbose_on">
+<code class="descname">verbose_on</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/mesh/mesh_clipper.html#MeshClipper.verbose_on"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.verbose_on" title="Permalink to this definition">¶</a></dt>
+<dd><p>Switches ON the verbosity of the clipper.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.mesh.mesh_clipper.MeshClipper.vicinity_tol">
+<code class="descname">vicinity_tol</code><a class="headerlink" href="#capytaine.mesh.mesh_clipper.MeshClipper.vicinity_tol" title="Permalink to this definition">¶</a></dt>
+<dd><p>Vicinity tolerance.</p>
+<p>It tells if a point is close enough to the plane to consider it lies on the plane</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../installation.html">Installation for developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../code_structure.html">Code structure</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html">API documentation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Developer manual</a><ul>
+  <li><a href="modules.html">API documentation</a><ul>
+  <li><a href="capytaine.html">capytaine package</a><ul>
+  <li><a href="capytaine.mesh.html">capytaine.mesh package</a><ul>
+      <li>Previous: <a href="capytaine.mesh.mesh.html" title="previous chapter">capytaine.mesh.mesh module</a></li>
+      <li>Next: <a href="capytaine.mesh.mesh_properties.html" title="next chapter">capytaine.mesh.mesh_properties module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/developer_manual/api/capytaine.mesh.mesh_clipper.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.7</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="../../_sources/developer_manual/api/capytaine.mesh.mesh_clipper.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

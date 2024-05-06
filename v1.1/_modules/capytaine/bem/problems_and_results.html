@@ -1,0 +1,381 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>capytaine.bem.problems_and_results &#8212; capytaine 1.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../../_static/proof.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.bem.problems_and_results</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;Definition of the problems to solve with the BEM solver.&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">attr</span> <span class="k">import</span> <span class="n">attrs</span><span class="p">,</span> <span class="n">attrib</span><span class="p">,</span> <span class="n">astuple</span><span class="p">,</span> <span class="n">Factory</span><span class="p">,</span> <span class="n">asdict</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="k">import</span> <span class="n">newton</span>
+
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="LinearPotentialFlowProblem"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.LinearPotentialFlowProblem">[docs]</a><span class="nd">@attrs</span><span class="p">(</span><span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">LinearPotentialFlowProblem</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;General class of a potential flow problem.</span>
+
+<span class="sd">    Stores:</span>
+
+<span class="sd">    * the environmental variables (gravity and fluid density),</span>
+<span class="sd">    * the shape of the domain (position of the free surface and of the sea bottom),</span>
+<span class="sd">    * the frequency of interest,</span>
+<span class="sd">    * the meshed floating body,</span>
+<span class="sd">    * the Neumann boundary conditions on the body.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">default_parameters</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;rho&#39;</span><span class="p">:</span> <span class="mf">1000.0</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">:</span> <span class="mf">9.81</span><span class="p">,</span> <span class="s1">&#39;free_surface&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s1">&#39;sea_bottom&#39;</span><span class="p">:</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">,</span> <span class="s1">&#39;omega&#39;</span><span class="p">:</span> <span class="mf">1.0</span><span class="p">}</span>
+
+    <span class="n">body</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">free_surface</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">default_parameters</span><span class="p">[</span><span class="s1">&#39;free_surface&#39;</span><span class="p">])</span>
+    <span class="n">sea_bottom</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">default_parameters</span><span class="p">[</span><span class="s1">&#39;sea_bottom&#39;</span><span class="p">])</span>
+    <span class="n">omega</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">default_parameters</span><span class="p">[</span><span class="s1">&#39;omega&#39;</span><span class="p">])</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">default_parameters</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">])</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">default_parameters</span><span class="p">[</span><span class="s1">&#39;rho&#39;</span><span class="p">])</span>
+
+    <span class="nd">@free_surface</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">_check_free_surface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">free_surface</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;Only z=0 and z=∞ are accepted values for the free surface position at the moment.&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">sea_bottom</span> <span class="o">!=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="s2">&quot;The case without free surface but with a sea bottom has not been implemented yet.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@sea_bottom</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">_check_depth</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_surface</span> <span class="o">&lt;</span> <span class="n">sea_bottom</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Sea bottom is above the free surface.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@body</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">_check_body_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">body</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="nb">any</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_surface</span><span class="p">)</span>
+                    <span class="ow">or</span> <span class="nb">any</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">sea_bottom</span><span class="p">)):</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;&quot;&quot;The mesh of the body </span><span class="si">{body.name}</span><span class="s2"> is not inside the domain.</span><span class="se">\n</span><span class="s2"></span>
+<span class="s2">                                Check the values of free_surface and sea_bottom</span><span class="se">\n</span><span class="s2"></span>
+<span class="s2">                                or use body.keep_immersed_part() to clip the mesh.&quot;&quot;&quot;</span><span class="p">)</span>
+
+    <span class="nd">@omega</span><span class="o">.</span><span class="n">validator</span>
+    <span class="k">def</span> <span class="nf">_check_frequency</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">omega</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">omega</span> <span class="ow">in</span> <span class="p">{</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">}</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;omega=</span><span class="si">{omega}</span><span class="s2"> is only implemented for infinite depth.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Do not display default values in str(problem).&quot;&quot;&quot;</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="s2">&quot;body={self.body.name if self.body is not None else &#39;None&#39;}&quot;</span><span class="p">,</span>
+                      <span class="n">f</span><span class="s2">&quot;omega=</span><span class="si">{self.omega:.3f}</span><span class="s2">&quot;</span><span class="p">,</span>
+                      <span class="n">f</span><span class="s2">&quot;depth=</span><span class="si">{self.depth}</span><span class="s2">&quot;</span><span class="p">]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">parameters</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_str_other_attributes</span><span class="p">())</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_surface</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_parameters</span><span class="p">[</span><span class="s1">&#39;free_surface&#39;</span><span class="p">]:</span>
+            <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;free_surface=</span><span class="si">{self.free_surface}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">g</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_parameters</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">]:</span>
+            <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;g=</span><span class="si">{self.g}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">rho</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_parameters</span><span class="p">[</span><span class="s1">&#39;rho&#39;</span><span class="p">]:</span>
+            <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;rho=</span><span class="si">{self.rho}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">+</span> <span class="s2">&quot;(&quot;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parameters</span><span class="p">)</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LinearPotentialFlowProblem</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">astuple</span><span class="p">(</span><span class="bp">self</span><span class="p">)[:</span><span class="mi">6</span><span class="p">]</span> <span class="o">==</span> <span class="n">astuple</span><span class="p">(</span><span class="n">other</span><span class="p">)[:</span><span class="mi">6</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="k">def</span> <span class="nf">__lt__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="c1"># Arbitrary order. Used for ordering of problems: problems with similar body are grouped together.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">LinearPotentialFlowProblem</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">astuple</span><span class="p">(</span><span class="bp">self</span><span class="p">)[:</span><span class="mi">6</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">astuple</span><span class="p">(</span><span class="n">other</span><span class="p">)[:</span><span class="mi">6</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">NotImplemented</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">depth</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_surface</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">sea_bottom</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">wavenumber</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">newton</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span><span class="p">,</span> <span class="n">x0</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">depth</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">wavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">period</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dimensionless_omega</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">g</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Dimensionless omega is defined only for finite depth problems.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">dimensionless_wavenumber</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavenumber</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">depth</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Dimensionless wavenumber is defined only for finite depth problems.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">influenced_dofs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># TODO: let the user choose the influenced dofs</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span>
+
+<div class="viewcode-block" id="LinearPotentialFlowProblem.make_results_container"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.LinearPotentialFlowProblem.make_results_container">[docs]</a>    <span class="k">def</span> <span class="nf">make_results_container</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LinearPotentialFlowResult</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="DiffractionProblem"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.DiffractionProblem">[docs]</a><span class="nd">@attrs</span><span class="p">(</span><span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">DiffractionProblem</span><span class="p">(</span><span class="n">LinearPotentialFlowProblem</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Particular LinearPotentialFlowProblem whose boundary conditions have</span>
+<span class="sd">    been computed from an incoming Airy wave.&quot;&quot;&quot;</span>
+
+    <span class="n">wave_direction</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="mf">0.0</span><span class="p">)</span>  <span class="c1"># Angle of the incoming wave.</span>
+    <span class="n">convention</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="s2">&quot;Nemoh&quot;</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">capytaine.bem.airy_waves</span> <span class="k">import</span> <span class="n">airy_waves_velocity</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">boundary_condition</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span>
+                    <span class="n">airy_waves_velocity</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">convention</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">convention</span><span class="p">)</span>
+                    <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_normals</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;The body </span><span class="si">{self.body.name}</span><span class="s2"> used in diffraction problem has no dofs!&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_str_other_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">f</span><span class="s2">&quot;wave_direction=</span><span class="si">{self.wave_direction:.3f}</span><span class="s2">&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="DiffractionProblem.make_results_container"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.DiffractionProblem.make_results_container">[docs]</a>    <span class="k">def</span> <span class="nf">make_results_container</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">DiffractionResult</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RadiationProblem"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.RadiationProblem">[docs]</a><span class="nd">@attrs</span><span class="p">(</span><span class="nb">cmp</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">RadiationProblem</span><span class="p">(</span><span class="n">LinearPotentialFlowProblem</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Particular LinearPotentialFlowProblem whose boundary conditions have</span>
+<span class="sd">    been computed from the degree of freedom of the body.&quot;&quot;&quot;</span>
+
+    <span class="n">radiating_dof</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Do not display default values in str(problem).&quot;&quot;&quot;</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="s2">&quot;body={self.body.name if self.body is not None else &#39;None&#39;}, &quot;</span>
+                      <span class="n">f</span><span class="s2">&quot;omega=</span><span class="si">{self.omega:.3f}</span><span class="s2">, depth=</span><span class="si">{self.depth}</span><span class="s2">, radiating_dof=</span><span class="si">{self.radiating_dof}</span><span class="s2">, &quot;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_surface</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;free_surface=</span><span class="si">{self.free_surface}</span><span class="s2">, &quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">g</span> <span class="o">==</span> <span class="mf">9.81</span><span class="p">:</span>
+            <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;g=</span><span class="si">{self.g}</span><span class="s2">, &quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">rho</span> <span class="o">==</span> <span class="mi">1000</span><span class="p">:</span>
+            <span class="n">parameters</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;rho=</span><span class="si">{self.rho}</span><span class="s2">, &quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s2">&quot;RadiationProblem(&quot;</span> <span class="o">+</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">parameters</span><span class="p">)[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;)&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Set the boundary condition&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">boundary_condition</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Body </span><span class="si">{self.body.name}</span><span class="s2"> does not have any degrees of freedom.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">radiating_dof</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">radiating_dof</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">radiating_dof</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;In </span><span class="si">{self}</span><span class="s2">: the radiating degree of freedom </span><span class="si">{self.radiating_dof}</span><span class="s2"> is not one of&quot;</span>
+                      <span class="n">f</span><span class="s2">&quot;the degrees of freedom of the body.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                      <span class="n">f</span><span class="s2">&quot;The dofs of the body are {list(self.body.dofs.keys())}&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized degree of freedom name.&quot;</span><span class="p">)</span>
+
+        <span class="n">dof</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">radiating_dof</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">boundary_condition</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dof</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_str_other_attributes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">f</span><span class="s2">&quot;radiating_dof=</span><span class="si">{self.radiating_dof}</span><span class="s2">&quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="RadiationProblem.make_results_container"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.RadiationProblem.make_results_container">[docs]</a>    <span class="k">def</span> <span class="nf">make_results_container</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RadiationResult</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="LinearPotentialFlowResult"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.LinearPotentialFlowResult">[docs]</a><span class="nd">@attrs</span>
+<span class="k">class</span> <span class="nc">LinearPotentialFlowResult</span><span class="p">:</span>
+    <span class="n">problem</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">()</span>
+
+    <span class="n">sources</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">potential</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">fs_elevation</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">Factory</span><span class="p">(</span><span class="nb">dict</span><span class="p">),</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+    <span class="fm">__str__</span> <span class="o">=</span> <span class="n">LinearPotentialFlowProblem</span><span class="o">.</span><span class="fm">__str__</span>
+
+    <span class="k">def</span> <span class="nf">__getattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Direct access to the attributes of the included problem.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{self.__class__}</span><span class="s2"> does not have a attribute named </span><span class="si">{name}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">settings_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">settings</span> <span class="o">=</span> <span class="n">asdict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">)</span>
+        <span class="c1"># Keep only the name of the body, not the full object.</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;body_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">del</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;body&#39;</span><span class="p">]</span>
+        <span class="c1"># Keep only water_depth  # TODO: Remove.</span>
+        <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_surface</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">sea_bottom</span>
+        <span class="k">del</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;free_surface&#39;</span><span class="p">]</span>
+        <span class="k">del</span> <span class="n">settings</span><span class="p">[</span><span class="s1">&#39;sea_bottom&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">settings</span></div>
+
+
+<div class="viewcode-block" id="DiffractionResult"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.DiffractionResult">[docs]</a><span class="nd">@attrs</span>
+<span class="k">class</span> <span class="nc">DiffractionResult</span><span class="p">(</span><span class="n">LinearPotentialFlowResult</span><span class="p">):</span>
+    <span class="n">forces</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">Factory</span><span class="p">(</span><span class="nb">dict</span><span class="p">),</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<div class="viewcode-block" id="DiffractionResult.store_force"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.DiffractionResult.store_force">[docs]</a>    <span class="k">def</span> <span class="nf">store_force</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dof</span><span class="p">,</span> <span class="n">force</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">forces</span><span class="p">[</span><span class="n">dof</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="o">*</span><span class="n">force</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">records</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">capytaine.bem.airy_waves</span> <span class="k">import</span> <span class="n">froude_krylov_force</span>
+        <span class="n">FK</span> <span class="o">=</span> <span class="n">froude_krylov_force</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings_dict</span><span class="p">,</span> <span class="n">influenced_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span>
+                     <span class="n">diffraction_force</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">forces</span><span class="p">[</span><span class="n">dof</span><span class="p">],</span> <span class="n">Froude_Krylov_force</span><span class="o">=</span><span class="n">FK</span><span class="p">[</span><span class="n">dof</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">influenced_dofs</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="RadiationResult"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.RadiationResult">[docs]</a><span class="nd">@attrs</span>
+<span class="k">class</span> <span class="nc">RadiationResult</span><span class="p">(</span><span class="n">LinearPotentialFlowResult</span><span class="p">):</span>
+    <span class="n">added_masses</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">Factory</span><span class="p">(</span><span class="nb">dict</span><span class="p">),</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">radiation_dampings</span> <span class="o">=</span> <span class="n">attrib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">Factory</span><span class="p">(</span><span class="nb">dict</span><span class="p">),</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="nb">repr</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<div class="viewcode-block" id="RadiationResult.store_force"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.RadiationResult.store_force">[docs]</a>    <span class="k">def</span> <span class="nf">store_force</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dof</span><span class="p">,</span> <span class="n">force</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">added_masses</span><span class="p">[</span><span class="n">dof</span><span class="p">]</span> <span class="o">=</span> <span class="n">force</span><span class="o">.</span><span class="n">real</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">omega</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">radiation_dampings</span><span class="p">[</span><span class="n">dof</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">radiation_dampings</span><span class="p">[</span><span class="n">dof</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">problem</span><span class="o">.</span><span class="n">omega</span> <span class="o">*</span> <span class="n">force</span><span class="o">.</span><span class="n">imag</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">records</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="nb">dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">settings_dict</span><span class="p">,</span> <span class="n">influenced_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span>
+                     <span class="n">added_mass</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">added_masses</span><span class="p">[</span><span class="n">dof</span><span class="p">],</span> <span class="n">radiation_damping</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">radiation_dampings</span><span class="p">[</span><span class="n">dof</span><span class="p">])</span>
+                <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">influenced_dofs</span><span class="p">]</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

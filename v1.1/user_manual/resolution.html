@@ -1,0 +1,231 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Resolution &#8212; capytaine 1.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/proof.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="../_static/proof.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Outputs" href="outputs.html" />
+    <link rel="prev" title="Setting up a problem" href="problem_setup.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="resolution">
+<h1>Resolution<a class="headerlink" href="#resolution" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="settings-of-the-solver">
+<h2>Settings of the solver<a class="headerlink" href="#settings-of-the-solver" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver" title="capytaine.bem.solver.BEMSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">BEMSolver</span></code></a> class takes two (keyword-only) arguments at the time of its initialization:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">capytaine</span> <span class="k">import</span> <span class="n">BEMSolver</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">BEMSolver</span><span class="p">(</span><span class="n">green_function</span><span class="o">=...</span><span class="p">,</span> <span class="n">engine</span><span class="o">=...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Let us discuss in more details these two objects.</p>
+<div class="section" id="green-function">
+<h3>Green function<a class="headerlink" href="#green-function" title="Permalink to this headline">¶</a></h3>
+<p>A class used to evaluate the Green function, deriving from <a class="reference internal" href="../developer_manual/api/capytaine.green_functions.abstract_green_function.html#capytaine.green_functions.abstract_green_function.AbstractGreenFunction" title="capytaine.green_functions.abstract_green_function.AbstractGreenFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractGreenFunction</span></code></a>.
+Two of them are available in the present version:</p>
+<dl class="simple">
+<dt><a class="reference internal" href="../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau" title="capytaine.green_functions.delhommeau.Delhommeau"><code class="xref py py-class docutils literal notranslate"><span class="pre">Delhommeau</span></code></a> (Default)</dt><dd><p>The method implemented in Nemoh (see <a class="reference internal" href="../theory_manual/bibliography.html#del87" id="id1"><span>[Del87]</span></a> and <a class="reference internal" href="../theory_manual/bibliography.html#del89" id="id2"><span>[Del89]</span></a>).
+See the documentation for details on the available options.</p>
+</dd>
+<dt><a class="reference internal" href="../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.XieDelhommeau" title="capytaine.green_functions.delhommeau.XieDelhommeau"><code class="xref py py-class docutils literal notranslate"><span class="pre">XieDelhommeau</span></code></a></dt><dd><p>A variant of the above, more accurate near the free surface (see <a class="reference internal" href="../theory_manual/bibliography.html#x18" id="id3"><span>[X18]</span></a>).
+Accepts the same options as <a class="reference internal" href="../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau" title="capytaine.green_functions.delhommeau.Delhommeau"><code class="xref py py-class docutils literal notranslate"><span class="pre">Delhommeau</span></code></a></p>
+</dd>
+</dl>
+<p>Advanced users can write their own class to evaluate the Green function.
+See the example in the <a class="reference internal" href="cookbook.html"><span class="doc">Cookbook</span></a>.</p>
+</div>
+<div class="section" id="engine">
+<h3>Engine<a class="headerlink" href="#engine" title="Permalink to this headline">¶</a></h3>
+<p>A class to build a interaction matrix, deriving from <a class="reference internal" href="../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.MatrixEngine" title="capytaine.bem.engines.MatrixEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixEngine</span></code></a>.
+Two of them are available in the present version:</p>
+<dl>
+<dt><a class="reference internal" href="../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine" title="capytaine.bem.engines.BasicMatrixEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicMatrixEngine</span></code></a> (Default)</dt><dd><p>A simple engine fairly similar to the one in Nemoh.
+It builds the full matrices with few optimizations.
+Only a reflection symmetry can be used to make the resolution faster.</p>
+<p>The object can be initialized with the following options:</p>
+<dl>
+<dt><code class="code docutils literal notranslate"><span class="pre">matrix_cache_size</span></code> (Default: <code class="code docutils literal notranslate"><span class="pre">1</span></code>)</dt><dd><p>The solver keeps in memory the last interaction matrices that has been computed.
+This setting controls the number of old matrices that are saved.
+Setting it to <code class="code docutils literal notranslate"><span class="pre">0</span></code> will reduce the RAM usage of the code but might
+increase the computation time.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">linear_solver</span></code> (Default: <code class="code docutils literal notranslate"><span class="pre">'gmres'</span></code>)</dt><dd><p>This option is used to set the solver for linear systems that is used in the resolution of the BEM problem.
+Passing a string will make the code use one of the predefined solver. Two of them are available:
+<code class="code docutils literal notranslate"><span class="pre">'direct'</span></code> for a direct solver using LU-decomposition or <code class="code docutils literal notranslate"><span class="pre">'gmres'</span></code> for an iterative solver.</p>
+<p>Alternatively, any function taking as arguments a matrix and a vector and returning a vector can be given to the solver:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="k">def</span> <span class="nf">my_linear_solver</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;A dumb solver for testing.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">@</span> <span class="n">b</span>
+
+<span class="n">my_bem_solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">(</span>
+   <span class="n">engine</span><span class="o">=</span><span class="n">BasicMatrixEngine</span><span class="p">(</span><span class="n">linear_solver</span><span class="o">=</span><span class="n">my_linear_solver</span><span class="p">)</span>
+   <span class="p">)</span>
+</pre></div>
+</div>
+<p>This option can be used for instance to apply a custom preconditioning to
+the iterative solver.</p>
+</dd>
+</dl>
+</dd>
+<dt><a class="reference internal" href="../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.HierarchicalToeplitzMatrixEngine" title="capytaine.bem.engines.HierarchicalToeplitzMatrixEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">HierarchicalToeplitzMatrixEngine</span></code></a></dt><dd><p>Experimental engine using hierarchical structure in the mesh to build
+hierarchical influence matrices.</p>
+<p>The object can be initialized with the following options:</p>
+<dl class="simple">
+<dt><code class="code docutils literal notranslate"><span class="pre">matrix_cache_size</span></code> (Default: <code class="code docutils literal notranslate"><span class="pre">1</span></code>)</dt><dd><p>Same as above.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">ACA_distance</span></code> and <code class="code docutils literal notranslate"><span class="pre">ACA_tol</span></code></dt><dd><p>Parameters of the Adaptive Cross Approximation (ACA) used to set the
+precision of the low-rank matrices.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="legacy-interface">
+<h2>Legacy interface<a class="headerlink" href="#legacy-interface" title="Permalink to this headline">¶</a></h2>
+<p>The class <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.Nemoh" title="capytaine.bem.solver.Nemoh"><code class="xref py py-class docutils literal notranslate"><span class="pre">Nemoh</span></code></a> was the main solver class in
+version 1.0 of Capytaine.
+It is still available in the current version for backward compatibility.
+It is now a subclass of <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver" title="capytaine.bem.solver.BEMSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">BEMSolver</span></code></a> that always uses
+<a class="reference internal" href="../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau" title="capytaine.green_functions.delhommeau.Delhommeau"><code class="xref py py-class docutils literal notranslate"><span class="pre">Delhommeau</span></code></a>’s Green function and
+accept the same arguments as in version 1.0.</p>
+<p>The use of <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver" title="capytaine.bem.solver.BEMSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">BEMSolver</span></code></a> is recommended.</p>
+</div>
+<div class="section" id="solving-the-problem">
+<h2>Solving the problem<a class="headerlink" href="#solving-the-problem" title="Permalink to this headline">¶</a></h2>
+<p>Once the solver has been initialized, it can be used to solve problems with the <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The optional argument <code class="code docutils literal notranslate"><span class="pre">keep_details</span></code> (default value: <code class="code docutils literal notranslate"><span class="pre">True</span></code>)
+controls whether the source and potential distributions should be saved in the
+result object. These data are necessary for some post-processing such as the
+computation of the Kochin function or the reconstruction of the free surface
+elevation. However, when only the force on the body is of interest, they can be
+discarded to save space in memory.</p>
+<p>A list of problems can be solved at once in an optimal order with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">list_of_results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">list_of_problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="parallelization">
+<h2>Parallelization<a class="headerlink" href="#parallelization" title="Permalink to this headline">¶</a></h2>
+<p>The resolution should happen in parallel with OpenMP. The number of cores used
+by OpenMP is controlled by the environment variables <code class="code docutils literal notranslate"><span class="pre">OMP_NUM_THREADS</span></code>
+(for the computation of the Green function by capytaine itself) and
+<code class="code docutils literal notranslate"><span class="pre">MKL_NUM_THREADS</span></code> (for the linear solver from Intel’s MKL library
+distributed with conda).</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation for users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mesh.html">Meshes and floating bodies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="problem_setup.html">Setting up a problem</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Resolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="outputs.html">Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="post_pro.html">Post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html">Cookbook</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">User manual</a><ul>
+      <li>Previous: <a href="problem_setup.html" title="previous chapter">Setting up a problem</a></li>
+      <li>Next: <a href="outputs.html" title="next chapter">Outputs</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_manual/resolution.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/user_manual/resolution.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

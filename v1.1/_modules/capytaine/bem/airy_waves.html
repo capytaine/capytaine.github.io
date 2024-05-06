@@ -1,0 +1,199 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>capytaine.bem.airy_waves &#8212; capytaine 1.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../../_static/proof.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.bem.airy_waves</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;Computing the potential and velocity of Airy wave.&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">capytaine.bem.problems_and_results</span> <span class="k">import</span> <span class="n">DiffractionProblem</span>
+
+
+<div class="viewcode-block" id="airy_waves_potential"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.airy_waves.html#capytaine.bem.airy_waves.airy_waves_potential">[docs]</a><span class="k">def</span> <span class="nf">airy_waves_potential</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">pb</span><span class="p">:</span> <span class="n">DiffractionProblem</span><span class="p">,</span> <span class="n">convention</span><span class="o">=</span><span class="s2">&quot;Nemoh&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the potential for Airy waves at a given point (or array of points).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    points: array of shape (3) or (N x 3)</span>
+<span class="sd">        coordinates of the points in which to evaluate the potential.</span>
+<span class="sd">    pb: DiffractionProblem</span>
+<span class="sd">        problem with the environmental conditions (g, rho, ...) of interest</span>
+<span class="sd">    convention: str, optional</span>
+<span class="sd">        convention for the incoming wave field. Accepted values: &quot;Nemoh&quot;, &quot;WAMIT&quot;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    array of shape (1) or (N x 1)</span>
+<span class="sd">        The potential</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">convention</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;nemoh&quot;</span><span class="p">,</span> <span class="s2">&quot;wamit&quot;</span><span class="p">],</span> \
+        <span class="s2">&quot;Convention for wave field should be either Nemoh or WAMIT.&quot;</span>
+
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">wavenumber</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">depth</span>
+    <span class="n">wbar</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">wave_direction</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">wave_direction</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">k</span><span class="o">*</span><span class="n">h</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">:</span>
+        <span class="n">cih</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">k</span><span class="o">*</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="n">h</span><span class="p">))</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">k</span><span class="o">*</span><span class="n">h</span><span class="p">)</span>
+        <span class="c1"># sih = np.sinh(k*(z+h))/np.cosh(k*h)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cih</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">k</span><span class="o">*</span><span class="n">z</span><span class="p">)</span>
+        <span class="c1"># sih = np.exp(k*z)</span>
+
+    <span class="k">if</span> <span class="n">convention</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;wamit&quot;</span><span class="p">:</span>
+        <span class="k">return</span>  <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">pb</span><span class="o">.</span><span class="n">g</span><span class="o">/</span><span class="n">pb</span><span class="o">.</span><span class="n">omega</span> <span class="o">*</span> <span class="n">cih</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">k</span> <span class="o">*</span> <span class="n">wbar</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">pb</span><span class="o">.</span><span class="n">g</span><span class="o">/</span><span class="n">pb</span><span class="o">.</span><span class="n">omega</span> <span class="o">*</span> <span class="n">cih</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">k</span> <span class="o">*</span> <span class="n">wbar</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="airy_waves_velocity"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.airy_waves.html#capytaine.bem.airy_waves.airy_waves_velocity">[docs]</a><span class="k">def</span> <span class="nf">airy_waves_velocity</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">pb</span><span class="p">:</span> <span class="n">DiffractionProblem</span><span class="p">,</span> <span class="n">convention</span><span class="o">=</span><span class="s2">&quot;Nemoh&quot;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the fluid velocity for Airy waves at a given point (or array of points).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    points: array of shape (3) or (N x 3)</span>
+<span class="sd">        coordinates of the points in which to evaluate the potential.</span>
+<span class="sd">    pb: DiffractionProblem</span>
+<span class="sd">        problem with the environmental conditions (g, rho, ...) of interest</span>
+<span class="sd">    convention: str, optional</span>
+<span class="sd">        convention for the incoming wave field. Accepted values: &quot;Nemoh&quot;, &quot;WAMIT&quot;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    array of shape (3) or (N x 3)</span>
+<span class="sd">        the velocity vectors</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">convention</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;nemoh&quot;</span><span class="p">,</span> <span class="s2">&quot;wamit&quot;</span><span class="p">],</span> \
+        <span class="s2">&quot;Convention for wave field should be either Nemoh or WAMIT.&quot;</span>
+
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">wavenumber</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">depth</span>
+
+    <span class="n">wbar</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">wave_direction</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">wave_direction</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">k</span><span class="o">*</span><span class="n">h</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">:</span>
+        <span class="n">cih</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">k</span><span class="o">*</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="n">h</span><span class="p">))</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">k</span><span class="o">*</span><span class="n">h</span><span class="p">)</span>
+        <span class="n">sih</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sinh</span><span class="p">(</span><span class="n">k</span><span class="o">*</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="n">h</span><span class="p">))</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">k</span><span class="o">*</span><span class="n">h</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cih</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">k</span><span class="o">*</span><span class="n">z</span><span class="p">)</span>
+        <span class="n">sih</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">k</span><span class="o">*</span><span class="n">z</span><span class="p">)</span>
+
+    <span class="n">v</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">g</span><span class="o">*</span><span class="n">k</span><span class="o">/</span><span class="n">pb</span><span class="o">.</span><span class="n">omega</span> <span class="o">*</span> \
+        <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">k</span> <span class="o">*</span> <span class="n">wbar</span><span class="p">)</span> <span class="o">*</span> \
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">wave_direction</span><span class="p">)</span> <span class="o">*</span> <span class="n">cih</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">wave_direction</span><span class="p">)</span> <span class="o">*</span> <span class="n">cih</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">sih</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="n">convention</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s2">&quot;wamit&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">v</span><span class="o">.</span><span class="n">T</span></div>
+
+
+<div class="viewcode-block" id="froude_krylov_force"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.airy_waves.html#capytaine.bem.airy_waves.froude_krylov_force">[docs]</a><span class="k">def</span> <span class="nf">froude_krylov_force</span><span class="p">(</span><span class="n">pb</span><span class="p">:</span> <span class="n">DiffractionProblem</span><span class="p">,</span> <span class="n">convention</span><span class="o">=</span><span class="s2">&quot;Nemoh&quot;</span><span class="p">):</span>
+    <span class="n">pressure</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">pb</span><span class="o">.</span><span class="n">omega</span> <span class="o">*</span> <span class="n">pb</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="n">airy_waves_potential</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">pb</span><span class="p">,</span> <span class="n">convention</span><span class="o">=</span><span class="n">convention</span><span class="p">)</span>
+    <span class="n">forces</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">pb</span><span class="o">.</span><span class="n">influenced_dofs</span><span class="p">:</span>
+        <span class="c1"># Scalar product on each face:</span>
+        <span class="n">normal_dof_amplitude_on_face</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="n">dof</span><span class="p">]</span> <span class="o">*</span> <span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># Sum over all faces:</span>
+        <span class="n">forces</span><span class="p">[</span><span class="n">dof</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pressure</span> <span class="o">*</span> <span class="n">normal_dof_amplitude_on_face</span> <span class="o">*</span> <span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">forces</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

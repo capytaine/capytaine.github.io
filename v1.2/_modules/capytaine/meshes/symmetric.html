@@ -1,0 +1,443 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>capytaine.meshes.symmetric &#8212; capytaine 1.2 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css" />
+    <script id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/language_data.js"></script>
+    <script src="../../../_static/proof.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.meshes.symmetric</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;Special meshes with symmetries, useful to speed up the computations.&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">reprlib</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">capytaine.meshes.meshes</span> <span class="kn">import</span> <span class="n">Mesh</span>
+<span class="kn">from</span> <span class="nn">capytaine.meshes.collections</span> <span class="kn">import</span> <span class="n">CollectionOfMeshes</span>
+<span class="kn">from</span> <span class="nn">capytaine.meshes.geometry</span> <span class="kn">import</span> <span class="n">Axis</span><span class="p">,</span> <span class="n">Plane</span><span class="p">,</span> <span class="n">Oz_axis</span><span class="p">,</span> <span class="n">inplace_transformation</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="SymmetricMesh"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.SymmetricMesh">[docs]</a><span class="k">class</span> <span class="nc">SymmetricMesh</span><span class="p">(</span><span class="n">CollectionOfMeshes</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">reprer</span> <span class="o">=</span> <span class="n">reprlib</span><span class="o">.</span><span class="n">Repr</span><span class="p">()</span>
+        <span class="n">reprer</span><span class="o">.</span><span class="n">maxstring</span> <span class="o">=</span> <span class="mi">90</span>
+        <span class="n">reprer</span><span class="o">.</span><span class="n">maxother</span> <span class="o">=</span> <span class="mi">90</span>
+        <span class="n">slice_name</span> <span class="o">=</span> <span class="n">reprer</span><span class="o">.</span><span class="n">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">slice_name</span><span class="si">}</span><span class="s2">, name=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="n">slice_name</span><span class="si">}</span><span class="s2">)&quot;</span></div>
+
+
+<div class="viewcode-block" id="ReflectionSymmetricMesh"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.ReflectionSymmetricMesh">[docs]</a><span class="k">class</span> <span class="nc">ReflectionSymmetricMesh</span><span class="p">(</span><span class="n">SymmetricMesh</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A mesh with one vertical symmetry plane.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    half : Mesh or CollectionOfMeshes</span>
+<span class="sd">        a mesh describing half of the body</span>
+<span class="sd">    plane : Plane</span>
+<span class="sd">        the symmetry plane across which the half body is mirrored</span>
+<span class="sd">    name :str, optional</span>
+<span class="sd">        a name for the mesh</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">half</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mesh</span><span class="p">,</span> <span class="n">CollectionOfMeshes</span><span class="p">],</span> <span class="n">plane</span><span class="p">:</span> <span class="n">Plane</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">half</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">half</span><span class="p">,</span> <span class="n">CollectionOfMeshes</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">plane</span><span class="p">,</span> <span class="n">Plane</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">plane</span><span class="o">.</span><span class="n">normal</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Only vertical reflection planes are supported in ReflectionSymmetry classes.&quot;</span>
+
+        <span class="n">other_half</span> <span class="o">=</span> <span class="n">half</span><span class="o">.</span><span class="n">mirrored</span><span class="p">(</span><span class="n">plane</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;mirrored_of_</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">half</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">((</span><span class="n">half</span><span class="p">,</span> <span class="n">other_half</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">plane</span> <span class="o">=</span> <span class="n">plane</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New mirror symmetric mesh: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New mirror symmetric mesh.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">half</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ReflectionSymmetricMesh.tree_view"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.ReflectionSymmetricMesh.tree_view">[docs]</a>    <span class="k">def</span> <span class="nf">tree_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fold_symmetry</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">fold_symmetry</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39; ├─&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">half</span><span class="o">.</span><span class="n">tree_view</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> │ &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; └─mirrored copy of the above </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">half</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CollectionOfMeshes</span><span class="o">.</span><span class="n">tree_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__deepcopy__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">half</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">plane</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ReflectionSymmetricMesh.join_meshes"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.ReflectionSymmetricMesh.join_meshes">[docs]</a>    <span class="k">def</span> <span class="nf">join_meshes</span><span class="p">(</span><span class="o">*</span><span class="n">meshes</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">)</span> <span class="k">for</span> <span class="n">mesh</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">),</span> \
+            <span class="s2">&quot;Only meshes with the same symmetry can be joined together.&quot;</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plane</span> <span class="o">==</span> <span class="n">mesh</span><span class="o">.</span><span class="n">plane</span> <span class="k">for</span> <span class="n">mesh</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">),</span> \
+            <span class="s2">&quot;Only reflection symmetric meshes with the same reflection plane can be joined together.&quot;</span>
+        <span class="n">half_mesh</span> <span class="o">=</span> <span class="n">CollectionOfMeshes</span><span class="p">([</span><span class="n">mesh</span><span class="o">.</span><span class="n">half</span> <span class="k">for</span> <span class="n">mesh</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;half_of_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">(</span><span class="n">half_mesh</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="n">meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">plane</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+
+    <span class="nd">@inplace_transformation</span>
+    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plane</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+        <span class="n">CollectionOfMeshes</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@inplace_transformation</span>
+    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="n">Axis</span><span class="p">,</span> <span class="n">angle</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plane</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span>
+        <span class="n">CollectionOfMeshes</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@inplace_transformation</span>
+    <span class="k">def</span> <span class="nf">mirror</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">Plane</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plane</span><span class="o">.</span><span class="n">mirror</span><span class="p">(</span><span class="n">plane</span><span class="p">)</span>
+        <span class="n">CollectionOfMeshes</span><span class="o">.</span><span class="n">mirror</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="TranslationalSymmetricMesh"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.TranslationalSymmetricMesh">[docs]</a><span class="k">class</span> <span class="nc">TranslationalSymmetricMesh</span><span class="p">(</span><span class="n">SymmetricMesh</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A mesh with a repeating pattern by translation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mesh_slice : Mesh or CollectionOfMeshes</span>
+<span class="sd">        the pattern that will be repeated to form the whole body</span>
+<span class="sd">    translation : array(3)</span>
+<span class="sd">        the vector of the translation</span>
+<span class="sd">    nb_repetitions : int, optional</span>
+<span class="sd">        the number of repetitions of the pattern (excluding the original one, default: 1)</span>
+<span class="sd">    name : str, optional</span>
+<span class="sd">        a name for the mesh</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh_slice</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mesh</span><span class="p">,</span> <span class="n">CollectionOfMeshes</span><span class="p">],</span> <span class="n">translation</span><span class="p">,</span> <span class="n">nb_repetitions</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh_slice</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh_slice</span><span class="p">,</span> <span class="n">CollectionOfMeshes</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nb_repetitions</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">nb_repetitions</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+
+        <span class="n">translation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">translation</span><span class="p">)</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">assert</span> <span class="n">translation</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)</span>
+        <span class="k">assert</span> <span class="n">translation</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span>  <span class="c1"># Only horizontal translation are supported.</span>
+
+        <span class="n">slices</span> <span class="o">=</span> <span class="p">[</span><span class="n">mesh_slice</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nb_repetitions</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mesh_slice</span><span class="o">.</span><span class="n">translated</span><span class="p">(</span><span class="n">vector</span><span class="o">=</span><span class="n">i</span><span class="o">*</span><span class="n">translation</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;repetition_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_of_</span><span class="si">{</span><span class="n">mesh_slice</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">))</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">slices</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">translation</span> <span class="o">=</span> <span class="n">translation</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New translation symmetric mesh: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New translation symmetric mesh.&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">first_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<div class="viewcode-block" id="TranslationalSymmetricMesh.tree_view"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.TranslationalSymmetricMesh.tree_view">[docs]</a>    <span class="k">def</span> <span class="nf">tree_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fold_symmetry</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">fold_symmetry</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39; ├─&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_slice</span><span class="o">.</span><span class="n">tree_view</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> │ &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; └─</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2"> translated copies of the above </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">first_slice</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CollectionOfMeshes</span><span class="o">.</span><span class="n">tree_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__deepcopy__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">TranslationalSymmetricMesh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">first_slice</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">translation</span><span class="p">,</span> <span class="n">nb_repetitions</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="nd">@inplace_transformation</span>
+    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
+        <span class="n">CollectionOfMeshes</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@inplace_transformation</span>
+    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="n">Axis</span><span class="p">,</span> <span class="n">angle</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">translation</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">rotation_matrix</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span> <span class="o">@</span> <span class="bp">self</span><span class="o">.</span><span class="n">translation</span>
+        <span class="n">CollectionOfMeshes</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@inplace_transformation</span>
+    <span class="k">def</span> <span class="nf">mirror</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">Plane</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">translation</span> <span class="o">-=</span> <span class="mi">2</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">translation</span> <span class="o">@</span> <span class="n">plane</span><span class="o">.</span><span class="n">normal</span><span class="p">)</span> <span class="o">*</span> <span class="n">plane</span><span class="o">.</span><span class="n">normal</span>
+        <span class="n">CollectionOfMeshes</span><span class="o">.</span><span class="n">mirror</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+<div class="viewcode-block" id="TranslationalSymmetricMesh.join_meshes"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.TranslationalSymmetricMesh.join_meshes">[docs]</a>    <span class="k">def</span> <span class="nf">join_meshes</span><span class="p">(</span><span class="o">*</span><span class="n">meshes</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">TranslationalSymmetricMesh</span><span class="p">)</span> <span class="k">for</span> <span class="n">mesh</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">),</span> \
+            <span class="s2">&quot;Only meshes with the same symmetry can be joined together.&quot;</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">translation</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">translation</span><span class="p">)</span> <span class="k">for</span> <span class="n">mesh</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">),</span> \
+            <span class="s2">&quot;Only translation symmetric meshes with the same translation vector can be joined together.&quot;</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span> <span class="k">for</span> <span class="n">mesh</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">),</span> \
+            <span class="s2">&quot;Only symmetric meshes with the same number of elements can be joined together.&quot;</span>
+        <span class="n">mesh_strip</span> <span class="o">=</span> <span class="n">CollectionOfMeshes</span><span class="p">([</span><span class="n">mesh</span><span class="o">.</span><span class="n">first_slice</span> <span class="k">for</span> <span class="n">mesh</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;strip_of_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">TranslationalSymmetricMesh</span><span class="p">(</span><span class="n">mesh_strip</span><span class="p">,</span> <span class="n">translation</span><span class="o">=</span><span class="n">meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">translation</span><span class="p">,</span> <span class="n">nb_repetitions</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="build_regular_array_of_meshes"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.build_regular_array_of_meshes">[docs]</a><span class="k">def</span> <span class="nf">build_regular_array_of_meshes</span><span class="p">(</span><span class="n">base_mesh</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">nb_bodies</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create an array of objects using TranslationalSymmetries.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    base_mesh : Mesh or CollectionOfMeshes or SymmetricMesh</span>
+<span class="sd">        The mesh to duplicate to create the array</span>
+<span class="sd">    distance : float</span>
+<span class="sd">        Center-to-center distance between objects in the array</span>
+<span class="sd">    nb_bodies : couple of ints</span>
+<span class="sd">        Number of objects in the x and y directions.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    TranslationalSymmetricMesh</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">nb_bodies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">base_mesh</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">TranslationalSymmetricMesh</span><span class="p">(</span><span class="n">base_mesh</span><span class="p">,</span> <span class="n">translation</span><span class="o">=</span><span class="p">(</span><span class="n">distance</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">nb_repetitions</span><span class="o">=</span><span class="n">nb_bodies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                                          <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;line_of_</span><span class="si">{</span><span class="n">base_mesh</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">nb_bodies</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">line</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">TranslationalSymmetricMesh</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">translation</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">),</span> <span class="n">nb_repetitions</span><span class="o">=</span><span class="n">nb_bodies</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span>
+                                           <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;array_of_</span><span class="si">{</span><span class="n">base_mesh</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">array</span></div>
+
+
+<div class="viewcode-block" id="AxialSymmetricMesh"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.AxialSymmetricMesh">[docs]</a><span class="k">class</span> <span class="nc">AxialSymmetricMesh</span><span class="p">(</span><span class="n">SymmetricMesh</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A mesh with a repeating pattern by rotation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mesh_slice : Mesh or CollectionOfMeshes</span>
+<span class="sd">        the pattern that will be repeated to form the whole body</span>
+<span class="sd">    axis : Axis, optional</span>
+<span class="sd">        symmetry axis</span>
+<span class="sd">    nb_repetitions : int, optional</span>
+<span class="sd">        the number of repetitions of the pattern (excluding the original one, default: 1)</span>
+<span class="sd">    name : str, optional</span>
+<span class="sd">        a name for the mesh</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh_slice</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mesh</span><span class="p">,</span> <span class="n">CollectionOfMeshes</span><span class="p">],</span> <span class="n">axis</span><span class="p">:</span> <span class="n">Axis</span><span class="o">=</span><span class="n">Oz_axis</span><span class="p">,</span> <span class="n">nb_repetitions</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh_slice</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh_slice</span><span class="p">,</span> <span class="n">CollectionOfMeshes</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nb_repetitions</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">nb_repetitions</span> <span class="o">&gt;=</span> <span class="mi">1</span>
+        <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">Axis</span><span class="p">)</span>
+
+        <span class="n">slices</span> <span class="o">=</span> <span class="p">[</span><span class="n">mesh_slice</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">nb_repetitions</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+            <span class="n">slices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mesh_slice</span><span class="o">.</span><span class="n">rotated</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="n">angle</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="p">(</span><span class="n">nb_repetitions</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                                             <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;rotation_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_of_</span><span class="si">{</span><span class="n">mesh_slice</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">))</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">slices</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">axis</span><span class="o">.</span><span class="n">is_parallel_to</span><span class="p">(</span><span class="n">Oz_axis</span><span class="p">):</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> is an axi-symmetric mesh along a non vertical axis.&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New rotation symmetric mesh: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New rotation symmetric mesh.&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AxialSymmetricMesh.from_profile"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.AxialSymmetricMesh.from_profile">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">from_profile</span><span class="p">(</span><span class="n">profile</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">Callable</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">]],</span>
+                     <span class="n">z_range</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>
+                     <span class="n">axis</span><span class="p">:</span> <span class="n">Axis</span><span class="o">=</span><span class="n">Oz_axis</span><span class="p">,</span>
+                     <span class="n">nphi</span><span class="p">:</span> <span class="nb">int</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                     <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Return a floating body using the axial symmetry.</span>
+<span class="sd">        The shape of the body can be defined either with a function defining the profile as [f(z), 0, z] for z in z_range.</span>
+<span class="sd">        Alternatively, the profile can be defined as a list of points.</span>
+<span class="sd">        The number of vertices along the vertical direction is len(z_range) in the first case and profile.shape[0] in the second case.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        profile : function(float → float)  or  array(N, 3)</span>
+<span class="sd">            define the shape of the body either as a function or a list of points.</span>
+<span class="sd">        z_range: array(N), optional</span>
+<span class="sd">            used only if the profile is defined as a function.</span>
+<span class="sd">        axis : Axis</span>
+<span class="sd">            symmetry axis</span>
+<span class="sd">        nphi : int, optional</span>
+<span class="sd">            number of vertical slices forming the body</span>
+<span class="sd">        name : str, optional</span>
+<span class="sd">            name of the generated body (optional)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        AxialSymmetricMesh</span>
+<span class="sd">            the generated mesh</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;axisymmetric_mesh&quot;</span>
+
+        <span class="k">if</span> <span class="n">callable</span><span class="p">(</span><span class="n">profile</span><span class="p">):</span>
+            <span class="n">z_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">z_range</span><span class="p">)</span>
+            <span class="n">x_values</span> <span class="o">=</span> <span class="p">[</span><span class="n">profile</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">z_range</span><span class="p">]</span>
+            <span class="n">profile_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">x_values</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">z_range</span><span class="p">)),</span> <span class="n">z_range</span><span class="p">])</span><span class="o">.</span><span class="n">T</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">profile_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">profile</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">profile_array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+        <span class="k">assert</span> <span class="n">profile_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span>
+
+        <span class="n">n</span> <span class="o">=</span> <span class="n">profile_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">angle</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">nphi</span>
+
+        <span class="n">rotated_profile</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">profile_array</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">)),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;rotated_profile_mesh&quot;</span><span class="p">)</span>
+        <span class="n">rotated_profile</span><span class="o">.</span><span class="n">rotate_z</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+
+        <span class="n">nodes_slice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">profile_array</span><span class="p">,</span> <span class="n">rotated_profile</span><span class="o">.</span><span class="n">vertices</span><span class="p">])</span>
+        <span class="n">faces_slice</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="n">n</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="n">n</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
+        <span class="n">body_slice</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">nodes_slice</span><span class="p">,</span> <span class="n">faces_slice</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;slice_of_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">body_slice</span><span class="o">.</span><span class="n">merge_duplicates</span><span class="p">()</span>
+        <span class="n">body_slice</span><span class="o">.</span><span class="n">heal_triangles</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">AxialSymmetricMesh</span><span class="p">(</span><span class="n">body_slice</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">nb_repetitions</span><span class="o">=</span><span class="n">nphi</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">first_slice</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<div class="viewcode-block" id="AxialSymmetricMesh.tree_view"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.AxialSymmetricMesh.tree_view">[docs]</a>    <span class="k">def</span> <span class="nf">tree_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fold_symmetry</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">fold_symmetry</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="s1">&#39; ├─&#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_slice</span><span class="o">.</span><span class="n">tree_view</span><span class="p">()</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1"> │ &#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+                    <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; └─</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="si">}</span><span class="s2"> rotated copies of the above </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">first_slice</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">CollectionOfMeshes</span><span class="o">.</span><span class="n">tree_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">__deepcopy__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">AxialSymmetricMesh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">first_slice</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">nb_repetitions</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AxialSymmetricMesh.join_meshes"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.AxialSymmetricMesh.join_meshes">[docs]</a>    <span class="k">def</span> <span class="nf">join_meshes</span><span class="p">(</span><span class="o">*</span><span class="n">meshes</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">AxialSymmetricMesh</span><span class="p">)</span> <span class="k">for</span> <span class="n">mesh</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">),</span> \
+            <span class="s2">&quot;Only meshes with the same symmetry can be joined together.&quot;</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="n">meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span> <span class="o">==</span> <span class="n">mesh</span><span class="o">.</span><span class="n">axis</span> <span class="k">for</span> <span class="n">mesh</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">),</span> \
+            <span class="s2">&quot;Only axisymmetric meshes with the same symmetry axis can be joined together.&quot;</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span> <span class="k">for</span> <span class="n">mesh</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">),</span> \
+            <span class="s2">&quot;Only axisymmetric meshes with the same number of elements can be joined together.&quot;</span>
+        <span class="n">mesh_slice</span> <span class="o">=</span> <span class="n">CollectionOfMeshes</span><span class="p">([</span><span class="n">mesh</span><span class="o">.</span><span class="n">first_slice</span> <span class="k">for</span> <span class="n">mesh</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;slice_of_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">AxialSymmetricMesh</span><span class="p">(</span><span class="n">mesh_slice</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">nb_repetitions</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+
+    <span class="nd">@inplace_transformation</span>
+    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">vector</span><span class="p">)</span>
+        <span class="n">CollectionOfMeshes</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@inplace_transformation</span>
+    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_axis</span><span class="p">:</span> <span class="n">Axis</span><span class="p">,</span> <span class="n">angle</span><span class="p">:</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">other_axis</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span>
+        <span class="n">CollectionOfMeshes</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other_axis</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="nd">@inplace_transformation</span>
+    <span class="k">def</span> <span class="nf">mirror</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">Plane</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="o">.</span><span class="n">mirror</span><span class="p">(</span><span class="n">plane</span><span class="p">)</span>
+        <span class="n">CollectionOfMeshes</span><span class="o">.</span><span class="n">mirror</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

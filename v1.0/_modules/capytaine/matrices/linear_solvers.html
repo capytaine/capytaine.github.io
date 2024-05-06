@@ -1,0 +1,212 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>capytaine.matrices.linear_solvers &#8212; capytaine 1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../../_static/proof.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.matrices.linear_solvers</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;The linear solvers used in Capytaine.</span>
+
+<span class="sd">They are based on numpy solvers with a thin layer for the handling of Hierarchical Toeplitz matrices.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">lru_cache</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">sl</span>
+<span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="k">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">ssl</span>
+
+<span class="kn">from</span> <span class="nn">capytaine.matrices.block</span> <span class="k">import</span> <span class="n">BlockMatrix</span>
+<span class="kn">from</span> <span class="nn">capytaine.matrices.block_toeplitz</span> <span class="k">import</span> <span class="n">BlockSymmetricToeplitzMatrix</span><span class="p">,</span> <span class="n">BlockCirculantMatrix</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="c1"># DIRECT SOLVER</span>
+
+<div class="viewcode-block" id="solve_directly"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.linear_solvers.html#capytaine.matrices.linear_solvers.solve_directly">[docs]</a><span class="k">def</span> <span class="nf">solve_directly</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">A</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">ndim</span><span class="o">+</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">BlockCirculantMatrix</span><span class="p">):</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Solve linear system </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+        <span class="n">blocks_of_diagonalization</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">block_diagonalize</span><span class="p">()</span>
+        <span class="n">fft_of_rhs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">nb_blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">A</span><span class="o">.</span><span class="n">block_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>  <span class="c1"># Try to run it as vectorized numpy arrays.</span>
+            <span class="n">fft_of_result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">blocks_of_diagonalization</span><span class="p">,</span> <span class="n">fft_of_rhs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>  <span class="c1"># Or do the same thing with list comprehension.</span>
+            <span class="n">fft_of_result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">solve_directly</span><span class="p">(</span><span class="n">block</span><span class="p">,</span> <span class="n">vec</span><span class="p">)</span> <span class="k">for</span> <span class="n">block</span><span class="p">,</span> <span class="n">vec</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">blocks_of_diagonalization</span><span class="p">,</span> <span class="n">fft_of_rhs</span><span class="p">)])</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">fft_of_result</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],))</span>
+        <span class="k">return</span> <span class="n">result</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">BlockSymmetricToeplitzMatrix</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">A</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">==</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Solve linear system </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+            <span class="n">A1</span><span class="p">,</span> <span class="n">A2</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>
+            <span class="n">b1</span><span class="p">,</span> <span class="n">b2</span> <span class="o">=</span> <span class="n">b</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">],</span> <span class="n">b</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">b</span><span class="p">)</span><span class="o">//</span><span class="mi">2</span><span class="p">:]</span>
+            <span class="n">x_plus</span> <span class="o">=</span> <span class="n">solve_directly</span><span class="p">(</span><span class="n">A1</span> <span class="o">+</span> <span class="n">A2</span><span class="p">,</span> <span class="n">b1</span> <span class="o">+</span> <span class="n">b2</span><span class="p">)</span>
+            <span class="n">x_minus</span> <span class="o">=</span> <span class="n">solve_directly</span><span class="p">(</span><span class="n">A1</span> <span class="o">-</span> <span class="n">A2</span><span class="p">,</span> <span class="n">b1</span> <span class="o">-</span> <span class="n">b2</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">x_plus</span> <span class="o">+</span> <span class="n">x_minus</span><span class="p">,</span> <span class="n">x_plus</span> <span class="o">-</span> <span class="n">x_minus</span><span class="p">])</span><span class="o">/</span><span class="mi">2</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Not implemented</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Solve linear system </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">solve_directly</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">full_matrix</span><span class="p">(),</span> <span class="n">b</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">):</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Solve linear system </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">solve_directly</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">full_matrix</span><span class="p">(),</span> <span class="n">b</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Solve linear system (size: </span><span class="si">{A.shape}</span><span class="s2">) with numpy direct solver.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Unrecognized type of matrix to solve: </span><span class="si">{A}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<span class="c1"># EXPERIMENT: STORING THE LU DECOMPOSITION</span>
+<div class="viewcode-block" id="lu_decomp"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.linear_solvers.html#capytaine.matrices.linear_solvers.lu_decomp">[docs]</a><span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">lu_decomp</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+    <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Compute LU decomposition of </span><span class="si">{A}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sl</span><span class="o">.</span><span class="n">lu_factor</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">full_matrix</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="solve_storing_lu"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.linear_solvers.html#capytaine.matrices.linear_solvers.solve_storing_lu">[docs]</a><span class="k">def</span> <span class="nf">solve_storing_lu</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Solve with LU decomposition of </span><span class="si">{A}</span><span class="s2">.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sl</span><span class="o">.</span><span class="n">lu_solve</span><span class="p">(</span><span class="n">lu_decomp</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">b</span><span class="p">)</span></div>
+
+
+<span class="c1"># ITERATIVE SOLVER</span>
+
+<div class="viewcode-block" id="Counter"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.linear_solvers.html#capytaine.matrices.linear_solvers.Counter">[docs]</a><span class="k">class</span> <span class="nc">Counter</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nb_iter</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nb_iter</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="solve_gmres"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.linear_solvers.html#capytaine.matrices.linear_solvers.solve_gmres">[docs]</a><span class="k">def</span> <span class="nf">solve_gmres</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Solve with GMRES for </span><span class="si">{A}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">LOG</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">()</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">gmres</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">counter</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;End of GMRES after </span><span class="si">{counter.nb_iter}</span><span class="s2"> iterations.&quot;</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">gmres</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">info</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;No convergence of the GMRES. Error code: </span><span class="si">{info}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span></div>
+
+<div class="viewcode-block" id="gmres_no_fft"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.linear_solvers.html#capytaine.matrices.linear_solvers.gmres_no_fft">[docs]</a><span class="k">def</span> <span class="nf">gmres_no_fft</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;Solve with GMRES for </span><span class="si">{A}</span><span class="s2"> without using FFT.&quot;</span><span class="p">)</span>
+
+    <span class="n">x</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">gmres</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">no_toeplitz</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">)</span> <span class="k">else</span> <span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">info</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;No convergence of the GMRES. Error code: </span><span class="si">{info}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

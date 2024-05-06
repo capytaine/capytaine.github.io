@@ -1,0 +1,1014 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Cookbook &#8212; capytaine 1.4.2 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/proof.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/proof.js"></script>
+    <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Developer manual" href="../developer_manual/index.html" />
+    <link rel="prev" title="Conventions and differences to other codes" href="conventions.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="cookbook">
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">Cookbook</a><a class="headerlink" href="#cookbook" title="Permalink to this heading">¶</a></h1>
+<p>This page contains several examples of Capytaine’s features.
+The scripts can be downloaded individually as Python files from
+<a class="reference external" href="https://github.com/capytaine/capytaine/tree/master/docs/user_manual/examples">this folder</a>
+of the Github repository.</p>
+<nav class="contents" id="content">
+<p class="topic-title">Content</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#cookbook" id="id1">Cookbook</a></p>
+<ul>
+<li><p><a class="reference internal" href="#base-examples" id="id2">Base examples</a></p>
+<ul>
+<li><p><a class="reference internal" href="#added-mass-of-a-rigid-body" id="id3">Added mass of a rigid body</a></p></li>
+<li><p><a class="reference internal" href="#custom-degree-of-freedom" id="id4">Custom degree of freedom</a></p></li>
+<li><p><a class="reference internal" href="#influence-of-the-water-depth" id="id5">Influence of the water depth</a></p></li>
+<li><p><a class="reference internal" href="#simulation-with-several-bodies" id="id6">Simulation with several bodies</a></p></li>
+<li><p><a class="reference internal" href="#comparison-with-hydrostatics-from-meshmagick" id="id7">Comparison with hydrostatics from Meshmagick</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#intermediate-examples" id="id8">Intermediate examples</a></p>
+<ul>
+<li><p><a class="reference internal" href="#animated-free-surface-elevation" id="id9">Animated free surface elevation</a></p></li>
+<li><p><a class="reference internal" href="#animation-of-the-rao" id="id10">Animation of the RAO</a></p></li>
+<li><p><a class="reference internal" href="#kochin-function" id="id11">Kochin function</a></p></li>
+<li><p><a class="reference internal" href="#haskind-s-relation" id="id12">Haskind’s relation</a></p></li>
+<li><p><a class="reference internal" href="#symmetric-body" id="id13">Symmetric body</a></p></li>
+<li><p><a class="reference internal" href="#axisymmetric-body" id="id14">Axisymmetric body</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#advanced-examples" id="id15">Advanced examples</a></p>
+<ul>
+<li><p><a class="reference internal" href="#convergence-study" id="id16">Convergence study</a></p></li>
+<li><p><a class="reference internal" href="#plot-the-influence-matrix" id="id17">Plot the influence matrix</a></p></li>
+<li><p><a class="reference internal" href="#compare-two-implementations-of-the-green-function" id="id18">Compare two implementations of the Green function</a></p></li>
+<li><p><a class="reference internal" href="#use-a-custom-green-function" id="id19">Use a custom Green function</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="base-examples">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Base examples</a><a class="headerlink" href="#base-examples" title="Permalink to this heading">¶</a></h2>
+<section id="added-mass-of-a-rigid-body">
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">Added mass of a rigid body</a><a class="headerlink" href="#added-mass-of-a-rigid-body" title="Permalink to this heading">¶</a></h3>
+<p>This example generates the mesh of an horizontal cylinder, solves radiation problems for the six
+rigid-body degrees of freedom and then plots the added mass.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+
+<span class="c1"># Set up logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Initialize floating body by generating a geometric mesh</span>
+<span class="n">cylinder</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">HorizontalCylinder</span><span class="p">(</span>
+    <span class="n">length</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>  <span class="c1"># Dimensions</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span>        <span class="c1"># Position</span>
+    <span class="n">nr</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>   <span class="c1"># Fineness of the mesh</span>
+<span class="p">)</span>
+
+<span class="c1"># Automatically add the six degrees of freedom of a rigid body</span>
+<span class="n">cylinder</span><span class="o">.</span><span class="n">add_all_rigid_body_dofs</span><span class="p">()</span>
+
+<span class="c1"># Define the range of frequencies as a Numpy array</span>
+<span class="n">omega_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">6.0</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
+
+<span class="c1"># Set up the problems: we will solve a radiation problem for each</span>
+<span class="c1"># degree of freedom of the body and for each frequency in the</span>
+<span class="c1"># frequency range.</span>
+<span class="n">problems</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">cylinder</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">cylinder</span><span class="o">.</span><span class="n">dofs</span>
+    <span class="k">for</span> <span class="n">omega</span> <span class="ow">in</span> <span class="n">omega_range</span>
+<span class="p">]</span>
+<span class="c1"># Water density, gravity and water depth have not been specified.</span>
+<span class="c1"># Default values are used.</span>
+
+<span class="c1"># Solve all radiation problems</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
+<span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">pb</span><span class="p">)</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">problems</span><span class="p">)]</span>
+<span class="c1"># The &#39;sorted&#39; function ensures that the problems are sequentially</span>
+<span class="c1"># treated in an optimal order.</span>
+
+<span class="c1"># Gather the computed added mass into a labelled array.</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+<span class="c1"># Plot the added mass of each dofs as a function of the frequency</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">cylinder</span><span class="o">.</span><span class="n">dofs</span><span class="p">:</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+        <span class="n">omega_range</span><span class="p">,</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span> <span class="n">influenced_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">),</span>
+        <span class="n">label</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span>
+        <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span>
+    <span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;omega&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;added mass&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="custom-degree-of-freedom">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">Custom degree of freedom</a><a class="headerlink" href="#custom-degree-of-freedom" title="Permalink to this heading">¶</a></h3>
+<p>This example defines arbitrary degrees of freedom for a sphere and solves a diffraction problem.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+
+<span class="c1"># Initialize floating body</span>
+<span class="n">sphere</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">Sphere</span><span class="p">(</span>
+    <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>          <span class="c1"># Dimension</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span>   <span class="c1"># Position</span>
+    <span class="n">nphi</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>  <span class="c1"># Fineness of the mesh</span>
+<span class="p">)</span>
+
+<span class="c1"># DEFINE THE DOFS</span>
+
+<span class="c1"># Manually defined heave,</span>
+<span class="c1"># that is a vertical unit vector for all faces.</span>
+<span class="n">sphere</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="s2">&quot;Heave&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+    <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">face</span> <span class="ow">in</span> <span class="n">sphere</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># Bulging of the sphere,</span>
+<span class="c1"># that is a deformation vector normal to the body at all faces.</span>
+<span class="c1"># We can simply point to the normal vectors of the mesh for that.</span>
+<span class="n">sphere</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="s2">&quot;Bulge&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sphere</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_normals</span>
+
+<span class="c1"># Shearing of the sphere in the x direction.</span>
+<span class="c1"># The deformation vector on a face is computed from the position of the face.</span>
+<span class="n">sphere</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="s2">&quot;x-shear&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+    <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">z</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">sphere</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">]</span>
+<span class="p">)</span>
+
+<span class="c1"># SOLVE DIFFRACTION PROBLEMS</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
+
+<span class="c1"># Solve the problem for β=0 (incoming wave in the x direction).</span>
+<span class="n">problem_1</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">sphere</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">result_1</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem_1</span><span class="p">)</span>
+
+<span class="c1"># Solve the problem for β=π/2 (incoming wave in the y direction).</span>
+<span class="n">problem_2</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">sphere</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span>
+<span class="n">result_2</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem_2</span><span class="p">)</span>
+
+<span class="c1"># Print the generalized diffraction forces</span>
+<span class="c1"># for the three dofs we defined</span>
+<span class="c1"># for both values of the wave_direction β.</span>
+<span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="p">[</span><span class="n">result_1</span><span class="p">,</span> <span class="n">result_2</span><span class="p">]:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Angle: </span><span class="si">{</span><span class="n">result</span><span class="o">.</span><span class="n">wave_direction</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">sphere</span><span class="o">.</span><span class="n">dofs</span><span class="p">:</span>
+        <span class="n">force</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">forces</span><span class="p">[</span><span class="n">dof</span><span class="p">]</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">dof</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">force</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">·exp(</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">force</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">i) N&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">()</span>
+
+</pre></div>
+</div>
+<p>The diffraction force on the “Heave” and “Bulge” dofs should be the same for both incoming wave directions.
+The diffraction force on the “x-shear” dof is zero when the wave comes from the y direction.</p>
+</section>
+<section id="influence-of-the-water-depth">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Influence of the water depth</a><a class="headerlink" href="#influence-of-the-water-depth" title="Permalink to this heading">¶</a></h3>
+<p>This example runs the same simulation for several water depth and plot the results.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+
+<span class="c1"># Set up logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Initialize floating body by generating a geometric mesh</span>
+<span class="n">cylinder</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">HorizontalCylinder</span><span class="p">(</span>
+    <span class="n">length</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>  <span class="c1"># Dimensions</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span>        <span class="c1"># Position</span>
+    <span class="n">nr</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">40</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>   <span class="c1"># Fineness of the mesh</span>
+<span class="p">)</span>
+
+<span class="c1"># Define a degree of freedom. The keyword &quot;Heave&quot;</span>
+<span class="c1"># is recognized by the code and the vertical translation</span>
+<span class="c1"># motion is automatically defined.</span>
+<span class="n">cylinder</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+
+<span class="c1"># Define the range of water depth</span>
+<span class="n">depth_range</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span> <span class="o">+</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">]</span>
+
+<span class="c1"># Set up the problems: we will solve a radiation problem for each</span>
+<span class="c1"># water depth:</span>
+<span class="n">problems</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">cylinder</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="o">=-</span><span class="n">depth</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">depth</span> <span class="ow">in</span> <span class="n">depth_range</span>
+<span class="p">]</span>
+<span class="c1"># Water density, gravity and radiating dof have not been specified.</span>
+<span class="c1"># Default values are used. (For the radiating dof, the default value</span>
+<span class="c1"># is usually the first one that has been defined. Here only one has</span>
+<span class="c1"># been defined.)</span>
+
+<span class="c1"># Solve all radiation problems</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">(</span><span class="n">engine</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">HierarchicalToeplitzMatrixEngine</span><span class="p">())</span>
+<span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">pb</span><span class="p">)</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">problems</span><span class="p">)]</span>
+
+<span class="c1"># Gather the computed added mass into a labelled array.</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+<span class="c1"># Plot the added mass of each dofs as a function of the water depth.</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">depth_range</span><span class="p">,</span>
+    <span class="n">data</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">omega</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">,</span> <span class="n">influenced_dof</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">),</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s2">&quot;s&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;water depth&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;added mass&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="simulation-with-several-bodies">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Simulation with several bodies</a><a class="headerlink" href="#simulation-with-several-bodies" title="Permalink to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding: utf-8</span>
+
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+
+<span class="c1"># Define the first body</span>
+<span class="n">sphere</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">Sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">),</span>
+                <span class="n">ntheta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">nphi</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sphere_1&quot;</span><span class="p">)</span>
+<span class="n">sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
+<span class="n">sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+
+<span class="c1"># Define the second body</span>
+<span class="n">other_sphere</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">Sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
+                      <span class="n">ntheta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">nphi</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                      <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sphere_2&quot;</span><span class="p">)</span>
+<span class="n">other_sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
+<span class="n">other_sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+
+<span class="c1"># Define the third body</span>
+<span class="n">cylinder</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">HorizontalCylinder</span><span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                              <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.0</span><span class="p">),</span>
+                              <span class="n">nx</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">nr</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>
+                              <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cylinder&quot;</span><span class="p">)</span>
+<span class="n">cylinder</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
+<span class="n">cylinder</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+
+<span class="c1"># Combine the three individual bodies into a single body.</span>
+<span class="n">all_bodies</span> <span class="o">=</span> <span class="n">cylinder</span> <span class="o">+</span> <span class="n">sphere</span> <span class="o">+</span> <span class="n">other_sphere</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Merged body name:&quot;</span><span class="p">,</span> <span class="n">all_bodies</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Merged body dofs:&quot;</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_bodies</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+
+<span class="c1"># The merged body can be used to define the problems in the usual way</span>
+<span class="n">problems</span> <span class="o">=</span> <span class="p">[</span><span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">all_bodies</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">all_bodies</span><span class="o">.</span><span class="n">dofs</span><span class="p">]</span>
+<span class="n">problems</span> <span class="o">+=</span> <span class="p">[</span><span class="n">cpt</span><span class="o">.</span><span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">all_bodies</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)]</span>
+
+<span class="c1"># Solves the problem</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="comparison-with-hydrostatics-from-meshmagick">
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Comparison with hydrostatics from Meshmagick</a><a class="headerlink" href="#comparison-with-hydrostatics-from-meshmagick" title="Permalink to this heading">¶</a></h3>
+<p>Hydrostatic and inertia properties can be computed independently via Capytaine or Meshmagick.
+This script compares them both with analytical expression for a simple geometric object.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+<span class="kn">import</span> <span class="nn">meshmagick.mesh</span>
+<span class="kn">import</span> <span class="nn">meshmagick.hydrostatics</span>
+
+<span class="n">radius</span> <span class="o">=</span> <span class="mi">10</span>
+<span class="n">cog</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">Sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="n">cog</span><span class="p">,</span> <span class="n">nphi</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+<span class="n">body</span><span class="o">.</span><span class="n">center_of_mass</span> <span class="o">=</span> <span class="n">cog</span>
+
+<span class="n">body</span><span class="o">.</span><span class="n">add_all_rigid_body_dofs</span><span class="p">()</span>
+<span class="n">body</span><span class="o">.</span><span class="n">keep_immersed_part</span><span class="p">()</span>
+
+<span class="n">density</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="n">gravity</span> <span class="o">=</span> <span class="mf">9.81</span>
+
+<span class="n">capy_hsdb</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">compute_hydrostatics</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="n">density</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="n">gravity</span><span class="p">)</span>
+
+<span class="n">stiff_compare_dofs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Heave&quot;</span><span class="p">,</span> <span class="s2">&quot;Roll&quot;</span><span class="p">,</span> <span class="s2">&quot;Pitch&quot;</span><span class="p">]</span>
+<span class="n">capy_hsdb</span><span class="p">[</span><span class="s2">&quot;stiffness_matrix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">capy_hsdb</span><span class="p">[</span><span class="s2">&quot;hydrostatic_stiffness&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span>
+    <span class="n">influenced_dof</span><span class="o">=</span><span class="n">stiff_compare_dofs</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="n">stiff_compare_dofs</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">values</span>
+
+<span class="n">mass_compare_dofs</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;Roll&quot;</span><span class="p">,</span> <span class="s2">&quot;Pitch&quot;</span><span class="p">,</span> <span class="s2">&quot;Yaw&quot;</span><span class="p">]</span>
+<span class="n">capy_hsdb</span><span class="p">[</span><span class="s2">&quot;inertia_matrix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">capy_hsdb</span><span class="p">[</span><span class="s2">&quot;inertia_matrix&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span>
+    <span class="n">influenced_dof</span><span class="o">=</span><span class="n">mass_compare_dofs</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="n">mass_compare_dofs</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">values</span>
+
+
+<span class="n">mm_mesh</span> <span class="o">=</span> <span class="n">meshmagick</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+<span class="n">mm_hsdb</span> <span class="o">=</span> <span class="n">meshmagick</span><span class="o">.</span><span class="n">hydrostatics</span><span class="o">.</span><span class="n">compute_hydrostatics</span><span class="p">(</span><span class="n">mm_mesh</span><span class="p">,</span> <span class="n">cog</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cog</span><span class="p">),</span> <span class="n">rho_water</span><span class="o">=</span><span class="n">density</span><span class="p">,</span> <span class="n">grav</span><span class="o">=</span><span class="n">gravity</span><span class="p">)</span>
+
+<span class="n">mm_hsdb</span><span class="p">[</span><span class="s2">&quot;inertia_matrix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mm_mesh</span><span class="o">.</span><span class="n">eval_plain_mesh_inertias</span><span class="p">(</span><span class="n">rho_medium</span><span class="o">=</span><span class="n">density</span><span class="p">)</span><span class="o">.</span><span class="n">inertia_matrix</span>
+<span class="n">mm_hsdb</span><span class="p">[</span><span class="s2">&quot;center_of_buoyancy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mm_hsdb</span><span class="p">[</span><span class="s2">&quot;buoyancy_center&quot;</span><span class="p">]</span>
+
+
+<span class="n">analytical</span> <span class="o">=</span> <span class="p">{}</span>
+<span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;waterplane_area&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">radius</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;wet_surface_area&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">radius</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;disp_volume&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">radius</span><span class="o">**</span><span class="mi">3</span>
+<span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;center_of_buoyancy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">3</span><span class="o">*</span><span class="n">radius</span><span class="o">/</span><span class="mi">8</span><span class="p">])</span>
+<span class="n">inertia_xx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">radius</span><span class="o">**</span><span class="mi">4</span><span class="o">/</span><span class="mi">4</span>
+<span class="n">inertia_yy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">radius</span><span class="o">**</span><span class="mi">4</span><span class="o">/</span><span class="mi">4</span>
+<span class="n">inertia_zz</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">radius</span><span class="o">**</span><span class="mi">4</span><span class="o">/</span><span class="mi">2</span>
+<span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;transversal_metacentric_radius&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">inertia_xx</span> <span class="o">/</span> <span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;disp_volume&quot;</span><span class="p">]</span>
+<span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;longitudinal_metacentric_radius&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">inertia_yy</span> <span class="o">/</span> <span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;disp_volume&quot;</span><span class="p">]</span>
+<span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;transversal_metacentric_height&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;transversal_metacentric_radius&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;center_of_buoyancy&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">cog</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+<span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;longitudinal_metacentric_height&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;longitudinal_metacentric_radius&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;center_of_buoyancy&quot;</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">cog</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>
+
+<span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;stiffness_matrix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">density</span> <span class="o">*</span> <span class="n">gravity</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+    <span class="p">[</span><span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;waterplane_area&quot;</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;disp_volume&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;transversal_metacentric_height&quot;</span><span class="p">],</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;disp_volume&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">analytical</span><span class="p">[</span><span class="s2">&quot;transversal_metacentric_height&quot;</span><span class="p">]],</span>
+    <span class="p">])</span>
+
+<span class="n">vars_to_be_displayed</span> <span class="o">=</span> <span class="n">capy_hsdb</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">mm_hsdb</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="o">|</span> <span class="n">analytical</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">vars_to_be_displayed</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">var</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Capytaine  :  </span><span class="si">{</span><span class="n">capy_hsdb</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">mm_hsdb</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Meshmagick :  </span><span class="si">{</span><span class="n">mm_hsdb</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">analytical</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Analytical :  </span><span class="si">{</span><span class="n">analytical</span><span class="p">[</span><span class="n">var</span><span class="p">]</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+</pre></div>
+</div>
+</section>
+</section>
+<section id="intermediate-examples">
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Intermediate examples</a><a class="headerlink" href="#intermediate-examples" title="Permalink to this heading">¶</a></h2>
+<section id="animated-free-surface-elevation">
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Animated free surface elevation</a><a class="headerlink" href="#animated-free-surface-elevation" title="Permalink to this heading">¶</a></h3>
+<p>This example solves a diffraction problem, it computes the free surface elevation and shows it as a
+3D animation.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+<span class="kn">from</span> <span class="nn">capytaine.ui.vtk.animation</span> <span class="kn">import</span> <span class="n">Animation</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Generate the mesh of a sphere</span>
+<span class="n">full_sphere</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">Sphere</span><span class="p">(</span>
+    <span class="n">radius</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>  <span class="c1"># Size and positions</span>
+    <span class="n">ntheta</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">nphi</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span>          <span class="c1"># Fineness of the mesh</span>
+<span class="p">)</span>
+<span class="n">full_sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+
+<span class="c1"># Keep only the immersed part of the mesh</span>
+<span class="n">sphere</span> <span class="o">=</span> <span class="n">full_sphere</span><span class="o">.</span><span class="n">keep_immersed_part</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+
+<span class="c1"># Set up and solve problem</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
+
+<span class="n">diffraction_problem</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">sphere</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="n">diffraction_result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">diffraction_problem</span><span class="p">)</span>
+
+<span class="n">radiation_problem</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">sphere</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">2.0</span><span class="p">)</span>
+<span class="n">radiation_result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">radiation_problem</span><span class="p">)</span>
+
+<span class="c1"># Define a mesh of the free surface and compute the free surface elevation</span>
+<span class="n">free_surface</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FreeSurface</span><span class="p">(</span><span class="n">x_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="n">y_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="mi">50</span><span class="p">),</span> <span class="n">nx</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">150</span><span class="p">)</span>
+<span class="n">diffraction_elevation_at_faces</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">get_free_surface_elevation</span><span class="p">(</span><span class="n">diffraction_result</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">)</span>
+<span class="n">radiation_elevation_at_faces</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">get_free_surface_elevation</span><span class="p">(</span><span class="n">radiation_result</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">)</span>
+
+<span class="c1"># Add incoming waves</span>
+<span class="n">diffraction_elevation_at_faces</span> <span class="o">=</span> <span class="n">diffraction_elevation_at_faces</span> <span class="o">+</span> <span class="n">free_surface</span><span class="o">.</span><span class="n">incoming_waves</span><span class="p">(</span><span class="n">diffraction_result</span><span class="p">)</span>
+
+<span class="c1"># Run the animations</span>
+<span class="n">animation</span> <span class="o">=</span> <span class="n">Animation</span><span class="p">(</span><span class="n">loop_duration</span><span class="o">=</span><span class="n">diffraction_result</span><span class="o">.</span><span class="n">period</span><span class="p">)</span>
+<span class="n">animation</span><span class="o">.</span><span class="n">add_body</span><span class="p">(</span><span class="n">full_sphere</span><span class="p">,</span> <span class="n">faces_motion</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+<span class="n">animation</span><span class="o">.</span><span class="n">add_free_surface</span><span class="p">(</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">faces_elevation</span><span class="o">=</span><span class="mf">0.5</span><span class="o">*</span><span class="n">diffraction_elevation_at_faces</span><span class="p">)</span>
+<span class="n">animation</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">camera_position</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">))</span>  <span class="c1"># The camera is oriented towards (0, 0, 0) by default.</span>
+<span class="c1"># animation.save(&quot;path/to/the/video/file.ogv&quot;, camera_position=(-30, -30, 30))</span>
+
+<span class="n">animation</span> <span class="o">=</span> <span class="n">Animation</span><span class="p">(</span><span class="n">loop_duration</span><span class="o">=</span><span class="n">radiation_result</span><span class="o">.</span><span class="n">period</span><span class="p">)</span>
+<span class="n">animation</span><span class="o">.</span><span class="n">add_body</span><span class="p">(</span><span class="n">full_sphere</span><span class="p">,</span> <span class="n">faces_motion</span><span class="o">=</span><span class="n">full_sphere</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="s2">&quot;Heave&quot;</span><span class="p">])</span>
+<span class="n">animation</span><span class="o">.</span><span class="n">add_free_surface</span><span class="p">(</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">faces_elevation</span><span class="o">=</span><span class="mf">3.0</span><span class="o">*</span><span class="n">radiation_elevation_at_faces</span><span class="p">)</span>
+<span class="n">animation</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">camera_position</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="o">-</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">))</span>
+<span class="c1"># animation.save(&quot;path/to/the/video/file.ogv&quot;, camera_position=(-30, -30, 30))</span>
+
+</pre></div>
+</div>
+</section>
+<section id="animation-of-the-rao">
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Animation of the RAO</a><a class="headerlink" href="#animation-of-the-rao" title="Permalink to this heading">¶</a></h3>
+<p>This script generates the animation of the RAO motion for a wave incoming in front of a ship,
+such as the one used on the main page of this documentation.
+This script requires the mesh of the ship <code class="code docutils literal notranslate"><span class="pre">boat_200.mar</span></code>. It can be
+downloaded from: <a class="reference external" href="https://raw.githubusercontent.com/capytaine/capytaine/master/docs/user_manual/examples/boat_200.mar">https://raw.githubusercontent.com/capytaine/capytaine/master/docs/user_manual/examples/boat_200.mar</a></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">pi</span> <span class="k">as</span> <span class="n">π</span>
+
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+<span class="kn">from</span> <span class="nn">capytaine.ui.vtk</span> <span class="kn">import</span> <span class="n">Animation</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%(levelname)-8s</span><span class="s1">: </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">)</span>
+
+<span class="n">bem_solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">generate_boat</span><span class="p">():</span>
+    <span class="n">boat</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s2">&quot;boat_200.mar&quot;</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="s2">&quot;mar&quot;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;pirate ship&quot;</span><span class="p">)</span>
+    <span class="n">boat</span><span class="o">.</span><span class="n">center_of_mass</span> <span class="o">=</span> <span class="n">boat</span><span class="o">.</span><span class="n">rotation_center</span> <span class="o">=</span> <span class="n">boat</span><span class="o">.</span><span class="n">center_of_buoyancy</span>
+    <span class="n">boat</span><span class="o">.</span><span class="n">add_all_rigid_body_dofs</span><span class="p">()</span>
+    <span class="n">boat</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="n">boat</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">()</span> <span class="o">/</span> <span class="mi">10</span> <span class="c1"># Artificially lower to have a more appealing animation</span>
+    <span class="n">boat</span><span class="o">.</span><span class="n">keep_immersed_part</span><span class="p">()</span>
+    <span class="n">boat</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">boat</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">boat</span>
+
+
+<span class="k">def</span> <span class="nf">setup_animation</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">fs</span><span class="p">,</span> <span class="n">omega</span><span class="p">,</span> <span class="n">wave_amplitude</span><span class="p">,</span> <span class="n">wave_direction</span><span class="p">):</span>
+    <span class="c1"># SOLVE BEM PROBLEMS</span>
+    <span class="n">radiation_problems</span> <span class="o">=</span> <span class="p">[</span><span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">]</span>
+    <span class="n">radiation_results</span> <span class="o">=</span> <span class="n">bem_solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">radiation_problems</span><span class="p">)</span>
+    <span class="n">diffraction_problem</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">,</span> <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="n">wave_direction</span><span class="p">)</span>
+    <span class="n">diffraction_result</span> <span class="o">=</span> <span class="n">bem_solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">diffraction_problem</span><span class="p">)</span>
+
+    <span class="n">dataset</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">(</span><span class="n">radiation_results</span> <span class="o">+</span> <span class="p">[</span><span class="n">diffraction_result</span><span class="p">])</span>
+    <span class="n">rao</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">post_pro</span><span class="o">.</span><span class="n">rao</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="n">wave_direction</span><span class="p">)</span>
+
+    <span class="c1"># COMPUTE FREE SURFACE ELEVATION</span>
+    <span class="c1"># Compute the diffracted wave pattern</span>
+    <span class="n">diffraction_elevation</span> <span class="o">=</span> <span class="n">bem_solver</span><span class="o">.</span><span class="n">get_free_surface_elevation</span><span class="p">(</span><span class="n">diffraction_result</span><span class="p">,</span> <span class="n">fs</span><span class="p">)</span>
+    <span class="n">incoming_waves_elevation</span> <span class="o">=</span> <span class="n">fs</span><span class="o">.</span><span class="n">incoming_waves</span><span class="p">(</span><span class="n">diffraction_result</span><span class="p">)</span>
+
+    <span class="c1"># Compute the wave pattern radiated by the RAO</span>
+    <span class="n">radiation_elevations_per_dof</span> <span class="o">=</span> <span class="p">{</span><span class="n">res</span><span class="o">.</span><span class="n">radiating_dof</span><span class="p">:</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">omega</span><span class="p">)</span><span class="o">*</span><span class="n">bem_solver</span><span class="o">.</span><span class="n">get_free_surface_elevation</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">fs</span><span class="p">)</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">radiation_results</span><span class="p">}</span>
+    <span class="n">radiation_elevation</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">rao</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">)</span><span class="o">.</span><span class="n">data</span> <span class="o">*</span> <span class="n">radiation_elevations_per_dof</span><span class="p">[</span><span class="n">dof</span><span class="p">]</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">)</span>
+
+    <span class="c1"># SET UP ANIMATION</span>
+    <span class="c1"># Compute the motion of each face of the mesh for the animation</span>
+    <span class="n">rao_faces_motion</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">rao</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">)</span><span class="o">.</span><span class="n">data</span> <span class="o">*</span> <span class="n">body</span><span class="o">.</span><span class="n">full_body</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="n">dof</span><span class="p">]</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">)</span>
+
+    <span class="c1"># Set up scene</span>
+    <span class="n">animation</span> <span class="o">=</span> <span class="n">Animation</span><span class="p">(</span><span class="n">loop_duration</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">π</span><span class="o">/</span><span class="n">omega</span><span class="p">)</span>
+    <span class="n">animation</span><span class="o">.</span><span class="n">add_body</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">full_body</span><span class="p">,</span> <span class="n">faces_motion</span><span class="o">=</span><span class="n">wave_amplitude</span><span class="o">*</span><span class="n">rao_faces_motion</span><span class="p">)</span>
+    <span class="n">animation</span><span class="o">.</span><span class="n">add_free_surface</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">wave_amplitude</span> <span class="o">*</span> <span class="p">(</span><span class="n">incoming_waves_elevation</span> <span class="o">+</span> <span class="n">diffraction_elevation</span> <span class="o">+</span> <span class="n">radiation_elevation</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">animation</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">generate_boat</span><span class="p">()</span>
+    <span class="n">fs</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FreeSurface</span><span class="p">(</span><span class="n">x_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="n">y_range</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">75</span><span class="p">),</span> <span class="n">nx</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
+
+    <span class="n">anim</span> <span class="o">=</span> <span class="n">setup_animation</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">fs</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">wave_amplitude</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="n">π</span><span class="p">)</span>
+    <span class="n">anim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">camera_position</span><span class="o">=</span><span class="p">(</span><span class="mi">70</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">800</span><span class="p">,</span> <span class="mi">600</span><span class="p">))</span>
+    <span class="n">anim</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;animated_boat.ogv&quot;</span><span class="p">,</span> <span class="n">camera_position</span><span class="o">=</span><span class="p">(</span><span class="mi">70</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">800</span><span class="p">,</span> <span class="mi">600</span><span class="p">))</span>
+
+</pre></div>
+</div>
+</section>
+<section id="kochin-function">
+<h3><a class="toc-backref" href="#id11" role="doc-backlink">Kochin function</a><a class="headerlink" href="#kochin-function" title="Permalink to this heading">¶</a></h3>
+<p>This example computes the Kochin function for a surging buoy and plot the results.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">pi</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+
+<span class="c1"># SET UP THE MESH</span>
+<span class="n">buoy</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">VerticalCylinder</span><span class="p">(</span>
+    <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">),</span>
+    <span class="n">nx</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">nr</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">clever</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">buoy</span><span class="o">.</span><span class="n">keep_immersed_part</span><span class="p">()</span>
+<span class="n">buoy</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
+
+<span class="c1"># SOLVE THE BEM PROBLEMS AND COMPUTE THE KOCHIN FUNCTIONS</span>
+<span class="n">theta_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">,</span> <span class="mi">40</span><span class="p">)</span>
+<span class="n">omega_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+<span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="p">{</span>
+    <span class="s1">&#39;omega&#39;</span><span class="p">:</span> <span class="n">omega_range</span><span class="p">,</span> <span class="s1">&#39;theta&#39;</span><span class="p">:</span> <span class="n">theta_range</span><span class="p">,</span> <span class="s1">&#39;radiating_dof&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Surge&quot;</span><span class="p">],</span>
+<span class="p">})</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">buoy</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="c1"># PLOT THE KOCHIN FUNCTION</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">swap_dims</span><span class="p">({</span><span class="s1">&#39;omega&#39;</span><span class="p">:</span> <span class="s1">&#39;wavenumber&#39;</span><span class="p">})</span>  <span class="c1"># Use wavenumber to index data</span>
+<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;wavenumber&#39;</span><span class="p">]:</span>
+    <span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;kochin&#39;</span><span class="p">]</span>
+     <span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">radiating_dof</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="n">k</span><span class="p">)</span>
+     <span class="o">.</span><span class="n">real</span>
+     <span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;theta&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;k=</span><span class="si">{</span><span class="nb">float</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> m¯¹&quot;</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Real part of the Kochin function as a function of theta&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="haskind-s-relation">
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Haskind’s relation</a><a class="headerlink" href="#haskind-s-relation" title="Permalink to this heading">¶</a></h3>
+<p>This example computes the excitation force from the radiation potential
+using Haskind’s relation. The result is compared with the one obtained by
+direct integration of the potentials from incident waves and from the
+diffraction problem.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#! /usr/bin/env python3</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+
+
+<span class="n">r</span> <span class="o">=</span> <span class="mf">1.</span>
+<span class="n">draft</span> <span class="o">=</span> <span class="mf">0.5</span>
+<span class="n">depth</span> <span class="o">=</span> <span class="mf">10.</span>
+<span class="n">omega</span> <span class="o">=</span> <span class="mf">1.</span>
+<span class="n">rho</span> <span class="o">=</span> <span class="mi">1000</span>
+
+<span class="c1"># Define geometry and heave degree of freedom</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">VerticalCylinder</span><span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">draft</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">r</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">),</span>
+                            <span class="n">nx</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">nr</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>
+                            <span class="n">clever</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>  <span class="c1"># Do not use axial symmetry of the mesh (not really useful here)</span>
+                           <span class="p">)</span>
+<span class="n">body</span><span class="o">.</span><span class="n">keep_immersed_part</span><span class="p">()</span>
+<span class="n">body</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;Heave&#39;</span><span class="p">)</span>
+
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
+
+<span class="c1"># Define and solve the diffraction and radiation problems</span>
+<span class="n">diff_problem</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="o">=-</span><span class="n">depth</span><span class="p">,</span>
+                                      <span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="mf">0.</span><span class="p">)</span>
+<span class="n">rad_problem</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="o">=-</span><span class="n">depth</span><span class="p">,</span>
+                                   <span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s1">&#39;Heave&#39;</span><span class="p">)</span>
+
+<span class="n">diff_solution</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">diff_problem</span><span class="p">)</span>
+<span class="n">rad_solution</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">rad_problem</span><span class="p">)</span>
+
+
+<span class="c1"># Read mesh properties</span>
+<span class="n">faces_centers</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span>
+<span class="n">faces_normals</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_normals</span>
+<span class="n">faces_areas</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_areas</span>
+
+<span class="kn">from</span> <span class="nn">capytaine.bem.airy_waves</span> <span class="kn">import</span> <span class="n">airy_waves_potential</span><span class="p">,</span> <span class="n">airy_waves_velocity</span><span class="p">,</span> <span class="n">froude_krylov_force</span>
+
+<span class="c1"># Computation from the diffraction solution (Capytaine)</span>
+<span class="n">FK</span> <span class="o">=</span> <span class="n">froude_krylov_force</span><span class="p">(</span><span class="n">diff_problem</span><span class="p">)[</span><span class="s1">&#39;Heave&#39;</span><span class="p">]</span>
+<span class="n">diff_force</span> <span class="o">=</span> <span class="n">diff_solution</span><span class="o">.</span><span class="n">forces</span><span class="p">[</span><span class="s1">&#39;Heave&#39;</span><span class="p">]</span>
+
+<span class="c1"># Get potentials</span>
+<span class="n">phi_inc</span> <span class="o">=</span> <span class="n">airy_waves_potential</span><span class="p">(</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">diff_problem</span><span class="p">)</span>
+<span class="n">v_inc</span> <span class="o">=</span> <span class="n">airy_waves_velocity</span><span class="p">(</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">diff_problem</span><span class="p">)</span>
+<span class="n">phi_rad</span> <span class="o">=</span> <span class="n">rad_solution</span><span class="o">.</span><span class="n">potential</span>
+
+<span class="c1"># Indirect computation from the radiation solution, via the Haskind relation</span>
+<span class="n">integrand</span> <span class="o">=</span> <span class="o">-</span> <span class="p">(</span><span class="n">phi_inc</span> <span class="o">*</span> <span class="n">faces_normals</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span>
+              <span class="o">-</span> <span class="n">phi_rad</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">v_inc</span><span class="nd">@faces_normals</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+<span class="n">F_hask</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">integrand</span><span class="o">*</span><span class="n">faces_areas</span><span class="p">)</span>
+
+<span class="c1"># Direct integration of the potentials</span>
+<span class="n">diff_force_recomputed</span> <span class="o">=</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                        <span class="n">diff_solution</span><span class="o">.</span><span class="n">potential</span><span class="o">*</span><span class="n">faces_areas</span><span class="o">*</span><span class="n">faces_normals</span><span class="p">[:,</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">FK_recomputed</span> <span class="o">=</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                        <span class="n">phi_inc</span><span class="o">*</span><span class="n">faces_areas</span><span class="o">*</span><span class="n">faces_normals</span><span class="p">[:,</span><span class="mi">2</span><span class="p">])</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Result from Capytaine = &#39;</span><span class="p">,</span> <span class="n">FK</span> <span class="o">+</span> <span class="n">diff_force</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Result from recomputed direct integration&#39;</span><span class="p">,</span>
+        <span class="n">FK_recomputed</span> <span class="o">+</span> <span class="n">diff_force_recomputed</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Result from Haskind relation = &#39;</span><span class="p">,</span> <span class="n">F_hask</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="symmetric-body">
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Symmetric body</a><a class="headerlink" href="#symmetric-body" title="Permalink to this heading">¶</a></h3>
+<p>This example loads a mesh from a file, keeps only a part of it and defines a symmetric body from this
+half.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+
+<span class="c1"># Load a mesh</span>
+<span class="n">original_mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">Sphere</span><span class="p">(</span><span class="n">axial_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span><span class="o">.</span><span class="n">mesh</span>
+
+<span class="c1"># METHOD 1</span>
+<span class="c1"># Get the indices of the panels such that the center is in the half-space y &gt; 0.</span>
+<span class="n">indices_of_some_faces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">original_mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="n">half_mesh</span> <span class="o">=</span> <span class="n">original_mesh</span><span class="o">.</span><span class="n">extract_faces</span><span class="p">(</span><span class="n">indices_of_some_faces</span><span class="p">)</span>
+
+<span class="c1"># METHOD 2</span>
+<span class="c1"># Clip the mesh</span>
+<span class="n">half_mesh</span> <span class="o">=</span> <span class="n">original_mesh</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">xOz_Plane</span><span class="p">)</span>
+
+<span class="c1"># Define a new body by reflecting the half mesh across the xOz plane.</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
+    <span class="n">cpt</span><span class="o">.</span><span class="n">ReflectionSymmetricMesh</span><span class="p">(</span><span class="n">half_mesh</span><span class="p">,</span> <span class="n">cpt</span><span class="o">.</span><span class="n">xOz_Plane</span><span class="p">),</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;symmetric_body&quot;</span><span class="p">)</span>
+
+<span class="c1"># Display the body with VTK.</span>
+<span class="n">body</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="axisymmetric-body">
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Axisymmetric body</a><a class="headerlink" href="#axisymmetric-body" title="Permalink to this heading">¶</a></h3>
+<p>This example generates an axisymmetric mesh from a profile function and solves radiation problems for
+this floating body.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+<span class="kn">import</span> <span class="nn">capytaine.io.xarray</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Profile of the axisymmetric body</span>
+<span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="n">z</span><span class="p">):</span>
+    <span class="k">return</span> <span class="mf">0.1</span><span class="o">*</span><span class="p">(</span><span class="o">-</span><span class="p">(</span><span class="n">z</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="mi">16</span><span class="p">)</span>
+
+<span class="c1"># Generate the mesh and display it with VTK.</span>
+<span class="n">buoy</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
+    <span class="n">cpt</span><span class="o">.</span><span class="n">AxialSymmetricMesh</span><span class="o">.</span><span class="n">from_profile</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">z_range</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">30</span><span class="p">),</span> <span class="n">nphi</span><span class="o">=</span><span class="mi">40</span><span class="p">)</span>
+<span class="p">)</span>
+<span class="n">buoy</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+<span class="n">buoy</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+<span class="c1"># Set up problems</span>
+<span class="n">omega_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mi">60</span><span class="p">)</span>
+<span class="n">problems</span> <span class="o">=</span> <span class="p">[</span><span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">buoy</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s1">&#39;Heave&#39;</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">omega</span> <span class="ow">in</span> <span class="n">omega_range</span><span class="p">]</span>
+
+<span class="c1"># Solve the problems using the axial symmetry</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">(</span><span class="n">engine</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">HierarchicalToeplitzMatrixEngine</span><span class="p">())</span>
+<span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">pb</span><span class="p">)</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">problems</span><span class="p">)]</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">capytaine</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">xarray</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+<span class="c1"># Plot results</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">omega_range</span><span class="p">,</span>
+    <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">radiating_dof</span><span class="o">=</span><span class="s1">&#39;Heave&#39;</span><span class="p">,</span>
+                              <span class="n">influenced_dof</span><span class="o">=</span><span class="s1">&#39;Heave&#39;</span><span class="p">),</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Added mass&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">omega_range</span><span class="p">,</span>
+    <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;radiation_damping&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">radiating_dof</span><span class="o">=</span><span class="s1">&#39;Heave&#39;</span><span class="p">,</span>
+                                     <span class="n">influenced_dof</span><span class="o">=</span><span class="s1">&#39;Heave&#39;</span><span class="p">),</span>
+    <span class="n">label</span><span class="o">=</span><span class="s2">&quot;Radiation damping&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;omega&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="advanced-examples">
+<h2><a class="toc-backref" href="#id15" role="doc-backlink">Advanced examples</a><a class="headerlink" href="#advanced-examples" title="Permalink to this heading">¶</a></h2>
+<section id="convergence-study">
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Convergence study</a><a class="headerlink" href="#convergence-study" title="Permalink to this heading">¶</a></h3>
+<p>This example runs a mesh convergence study for a submerged cylinder.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">pi</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+
+<span class="c1"># Set up logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">make_cylinder</span><span class="p">(</span><span class="n">resolution</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Make cylinder with a mesh of a given resolution in panels/meter.&quot;&quot;&quot;</span>
+    <span class="n">radius</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">length</span> <span class="o">=</span> <span class="mf">5.0</span>
+    <span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">HorizontalCylinder</span><span class="p">(</span>
+        <span class="n">length</span><span class="o">=</span><span class="n">length</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span>
+        <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.5</span><span class="o">*</span><span class="n">radius</span><span class="p">),</span>
+        <span class="n">nr</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">resolution</span><span class="o">*</span><span class="n">radius</span><span class="p">),</span>
+        <span class="n">nx</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">length</span><span class="o">*</span><span class="n">resolution</span><span class="p">),</span>
+        <span class="n">ntheta</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">length</span><span class="o">*</span><span class="n">resolution</span><span class="p">),</span>
+    <span class="p">)</span>
+    <span class="c1"># Store the number of panels in the name of the body</span>
+    <span class="n">body</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;cylinder_</span><span class="si">{</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="si">:</span><span class="s2">04d</span><span class="si">}</span><span class="s2">&quot;</span>
+    <span class="n">body</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">body</span>
+
+<span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="p">{</span>
+    <span class="s1">&#39;omega&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">],</span>
+    <span class="s1">&#39;radiating_dof&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;Heave&#39;</span><span class="p">],</span>
+<span class="p">})</span>
+
+<span class="n">bodies</span> <span class="o">=</span> <span class="p">[</span><span class="n">make_cylinder</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">)]</span>
+<span class="n">ds1</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">(</span><span class="n">green_function</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">XieDelhommeau</span><span class="p">())</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">bodies</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">read_nb_faces_in_mesh_name</span><span class="p">(</span><span class="n">ds</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Read the name of the body to guess the resolution of the mesh.&quot;&quot;&quot;</span>
+    <span class="n">ds</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;nb_faces&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">name</span><span class="p">[</span><span class="mi">9</span><span class="p">:])</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">[</span><span class="s1">&#39;body_name&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">],</span> <span class="n">coords</span><span class="o">=</span><span class="p">[</span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;body_name&#39;</span><span class="p">]])</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">ds</span><span class="o">.</span><span class="n">swap_dims</span><span class="p">({</span><span class="s1">&#39;body_name&#39;</span><span class="p">:</span> <span class="s1">&#39;nb_faces&#39;</span><span class="p">})</span>
+    <span class="k">return</span> <span class="n">ds</span>
+<span class="n">ds1</span> <span class="o">=</span> <span class="n">read_nb_faces_in_mesh_name</span><span class="p">(</span><span class="n">ds1</span><span class="p">)</span>
+
+<span class="n">ds1</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;nb_faces&#39;</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="plot-the-influence-matrix">
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Plot the influence matrix</a><a class="headerlink" href="#plot-the-influence-matrix" title="Permalink to this heading">¶</a></h3>
+<p>This example plots the influence matrix for an horizontal cylinder.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+
+<span class="c1"># Generate the mesh of a cylinder</span>
+<span class="n">cylinder</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">HorizontalCylinder</span><span class="p">(</span>
+    <span class="n">length</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>  <span class="c1"># Dimensions</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span>        <span class="c1"># Position</span>
+    <span class="n">nr</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">6</span><span class="p">,</span>     <span class="c1"># Fineness of the mesh</span>
+<span class="p">)</span>
+
+<span class="n">engine</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BasicMatrixEngine</span><span class="p">()</span>
+<span class="n">green_function</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">Delhommeau</span><span class="p">()</span>
+
+<span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
+    <span class="n">cylinder</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">cylinder</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+    <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="o">=-</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">,</span>
+    <span class="n">wavenumber</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">green_function</span><span class="o">=</span><span class="n">green_function</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Plot the absolute value of the matrix S</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">full_matrix</span><span class="p">()))</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;$|S|$&quot;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="compare-two-implementations-of-the-green-function">
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">Compare two implementations of the Green function</a><a class="headerlink" href="#compare-two-implementations-of-the-green-function" title="Permalink to this heading">¶</a></h3>
+<p>This is an example of comparison of two implementations of the Green function.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+
+<span class="c1"># Set up logging</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span>
+                    <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%(levelname)s</span><span class="s2">:</span><span class="se">\t</span><span class="si">%(message)s</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="c1"># Generate body</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">HorizontalCylinder</span><span class="p">(</span>
+    <span class="n">length</span><span class="o">=</span><span class="mf">3.0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>  <span class="c1"># Dimensions</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.01</span><span class="p">),</span>     <span class="c1"># Position</span>
+    <span class="n">nr</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">15</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>   <span class="c1"># Fineness of the mesh</span>
+<span class="p">)</span>
+<span class="n">body</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+
+<span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="p">{</span>
+    <span class="s1">&#39;omega&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
+    <span class="s1">&#39;radiating_dof&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">()),</span>
+<span class="p">})</span>
+
+<span class="n">ds2</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">(</span><span class="n">green_function</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">XieDelhommeau</span><span class="p">())</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
+<span class="n">ds1</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">(</span><span class="n">green_function</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">Delhommeau</span><span class="p">())</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">ds1</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Delhommeau&#39;</span><span class="p">)</span>
+<span class="n">ds2</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;XieDelhommeau&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">ds1</span><span class="p">[</span><span class="s1">&#39;radiation_damping&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;Delhommeau&#39;</span><span class="p">)</span>
+<span class="n">ds2</span><span class="p">[</span><span class="s1">&#39;radiation_damping&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="s1">&#39;XieDelhommeau&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
+<section id="use-a-custom-green-function">
+<h3><a class="toc-backref" href="#id19" role="doc-backlink">Use a custom Green function</a><a class="headerlink" href="#use-a-custom-green-function" title="Permalink to this heading">¶</a></h3>
+<p>This is an example of how to implement a custom Green function.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">dot</span><span class="p">,</span> <span class="n">pi</span>
+<span class="kn">from</span> <span class="nn">numpy.linalg</span> <span class="kn">import</span> <span class="n">norm</span>
+
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+<span class="kn">from</span> <span class="nn">capytaine.green_functions.abstract_green_function</span> <span class="kn">import</span> <span class="n">AbstractGreenFunction</span>
+
+<span class="k">class</span> <span class="nc">MyGreenFunction</span><span class="p">(</span><span class="n">AbstractGreenFunction</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;An example of a custom routine to evaluate the Green function.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The main method that needs to be implemented in the class.&quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">infty</span> <span class="ow">and</span> <span class="n">sea_bottom</span> <span class="o">==</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">:</span>
+
+            <span class="c1"># Initialize the matrices</span>
+            <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">mesh1</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
+            <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">mesh1</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
+
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mesh1</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">):</span>
+                    <span class="n">area</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">:</span>
+                        <span class="c1"># The integral on the face is computed using the value at the center of the face.</span>
+                        <span class="n">r</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:]</span>
+
+                        <span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">area</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">norm</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+                        <span class="n">K</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">area</span><span class="o">*</span><span class="n">dot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:])</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">norm</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="c1"># The kernel is singular.</span>
+                        <span class="c1"># When i == j, we can&#39;t use the approximation above for the integral.</span>
+                        <span class="c1"># Below, we take a rough approximation.</span>
+                        <span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">area</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="mi">3</span>
+                        <span class="n">K</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">area</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="mi">3</span>
+
+            <span class="k">if</span> <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mesh1</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">):</span>
+                    <span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
+
+            <span class="k">return</span> <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+
+<span class="c1"># Define a solver using the Green function above.</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">(</span><span class="n">green_function</span><span class="o">=</span><span class="n">MyGreenFunction</span><span class="p">())</span>
+
+<span class="c1"># Example of a problem</span>
+<span class="n">sphere</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">Sphere</span><span class="p">(</span>
+    <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>          <span class="c1"># Dimension</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span>   <span class="c1"># Position</span>
+    <span class="n">nphi</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>  <span class="c1"># Fineness of the mesh</span>
+<span class="p">)</span>
+<span class="n">sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">sphere</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="o">=-</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s1">&#39;Heave&#39;</span><span class="p">)</span>
+
+<span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">added_masses</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation for users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mesh.html">Meshes and floating bodies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hydrostatics.html">Hydrostatics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="problem_setup.html">Setting up a problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resolution.html">Resolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="outputs.html">Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="post_pro.html">Post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conventions.html">Conventions and differences to other codes</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Cookbook</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">User manual</a><ul>
+      <li>Previous: <a href="conventions.html" title="previous chapter">Conventions and differences to other codes</a></li>
+      <li>Next: <a href="../developer_manual/index.html" title="next chapter">Developer manual</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_manual/cookbook.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/user_manual/cookbook.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

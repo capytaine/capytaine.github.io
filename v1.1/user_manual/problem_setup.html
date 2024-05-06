@@ -1,0 +1,323 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Setting up a problem &#8212; capytaine 1.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/proof.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="../_static/proof.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Resolution" href="resolution.html" />
+    <link rel="prev" title="Meshes and floating bodies" href="mesh.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="setting-up-a-problem">
+<h1>Setting up a problem<a class="headerlink" href="#setting-up-a-problem" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="defining-a-test-matrix-with-xarray">
+<h2>Defining a test matrix with <code class="code docutils literal notranslate"><span class="pre">xarray</span></code><a class="headerlink" href="#defining-a-test-matrix-with-xarray" title="Permalink to this headline">¶</a></h2>
+<p>The shortest way to set the parameters of the potential flow problems to be solved is to build a <a class="reference external" href="http://xarray.pydata.org">xarray</a> dataset.
+Then the function <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset" title="capytaine.bem.solver.BEMSolver.fill_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_dataset</span></code></a> will automatically make all the simulations defined in the test matrix.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+
+<span class="n">body</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Set up the body and its dofs here.</span>
+
+<span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="p">{</span>
+    <span class="s1">&#39;omega&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
+    <span class="s1">&#39;wave_direction&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span>
+    <span class="s1">&#39;radiating_dof&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">),</span>
+    <span class="s1">&#39;water_depth&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">],</span>
+<span class="p">})</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="p">[</span><span class="n">body</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>It returns a filled dataset. If the coordinate <code class="code docutils literal notranslate"><span class="pre">theta</span></code> is added to the test matrix, the code will
+compute the Kochin function for these values of <span class="math notranslate nohighlight">\(\theta\)</span>.</p>
+</div>
+<div class="section" id="the-linearpotentialflowproblem-class">
+<h2>The <code class="xref py py-class docutils literal notranslate"><span class="pre">LinearPotentialFlowProblem</span></code> class<a class="headerlink" href="#the-linearpotentialflowproblem-class" title="Permalink to this headline">¶</a></h2>
+<p>For a finer grain control of the problems to be solved, a list of <code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowProblem</span></code> should be defined.
+It is defined as, e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">my_body</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+<span class="n">other_problem</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">my_body</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Besides the body, all the parameters are optional.
+The table below gives their definitions and their default values.</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 47%" />
+<col style="width: 27%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Description (unit)</p></th>
+<th class="head"><p>Default value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">free_surface</span></code></p></td>
+<td><p>Position of the free surface <a class="footnote-reference brackets" href="#id3" id="id1">1</a> (m)</p></td>
+<td><p><span class="math notranslate nohighlight">\(0\)</span> m</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">sea_bottom</span></code></p></td>
+<td><p>Position of the sea bottom (m)</p></td>
+<td><p><span class="math notranslate nohighlight">\(-\infty\)</span> m</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">omega</span></code></p></td>
+<td><p>Frequency <span class="math notranslate nohighlight">\(\omega\)</span> (rad/s)</p></td>
+<td><p><span class="math notranslate nohighlight">\(1.0\)</span> rad/s</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">g</span></code></p></td>
+<td><p>Acceleration of gravity <span class="math notranslate nohighlight">\(g\)</span> (m/s²)</p></td>
+<td><p><span class="math notranslate nohighlight">\(9.81\)</span> m/s²</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">rho</span></code></p></td>
+<td><p>Water density (kg/m³)</p></td>
+<td><p><span class="math notranslate nohighlight">\(1000\)</span> kg/m³</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">wave_direction</span></code></p></td>
+<td><p>Direction of the incoming waves
+(only for diffraction)</p></td>
+<td><p><span class="math notranslate nohighlight">\(0\)</span> rad <a class="footnote-reference brackets" href="#id4" id="id2">2</a></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">radiating_dof</span></code></p></td>
+<td><p>Name of radiating dof
+(only for radiation)</p></td>
+<td><p>first one found</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="footnote brackets">
+<dt class="label" id="id3"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
+<dd><p>Only two positions are accepted for the free surface: <span class="math notranslate nohighlight">\(z=0\)</span> and
+<span class="math notranslate nohighlight">\(z= +\infty\)</span>. The former is the usual case for linear potential
+flow. The latter corresponds to an object in a infinite
+potential flow domain with no free surface.</p>
+</dd>
+<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
+<dd><p>A wave direction of <span class="math notranslate nohighlight">\(0\)</span> rad corresponds to a wave propagating along
+the <span class="math notranslate nohighlight">\(x\)</span>-axis from <span class="math notranslate nohighlight">\(x = -\infty\)</span> to <span class="math notranslate nohighlight">\(x= + \infty\)</span>.</p>
+</dd>
+</dl>
+<p>The wave height is implicitely assumed to be <span class="math notranslate nohighlight">\(1\)</span> m.
+Since all computations are linear, any wave height or motion amplitude can be retrieved by multiplying the result by the desired value.</p>
+<p>The following attributes are automatically computed for a given problem:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 42%" />
+<col style="width: 58%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Description (unit)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">depth</span></code></p></td>
+<td><p>Water depth <span class="math notranslate nohighlight">\(h\)</span> (m)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">wavenumber</span></code></p></td>
+<td><p>Wave number <span class="math notranslate nohighlight">\(k\)</span> (m¯¹)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">wavelength</span></code></p></td>
+<td><p>Wave length <span class="math notranslate nohighlight">\(\lambda=\frac{2\pi}{k}\)</span> (m)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">period</span></code></p></td>
+<td><p>Wave period <span class="math notranslate nohighlight">\(T=\frac{2\pi}{\omega}\)</span> (s)</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="code docutils literal notranslate"><span class="pre">dimensionless_omega</span></code></p></td>
+<td><p><span class="math notranslate nohighlight">\(\frac{2\omega^2 h}{g}\)</span> (ø)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="code docutils literal notranslate"><span class="pre">dimensionless_wavenumber</span></code></p></td>
+<td><p><span class="math notranslate nohighlight">\(k h\)</span> (ø)</p></td>
+</tr>
+</tbody>
+</table>
+<p>They can be retrieved as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span><span class="o">.</span><span class="n">wavenumber</span>
+<span class="n">problem</span><span class="o">.</span><span class="n">period</span>
+<span class="c1"># ...</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="legacy-nemoh-cal-parameters-files">
+<h2>Legacy Nemoh.cal parameters files<a class="headerlink" href="#legacy-nemoh-cal-parameters-files" title="Permalink to this headline">¶</a></h2>
+<p>The <a class="reference external" href="https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-running-192930.kjsp">legacy parameters files from Nemoh</a> can be read by a dedicated function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">capytaine.io.legacy</span> <span class="k">import</span> <span class="n">import_cal_file</span>
+
+<span class="n">list_of_problems</span> <span class="o">=</span> <span class="n">import_cal_file</span><span class="p">(</span><span class="s2">&quot;path/to/Nemoh.cal&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The function returns a list of <code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowProblems</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This feature is experimental.
+Some of the settings in the files (such as the free surface computation or the Kochin function) are ignored for the moment.
+See the example <code class="code docutils literal notranslate"><span class="pre">Nemoh.cal</span></code> below.</p>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>--- Environment ---
+1000                    ! RHO         ! KG/M**3   ! Fluid specific volume 
+9.81                    ! G           ! M/S**2    ! Gravity
+0                       ! DEPTH       ! M         ! Water depth
+0     0                 ! Wave measurement point !! This line is ignored !!
+--- Description of floating bodies ---
+1                       ! Number of bodies
+--- Body 1 ---
+Cylinder.dat            ! Name of mesh file
+540    300              ! Number of vertices and panels in mesh !! This line is ignored !!
+6                       ! Number of degrees of freedom
+1  1  0  0  0  0  0     ! Surge
+1  0  1  0  0  0  0     ! Sway
+1  0  0  1  0  0  0     ! Heave
+2  1  0  0  0  0  -7.5  ! Roll about CdG
+2  0  1  0  0  0  -7.5  ! Pitch about CdG
+2  0  0  1  0  0  -7.5  ! Yaw about CdG
+6                       ! Number of resulting generalised forces
+1  1  0  0  0  0  0     ! Force in x direction !! This line is ignored !!
+1  0  1  0  0  0  0     ! Force in y direction !! This line is ignored !!
+1  0  0  1  0  0  0     ! Force in z direction !! This line is ignored !!
+2  1  0  0  0  0  -7.5  ! Moment force in x direction about CdG !! This line is ignored !!
+2  0  1  0  0  0  -7.5  ! Moment force in y direction about CdG !! This line is ignored !!
+2  0  0  1  0  0  -7.5  ! Moment force in z direction about CdG !! This line is ignored !!
+0                       ! Number of lines of additional information !! All the additional informations are ignored !!
+--- Load cases to be solved ---
+2  0.1  2.0             ! Number of wave frequencies, Min, and Max (rad/s)
+1  0.0  0.0             ! Number of wave directions, Min and Max (degrees)
+--- Post processing ---
+0  0.1  10              ! IRF !! This line is ignored !!
+0                       ! Show pressure !! This line is ignored !!
+0  0  180               ! Kochin function !! This line is ignored !!
+0 10  100  100          ! Free surface elevation !! This line ignored !!
+
+</pre></div>
+</div>
+</div>
+<div class="section" id="command-line-interface">
+<h2>Command-line interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This feature is experimental.</p>
+</div>
+<p>Capytaine comes with a command-line command <code class="code docutils literal notranslate"><span class="pre">capytaine</span></code> which can be used as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ capytaine path/to/directory/parameter.cal
+</pre></div>
+</div>
+<p>The parameter file (in <code class="code docutils literal notranslate"><span class="pre">Nemoh.cal</span></code> format) passed as argument is read and legacy tecplot output file are written in the directory <code class="code docutils literal notranslate"><span class="pre">path/to/directory/results/</span></code>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If results files already exist, they will be overwritten!</p>
+</div>
+<p>If no argument is provided to the command, the code looks for a file <code class="code docutils literal notranslate"><span class="pre">Nemoh.cal</span></code> in the current directory.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation for users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mesh.html">Meshes and floating bodies</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Setting up a problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resolution.html">Resolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="outputs.html">Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="post_pro.html">Post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html">Cookbook</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">User manual</a><ul>
+      <li>Previous: <a href="mesh.html" title="previous chapter">Meshes and floating bodies</a></li>
+      <li>Next: <a href="resolution.html" title="next chapter">Resolution</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_manual/problem_setup.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/user_manual/problem_setup.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

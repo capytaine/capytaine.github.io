@@ -1,0 +1,257 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Setting up a problem &#8212; capytaine 0.5.1 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/proof.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/proof.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Outputs" href="outputs.html" />
+    <link rel="prev" title="Inputs" href="inputs.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="setting-up-a-problem">
+<h1>Setting up a problem<a class="headerlink" href="#setting-up-a-problem" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="defining-a-test-matrix-with-xarray">
+<h2>Defining a test matrix with <code class="code docutils literal notranslate"><span class="pre">xarray</span></code><a class="headerlink" href="#defining-a-test-matrix-with-xarray" title="Permalink to this headline">¶</a></h2>
+<p>The shortest way to set the parameters of the potential flow problems to be solved is to build a <a class="reference external" href="http://xarray.pydata.org">xarray</a> dataset.
+Then the function <a class="reference internal" href="../developer_manual/api/capytaine.Nemoh.html#capytaine.Nemoh.Nemoh.fill_dataset" title="capytaine.Nemoh.Nemoh.fill_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_dataset</span></code></a> will automatically make all the simulations defined in the test matrix.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="kn">from</span> <span class="nn">capytaine</span> <span class="k">import</span> <span class="o">*</span>
+
+<span class="n">body</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Set up the body and its dofs here.</span>
+
+<span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="p">{</span>
+    <span class="s1">&#39;omega&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">40</span><span class="p">),</span>
+    <span class="s1">&#39;angle&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">],</span>
+    <span class="s1">&#39;radiating_dof&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">),</span>
+    <span class="s1">&#39;water_depth&#39;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">infty</span><span class="p">],</span>
+<span class="p">})</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">Nemoh</span><span class="p">()</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="p">[</span><span class="n">body</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>It returns a dataset:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:              (angle: 2, influenced_dof: 1, omega: 40, radiating_dof: 1)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * omega                (omega) float64 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 ...</span>
+<span class="go">  * radiating_dof        (radiating_dof) object &#39;Heave&#39;</span>
+<span class="go">  * influenced_dof       (influenced_dof) object &#39;Heave&#39;</span>
+<span class="go">  * angle                (angle) float64 0.0 1.571</span>
+<span class="go">Data variables:</span>
+<span class="go">    added_mass           (omega, radiating_dof, influenced_dof) float64 2.14e+03 ...</span>
+<span class="go">    radiation_damping    (omega, radiating_dof, influenced_dof) float64 1.562e-06 ...</span>
+<span class="go">    Froude_Krylov_force  (omega, angle, influenced_dof) complex128 (-38.148887002448475-3.191891195797325e-16j) ...</span>
+<span class="go">    diffraction_force    (omega, angle, influenced_dof) complex128 (-21.354062211407268-1.5242955876404453e-07j) ...</span>
+<span class="go">Attributes:</span>
+<span class="go">    g:            9.81</span>
+<span class="go">    rho:          1000.0</span>
+<span class="go">    body_name:    sphere_1</span>
+<span class="go">    water_depth:  inf</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="the-linearpotentialflowproblem-class">
+<h2>The <a class="reference internal" href="../developer_manual/api/capytaine.problems.html#capytaine.problems.LinearPotentialFlowProblem" title="capytaine.problems.LinearPotentialFlowProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearPotentialFlowProblem</span></code></a> class<a class="headerlink" href="#the-linearpotentialflowproblem-class" title="Permalink to this headline">¶</a></h2>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Work in progress…</p>
+</div>
+<p>For a finer grain control of the problems to be solved, a list of <code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowProblem</span></code> should be defined.</p>
+<div class="section" id="main-parameters">
+<h3>Main parameters<a class="headerlink" href="#main-parameters" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="19%" />
+<col width="52%" />
+<col width="30%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description (unit)</th>
+<th class="head">Default value</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>free_surface</td>
+<td>Position of the free surface (m)</td>
+<td><span class="math notranslate nohighlight">\(0\)</span> m</td>
+</tr>
+<tr class="row-odd"><td>sea_bottom</td>
+<td>Position of the sea bottom (m)</td>
+<td><span class="math notranslate nohighlight">\(-\infty\)</span> m</td>
+</tr>
+<tr class="row-even"><td>omega</td>
+<td>Frequency <span class="math notranslate nohighlight">\(\omega\)</span> (rad/s)</td>
+<td><span class="math notranslate nohighlight">\(1.0\)</span> rad/s</td>
+</tr>
+<tr class="row-odd"><td>g</td>
+<td>Acceleration of gravity <span class="math notranslate nohighlight">\(g\)</span> (m/s²)</td>
+<td><span class="math notranslate nohighlight">\(9.81\)</span> m/s²</td>
+</tr>
+<tr class="row-even"><td>rho</td>
+<td>Water density (kg/m³)</td>
+<td><span class="math notranslate nohighlight">\(1000\)</span> kg/m³</td>
+</tr>
+<tr class="row-odd"><td>angle</td>
+<td>Angle of incoming wave
+(only for diffraction)</td>
+<td><span class="math notranslate nohighlight">\(0\)</span> rad</td>
+</tr>
+<tr class="row-even"><td>radiating_dof</td>
+<td>Name of radiating dof
+(only for radiation)</td>
+<td>first one found</td>
+</tr>
+</tbody>
+</table>
+<p>The wave height is implicitely assumed to be <span class="math notranslate nohighlight">\(1\)</span> m.
+Since all computations are linear, any wave height or motion amplitude can be retrieved by multiplying the result by the desired value.</p>
+</div>
+<div class="section" id="derived-parameters">
+<h3>Derived parameters<a class="headerlink" href="#derived-parameters" title="Permalink to this headline">¶</a></h3>
+<table border="1" class="docutils">
+<colgroup>
+<col width="36%" />
+<col width="64%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Parameter</th>
+<th class="head">Description (unit)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>depth</td>
+<td>Water depth <span class="math notranslate nohighlight">\(h\)</span> (m)</td>
+</tr>
+<tr class="row-odd"><td>wavenumber</td>
+<td>Wave number <span class="math notranslate nohighlight">\(k\)</span> (m¯¹)</td>
+</tr>
+<tr class="row-even"><td>wavelength</td>
+<td>Wave length <span class="math notranslate nohighlight">\(\lambda=\frac{2\pi}{k}\)</span> (m)</td>
+</tr>
+<tr class="row-odd"><td>period</td>
+<td>Wave period <span class="math notranslate nohighlight">\(T=\frac{2\pi}{\omega}\)</span> (s)</td>
+</tr>
+<tr class="row-even"><td>dimensionless_omega</td>
+<td><span class="math notranslate nohighlight">\(\frac{2\omega^2 h}{g}\)</span> (ø)</td>
+</tr>
+<tr class="row-odd"><td>dimensionless_wavenumber</td>
+<td><span class="math notranslate nohighlight">\(k h\)</span> (ø)</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation for users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="inputs.html">Inputs</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Setting up a problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="outputs.html">Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html">Cookbook</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">User manual</a><ul>
+      <li>Previous: <a href="inputs.html" title="previous chapter">Inputs</a></li>
+      <li>Next: <a href="outputs.html" title="next chapter">Outputs</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_manual/problem_setup.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.7</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="../_sources/user_manual/problem_setup.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

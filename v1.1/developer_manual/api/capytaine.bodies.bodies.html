@@ -1,0 +1,328 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>capytaine.bodies.bodies module &#8212; capytaine 1.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/proof.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../_static/proof.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="capytaine.bodies.predefined.spheres module" href="capytaine.bodies.predefined.spheres.html" />
+    <link rel="prev" title="capytaine.meshes.symmetric module" href="capytaine.meshes.symmetric.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-capytaine.bodies.bodies">
+<span id="capytaine-bodies-bodies-module"></span><h1>capytaine.bodies.bodies module<a class="headerlink" href="#module-capytaine.bodies.bodies" title="Permalink to this headline">¶</a></h1>
+<p>Floating bodies to be used in radiation-diffraction problems.</p>
+<dl class="class">
+<dt id="capytaine.bodies.bodies.FloatingBody">
+<em class="property">class </em><code class="sig-prename descclassname">capytaine.bodies.bodies.</code><code class="sig-name descname">FloatingBody</code><span class="sig-paren">(</span><em class="sig-param">mesh=None</em>, <em class="sig-param">dofs=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="capytaine.meshes.geometry.html#capytaine.meshes.geometry.Abstract3DObject" title="capytaine.meshes.geometry.Abstract3DObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">capytaine.meshes.geometry.Abstract3DObject</span></code></a></p>
+<p>A floating body described as a mesh and some degrees of freedom.</p>
+<p>The mesh structure is stored as a Mesh from capytaine.mesh.mesh or a
+CollectionOfMeshes from capytaine.mesh.meshes_collection.</p>
+<p>The degrees of freedom (dofs) are stored as a dict associating a name to
+a complex-valued array of shape (nb_faces, 3). To each face of the body
+(as indexed in the mesh) corresponds a complex-valued 3d vector, which
+defines the displacement of the center of the face in frequency domain.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mesh</strong> (<em>Mesh or CollectionOfMeshes, optional</em>) – the mesh describing the geometry of the floating body.
+If none is given, a empty one is created.</p></li>
+<li><p><strong>dofs</strong> (<em>dict, optional</em>) – the degrees of freedom of the body.
+If none is given, a empty dictionary is initialized.</p></li>
+<li><p><strong>name</strong> (<em>str, optional</em>) – a name for the body.
+If none is given, the one of the mesh is used.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.add_all_rigid_body_dofs">
+<code class="sig-name descname">add_all_rigid_body_dofs</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.add_all_rigid_body_dofs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.add_all_rigid_body_dofs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add the six degrees of freedom of rigid bodies (in place).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.add_dofs_labels_to_matrix">
+<code class="sig-name descname">add_dofs_labels_to_matrix</code><span class="sig-paren">(</span><em class="sig-param">matrix</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.add_dofs_labels_to_matrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.add_dofs_labels_to_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function turning a bare matrix into a matrix labelled by the name of the dofs of the body,
+to be used for instance for the computation of RAO.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.add_dofs_labels_to_vector">
+<code class="sig-name descname">add_dofs_labels_to_vector</code><span class="sig-paren">(</span><em class="sig-param">vector</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.add_dofs_labels_to_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.add_dofs_labels_to_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Helper function turning a bare vector into a vector labelled by the name of the dofs of the body,
+to be used for instance for the computation of RAO.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.add_rotation_dof">
+<code class="sig-name descname">add_rotation_dof</code><span class="sig-paren">(</span><em class="sig-param">axis=None</em>, <em class="sig-param">name=None</em>, <em class="sig-param">amplitude=1.0</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.add_rotation_dof"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.add_rotation_dof" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new rotation dof (in place).
+If no axis is given, the code tries to infer it from the name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>axis</strong> (<em>Axis, optional</em>) – the axis of the rotation</p></li>
+<li><p><strong>name</strong> (<em>str, optional</em>) – a name for the degree of freedom</p></li>
+<li><p><strong>amplitude</strong> (<em>float, optional</em>) – amplitude of the dof (default: 1.0)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.add_translation_dof">
+<code class="sig-name descname">add_translation_dof</code><span class="sig-paren">(</span><em class="sig-param">direction=None</em>, <em class="sig-param">name=None</em>, <em class="sig-param">amplitude=1.0</em><span class="sig-paren">)</span> &#x2192; None<a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.add_translation_dof"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.add_translation_dof" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a new translation dof (in place).
+If no direction is given, the code tries to infer it from the name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>direction</strong> (<em>array of shape (3,), optional</em>) – the direction of the translation</p></li>
+<li><p><strong>name</strong> (<em>str, optional</em>) – a name for the degree of freedom</p></li>
+<li><p><strong>amplitude</strong> (<em>float, optional</em>) – amplitude of the dof (default: 1.0 m/s)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.assemble_regular_array">
+<code class="sig-name descname">assemble_regular_array</code><span class="sig-paren">(</span><em class="sig-param">distance</em>, <em class="sig-param">nb_bodies</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.assemble_regular_array"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.assemble_regular_array" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an regular array of identical bodies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>distance</strong> (<em>float</em>) – Center-to-center distance between objects in the array</p></li>
+<li><p><strong>nb_bodies</strong> (<em>couple of ints</em>) – Number of objects in the x and y directions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#capytaine.bodies.bodies.FloatingBody" title="capytaine.bodies.bodies.FloatingBody">FloatingBody</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.clip">
+<code class="sig-name descname">clip</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inplace=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.clip" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.clipped">
+<code class="sig-name descname">clipped</code><span class="sig-paren">(</span><em class="sig-param">plane</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.clipped"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.clipped" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.combine_dofs">
+<em class="property">static </em><code class="sig-name descname">combine_dofs</code><span class="sig-paren">(</span><em class="sig-param">bodies</em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.combine_dofs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.combine_dofs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Combine the degrees of freedom of several bodies.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.copy">
+<code class="sig-name descname">copy</code><span class="sig-paren">(</span><em class="sig-param">name=None</em><span class="sig-paren">)</span> &#x2192; capytaine.bodies.bodies.FloatingBody<a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.copy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.copy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a deep copy of the body.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str, optional</em>) – a name for the new copy</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.extract_faces">
+<code class="sig-name descname">extract_faces</code><span class="sig-paren">(</span><em class="sig-param">id_faces_to_extract</em>, <em class="sig-param">return_index=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.extract_faces"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.extract_faces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a new FloatingBody by extracting some faces from the mesh.
+The dofs evolve accordingly.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.from_file">
+<em class="property">static </em><code class="sig-name descname">from_file</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">file_format=None</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span> &#x2192; capytaine.bodies.bodies.FloatingBody<a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.from_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a FloatingBody from a mesh file using meshmagick.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.join_bodies">
+<code class="sig-name descname">join_bodies</code><span class="sig-paren">(</span><em class="sig-param">*</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span> &#x2192; capytaine.bodies.bodies.FloatingBody<a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.join_bodies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.join_bodies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.keep_immersed_part">
+<code class="sig-name descname">keep_immersed_part</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inplace=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.keep_immersed_part" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.keep_only_dofs">
+<code class="sig-name descname">keep_only_dofs</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inplace=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.keep_only_dofs" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.minced">
+<code class="sig-name descname">minced</code><span class="sig-paren">(</span><em class="sig-param">nb_slices=(8</em>, <em class="sig-param">8</em>, <em class="sig-param">4)</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.minced"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.minced" title="Permalink to this definition">¶</a></dt>
+<dd><p>Experimental method decomposing the mesh as a hierarchical structure.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>nb_slices</strong> (<em>Tuple[int, int, int]</em>) – The number of slices in each of the x, y and z directions.
+Only powers of 2 are supported at the moment.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#capytaine.bodies.bodies.FloatingBody" title="capytaine.bodies.bodies.FloatingBody">FloatingBody</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.mirror">
+<code class="sig-name descname">mirror</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inplace=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.mirror" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.nb_dofs">
+<em class="property">property </em><code class="sig-name descname">nb_dofs</code><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.nb_dofs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Number of degrees of freedom.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.rotate">
+<code class="sig-name descname">rotate</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inplace=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.rotate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.show">
+<code class="sig-name descname">show</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.show"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.show" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.show_matplotlib">
+<code class="sig-name descname">show_matplotlib</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.show_matplotlib"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.show_matplotlib" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.sliced_by_plane">
+<code class="sig-name descname">sliced_by_plane</code><span class="sig-paren">(</span><em class="sig-param">plane</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.sliced_by_plane"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.sliced_by_plane" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.bodies.bodies.FloatingBody.translate">
+<code class="sig-name descname">translate</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inplace=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.translate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../installation.html">Installation for developers</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../overview.html">Overview of the modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">API documentation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Developer manual</a><ul>
+  <li><a href="../overview.html">Overview of the modules</a><ul>
+      <li>Previous: <a href="capytaine.meshes.symmetric.html" title="previous chapter">capytaine.meshes.symmetric module</a></li>
+      <li>Next: <a href="capytaine.bodies.predefined.spheres.html" title="next chapter">capytaine.bodies.predefined.spheres module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/developer_manual/api/capytaine.bodies.bodies.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/developer_manual/api/capytaine.bodies.bodies.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,315 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>capytaine.meshes.symmetric module &#8212; capytaine 1.2 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/proof.css" />
+    <script id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/language_data.js"></script>
+    <script src="../../_static/proof.js"></script>
+    <script async="async" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="capytaine.bodies.bodies module" href="capytaine.bodies.bodies.html" />
+    <link rel="prev" title="capytaine.meshes.surface_integrals module" href="capytaine.meshes.surface_integrals.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-capytaine.meshes.symmetric">
+<span id="capytaine-meshes-symmetric-module"></span><h1>capytaine.meshes.symmetric module<a class="headerlink" href="#module-capytaine.meshes.symmetric" title="Permalink to this headline">¶</a></h1>
+<p>Special meshes with symmetries, useful to speed up the computations.</p>
+<dl class="class">
+<dt id="capytaine.meshes.symmetric.AxialSymmetricMesh">
+<em class="property">class </em><code class="sig-prename descclassname">capytaine.meshes.symmetric.</code><code class="sig-name descname">AxialSymmetricMesh</code><span class="sig-paren">(</span><em class="sig-param">mesh_slice: Union[capytaine.meshes.meshes.Mesh, capytaine.meshes.collections.CollectionOfMeshes], axis: capytaine.meshes.geometry.Axis = Axis(vector=[0. 0. 1.], point=[0. 0. 0.]), nb_repetitions: int = 1, name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/symmetric.html#AxialSymmetricMesh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.meshes.symmetric.AxialSymmetricMesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#capytaine.meshes.symmetric.SymmetricMesh" title="capytaine.meshes.symmetric.SymmetricMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">capytaine.meshes.symmetric.SymmetricMesh</span></code></a></p>
+<p>A mesh with a repeating pattern by rotation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mesh_slice</strong> (<em>Mesh or CollectionOfMeshes</em>) – the pattern that will be repeated to form the whole body</p></li>
+<li><p><strong>axis</strong> (<em>Axis, optional</em>) – symmetry axis</p></li>
+<li><p><strong>nb_repetitions</strong> (<em>int, optional</em>) – the number of repetitions of the pattern (excluding the original one, default: 1)</p></li>
+<li><p><strong>name</strong> (<em>str, optional</em>) – a name for the mesh</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.AxialSymmetricMesh.first_slice">
+<em class="property">property </em><code class="sig-name descname">first_slice</code><a class="headerlink" href="#capytaine.meshes.symmetric.AxialSymmetricMesh.first_slice" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.AxialSymmetricMesh.from_profile">
+<em class="property">static </em><code class="sig-name descname">from_profile</code><span class="sig-paren">(</span><em class="sig-param">profile: Union[Callable, Iterable[float]], z_range: Iterable[float] = array([-5.        , -4.73684211, -4.47368421, -4.21052632, -3.94736842,        -3.68421053, -3.42105263, -3.15789474, -2.89473684, -2.63157895,        -2.36842105, -2.10526316, -1.84210526, -1.57894737, -1.31578947,        -1.05263158, -0.78947368, -0.52631579, -0.26315789,  0.        ]), axis: capytaine.meshes.geometry.Axis = Axis(vector=[0. 0. 1.], point=[0. 0. 0.]), nphi: int = 20, name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/symmetric.html#AxialSymmetricMesh.from_profile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.meshes.symmetric.AxialSymmetricMesh.from_profile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a floating body using the axial symmetry.
+The shape of the body can be defined either with a function defining the profile as [f(z), 0, z] for z in z_range.
+Alternatively, the profile can be defined as a list of points.
+The number of vertices along the vertical direction is len(z_range) in the first case and profile.shape[0] in the second case.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>profile</strong> (<em>function(float → float)  or  array(N, 3)</em>) – define the shape of the body either as a function or a list of points.</p></li>
+<li><p><strong>z_range</strong> (<em>array(N), optional</em>) – used only if the profile is defined as a function.</p></li>
+<li><p><strong>axis</strong> (<em>Axis</em>) – symmetry axis</p></li>
+<li><p><strong>nphi</strong> (<em>int, optional</em>) – number of vertical slices forming the body</p></li>
+<li><p><strong>name</strong> (<em>str, optional</em>) – name of the generated body (optional)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the generated mesh</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#capytaine.meshes.symmetric.AxialSymmetricMesh" title="capytaine.meshes.symmetric.AxialSymmetricMesh">AxialSymmetricMesh</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.AxialSymmetricMesh.join_meshes">
+<code class="sig-name descname">join_meshes</code><span class="sig-paren">(</span><em class="sig-param">*</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/symmetric.html#AxialSymmetricMesh.join_meshes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.meshes.symmetric.AxialSymmetricMesh.join_meshes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.AxialSymmetricMesh.mirror">
+<code class="sig-name descname">mirror</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inplace=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.symmetric.AxialSymmetricMesh.mirror" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.AxialSymmetricMesh.rotate">
+<code class="sig-name descname">rotate</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inplace=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.symmetric.AxialSymmetricMesh.rotate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.AxialSymmetricMesh.translate">
+<code class="sig-name descname">translate</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inplace=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.symmetric.AxialSymmetricMesh.translate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.AxialSymmetricMesh.tree_view">
+<code class="sig-name descname">tree_view</code><span class="sig-paren">(</span><em class="sig-param">fold_symmetry=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/symmetric.html#AxialSymmetricMesh.tree_view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.meshes.symmetric.AxialSymmetricMesh.tree_view" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="capytaine.meshes.symmetric.ReflectionSymmetricMesh">
+<em class="property">class </em><code class="sig-prename descclassname">capytaine.meshes.symmetric.</code><code class="sig-name descname">ReflectionSymmetricMesh</code><span class="sig-paren">(</span><em class="sig-param">half: Union[capytaine.meshes.meshes.Mesh, capytaine.meshes.collections.CollectionOfMeshes], plane: capytaine.meshes.geometry.Plane, name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/symmetric.html#ReflectionSymmetricMesh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.meshes.symmetric.ReflectionSymmetricMesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#capytaine.meshes.symmetric.SymmetricMesh" title="capytaine.meshes.symmetric.SymmetricMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">capytaine.meshes.symmetric.SymmetricMesh</span></code></a></p>
+<p>A mesh with one vertical symmetry plane.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>half</strong> (<em>Mesh or CollectionOfMeshes</em>) – a mesh describing half of the body</p></li>
+<li><p><strong>plane</strong> (<em>Plane</em>) – the symmetry plane across which the half body is mirrored</p></li>
+<li><p><strong>name</strong> (<em>str, optional</em>) – a name for the mesh</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.ReflectionSymmetricMesh.half">
+<em class="property">property </em><code class="sig-name descname">half</code><a class="headerlink" href="#capytaine.meshes.symmetric.ReflectionSymmetricMesh.half" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.ReflectionSymmetricMesh.join_meshes">
+<code class="sig-name descname">join_meshes</code><span class="sig-paren">(</span><em class="sig-param">*</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/symmetric.html#ReflectionSymmetricMesh.join_meshes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.meshes.symmetric.ReflectionSymmetricMesh.join_meshes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.ReflectionSymmetricMesh.mirror">
+<code class="sig-name descname">mirror</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inplace=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.symmetric.ReflectionSymmetricMesh.mirror" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.ReflectionSymmetricMesh.rotate">
+<code class="sig-name descname">rotate</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inplace=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.symmetric.ReflectionSymmetricMesh.rotate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.ReflectionSymmetricMesh.translate">
+<code class="sig-name descname">translate</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inplace=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.symmetric.ReflectionSymmetricMesh.translate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.ReflectionSymmetricMesh.tree_view">
+<code class="sig-name descname">tree_view</code><span class="sig-paren">(</span><em class="sig-param">fold_symmetry=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/symmetric.html#ReflectionSymmetricMesh.tree_view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.meshes.symmetric.ReflectionSymmetricMesh.tree_view" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="capytaine.meshes.symmetric.SymmetricMesh">
+<em class="property">class </em><code class="sig-prename descclassname">capytaine.meshes.symmetric.</code><code class="sig-name descname">SymmetricMesh</code><span class="sig-paren">(</span><em class="sig-param">meshes: Iterable[Union[capytaine.meshes.meshes.Mesh, CollectionOfMeshes]], name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/symmetric.html#SymmetricMesh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.meshes.symmetric.SymmetricMesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="capytaine.meshes.collections.html#capytaine.meshes.collections.CollectionOfMeshes" title="capytaine.meshes.collections.CollectionOfMeshes"><code class="xref py py-class docutils literal notranslate"><span class="pre">capytaine.meshes.collections.CollectionOfMeshes</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="capytaine.meshes.symmetric.TranslationalSymmetricMesh">
+<em class="property">class </em><code class="sig-prename descclassname">capytaine.meshes.symmetric.</code><code class="sig-name descname">TranslationalSymmetricMesh</code><span class="sig-paren">(</span><em class="sig-param">mesh_slice: Union[capytaine.meshes.meshes.Mesh, capytaine.meshes.collections.CollectionOfMeshes], translation, nb_repetitions=1, name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/symmetric.html#TranslationalSymmetricMesh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.meshes.symmetric.TranslationalSymmetricMesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#capytaine.meshes.symmetric.SymmetricMesh" title="capytaine.meshes.symmetric.SymmetricMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">capytaine.meshes.symmetric.SymmetricMesh</span></code></a></p>
+<p>A mesh with a repeating pattern by translation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mesh_slice</strong> (<em>Mesh or CollectionOfMeshes</em>) – the pattern that will be repeated to form the whole body</p></li>
+<li><p><strong>translation</strong> (<em>array(3)</em>) – the vector of the translation</p></li>
+<li><p><strong>nb_repetitions</strong> (<em>int, optional</em>) – the number of repetitions of the pattern (excluding the original one, default: 1)</p></li>
+<li><p><strong>name</strong> (<em>str, optional</em>) – a name for the mesh</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.TranslationalSymmetricMesh.first_slice">
+<em class="property">property </em><code class="sig-name descname">first_slice</code><a class="headerlink" href="#capytaine.meshes.symmetric.TranslationalSymmetricMesh.first_slice" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.TranslationalSymmetricMesh.join_meshes">
+<code class="sig-name descname">join_meshes</code><span class="sig-paren">(</span><em class="sig-param">*</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/symmetric.html#TranslationalSymmetricMesh.join_meshes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.meshes.symmetric.TranslationalSymmetricMesh.join_meshes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.TranslationalSymmetricMesh.mirror">
+<code class="sig-name descname">mirror</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inplace=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.symmetric.TranslationalSymmetricMesh.mirror" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.TranslationalSymmetricMesh.rotate">
+<code class="sig-name descname">rotate</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inplace=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.symmetric.TranslationalSymmetricMesh.rotate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.TranslationalSymmetricMesh.translate">
+<code class="sig-name descname">translate</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inplace=True</em>, <em class="sig-param">name=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.symmetric.TranslationalSymmetricMesh.translate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.meshes.symmetric.TranslationalSymmetricMesh.tree_view">
+<code class="sig-name descname">tree_view</code><span class="sig-paren">(</span><em class="sig-param">fold_symmetry=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/symmetric.html#TranslationalSymmetricMesh.tree_view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.meshes.symmetric.TranslationalSymmetricMesh.tree_view" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="capytaine.meshes.symmetric.build_regular_array_of_meshes">
+<code class="sig-prename descclassname">capytaine.meshes.symmetric.</code><code class="sig-name descname">build_regular_array_of_meshes</code><span class="sig-paren">(</span><em class="sig-param">base_mesh</em>, <em class="sig-param">distance</em>, <em class="sig-param">nb_bodies</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/symmetric.html#build_regular_array_of_meshes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.meshes.symmetric.build_regular_array_of_meshes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an array of objects using TranslationalSymmetries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>base_mesh</strong> (<em>Mesh or CollectionOfMeshes or SymmetricMesh</em>) – The mesh to duplicate to create the array</p></li>
+<li><p><strong>distance</strong> (<em>float</em>) – Center-to-center distance between objects in the array</p></li>
+<li><p><strong>nb_bodies</strong> (<em>couple of ints</em>) – Number of objects in the x and y directions.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#capytaine.meshes.symmetric.TranslationalSymmetricMesh" title="capytaine.meshes.symmetric.TranslationalSymmetricMesh">TranslationalSymmetricMesh</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../installation.html">Installation for developers</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../overview.html">Overview of the modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">API documentation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Developer manual</a><ul>
+  <li><a href="../overview.html">Overview of the modules</a><ul>
+      <li>Previous: <a href="capytaine.meshes.surface_integrals.html" title="previous chapter">capytaine.meshes.surface_integrals module</a></li>
+      <li>Next: <a href="capytaine.bodies.bodies.html" title="next chapter">capytaine.bodies.bodies module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/developer_manual/api/capytaine.meshes.symmetric.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.4.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/developer_manual/api/capytaine.meshes.symmetric.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

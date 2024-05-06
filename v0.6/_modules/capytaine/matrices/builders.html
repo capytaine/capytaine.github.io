@@ -1,0 +1,366 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>capytaine.matrices.builders &#8212; capytaine 0.6 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../../_static/proof.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.matrices.builders</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding: utf-8</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">accumulate</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">wraps</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">capytaine.mesh.meshes_collection</span> <span class="k">import</span> <span class="n">CollectionOfMeshes</span>
+<span class="kn">from</span> <span class="nn">capytaine.mesh.symmetries</span> <span class="k">import</span> <span class="n">ReflectionSymmetry</span><span class="p">,</span> <span class="n">TranslationalSymmetry</span><span class="p">,</span> <span class="n">AxialSymmetry</span>
+<span class="kn">from</span> <span class="nn">capytaine.matrices.block_matrices</span> <span class="k">import</span> <span class="n">BlockMatrix</span>
+<span class="kn">from</span> <span class="nn">capytaine.matrices.low_rank_blocks</span> <span class="k">import</span> <span class="n">LowRankMatrix</span>
+<span class="kn">from</span> <span class="nn">capytaine.matrices.block_toeplitz_matrices</span> <span class="k">import</span> <span class="p">(</span>
+    <span class="n">BlockToeplitzMatrix</span><span class="p">,</span> <span class="n">BlockSymmetricToeplitzMatrix</span><span class="p">,</span>
+    <span class="n">BlockCirculantMatrix</span><span class="p">,</span> <span class="n">EvenBlockSymmetricCirculantMatrix</span><span class="p">,</span> <span class="n">OddBlockSymmetricCirculantMatrix</span>
+<span class="p">)</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="cut_matrix"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.builders.html#capytaine.matrices.builders.cut_matrix">[docs]</a><span class="k">def</span> <span class="nf">cut_matrix</span><span class="p">(</span><span class="n">full_matrix</span><span class="p">,</span> <span class="n">x_shapes</span><span class="p">,</span> <span class="n">y_shapes</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Transform a numpy array into a block matrix of numpy arrays.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    full_matrix: numpy array</span>
+<span class="sd">        The matrix to split into blocks.</span>
+<span class="sd">    x_shapes: sequence of int</span>
+<span class="sd">        The columns at which to split the blocks.</span>
+<span class="sd">    y_shapes: sequence of int</span>
+<span class="sd">        The lines at which to split the blocks.</span>
+<span class="sd">    check: bool, optional</span>
+<span class="sd">        Check to dimensions and type of the matrix after creation (default: False).</span>
+
+<span class="sd">    Return</span>
+<span class="sd">    ------</span>
+<span class="sd">    BlockMatrix</span>
+<span class="sd">        The same matrix as the input one but in block form.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">new_block_matrix</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">di</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">accumulate</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">x_shapes</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">x_shapes</span><span class="p">):</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">dj</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">accumulate</span><span class="p">([</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">x_shapes</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]),</span> <span class="n">y_shapes</span><span class="p">):</span>
+            <span class="n">line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">full_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">di</span><span class="p">,</span> <span class="n">j</span><span class="p">:</span><span class="n">j</span><span class="o">+</span><span class="n">dj</span><span class="p">])</span>
+        <span class="n">new_block_matrix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">BlockMatrix</span><span class="p">(</span><span class="n">new_block_matrix</span><span class="p">,</span> <span class="n">check</span><span class="o">=</span><span class="n">check</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="random_block_matrix"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.builders.html#capytaine.matrices.builders.random_block_matrix">[docs]</a><span class="k">def</span> <span class="nf">random_block_matrix</span><span class="p">(</span><span class="n">x_shapes</span><span class="p">,</span> <span class="n">y_shapes</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A random block matrix.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">cut_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="nb">sum</span><span class="p">(</span><span class="n">x_shapes</span><span class="p">),</span> <span class="nb">sum</span><span class="p">(</span><span class="n">y_shapes</span><span class="p">)),</span> <span class="n">x_shapes</span><span class="p">,</span> <span class="n">y_shapes</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="full_like"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.builders.html#capytaine.matrices.builders.full_like">[docs]</a><span class="k">def</span> <span class="nf">full_like</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A matrix of the same kind and shape as A but filled with a single value.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">):</span>
+        <span class="n">new_matrix</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">_stored_nb_blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">_stored_nb_blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="n">line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">full_like</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">))</span>
+            <span class="n">new_matrix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">A</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">new_matrix</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">LowRankMatrix</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LowRankMatrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">value</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="zeros_like"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.builders.html#capytaine.matrices.builders.zeros_like">[docs]</a><span class="k">def</span> <span class="nf">zeros_like</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A matrix of the same kind and shape as A but filled with zeros.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">full_like</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ones_like"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.builders.html#capytaine.matrices.builders.ones_like">[docs]</a><span class="k">def</span> <span class="nf">ones_like</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A matrix of the same kind and shape as A but filled with ones.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">full_like</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="identity_like"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.builders.html#capytaine.matrices.builders.identity_like">[docs]</a><span class="k">def</span> <span class="nf">identity_like</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A identity matrix of the same kind and shape as A.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">BlockMatrix</span><span class="p">):</span>
+        <span class="n">I</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">_stored_nb_blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">_stored_nb_blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+                    <span class="n">line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">identity_like</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">_stored_blocks</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">))</span>
+            <span class="n">I</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">A</span><span class="o">.</span><span class="vm">__class__</span><span class="p">(</span><span class="n">I</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="hierarchical_toeplitz_matrices"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.matrices.builders.html#capytaine.matrices.builders.hierarchical_toeplitz_matrices">[docs]</a><span class="k">def</span> <span class="nf">hierarchical_toeplitz_matrices</span><span class="p">(</span><span class="n">build_matrices</span><span class="p">,</span> <span class="n">ACA_distance</span><span class="o">=</span><span class="mf">8.0</span><span class="p">,</span> <span class="n">ACA_tol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Decorator for the matrix building functions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    build_matrices: function</span>
+<span class="sd">        Function that takes as argument two meshes and several other parameters</span>
+<span class="sd">        and returns a pair of influence matrices.</span>
+<span class="sd">    ACA_distance: float, optional</span>
+<span class="sd">        Above this distance, the ACA is used to approximate the matrix with a low-rank block.</span>
+<span class="sd">    ACA_tol: float, optional</span>
+<span class="sd">        The tolerance of the ACA when building a low-rank matrix.</span>
+<span class="sd">    dtype: numpy.dtype, optional</span>
+<span class="sd">        The type of the data in the matrix (typically float64 or complex128).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    function</span>
+<span class="sd">        A similar function that returns two hierarchical Toeplitz matrices.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
+        <span class="c1"># Read the docstring of the function and use the first line for logging.</span>
+        <span class="n">function_description_for_logging</span> <span class="o">=</span> <span class="n">build_matrices</span><span class="o">.</span><span class="vm">__doc__</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> \
+            <span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;mesh1&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{mesh1}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;mesh2&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="si">{mesh2}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">function_description_for_logging</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># irrelevant</span>
+
+    <span class="nd">@wraps</span><span class="p">(</span><span class="n">build_matrices</span><span class="p">)</span>  <span class="c1"># Is this decorator really necessary?</span>
+    <span class="k">def</span> <span class="nf">build_hierarchical_toeplitz_matrix</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">_rec_depth</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Assemble hierarchical Toeplitz matrices.</span>
+
+<span class="sd">        The method is basically an ugly multiple dispatch on the kind of mesh.</span>
+<span class="sd">        For hierarchical structures, the method is called recursively on all of the sub-bodies.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mesh1: Mesh or CollectionOfMeshes</span>
+<span class="sd">            mesh of the receiving body (where the potential is measured)</span>
+<span class="sd">        mesh2: Mesh or CollectionOfMeshes</span>
+<span class="sd">            mesh of the source body (over which the source distribution is integrated)</span>
+<span class="sd">        *args, **kwargs</span>
+<span class="sd">            Other arguments, passed to the actual evaluation of the coefficients</span>
+<span class="sd">        _rec_depth: int, optional</span>
+<span class="sd">            internal parameter: recursion accumulator, used only for pretty logging</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        pair of matrix-like objects</span>
+<span class="sd">            influence matrices</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">()</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">):</span>
+            <span class="n">log_entry</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="se">\t</span><span class="s2">&quot;</span> <span class="o">*</span> <span class="p">(</span><span class="n">_rec_depth</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">function_description_for_logging</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">mesh1</span><span class="o">=</span><span class="n">mesh1</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">=</span><span class="p">(</span><span class="n">mesh2</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="n">mesh2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">mesh1</span> <span class="k">else</span> <span class="s1">&#39;itself&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">log_entry</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>  <span class="c1"># irrelevant</span>
+
+        <span class="c1"># Distance between the meshes (for ACA).</span>
+        <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mesh1</span><span class="o">.</span><span class="n">center_of_mass_of_nodes</span> <span class="o">-</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">center_of_mass_of_nodes</span><span class="p">)</span>
+
+        <span class="c1"># I) SPARSE COMPUTATION</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">ReflectionSymmetry</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh2</span><span class="p">,</span> <span class="n">ReflectionSymmetry</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">plane</span> <span class="o">==</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">plane</span><span class="p">):</span>
+
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">log_entry</span> <span class="o">+</span> <span class="s2">&quot; using mirror symmetry.&quot;</span><span class="p">)</span>
+
+            <span class="n">S_a</span><span class="p">,</span> <span class="n">V_a</span> <span class="o">=</span> <span class="n">build_hierarchical_toeplitz_matrix</span><span class="p">(</span>
+                <span class="n">mesh1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                <span class="n">_rec_depth</span><span class="o">=</span><span class="n">_rec_depth</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">S_b</span><span class="p">,</span> <span class="n">V_b</span> <span class="o">=</span> <span class="n">build_hierarchical_toeplitz_matrix</span><span class="p">(</span>
+                <span class="n">mesh1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                <span class="n">_rec_depth</span><span class="o">=</span><span class="n">_rec_depth</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">BlockSymmetricToeplitzMatrix</span><span class="p">([[</span><span class="n">S_a</span><span class="p">,</span> <span class="n">S_b</span><span class="p">]]),</span> <span class="n">BlockSymmetricToeplitzMatrix</span><span class="p">([[</span><span class="n">V_a</span><span class="p">,</span> <span class="n">V_b</span><span class="p">]])</span>
+
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">TranslationalSymmetry</span><span class="p">)</span>
+              <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh2</span><span class="p">,</span> <span class="n">TranslationalSymmetry</span><span class="p">)</span>
+              <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">mesh1</span><span class="o">.</span><span class="n">translation</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">translation</span><span class="p">)</span>
+              <span class="ow">and</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">nb_submeshes</span> <span class="o">==</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_submeshes</span><span class="p">):</span>
+
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">log_entry</span> <span class="o">+</span> <span class="s2">&quot; using translational symmetry.&quot;</span><span class="p">)</span>
+
+            <span class="n">S_list</span><span class="p">,</span> <span class="n">V_list</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">submesh</span> <span class="ow">in</span> <span class="n">mesh2</span><span class="p">:</span>
+                <span class="n">S</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">build_hierarchical_toeplitz_matrix</span><span class="p">(</span>
+                    <span class="n">mesh1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">submesh</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                    <span class="n">_rec_depth</span><span class="o">=</span><span class="n">_rec_depth</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">S_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+                <span class="n">V_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">submesh</span> <span class="ow">in</span> <span class="n">mesh1</span><span class="p">[</span><span class="mi">1</span><span class="p">:][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                <span class="n">S</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">build_hierarchical_toeplitz_matrix</span><span class="p">(</span>
+                    <span class="n">submesh</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                    <span class="n">_rec_depth</span><span class="o">=</span><span class="n">_rec_depth</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">S_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+                <span class="n">V_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">BlockToeplitzMatrix</span><span class="p">([</span><span class="n">S_list</span><span class="p">]),</span> <span class="n">BlockToeplitzMatrix</span><span class="p">([</span><span class="n">V_list</span><span class="p">])</span>
+
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">AxialSymmetry</span><span class="p">)</span>
+              <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh2</span><span class="p">,</span> <span class="n">AxialSymmetry</span><span class="p">)</span>
+              <span class="ow">and</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">axis</span> <span class="o">==</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">axis</span>
+              <span class="ow">and</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">nb_submeshes</span> <span class="o">==</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_submeshes</span><span class="p">):</span>
+
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">log_entry</span> <span class="o">+</span> <span class="s2">&quot; using rotation symmetry.&quot;</span><span class="p">)</span>
+
+            <span class="n">S_line</span><span class="p">,</span> <span class="n">V_line</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">submesh</span> <span class="ow">in</span> <span class="n">mesh2</span><span class="p">[:</span><span class="n">mesh2</span><span class="o">.</span><span class="n">nb_submeshes</span><span class="p">]:</span>
+                <span class="n">S</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">build_hierarchical_toeplitz_matrix</span><span class="p">(</span>
+                    <span class="n">mesh1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">submesh</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                    <span class="n">_rec_depth</span><span class="o">=</span><span class="n">_rec_depth</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                <span class="n">S_line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+                <span class="n">V_line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">BlockCirculantMatrix</span><span class="p">([</span><span class="n">S_line</span><span class="p">]),</span> <span class="n">BlockCirculantMatrix</span><span class="p">([</span><span class="n">V_line</span><span class="p">])</span>
+
+        <span class="k">elif</span> <span class="n">distance</span> <span class="o">&gt;</span> <span class="n">ACA_distance</span><span class="o">*</span><span class="n">mesh1</span><span class="o">.</span><span class="n">diameter_of_nodes</span> <span class="ow">or</span> <span class="n">distance</span> <span class="o">&gt;</span> <span class="n">ACA_distance</span><span class="o">*</span><span class="n">mesh2</span><span class="o">.</span><span class="n">diameter_of_nodes</span><span class="p">:</span>
+            <span class="c1"># Low-rank matrix computed with Adaptive Cross Approximation.</span>
+
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">log_entry</span> <span class="o">+</span> <span class="s2">&quot; using ACA.&quot;</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">get_row_func</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
+                <span class="n">s</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">build_matrices</span><span class="p">(</span><span class="n">mesh1</span><span class="o">.</span><span class="n">extract_faces</span><span class="p">([</span><span class="n">i</span><span class="p">]),</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">v</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+            <span class="k">def</span> <span class="nf">get_col_func</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
+                <span class="n">s</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">build_matrices</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">extract_faces</span><span class="p">([</span><span class="n">j</span><span class="p">]),</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">s</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">v</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+            <span class="k">return</span> <span class="n">LowRankMatrix</span><span class="o">.</span><span class="n">from_rows_and_cols_functions_with_2_in_1_ACA</span><span class="p">(</span>
+                <span class="n">get_row_func</span><span class="p">,</span> <span class="n">get_col_func</span><span class="p">,</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span>
+                <span class="n">tol</span><span class="o">=</span><span class="n">ACA_tol</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+
+        <span class="c1"># II) NON-SPARSE COMPUTATIONS</span>
+
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">CollectionOfMeshes</span><span class="p">)</span>
+              <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh2</span><span class="p">,</span> <span class="n">CollectionOfMeshes</span><span class="p">)):</span>
+            <span class="c1"># Recursively build a block matrix</span>
+
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">log_entry</span> <span class="o">+</span> <span class="s2">&quot; using block matrix structure.&quot;</span><span class="p">)</span>
+
+            <span class="n">S_matrix</span><span class="p">,</span> <span class="n">V_matrix</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">submesh1</span> <span class="ow">in</span> <span class="n">mesh1</span><span class="p">:</span>
+                <span class="n">S_line</span><span class="p">,</span> <span class="n">V_line</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">submesh2</span> <span class="ow">in</span> <span class="n">mesh2</span><span class="p">:</span>
+                    <span class="n">S</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">build_hierarchical_toeplitz_matrix</span><span class="p">(</span>
+                        <span class="n">submesh1</span><span class="p">,</span> <span class="n">submesh2</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+                        <span class="n">_rec_depth</span><span class="o">=</span><span class="n">_rec_depth</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+                    <span class="n">S_line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">S</span><span class="p">)</span>
+                    <span class="n">V_line</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">V</span><span class="p">)</span>
+                <span class="n">S_matrix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">S_line</span><span class="p">)</span>
+                <span class="n">V_matrix</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">V_line</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">BlockMatrix</span><span class="p">(</span><span class="n">S_matrix</span><span class="p">),</span> <span class="n">BlockMatrix</span><span class="p">(</span><span class="n">V_matrix</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Actual evaluation of coefficients using the Green function.</span>
+
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">log_entry</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">build_matrices</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">build_hierarchical_toeplitz_matrix</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

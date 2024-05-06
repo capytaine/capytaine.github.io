@@ -1,0 +1,748 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>capytaine.io.mesh_writers &#8212; capytaine 0.6 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../../_static/proof.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.io.mesh_writers</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1">#  -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;Functions to write mesh to different file formats.</span>
+<span class="sd">Adapted from meshmagick (https://github.com/LHEEA/meshmagick).&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="write_mesh"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_mesh">[docs]</a><span class="k">def</span> <span class="nf">write_mesh</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">,</span> <span class="n">file_format</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Driver function that writes every mesh file file_format known by meshmagick</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename: str</span>
+<span class="sd">        name of the mesh file to be written on disk</span>
+<span class="sd">    vertices: ndarray</span>
+<span class="sd">        numpy array of the coordinates of the mesh&#39;s nodes</span>
+<span class="sd">    faces: ndarray</span>
+<span class="sd">        numpy array of the faces&#39; nodes connectivities</span>
+<span class="sd">    file_format: str</span>
+<span class="sd">        file_format of the mesh defined in the extension_dict dictionary</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">file_format</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">extension_dict</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">IOError</span><span class="p">(</span><span class="s1">&#39;Extension &quot;</span><span class="si">%s</span><span class="s1">&quot; is not known&#39;</span> <span class="o">%</span> <span class="n">file_format</span><span class="p">)</span>
+
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">extension_dict</span><span class="p">[</span><span class="n">file_format</span><span class="p">]</span>
+
+    <span class="n">writer</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="write_DAT"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_DAT">[docs]</a><span class="k">def</span> <span class="nf">write_DAT</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes .DAT file format for the DIODORE (PRINCIPA (c)) software.</span>
+
+<span class="sd">    It also displays suggestions for inclusion into the .INP configuration</span>
+<span class="sd">    file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename: str</span>
+<span class="sd">        name of the mesh file to be written on disk</span>
+<span class="sd">    vertices: ndarray</span>
+<span class="sd">        numpy array of the coordinates of the mesh&#39;s nodes</span>
+<span class="sd">    faces: ndarray</span>
+<span class="sd">        numpy array of the faces&#39; nodes connectivities</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">root_filename</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">root_filename</span> <span class="o">+</span> <span class="n">ext</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+    <span class="n">ofile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;$</span><span class="se">\n</span><span class="s1">$ Data for DIODORE input file : </span><span class="si">{0}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">root_filename</span><span class="o">.</span><span class="n">upper</span><span class="p">()))</span>
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;$ GENERATED BY MESHMAGICK ON </span><span class="si">{0}</span><span class="se">\n</span><span class="s1">$</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%c</span><span class="s1">&#39;</span><span class="p">)))</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;$ NODE</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">vertex_block</span> <span class="o">=</span> \
+        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="p">(</span>
+                <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                        <span class="p">(</span>
+                            <span class="s1">&#39;</span><span class="si">{:8d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{:13.5E}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elt</span><span class="p">)</span> <span class="k">for</span> <span class="n">elt</span> <span class="ow">in</span> <span class="n">node</span><span class="p">)</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span>
+                <span class="p">),</span>
+
+                <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">*RETURN</span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">vertex_block</span><span class="p">)</span>
+
+    <span class="n">quad_block</span> <span class="o">=</span> <span class="s1">&#39;$</span><span class="se">\n</span><span class="s1">$ ELEMENT,TYPE=Q4C000,ELSTRUCTURE=</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">root_filename</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+    <span class="n">tri_block</span> <span class="o">=</span> <span class="s1">&#39;$</span><span class="se">\n</span><span class="s1">$ ELEMENT,TYPE=T3C000,ELSTRUCTURE=</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">root_filename</span><span class="o">.</span><span class="n">upper</span><span class="p">())</span>
+    <span class="n">nq</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">nt</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">cell</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">faces</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">cell</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="c1"># quadrangle</span>
+            <span class="n">nq</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">quad_block</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="n">quad_block</span><span class="p">,</span>
+                    <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;</span><span class="si">{:8d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                    <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{:8d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">cell</span><span class="p">)</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Triangle</span>
+            <span class="n">nt</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">tri_block</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="p">(</span>
+                    <span class="n">tri_block</span><span class="p">,</span>
+                    <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;</span><span class="si">{:8d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                    <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{:8d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">cell</span><span class="p">[:</span><span class="mi">3</span><span class="p">])</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-------------------------------------------------&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Suggestion for .inp DIODORE input file :&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;*NODE,INPUT=</span><span class="si">{0}</span><span class="s1">,FRAME=???&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">root_filename</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">nq</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">quad_block</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">quad_block</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">*RETURN</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span>
+        <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">quad_block</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;*ELEMENT,TYPE=Q4C000,ELSTRUCTURE=</span><span class="si">{0}</span><span class="s1">,INPUT=</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">root_filename</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">nt</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">tri_block</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">tri_block</span><span class="p">,</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">*RETURN</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">))</span>
+        <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">tri_block</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;*ELEMENT,TYPE=T3C000,ELSTRUCTURE=</span><span class="si">{0}</span><span class="s1">,INPUT=</span><span class="si">{0}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">root_filename</span><span class="p">))</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;-------------------------------------------------&#39;</span><span class="p">)</span>
+    <span class="n">ofile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="write_HST"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_HST">[docs]</a><span class="k">def</span> <span class="nf">write_HST</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes .HST file format for the HYDROSTAR (Bureau Veritas (c)) software.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename: str</span>
+<span class="sd">        name of the mesh file to be written on disk</span>
+<span class="sd">    vertices: ndarray</span>
+<span class="sd">        numpy array of the coordinates of the mesh&#39;s nodes</span>
+<span class="sd">    faces: ndarray</span>
+<span class="sd">        numpy array of the faces&#39; nodes connectivities</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># TODO: allow many bodies</span>
+
+    <span class="n">ofile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span>
+        <span class="s1">&#39;PROJECT:</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;USERS:   meshmagick</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+        <span class="s1">&#39;NBODY   1</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="s1">&#39;RHO   1025.0</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="s1">&#39;GRAVITY   9.81</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+    <span class="p">)))</span>
+
+    <span class="n">coordinates_block</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span>  <span class="c1"># block</span>
+            <span class="s1">&#39;COORDINATES</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>  <span class="c1"># line</span>
+                <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                    <span class="p">(</span>
+                        <span class="s1">&#39;</span><span class="si">{:10d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>  <span class="c1"># index</span>
+                        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{:16.6E}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elt</span><span class="p">)</span> <span class="k">for</span> <span class="n">elt</span> <span class="ow">in</span> <span class="n">node</span><span class="p">)</span>  <span class="c1"># node coordinates</span>
+                    <span class="p">)</span>
+                <span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">node</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span>
+            <span class="p">),</span>
+            <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">ENDCOORDINATES</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+    <span class="p">))</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">coordinates_block</span><span class="p">)</span>
+
+    <span class="n">cells_coordinates</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span>  <span class="c1"># block</span>
+        <span class="s1">&#39;PANEL TYPE 0</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>  <span class="c1"># line</span>
+            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+                <span class="s1">&#39;</span><span class="si">{:10d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node_idx</span><span class="p">)</span> <span class="k">for</span> <span class="n">node_idx</span> <span class="ow">in</span> <span class="n">cell</span>
+            <span class="p">)</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">faces</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="p">),</span>
+        <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">ENDPANEL</span><span class="se">\n\n</span><span class="s1">&#39;</span>
+    <span class="p">))</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">cells_coordinates</span><span class="p">)</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;ENDFILE</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="write_TEC"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_TEC">[docs]</a><span class="k">def</span> <span class="nf">write_TEC</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes .TEC file format for the TECPLOT (Tecplot (c)) visualisation software.</span>
+
+<span class="sd">    It relies on the VTK library for its writer.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename: str</span>
+<span class="sd">        name of the mesh file to be written on disk</span>
+<span class="sd">    vertices: ndarray</span>
+<span class="sd">        numpy array of the coordinates of the mesh&#39;s nodes</span>
+<span class="sd">    faces: ndarray</span>
+<span class="sd">        numpy array of the faces&#39; nodes connectivities</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ofile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="n">nv</span> <span class="o">=</span> <span class="n">vertices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">nf</span> <span class="o">=</span> <span class="n">faces</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;TITLE = </span><span class="se">\&quot;</span><span class="s1"> THIS FILE WAS GENERATED BY MESHMAGICK - FICHIER : </span><span class="si">{}</span><span class="s1"> </span><span class="se">\&quot;</span><span class="s1"> </span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;VARIABLES = </span><span class="se">\&quot;</span><span class="s1">X</span><span class="se">\&quot;</span><span class="s1">,</span><span class="se">\&quot;</span><span class="s1">Y</span><span class="se">\&quot;</span><span class="s1">,</span><span class="se">\&quot;</span><span class="s1">Z</span><span class="se">\&quot;</span><span class="s1"> </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;ZONE T=</span><span class="se">\&quot;</span><span class="s1">MESH</span><span class="se">\&quot;</span><span class="s1"> </span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;N=</span><span class="si">{nv:10d}</span><span class="s1"> ,E=</span><span class="si">{nf:10d}</span><span class="s1"> , F=FEPOINT, ET=QUADRILATERAL</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nv</span><span class="o">=</span><span class="n">nv</span><span class="p">,</span> <span class="n">nf</span><span class="o">=</span><span class="n">nf</span><span class="p">))</span>
+
+    <span class="n">node_block</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="c1"># block</span>
+        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{:16.6E}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elt</span><span class="p">)</span> <span class="k">for</span> <span class="n">elt</span> <span class="ow">in</span> <span class="n">node</span><span class="p">)</span>
+        <span class="p">)</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">vertices</span>
+    <span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">node_block</span><span class="p">)</span>
+
+    <span class="n">cells_block</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>  <span class="c1"># block</span>
+        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{:10d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node_id</span><span class="p">)</span> <span class="k">for</span> <span class="n">node_id</span> <span class="ow">in</span> <span class="n">cell</span><span class="p">)</span>
+        <span class="p">)</span> <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">faces</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">cells_block</span><span class="p">)</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="mi">1</span></div>
+
+
+<div class="viewcode-block" id="write_VTU"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_VTU">[docs]</a><span class="k">def</span> <span class="nf">write_VTU</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes .vtu file format for the paraview (Kitware (c)) visualisation software.</span>
+
+<span class="sd">    It relies on the VTK library for its writer. VTU files use the last XML file format of the VTK library.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename: str</span>
+<span class="sd">        name of the mesh file to be written on disk</span>
+<span class="sd">    vertices: ndarray</span>
+<span class="sd">        numpy array of the coordinates of the mesh&#39;s nodes</span>
+<span class="sd">    faces: ndarray</span>
+<span class="sd">        numpy array of the faces&#39; nodes connectivities</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">vtk</span> <span class="k">import</span> <span class="n">vtkXMLUnstructuredGridWriter</span><span class="p">,</span> <span class="n">VTK_MAJOR_VERSION</span>
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">vtkXMLUnstructuredGridWriter</span><span class="p">()</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">SetDataModeToAscii</span><span class="p">()</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">SetFileName</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+    <span class="n">unstructured_grid</span> <span class="o">=</span> <span class="n">_build_vtkUnstructuredGrid</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">VTK_MAJOR_VERSION</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">SetInput</span><span class="p">(</span><span class="n">unstructured_grid</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">SetInputData</span><span class="p">(</span><span class="n">unstructured_grid</span><span class="p">)</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">Write</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="write_VTP"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_VTP">[docs]</a><span class="k">def</span> <span class="nf">write_VTP</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes .vtp file format for the Paraview (Kitware (c)) visualisation software.</span>
+
+<span class="sd">    It relies on the VTK library for its writer. VTP files use the last XML file format of the VTK library and</span>
+<span class="sd">    correspond to polydata.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename: str</span>
+<span class="sd">        name of the mesh file to be written on disk</span>
+<span class="sd">    vertices: ndarray</span>
+<span class="sd">        numpy array of the coordinates of the mesh&#39;s nodes</span>
+<span class="sd">    faces: ndarray</span>
+<span class="sd">        numpy array of the faces&#39; nodes connectivities</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">vtk</span> <span class="k">import</span> <span class="n">vtkXMLPolyDataWriter</span><span class="p">,</span> <span class="n">VTK_MAJOR_VERSION</span>
+    <span class="n">writer</span> <span class="o">=</span> <span class="n">vtkXMLPolyDataWriter</span><span class="p">()</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">SetDataModeToAscii</span><span class="p">()</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">SetFileName</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+
+    <span class="n">polydata</span> <span class="o">=</span> <span class="n">_build_vtkPolyData</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">VTK_MAJOR_VERSION</span> <span class="o">&lt;=</span> <span class="mi">5</span><span class="p">:</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">SetInput</span><span class="p">(</span><span class="n">polydata</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">SetInputData</span><span class="p">(</span><span class="n">polydata</span><span class="p">)</span>
+    <span class="n">writer</span><span class="o">.</span><span class="n">Write</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="write_VTK"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_VTK">[docs]</a><span class="k">def</span> <span class="nf">write_VTK</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes .vtk file format for the Paraview (Kitware (c)) visualisation software.</span>
+
+<span class="sd">    It relies on the VTK library for its writer. VTK files use the legagy ASCII file format of the VTK library.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename: str</span>
+<span class="sd">        name of the mesh file to be written on disk</span>
+<span class="sd">    vertices: ndarray</span>
+<span class="sd">        numpy array of the coordinates of the mesh&#39;s nodes</span>
+<span class="sd">    faces: ndarray</span>
+<span class="sd">        numpy array of the faces&#39; nodes connectivities</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nv</span> <span class="o">=</span> <span class="n">vertices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">nf</span> <span class="o">=</span> <span class="n">faces</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">triangle_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">faces</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">faces</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">quadrangles_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">triangle_mask</span><span class="p">)</span>
+    <span class="n">nb_triangles</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">triangle_mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">nb_quandrangles</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">quadrangles_mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;# vtk DataFile Version 4.0</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;vtk file generated by meshmagick on </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%c</span><span class="s1">&#39;</span><span class="p">))</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;ASCII</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;DATASET POLYDATA</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;POINTS </span><span class="si">%u</span><span class="s1"> float</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">nv</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">vertex</span> <span class="ow">in</span> <span class="n">vertices</span><span class="p">:</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%f</span><span class="s1"> </span><span class="si">%f</span><span class="s1"> </span><span class="si">%f</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">vertex</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vertex</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">vertex</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+
+        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;POLYGONS </span><span class="si">%u</span><span class="s1"> </span><span class="si">%u</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nf</span><span class="p">,</span> <span class="mi">4</span><span class="o">*</span><span class="n">nb_triangles</span><span class="o">+</span><span class="mi">5</span><span class="o">*</span><span class="n">nb_quandrangles</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">face</span> <span class="ow">in</span> <span class="n">faces</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">face</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">face</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>  <span class="c1"># Triangle</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;3 </span><span class="si">%u</span><span class="s1"> </span><span class="si">%u</span><span class="s1"> </span><span class="si">%u</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">face</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">face</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">face</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># Quadrangle</span>
+                <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;4 </span><span class="si">%u</span><span class="s1"> </span><span class="si">%u</span><span class="s1"> </span><span class="si">%u</span><span class="s1"> </span><span class="si">%u</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">face</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">face</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">face</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">face</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span></div>
+
+
+<span class="k">def</span> <span class="nf">_build_vtkUnstructuredGrid</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Internal function that builds a VTK object for manipulation by the VTK library.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vertices: ndarray</span>
+<span class="sd">        numpy array of the coordinates of the mesh&#39;s nodes</span>
+<span class="sd">    faces: ndarray</span>
+<span class="sd">        numpy array of the faces&#39; nodes connectivities</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    vtkObject</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">vtk</span>
+
+    <span class="n">nv</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">vertices</span><span class="p">))</span>
+    <span class="n">nf</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">faces</span><span class="p">))</span>
+
+    <span class="n">vtk_mesh</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkUnstructuredGrid</span><span class="p">()</span>
+    <span class="n">vtk_mesh</span><span class="o">.</span><span class="n">Allocate</span><span class="p">(</span><span class="n">nf</span><span class="p">,</span> <span class="n">nf</span><span class="p">)</span>
+
+    <span class="c1"># Building the vtkPoints data structure</span>
+    <span class="n">vtk_points</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkPoints</span><span class="p">()</span>
+    <span class="n">vtk_points</span><span class="o">.</span><span class="n">SetNumberOfPoints</span><span class="p">(</span><span class="n">nv</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">vertex</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vertices</span><span class="p">):</span>
+        <span class="n">vtk_points</span><span class="o">.</span><span class="n">SetPoint</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">vertex</span><span class="p">)</span>
+
+    <span class="n">vtk_mesh</span><span class="o">.</span><span class="n">SetPoints</span><span class="p">(</span><span class="n">vtk_points</span><span class="p">)</span>  <span class="c1"># Storing the points into vtk_mesh</span>
+
+    <span class="c1"># Building the vtkCell data structure</span>
+    <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">faces</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">cell</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="ow">in</span> <span class="n">cell</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">vtk_cell</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkTriangle</span><span class="p">()</span>
+            <span class="n">nc</span> <span class="o">=</span> <span class="mi">3</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># #print &#39;quadrangle&#39;</span>
+            <span class="n">vtk_cell</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkQuad</span><span class="p">()</span>
+            <span class="n">nc</span> <span class="o">=</span> <span class="mi">4</span>
+
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nc</span><span class="p">):</span>
+            <span class="n">vtk_cell</span><span class="o">.</span><span class="n">GetPointIds</span><span class="p">()</span><span class="o">.</span><span class="n">SetId</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">cell</span><span class="p">[</span><span class="n">k</span><span class="p">])</span>
+
+        <span class="n">vtk_mesh</span><span class="o">.</span><span class="n">InsertNextCell</span><span class="p">(</span><span class="n">vtk_cell</span><span class="o">.</span><span class="n">GetCellType</span><span class="p">(),</span> <span class="n">vtk_cell</span><span class="o">.</span><span class="n">GetPointIds</span><span class="p">())</span>
+    <span class="k">return</span> <span class="n">vtk_mesh</span>
+
+
+<span class="k">def</span> <span class="nf">_build_vtkPolyData</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Builds a vtkPolyData object from vertices and faces&quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">vtk</span>
+
+    <span class="c1"># Create a vtkPoints object and store the points in it</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkPoints</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">point</span> <span class="ow">in</span> <span class="n">vertices</span><span class="p">:</span>
+        <span class="n">points</span><span class="o">.</span><span class="n">InsertNextPoint</span><span class="p">(</span><span class="n">point</span><span class="p">)</span>
+
+    <span class="c1"># Create a vtkCellArray to store faces</span>
+    <span class="n">cell_array</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkCellArray</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">face_ids</span> <span class="ow">in</span> <span class="n">faces</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">face_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">face_ids</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="c1"># Triangle</span>
+            <span class="n">curface</span> <span class="o">=</span> <span class="n">face_ids</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+            <span class="n">vtk_face</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkTriangle</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Quadrangle</span>
+            <span class="n">curface</span> <span class="o">=</span> <span class="n">face_ids</span><span class="p">[:</span><span class="mi">4</span><span class="p">]</span>
+            <span class="n">vtk_face</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkQuad</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="nb">id</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">curface</span><span class="p">):</span>
+            <span class="n">vtk_face</span><span class="o">.</span><span class="n">GetPointIds</span><span class="p">()</span><span class="o">.</span><span class="n">SetId</span><span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="nb">id</span><span class="p">)</span>
+
+        <span class="n">cell_array</span><span class="o">.</span><span class="n">InsertNextCell</span><span class="p">(</span><span class="n">vtk_face</span><span class="p">)</span>
+
+    <span class="n">polydata_mesh</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkPolyData</span><span class="p">()</span>
+    <span class="n">polydata_mesh</span><span class="o">.</span><span class="n">SetPoints</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+    <span class="n">polydata_mesh</span><span class="o">.</span><span class="n">SetPolys</span><span class="p">(</span><span class="n">cell_array</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">polydata_mesh</span>
+
+
+<div class="viewcode-block" id="write_NAT"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_NAT">[docs]</a><span class="k">def</span> <span class="nf">write_NAT</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes .nat file format as defined into the load_NAT function.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename: str</span>
+<span class="sd">        name of the mesh file to be written on disk</span>
+<span class="sd">    vertices: ndarray</span>
+<span class="sd">        numpy array of the coordinates of the mesh&#39;s nodes</span>
+<span class="sd">    faces: ndarray</span>
+<span class="sd">        numpy array of the faces&#39; nodes connectivities</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+<span class="sd">    load_NAT</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ofile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="n">nv</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">vertices</span><span class="p">))</span>
+    <span class="n">nf</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">faces</span><span class="p">))</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%6u%6u</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>  <span class="c1"># lire les symmetries dans args...</span>
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%6u%6u</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">nv</span><span class="p">,</span> <span class="n">nf</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">vertex</span> <span class="ow">in</span> <span class="n">vertices</span><span class="p">:</span>
+        <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%15.6E%15.6E%15.6E</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">vertex</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vertex</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">vertex</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+    <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">faces</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%10u%10u%10u%10u</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cell</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cell</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">cell</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">cell</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="write_NEM"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_NEM">[docs]</a><span class="k">def</span> <span class="nf">write_NEM</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes mesh files used by the Mesh tool included in Nemoh</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename : str</span>
+<span class="sd">        name of the mesh file to be written on disk</span>
+<span class="sd">    vertices: ndarray</span>
+<span class="sd">        numpy array of the coordinates of the mesh&#39;s nodes</span>
+<span class="sd">    faces: ndarray</span>
+<span class="sd">        numpy array of the faces&#39; nodes connectivities</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    This file format is different from that used by Nemoh itself. It is only used by the Mesh tool.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ofile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%u</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">vertices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%u</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">faces</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">for</span> <span class="n">vertex</span> <span class="ow">in</span> <span class="n">vertices</span><span class="p">:</span>
+        <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%15.6f</span><span class="se">\t</span><span class="si">%15.6f</span><span class="se">\t</span><span class="si">%15.6f</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">vertex</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vertex</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">vertex</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+
+    <span class="k">for</span> <span class="n">face</span> <span class="ow">in</span> <span class="n">faces</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+        <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%10u</span><span class="se">\t</span><span class="si">%10u</span><span class="se">\t</span><span class="si">%10u</span><span class="se">\t</span><span class="si">%10u</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">face</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">face</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">face</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">face</span><span class="p">[</span><span class="mi">3</span><span class="p">]))</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="write_GDF"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_GDF">[docs]</a><span class="k">def</span> <span class="nf">write_GDF</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes .gdf file format for the WAMIT (Wamit INC. (c)) BEM software.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename: str</span>
+<span class="sd">        name of the mesh file to be written on disk</span>
+<span class="sd">    vertices: ndarray</span>
+<span class="sd">        numpy array of the coordinates of the mesh&#39;s nodes</span>
+<span class="sd">    faces: ndarray</span>
+<span class="sd">        numpy array of the faces&#39; nodes connectivities</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nf</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">faces</span><span class="p">))</span>
+
+    <span class="n">ofile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;GDF file generated by meshmagick on </span><span class="si">%s</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">time</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%c</span><span class="s1">&#39;</span><span class="p">))</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%16.6f%16.6f</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">9.81</span><span class="p">))</span>
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%12u%12u</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>  <span class="c1"># TODO : mettre les symetries en argument</span>
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%12u</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">nf</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">faces</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">):</span>
+            <span class="n">cur_vertices</span> <span class="o">=</span> <span class="n">vertices</span><span class="p">[</span><span class="n">cell</span><span class="p">[</span><span class="n">k</span><span class="p">],</span> <span class="p">:]</span>
+            <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%16.6E%16.6E%16.6E</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">cur_vertices</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">cur_vertices</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">cur_vertices</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="write_MAR"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_MAR">[docs]</a><span class="k">def</span> <span class="nf">write_MAR</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes mesh files to be used with Nemoh BEM software (Ecole Centrale de Nantes)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename: str</span>
+<span class="sd">        name of the mesh file to be written on disk</span>
+<span class="sd">    vertices: ndarray</span>
+<span class="sd">        numpy array of the coordinates of the mesh&#39;s nodes</span>
+<span class="sd">    faces: ndarray</span>
+<span class="sd">        numpy array of the faces&#39; nodes connectivities</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO: detect symmetry in Oxz plane</span>
+
+    <span class="n">ofile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0:6d}{1:6d}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>  <span class="c1"># TODO : mettre les symetries en argument</span>
+
+    <span class="k">for</span> <span class="p">(</span><span class="n">idx</span><span class="p">,</span> <span class="n">vertex</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">vertices</span><span class="p">):</span>
+        <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0:6d}{1:16.6f}{2:16.6f}{3:16.6f}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">vertex</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">vertex</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">vertex</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0:6d}{1:6d}{2:6d}{3:6d}{4:6d}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+    <span class="n">cell_block</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+        <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">{0:10d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">elt</span><span class="p">)</span> <span class="k">for</span> <span class="n">elt</span> <span class="ow">in</span> <span class="n">cell</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">cell</span> <span class="ow">in</span> <span class="n">faces</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">cell_block</span><span class="p">)</span>
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%6u%6u%6u%6u</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;WARNING: if you described only one part of the mesh using symmetry for Nemoh, you may manually modify the &#39;</span> \
+          <span class="s1">&#39;file header accordingly&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="write_RAD"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_RAD">[docs]</a><span class="k">def</span> <span class="nf">write_RAD</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+
+<div class="viewcode-block" id="write_STL"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_STL">[docs]</a><span class="k">def</span> <span class="nf">write_STL</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Writes .stl file format. It relies on the VTK library for its writer.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    filename: str</span>
+<span class="sd">        name of the mesh file to be written on disk</span>
+<span class="sd">    vertices: ndarray</span>
+<span class="sd">        numpy array of the coordinates of the mesh&#39;s nodes</span>
+<span class="sd">    faces: ndarray</span>
+<span class="sd">        numpy array of the faces&#39; nodes connectivities</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># TODO : replace this implementation by using the vtk functionalities</span>
+
+    <span class="c1"># Triangulating quads</span>
+    <span class="n">t1</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="n">t2</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+
+    <span class="n">quads_ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">faces</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">faces</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">new_faces</span> <span class="o">=</span> <span class="n">faces</span><span class="p">[</span><span class="n">quads_ids</span><span class="p">]</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">new_faces</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_faces</span><span class="p">[:,</span> <span class="n">t1</span><span class="p">]</span>
+    <span class="n">new_faces</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_faces</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">faces</span><span class="p">[</span><span class="n">quads_ids</span><span class="p">,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]</span> <span class="o">=</span> <span class="n">faces</span><span class="p">[:,</span> <span class="n">t2</span><span class="p">][</span><span class="n">quads_ids</span><span class="p">]</span>
+    <span class="n">faces</span><span class="p">[</span><span class="n">quads_ids</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">faces</span><span class="p">[</span><span class="n">quads_ids</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">faces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">faces</span><span class="p">,</span> <span class="n">new_faces</span><span class="p">))</span>
+
+    <span class="c1"># Writing file</span>
+    <span class="n">ofile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;solid meshmagick</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">face</span> <span class="ow">in</span> <span class="n">faces</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">face</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">face</span><span class="p">[</span><span class="mi">3</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;&quot;&quot;Only full triangle meshes are accepted in STL files.</span>
+<span class="s2">              Please consider using the --triangulate-quadrangles option (-tq) to</span>
+<span class="s2">              perform a prior triangulation of the mesh&quot;&quot;&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Computing normal</span>
+        <span class="n">v0</span> <span class="o">=</span> <span class="n">vertices</span><span class="p">[</span><span class="n">face</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="p">:]</span>
+        <span class="n">v1</span> <span class="o">=</span> <span class="n">vertices</span><span class="p">[</span><span class="n">face</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="p">:]</span>
+        <span class="n">v2</span> <span class="o">=</span> <span class="n">vertices</span><span class="p">[</span><span class="n">face</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="p">:]</span>
+
+        <span class="n">n</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">v1</span> <span class="o">-</span> <span class="n">v0</span><span class="p">,</span> <span class="n">v2</span> <span class="o">-</span> <span class="n">v0</span><span class="p">)</span>
+        <span class="n">n</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+        <span class="n">block_facet</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s1">&#39;  facet normal &#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%15.6e</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">ni</span> <span class="k">for</span> <span class="n">ni</span> <span class="ow">in</span> <span class="n">n</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;    outer loop</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;      vertex&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%15.6e</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">Vi</span> <span class="k">for</span> <span class="n">Vi</span> <span class="ow">in</span> <span class="n">v0</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;      vertex&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%15.6e</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">Vi</span> <span class="k">for</span> <span class="n">Vi</span> <span class="ow">in</span> <span class="n">v1</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;      vertex&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%15.6e</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="n">Vi</span> <span class="k">for</span> <span class="n">Vi</span> <span class="ow">in</span> <span class="n">v2</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;    endloop</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span>
+                               <span class="s1">&#39;  endfacet</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">])</span>
+        <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">block_facet</span><span class="p">)</span>
+    <span class="n">ofile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;endsolid meshmagick</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">ofile</span><span class="o">.</span><span class="n">close</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="write_INP"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_INP">[docs]</a><span class="k">def</span> <span class="nf">write_INP</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;INP writer is not implementer yet&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="write_MSH"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_MSH">[docs]</a><span class="k">def</span> <span class="nf">write_MSH</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;MSH writer is not implemented yet&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="write_MED"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_MED">[docs]</a><span class="k">def</span> <span class="nf">write_MED</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;MED writer is not implemented yet&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="write_WRL"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_writers.html#capytaine.io.mesh_writers.write_WRL">[docs]</a><span class="k">def</span> <span class="nf">write_WRL</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s1">&#39;VRML writer is not implemented yet&#39;</span><span class="p">)</span></div>
+
+
+<span class="n">extension_dict</span> <span class="o">=</span> <span class="p">{</span>  <span class="c1"># keyword,  writer</span>
+    <span class="s1">&#39;mar&#39;</span><span class="p">:</span> <span class="n">write_MAR</span><span class="p">,</span>
+    <span class="s1">&#39;nemoh&#39;</span><span class="p">:</span> <span class="n">write_MAR</span><span class="p">,</span>
+    <span class="s1">&#39;wamit&#39;</span><span class="p">:</span> <span class="n">write_GDF</span><span class="p">,</span>
+    <span class="s1">&#39;gdf&#39;</span><span class="p">:</span> <span class="n">write_GDF</span><span class="p">,</span>
+    <span class="s1">&#39;diodore-inp&#39;</span><span class="p">:</span> <span class="n">write_INP</span><span class="p">,</span>
+    <span class="s1">&#39;inp&#39;</span><span class="p">:</span> <span class="n">write_INP</span><span class="p">,</span>
+    <span class="s1">&#39;diodore-dat&#39;</span><span class="p">:</span> <span class="n">write_DAT</span><span class="p">,</span>
+    <span class="s1">&#39;hydrostar&#39;</span><span class="p">:</span> <span class="n">write_HST</span><span class="p">,</span>
+    <span class="s1">&#39;hst&#39;</span><span class="p">:</span> <span class="n">write_HST</span><span class="p">,</span>
+    <span class="s1">&#39;natural&#39;</span><span class="p">:</span> <span class="n">write_NAT</span><span class="p">,</span>
+    <span class="s1">&#39;nat&#39;</span><span class="p">:</span> <span class="n">write_NAT</span><span class="p">,</span>
+    <span class="s1">&#39;gmsh&#39;</span><span class="p">:</span> <span class="n">write_MSH</span><span class="p">,</span>
+    <span class="s1">&#39;msh&#39;</span><span class="p">:</span> <span class="n">write_MSH</span><span class="p">,</span>
+    <span class="s1">&#39;rad&#39;</span><span class="p">:</span> <span class="n">write_RAD</span><span class="p">,</span>
+    <span class="s1">&#39;radioss&#39;</span><span class="p">:</span> <span class="n">write_RAD</span><span class="p">,</span>
+    <span class="s1">&#39;stl&#39;</span><span class="p">:</span> <span class="n">write_STL</span><span class="p">,</span>
+    <span class="s1">&#39;vtu&#39;</span><span class="p">:</span> <span class="n">write_VTU</span><span class="p">,</span>
+    <span class="s1">&#39;vtp&#39;</span><span class="p">:</span> <span class="n">write_VTP</span><span class="p">,</span>
+    <span class="s1">&#39;paraview-legacy&#39;</span><span class="p">:</span> <span class="n">write_VTK</span><span class="p">,</span>
+    <span class="s1">&#39;vtk&#39;</span><span class="p">:</span> <span class="n">write_VTK</span><span class="p">,</span>
+    <span class="s1">&#39;tecplot&#39;</span><span class="p">:</span> <span class="n">write_TEC</span><span class="p">,</span>
+    <span class="s1">&#39;tec&#39;</span><span class="p">:</span> <span class="n">write_TEC</span><span class="p">,</span>
+    <span class="s1">&#39;med&#39;</span><span class="p">:</span> <span class="n">write_MED</span><span class="p">,</span>
+    <span class="s1">&#39;salome&#39;</span><span class="p">:</span> <span class="n">write_MED</span><span class="p">,</span>
+    <span class="s1">&#39;vrml&#39;</span><span class="p">:</span> <span class="n">write_WRL</span><span class="p">,</span>
+    <span class="s1">&#39;wrl&#39;</span><span class="p">:</span> <span class="n">write_WRL</span><span class="p">,</span>
+    <span class="s1">&#39;nem&#39;</span><span class="p">:</span> <span class="n">write_NEM</span><span class="p">,</span>
+    <span class="s1">&#39;nemoh_mesh&#39;</span><span class="p">:</span> <span class="n">write_NEM</span>
+<span class="p">}</span>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

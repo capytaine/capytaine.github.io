@@ -1,0 +1,599 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>Theory manual &#8212; capytaine 1.4.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/proof.css" />
+    <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/proof.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Bibliography" href="bibliography.html" />
+    <link rel="prev" title="Theory manual" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="theory-manual">
+<h1><a class="toc-backref" href="#id22" role="doc-backlink">Theory manual</a><a class="headerlink" href="#theory-manual" title="Permalink to this heading">¶</a></h1>
+<p>This document presents several aspects of the theoretical background for Nemoh and Capytaine.
+We refer also to <a class="reference internal" href="bibliography.html#del87" id="id1"><span>[Del87]</span></a> <a class="reference internal" href="bibliography.html#del89" id="id2"><span>[Del89]</span></a> <a class="reference internal" href="bibliography.html#del93" id="id3"><span>[Del93]</span></a> <a class="reference internal" href="bibliography.html#bd15" id="id4"><span>[BD15]</span></a> and <a class="reference internal" href="bibliography.html#ad18" id="id5"><span>[AD18]</span></a>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This document is a work in progress. It is incomplete and might
+contain errors.</p>
+</div>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#theory-manual" id="id22">Theory manual</a></p>
+<ul>
+<li><p><a class="reference internal" href="#linear-boundary-value-problem" id="id23">Linear boundary value problem</a></p>
+<ul>
+<li><p><a class="reference internal" href="#hypotheses" id="id24">Hypotheses</a></p></li>
+<li><p><a class="reference internal" href="#mathematical-problem" id="id25">Mathematical problem</a></p></li>
+<li><p><a class="reference internal" href="#integral-problem" id="id26">Integral problem</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#expression-of-the-green-function" id="id27">Expression of the Green function</a></p>
+<ul>
+<li><p><a class="reference internal" href="#in-infinite-depth" id="id28">In infinite depth</a></p>
+<ul>
+<li><p><a class="reference internal" href="#green-function" id="id29">Green function</a></p></li>
+<li><p><a class="reference internal" href="#variants-of-the-formulation" id="id30">Variants of the formulation</a></p></li>
+<li><p><a class="reference internal" href="#gradient-of-the-green-function" id="id31">Gradient of the Green function</a></p></li>
+<li><p><a class="reference internal" href="#delhommeau-s-method-for-computation" id="id32">Delhommeau’s method for computation</a></p></li>
+<li><p><a class="reference internal" href="#xie-s-variant" id="id33">Xie’s variant</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#in-finite-depth" id="id34">In finite depth</a></p>
+<ul>
+<li><p><a class="reference internal" href="#id15" id="id35">Green function</a></p></li>
+<li><p><a class="reference internal" href="#id16" id="id36">Gradient of the Green function</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#symmetries" id="id37">Symmetries</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#discretization" id="id38">Discretization</a></p></li>
+<li><p><a class="reference internal" href="#post-processing" id="id39">Post-processing</a></p>
+<ul>
+<li><p><a class="reference internal" href="#forces-on-body-surfaces" id="id40">Forces on body surfaces</a></p></li>
+<li><p><a class="reference internal" href="#dynamic-coupling-and-impedance" id="id41">Dynamic coupling and impedance</a></p></li>
+<li><p><a class="reference internal" href="#free-surface-elevation" id="id42">Free surface elevation</a></p></li>
+<li><p><a class="reference internal" href="#far-field-coefficients" id="id43">Far-field coefficients</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="linear-boundary-value-problem">
+<h2><a class="toc-backref" href="#id23" role="doc-backlink">Linear boundary value problem</a><a class="headerlink" href="#linear-boundary-value-problem" title="Permalink to this heading">¶</a></h2>
+<section id="hypotheses">
+<h3><a class="toc-backref" href="#id24" role="doc-backlink">Hypotheses</a><a class="headerlink" href="#hypotheses" title="Permalink to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p>The fluid is inviscid.</p></li>
+<li><p>The fluid is incompressible: <span class="math notranslate nohighlight">\(\nabla \cdot u = 0\)</span> with <span class="math notranslate nohighlight">\(u\)</span> the flow velocity.</p></li>
+<li><p>The flow is irrotational: <span class="math notranslate nohighlight">\(\nabla \times u = 0\)</span>.</p></li>
+<li><p>The wave amplitude is small with respect to the wavelength.</p></li>
+<li><p>The amplitude of the body motion is small with respect to its dimension.</p></li>
+<li><p>The sea bottom is flat. The water depth is denoted <span class="math notranslate nohighlight">\(h\)</span>.</p></li>
+</ol>
+</section>
+<section id="mathematical-problem">
+<h3><a class="toc-backref" href="#id25" role="doc-backlink">Mathematical problem</a><a class="headerlink" href="#mathematical-problem" title="Permalink to this heading">¶</a></h3>
+<p>The mass conservation equation can be rewritten as the Laplace equation</p>
+<div class="math notranslate nohighlight" id="equation-laplace">
+<span class="eqno">(3)<a class="headerlink" href="#equation-laplace" title="Permalink to this equation">¶</a></span>\[\nabla^2 \phi = 0,\]</div>
+<p>where <span class="math notranslate nohighlight">\(\phi\)</span> is the velocity potential defined as <span class="math notranslate nohighlight">\(u = \nabla \phi\)</span>.</p>
+<p>Since the problem is linear, we look for a solution in the frequency domain:</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-0">
+<span class="eqno">(4)<a class="headerlink" href="#equation-theory-manual-theory-0" title="Permalink to this equation">¶</a></span>\[\phi = \mathrm{Re} \left( \Phi e^{-i \omega t} \right).\]</div>
+<p>The partial differential equation <a class="reference internal" href="#equation-laplace">(3)</a> is completed with the following boundary conditions:</p>
+<ul class="simple">
+<li><p>linearized free surface boundary condition:</p></li>
+</ul>
+<div class="math notranslate nohighlight" id="equation-bc-fs">
+<span class="eqno">(5)<a class="headerlink" href="#equation-bc-fs" title="Permalink to this equation">¶</a></span>\[g \frac{\partial \Phi}{\partial z} - \omega^2 \Phi = 0, \qquad \text{on } z = 0.\]</div>
+<ul class="simple">
+<li><p>no velocity boundary condition at the (flat) sea bottom:</p></li>
+</ul>
+<div class="math notranslate nohighlight" id="equation-bc-bottom">
+<span class="eqno">(6)<a class="headerlink" href="#equation-bc-bottom" title="Permalink to this equation">¶</a></span>\[\frac{\partial \Phi}{\partial z} = 0, \qquad \text{on } z = -h.\]</div>
+<ul class="simple">
+<li><p>a given velocity <span class="math notranslate nohighlight">\(u\)</span> on the floating body surface <span class="math notranslate nohighlight">\(\Gamma\)</span>:</p></li>
+</ul>
+<div class="math notranslate nohighlight" id="equation-bc-body">
+<span class="eqno">(7)<a class="headerlink" href="#equation-bc-body" title="Permalink to this equation">¶</a></span>\[\nabla \Phi \cdot n = u \cdot n, \qquad \text{on } \Gamma,\]</div>
+<p>where <span class="math notranslate nohighlight">\(n\)</span> denotes the normal vector at the surface of the floating body.</p>
+<p>The normal velocity on the floating body surface is the input of the problem.
+It depends on the type of problem:</p>
+<dl>
+<dt><strong>Radiation problem</strong>:</dt><dd><p>For the radiation problem, the normal velocity on the body surface corresponds to the motion of the body along one of its degrees of freedom.
+The resolution of the Laplace problem allows to derive the added mass and the radiation damping associated with this degree of freedom (see also <a class="reference internal" href="#post-processing">Post-processing</a>).</p>
+</dd>
+<dt><strong>Diffraction problem</strong>:</dt><dd><p>For the diffraction problem, the velocity on the floating body is given by the velocity of Airy’s wave field.
+Once the problem has been solved, the linear Froude-Krylov force is computed by the integration of the pressure (<span class="math notranslate nohighlight">\(p = i \rho \omega \Phi\)</span>) on the floating body (see also <a class="reference internal" href="#post-processing">Post-processing</a>).</p>
+<p>The incoming Airy’s wave fields is given by</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-1">
+<span class="eqno">(8)<a class="headerlink" href="#equation-theory-manual-theory-1" title="Permalink to this equation">¶</a></span>\[\Phi_0 = - i \frac{g}{\omega} \frac{\cosh (m_0 (z+h))}{\cosh (m_0 h)} e^{i m_0 (x \cos \beta + y \sin \beta)}\]</div>
+<p>in finite depth, where the wave number <span class="math notranslate nohighlight">\(m_0\)</span> is defined by the dispersion relation <span class="math notranslate nohighlight">\(\omega^2 = m_0 g \tanh (m_0 h)\)</span>, and by</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-2">
+<span class="eqno">(9)<a class="headerlink" href="#equation-theory-manual-theory-2" title="Permalink to this equation">¶</a></span>\[\Phi_0 = - i \frac{g}{\omega} e^{k z} e^{i k (x \cos \beta + y \sin \beta)}\]</div>
+<p>in infinite depth, where the wave number <span class="math notranslate nohighlight">\(k\)</span> is defined by <span class="math notranslate nohighlight">\(\omega^2 = k g\)</span>.</p>
+<p>In the above equations, <span class="math notranslate nohighlight">\(\beta\)</span> is the angle of the incoming wave.
+The angle <span class="math notranslate nohighlight">\(\beta = 0\)</span> corresponds to waves propagating in the <span class="math notranslate nohighlight">\(x\)</span> direction from <span class="math notranslate nohighlight">\(x=-\infty\)</span> to <span class="math notranslate nohighlight">\(x=+\infty\)</span>.
+The angle <span class="math notranslate nohighlight">\(\beta = \pi/2\)</span> corresponds to waves propagating in the <span class="math notranslate nohighlight">\(y\)</span> direction from <span class="math notranslate nohighlight">\(y=-\infty\)</span> to <span class="math notranslate nohighlight">\(y=+\infty\)</span>.</p>
+</dd>
+</dl>
+</section>
+<section id="integral-problem">
+<h3><a class="toc-backref" href="#id26" role="doc-backlink">Integral problem</a><a class="headerlink" href="#integral-problem" title="Permalink to this heading">¶</a></h3>
+<p>The partial differential equation can be rewritten as a boundary integral problem.
+Let us introduce the Green function <span class="math notranslate nohighlight">\(G(\xi, \cdot)\)</span>, which is solution of the partial differential equation:</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-3">
+<span class="eqno">(10)<a class="headerlink" href="#equation-theory-manual-theory-3" title="Permalink to this equation">¶</a></span>\[\nabla^2_x G(\xi, x) = \delta(\xi - x), \qquad \forall x,\]</div>
+<p>associated with the boundary condition <a class="reference internal" href="#equation-bc-fs">(5)</a> and <a class="reference internal" href="#equation-bc-bottom">(6)</a>, where <span class="math notranslate nohighlight">\(\xi\)</span> is a given point in the domain and <span class="math notranslate nohighlight">\(\delta\)</span> is the Dirac distribution.</p>
+<p>With the help of this Green function <span class="math notranslate nohighlight">\(G\)</span>, the potential of the surface of the floating body <span class="math notranslate nohighlight">\(\Gamma\)</span> can be rewritten as a function of a source distribution <span class="math notranslate nohighlight">\(\sigma\)</span>:</p>
+<div class="math notranslate nohighlight" id="equation-continuous-source-formulation">
+<span class="eqno">(11)<a class="headerlink" href="#equation-continuous-source-formulation" title="Permalink to this equation">¶</a></span>\[\Phi(x) = \iint_\Gamma \sigma(y) G(x, y) \, \mathrm{dS}(y).\]</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>There is a typo in this equation in <a class="reference internal" href="bibliography.html#bd15" id="id6"><span>[BD15]</span></a>.</p>
+</div>
+<p>The integral on the other boundaries of the domain is zero due to the properties of the Green function.</p>
+<p>The differentiation of <a class="reference internal" href="#equation-continuous-source-formulation">(11)</a> leads to the following equation <a class="reference internal" href="bibliography.html#del87" id="id7"><span>[Del87]</span></a>:</p>
+<div class="math notranslate nohighlight" id="equation-diff-continuous-source-formulation">
+<span class="eqno">(12)<a class="headerlink" href="#equation-diff-continuous-source-formulation" title="Permalink to this equation">¶</a></span>\[(u \cdot n)(x) = \frac{\sigma(x)}{2} + \iint_\Gamma \sigma(y) \, (\nabla_x G(x, y) \cdot n) \, \mathrm{dS}(y).\]</div>
+<p>where <span class="math notranslate nohighlight">\(n\)</span> is the normal vector on the floating body surface <span class="math notranslate nohighlight">\(\Gamma\)</span>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Dimensional analysis:</p>
+<p><span class="math notranslate nohighlight">\(\Phi\)</span> is in m²·s¯¹.</p>
+<p><span class="math notranslate nohighlight">\(\sigma\)</span> is in m·s¯¹.</p>
+<p><span class="math notranslate nohighlight">\(G\)</span> is in m¯¹.</p>
+</div>
+</section>
+</section>
+<section id="expression-of-the-green-function">
+<h2><a class="toc-backref" href="#id27" role="doc-backlink">Expression of the Green function</a><a class="headerlink" href="#expression-of-the-green-function" title="Permalink to this heading">¶</a></h2>
+<section id="in-infinite-depth">
+<h3><a class="toc-backref" href="#id28" role="doc-backlink">In infinite depth</a><a class="headerlink" href="#in-infinite-depth" title="Permalink to this heading">¶</a></h3>
+<p>The integral problem above relates the potential <span class="math notranslate nohighlight">\(\Phi\)</span> to the normal velocity
+<span class="math notranslate nohighlight">\(u \cdot n\)</span> via the Green function <span class="math notranslate nohighlight">\(G\)</span>. Let us know discuss the evaluation of this
+function for an infinite water depth.
+See also <a class="reference internal" href="bibliography.html#x18" id="id8"><span>[X18]</span></a>.</p>
+<section id="green-function">
+<h4><a class="toc-backref" href="#id29" role="doc-backlink">Green function</a><a class="headerlink" href="#green-function" title="Permalink to this heading">¶</a></h4>
+<p>The Green function can be written as the sum of three terms:</p>
+<div class="math notranslate nohighlight" id="equation-green-function">
+<span class="eqno">(13)<a class="headerlink" href="#equation-green-function" title="Permalink to this equation">¶</a></span>\[G(\xi, x) = - \frac{1}{4 \pi} \left( G_0(\xi, x) + G_1(\xi, x) + G_2(\xi, x) \right)\]</div>
+<p>The first term</p>
+<div class="math notranslate nohighlight" id="equation-green-function-inf-depth-0">
+<span class="eqno">(14)<a class="headerlink" href="#equation-green-function-inf-depth-0" title="Permalink to this equation">¶</a></span>\[G_0(\xi, x) = \frac{1}{\|x - \xi\|}\]</div>
+<p>is the usual Green function for the 3D Laplace equation without our specific boundary conditions.</p>
+<p>The second part reads</p>
+<div class="math notranslate nohighlight" id="equation-green-function-inf-depth-1">
+<span class="eqno">(15)<a class="headerlink" href="#equation-green-function-inf-depth-1" title="Permalink to this equation">¶</a></span>\[G_1(\xi, x) = - \frac{1}{\|x - s(\xi)\|}\]</div>
+<p>where <span class="math notranslate nohighlight">\(s(\xi_1, \xi_2, \xi_3) = (\xi_1, \xi_2, -\xi_3)\)</span> is the reflection of <span class="math notranslate nohighlight">\(\xi\)</span> across the free surface.</p>
+<p>Finally, this last part is complex-valued and it is introduced to satisfy the boundary conditions <a class="reference internal" href="#equation-bc-fs">(5)</a>.
+It depends on the water depth <span class="math notranslate nohighlight">\(h\)</span> and the wave frequency <span class="math notranslate nohighlight">\(\omega\)</span> (through the wave number <span class="math notranslate nohighlight">\(k\)</span>).</p>
+<div class="math notranslate nohighlight" id="equation-green-function-inf-depth-2">
+<span class="eqno">(16)<a class="headerlink" href="#equation-green-function-inf-depth-2" title="Permalink to this equation">¶</a></span>\[\begin{split}G_2(\xi, x) &amp; =
+\frac{2 k}{\pi} \Re \left( \int^{\pi/2}_{-\pi/2} \left( J(\zeta(x, \xi, \theta)) - \frac{1}{\zeta(x, \xi, \theta)} \right) \, \mathrm{d} \theta \right) \\
+&amp; \qquad \qquad \qquad \qquad + 2 i k \Re \left( \int^{\pi/2}_{-\pi/2} e^{\zeta (x, \xi, \theta)} \, \mathrm{d} \theta \right)\end{split}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-4">
+<span class="eqno">(17)<a class="headerlink" href="#equation-theory-manual-theory-4" title="Permalink to this equation">¶</a></span>\[\begin{split}J(z) =
+\begin{cases}
+e^z \left[ E_1(z) + i\pi \right] \quad \text{if} ~ \Im(z) \ge 0 \\
+e^z \left[ E_1(z) - i\pi \right] \quad \text{if} ~ \Im(z) &lt; 0
+\end{cases}\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(E_1\)</span> is the first exponential integral, defined as</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-5">
+<span class="eqno">(18)<a class="headerlink" href="#equation-theory-manual-theory-5" title="Permalink to this equation">¶</a></span>\[E_1(z) = \int_z^\infty \frac{e^{-t}}{t} dt,\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight" id="equation-def-zeta">
+<span class="eqno">(19)<a class="headerlink" href="#equation-def-zeta" title="Permalink to this equation">¶</a></span>\[\zeta (x, \xi, \theta) = k \left( x_3 + \xi_3 + i r \cos \theta \right)\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight" id="equation-def-r">
+<span class="eqno">(20)<a class="headerlink" href="#equation-def-r" title="Permalink to this equation">¶</a></span>\[r = \sqrt{(\xi_1 - x_1)^2 + (\xi_2 - x_2)^2}.\]</div>
+<div class="proof proof-type-property" id="id17">
+
+    <div class="proof-title">
+        <span class="proof-type">Property 1</span>
+        
+    </div><div class="proof-content">
+<p>The function <span class="math notranslate nohighlight">\(G\)</span> is symmetric in the sense of</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-6">
+<span class="eqno">(21)<a class="headerlink" href="#equation-theory-manual-theory-6" title="Permalink to this equation">¶</a></span>\[\forall x, \xi, \quad G(x, \xi) = G(\xi, x).\]</div>
+</div></div></section>
+<section id="variants-of-the-formulation">
+<h4><a class="toc-backref" href="#id30" role="doc-backlink">Variants of the formulation</a><a class="headerlink" href="#variants-of-the-formulation" title="Permalink to this heading">¶</a></h4>
+<div class="proof proof-type-lemma" id="id18">
+<span id="integrate-one-over-zeta"></span>
+    <div class="proof-title">
+        <span class="proof-type">Lemma 2</span>
+        
+    </div><div class="proof-content">
+<p>The following identity holds <a class="reference internal" href="bibliography.html#del89" id="id9"><span>[Del89]</span></a>:</p>
+<div class="math notranslate nohighlight" id="equation-int-1-over-zeta">
+<span class="eqno">(22)<a class="headerlink" href="#equation-int-1-over-zeta" title="Permalink to this equation">¶</a></span>\[\Re \int^{\pi/2}_{-\pi/2} \frac{1}{\zeta(\theta)} \, \mathrm{d} \theta = - \frac{\pi}{k \|x - s(\xi)\|}.\]</div>
+<p>It can be used to derive an alternative expression for the first term of <a class="reference internal" href="#equation-green-function-inf-depth-2">(16)</a>.</p>
+</div></div><div class="proof proof-type-lemma" id="id19">
+
+    <div class="proof-title">
+        <span class="proof-type">Lemma 3</span>
+        
+    </div><div class="proof-content">
+<p>The following identity holds <a class="reference internal" href="bibliography.html#x18" id="id10"><span>[X18]</span></a>:</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-7">
+<span class="eqno">(23)<a class="headerlink" href="#equation-theory-manual-theory-7" title="Permalink to this equation">¶</a></span>\[\Re \left( \int^{\pi/2}_{-\pi/2} e^{\zeta} \, \mathrm{d} \theta \right) = \pi \exp(k(x_3 + \xi_3)) J_0(k r)\]</div>
+<p>where <span class="math notranslate nohighlight">\(J_0\)</span> is the zeroth order Bessel function of the first kind.</p>
+</div></div><div class="proof proof-type-lemma" id="id20">
+
+    <div class="proof-title">
+        <span class="proof-type">Lemma 4</span>
+        
+    </div><div class="proof-content">
+<p>For any function <span class="math notranslate nohighlight">\(f\)</span>, the following two formulations of the integral are equivalent:</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-8">
+<span class="eqno">(24)<a class="headerlink" href="#equation-theory-manual-theory-8" title="Permalink to this equation">¶</a></span>\[\int_{-\frac{\pi}{2}}^{\frac{\pi}{2}} f \left(\zeta(\theta) \right) \mathrm{d} \theta =
+\int_{-\frac{\pi}{2}}^{\frac{\pi}{2}} f \left(\tilde{\zeta}(\theta) \right) \mathrm{d} \theta\]</div>
+<p>where <span class="math notranslate nohighlight">\(\zeta\)</span> is defined in <a class="reference internal" href="#equation-def-zeta">(19)</a> and <span class="math notranslate nohighlight">\(\tilde{\zeta}\)</span> is defined as</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-9">
+<span class="eqno">(25)<a class="headerlink" href="#equation-theory-manual-theory-9" title="Permalink to this equation">¶</a></span>\[\tilde{\zeta} (\theta) = k \left( x_3 + \xi_3 + i \left( (x_1 - \xi_1) \cos\theta + (x_2 - \xi_2) \sin\theta \right) \right).\]</div>
+</div></div><div class="proof proof-type-proof">
+
+    <div class="proof-title">
+        <span class="proof-type">Proof </span>
+        
+    </div><div class="proof-content">
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-10">
+\begin{align*}
+(x_1 - \xi_1) \cos(\theta) + (x_2 - \xi_2) \sin(\theta) &amp; = \Re \left( \left( x_1 - \xi_1  + i (x_2 - \xi_2) \right) e^{-i \theta} \right) \\
+             &amp; = \Re \left( r e^{i (\alpha - \theta)} \right) \\
+             &amp; = r \cos \left( \alpha - \theta \right) \\
+\end{align*}</div><p>where <span class="math notranslate nohighlight">\(r\)</span> and <span class="math notranslate nohighlight">\(\alpha\)</span> are defined by</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-11">
+\[
+    r e^{i \alpha} = (x_1 - \xi_1)  + i (x_2 - \xi_2).
+\]</div><p>Finally note that:</p>
+<blockquote>
+<div><div class="math notranslate nohighlight" id="equation-theory-manual-theory-12">
+\[
+    \int_{-\frac{\pi}{2}-\alpha}^{\frac{\pi}{2}-\alpha} f \left(\zeta(\theta) \right) \mathrm{d} \theta =
+    \int_{-\frac{\pi}{2}}^{\frac{\pi}{2}} f \left(\zeta(\theta) \right) \mathrm{d} \theta
+\]</div></div></blockquote>
+</div></div></section>
+<section id="gradient-of-the-green-function">
+<h4><a class="toc-backref" href="#id31" role="doc-backlink">Gradient of the Green function</a><a class="headerlink" href="#gradient-of-the-green-function" title="Permalink to this heading">¶</a></h4>
+<p>The gradient of the Green function can be written as</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-13">
+<span class="eqno">(29)<a class="headerlink" href="#equation-theory-manual-theory-13" title="Permalink to this equation">¶</a></span>\[\nabla_x G(\xi, x) = - \frac{1}{4 \pi} \left( \nabla_x G_0(\xi, x) + \nabla_x G_1(\xi, x) + \nabla_x G_2(\xi, x) \right)\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight" id="equation-green-function-inf-depth-deriv-0">
+<span class="eqno">(30)<a class="headerlink" href="#equation-green-function-inf-depth-deriv-0" title="Permalink to this equation">¶</a></span>\[\nabla_x G_0(\xi, x) = - \frac{x - \xi}{\|x - \xi\|^3}\,,\]</div>
+<div class="math notranslate nohighlight" id="equation-green-function-inf-depth-deriv-1">
+<span class="eqno">(31)<a class="headerlink" href="#equation-green-function-inf-depth-deriv-1" title="Permalink to this equation">¶</a></span>\[\nabla_x G_1(\xi, x) = \frac{x - s(\xi)}{\|x - s(\xi)\|^3}\,,\]</div>
+<p>and</p>
+<div class="math notranslate nohighlight" id="equation-green-function-inf-depth-deriv-2">
+<span class="eqno">(32)<a class="headerlink" href="#equation-green-function-inf-depth-deriv-2" title="Permalink to this equation">¶</a></span>\[\begin{split}\nabla_x G_2(\xi, x) = &amp;
+\frac{2 k}{\pi} \Re \left( \int^{\pi/2}_{-\pi/2} \left( J(\zeta(\theta)) - \frac{1}{\zeta(\theta)} \right) \, (\nabla_x \zeta) (\theta) \, \mathrm{d} \theta \right) \\
+&amp; - 2 \frac{x - s(\xi)}{\|x - s(\xi)\|^3}
++ 2 i k \Re \left( \int^{\pi/2}_{-\pi/2} e^{\zeta (\theta)} \, (\nabla_x \zeta) (\theta) \, \mathrm{d} \theta \right) \\\end{split}\]</div>
+<p>where</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-14">
+\[
+(\nabla_x \zeta) (\theta) = k
+\begin{pmatrix}
+\frac{x_1 - \xi_1}{r} i \cos \theta \\
+\frac{x_2 - \xi_2}{r} i \cos \theta \\
+1
+\end{pmatrix}.
+\]</div><div class="proof proof-type-proof">
+
+    <div class="proof-title">
+        <span class="proof-type">Proof </span>
+        
+    </div><div class="proof-content">
+<p>The derivation of <a class="reference internal" href="#equation-green-function-inf-depth-deriv-0">(30)</a> and <a class="reference internal" href="#equation-green-function-inf-depth-deriv-1">(31)</a> is straightforward.</p>
+<p>Let us discuss the derivation of <a class="reference internal" href="#equation-green-function-inf-depth-deriv-2">(32)</a>. Using <a class="reference internal" href="#integrate-one-over-zeta"><span class="std std-numref">Lemma 2</span></a>, the Green function <a class="reference internal" href="#equation-green-function-inf-depth-2">(16)</a> can be rewritten as:</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-15">
+<span class="eqno">(34)<a class="headerlink" href="#equation-theory-manual-theory-15" title="Permalink to this equation">¶</a></span>\[\begin{split}G_2(\xi, x) &amp; =
+\frac{2 k}{\pi} \Re \left( \int^{\pi/2}_{-\pi/2} J(\zeta(\theta)) \, \mathrm{d} \theta \right) + \frac{2}{\|x - s(\xi)\|} \\
+&amp; \qquad \qquad \qquad \qquad + 2 i k \Re \left( \int^{\pi/2}_{-\pi/2} e^{\zeta (\theta)} \, \mathrm{d} \theta \right)\end{split}\]</div>
+<p>Using the identity <span class="math notranslate nohighlight">\(J'(\zeta) = J(\zeta) - 1/\zeta\)</span>, the first term of <a class="reference internal" href="#equation-green-function-inf-depth-deriv-2">(32)</a> can be derived.</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-16">
+<span class="eqno">(35)<a class="headerlink" href="#equation-theory-manual-theory-16" title="Permalink to this equation">¶</a></span>\[\nabla_x \left( \int^{\pi/2}_{-\pi/2} J(\zeta(\theta)) \, \mathrm{d} \theta \right) = \int^{\pi/2}_{-\pi/2} \left( J(\zeta(\theta)) - \frac{1}{\zeta(\theta)} \right) \, (\nabla_x \zeta) (\theta) \, \mathrm{d} \theta\]</div>
+<p>The second term of <a class="reference internal" href="#equation-green-function-inf-depth-deriv-2">(32)</a> is similar to <a class="reference internal" href="#equation-green-function-inf-depth-deriv-1">(31)</a>.
+Finally, the last term can be found as follows:</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-17">
+<span class="eqno">(36)<a class="headerlink" href="#equation-theory-manual-theory-17" title="Permalink to this equation">¶</a></span>\[\nabla_x \left( \int^{\pi/2}_{-\pi/2} e^{\zeta(\theta)} \, \mathrm{d} \theta \right) = \int^{\pi/2}_{-\pi/2} e^{\zeta(\theta)} \, (\nabla_x \zeta) (\theta) \, \mathrm{d} \theta\]</div>
+</div></div><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>There is a typo in the second term of <a class="reference internal" href="#equation-green-function-inf-depth-deriv-2">(32)</a> in <a class="reference internal" href="bibliography.html#del89" id="id11"><span>[Del89]</span></a> and <a class="reference internal" href="bibliography.html#bd15" id="id12"><span>[BD15]</span></a>. It appears to be missing from <a class="reference internal" href="bibliography.html#x18" id="id13"><span>[X18]</span></a>.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The derivative of <span class="math notranslate nohighlight">\(G\)</span> with respect to <span class="math notranslate nohighlight">\(x_1\)</span> and <span class="math notranslate nohighlight">\(x_2\)</span> are antisymmetric in the sense of</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-18">
+ \[
+ \frac{\partial G}{\partial x_1} (\xi, x) = - \frac{\partial G}{\partial x_1}(x, \xi).
+ \]</div><p>Its derivative with respect to <span class="math notranslate nohighlight">\(x_3\)</span> can be decomposed into an antisymmetric term and a symmetric term.</p>
+</div>
+</section>
+<section id="delhommeau-s-method-for-computation">
+<h4><a class="toc-backref" href="#id32" role="doc-backlink">Delhommeau’s method for computation</a><a class="headerlink" href="#delhommeau-s-method-for-computation" title="Permalink to this heading">¶</a></h4>
+<p>The above formulations of the Green function and its derivative require the evaluation of the following dimensionless real-valued integrals:</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-19">
+<span class="eqno">(38)<a class="headerlink" href="#equation-theory-manual-theory-19" title="Permalink to this equation">¶</a></span>\[\begin{split}D_1(\tilde{r}, \tilde{z}) &amp; = \Re \left( \int^{\pi/2}_{-\pi/2} - i \cos(\theta) \left( J(\zeta) - \frac{1}{\zeta} \right) \, \mathrm{d} \theta \right) \\
+D_2(\tilde{r}, \tilde{z}) &amp; = \Re \left( \int^{\pi/2}_{-\pi/2} - i \cos(\theta) e^{\zeta} \, \mathrm{d} \theta \right) \\
+Z_1(\tilde{r}, \tilde{z}) &amp; = \Re \left( \int^{\pi/2}_{-\pi/2} \left( J(\zeta) - \frac{1}{\zeta} \right) \, \mathrm{d} \theta \right) \\
+Z_2(\tilde{r}, \tilde{z}) &amp; = \Re \left( \int^{\pi/2}_{-\pi/2} e^{\zeta} \, \mathrm{d} \theta \right)\end{split}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\tilde{r} = k r\)</span> and <span class="math notranslate nohighlight">\(\tilde{z} = k (x_3 + \xi_3)\)</span>, such that <span class="math notranslate nohighlight">\(\zeta = \tilde{z} + i \tilde{r} \cos \theta\)</span> and <span class="math notranslate nohighlight">\(k \| x - s(\xi) \| = \sqrt{\tilde{r}^2 + \tilde{z}^2}\)</span>.</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-20">
+<span class="eqno">(39)<a class="headerlink" href="#equation-theory-manual-theory-20" title="Permalink to this equation">¶</a></span>\[\begin{split}G_2(\xi, x) &amp; = 2 k \left( \frac{Z_1}{\pi} + i Z_2 \right) \\
+\frac{\partial G_2}{\partial x_1} &amp; = 2 k^2 \frac{x_1 - \xi_1}{r} \left( \frac{D_1}{\pi} + i D_2 \right) - 2 \frac{x_1 - \xi_1}{\sqrt{\tilde{r}^2 + \tilde{z}^2}^3} \\
+\frac{\partial G_2}{\partial x_2} &amp; = 2 k^2 \frac{x_2 - \xi_2}{r} \left( \frac{D_1}{\pi} + i D_2 \right) - 2 \frac{x_2 - \xi_2}{\sqrt{\tilde{r}^2 + \tilde{z}^2}^3}\\
+\frac{\partial G_2}{\partial x_3} &amp; = 2 k^2 \left( \frac{Z_1}{\pi} + i Z_2 \right) - 2 \frac{x_3 + \xi_3}{\sqrt{\tilde{r}^2 + \tilde{z}^2}^3}\end{split}\]</div>
+<p>To limit the computational cost of the evaluation of these integrals, they are precomputed for selected values of <span class="math notranslate nohighlight">\(\tilde{r}\)</span> and <span class="math notranslate nohighlight">\(\tilde{z}\)</span> and stored in a table.
+When evaluating the Green function, the values of the integrals are retrieved by interpolating the values in the tables.</p>
+<p>For large values of <span class="math notranslate nohighlight">\(\tilde{r}\)</span> and <span class="math notranslate nohighlight">\(\tilde{z}\)</span>, these integrals are asymptotically approximated by the following expressions:</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-21">
+<span class="eqno">(40)<a class="headerlink" href="#equation-theory-manual-theory-21" title="Permalink to this equation">¶</a></span>\[\begin{split}D_1(\tilde{r}, \tilde{z}) &amp; \simeq \pi \exp(\tilde{z}) \sqrt{\frac{2\pi}{\tilde{r}}} \left(\cos(\tilde{r} - \pi/4) - \frac{1}{2\tilde{r}} \sin(\tilde{r}-\pi/4) \right) - \pi \frac{\tilde{r}}{\sqrt{\tilde{r}^2 + \tilde{z}^2}^3} \\
+D_2(\tilde{r}, \tilde{z}) &amp; \simeq \exp(\tilde{z}) \sqrt{\frac{2\pi}{\tilde{r}}} (\sin(\tilde{r} - \pi/4) + \frac{1}{2\tilde{r}} \cos(\tilde{r} - \pi/4)) \\
+Z_1(\tilde{r}, \tilde{z}) &amp; \simeq - \pi \exp(\tilde{z}) \sqrt{\frac{2\pi}{\tilde{r}}} \sin(\tilde{r} - \pi/4) + \pi \frac{\tilde{z}}{\sqrt{\tilde{r}^2 + \tilde{z}^2}^3} \\
+Z_2(\tilde{r}, \tilde{z}) &amp; \simeq \exp(\tilde{z}) \sqrt{\frac{2\pi}{\tilde{r}}} \cos(\tilde{r} - \pi/4)\end{split}\]</div>
+<p>Incorporating these asymptotic approximation in the expression of the Green function, one gets:</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-22">
+<span class="eqno">(41)<a class="headerlink" href="#equation-theory-manual-theory-22" title="Permalink to this equation">¶</a></span>\[G_2(\xi, x) \simeq - 2 k \exp(\tilde{z}) \sqrt{\frac{2\pi}{\tilde{r}}} \left(\sin(\tilde{r} - \pi/4) - i\cos(\tilde{r} - \pi/4)\right) + 2 k \frac{\tilde{z}}{\sqrt{\tilde{r}^2 + \tilde{z}^2}^3}\]</div>
+</section>
+<section id="xie-s-variant">
+<h4><a class="toc-backref" href="#id33" role="doc-backlink">Xie’s variant</a><a class="headerlink" href="#xie-s-variant" title="Permalink to this heading">¶</a></h4>
+<p>A slight variant is presented in <a class="reference internal" href="bibliography.html#x18" id="id14"><span>[X18]</span></a>. The authors noticed that the
+interpolation of the integral <span class="math notranslate nohighlight">\(Z_1\)</span> can be inaccurate due to the
+singularity <span class="math notranslate nohighlight">\(\frac{1}{\zeta}\)</span>.
+Hence, they proposed to tabulate instead</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-23">
+<span class="eqno">(42)<a class="headerlink" href="#equation-theory-manual-theory-23" title="Permalink to this equation">¶</a></span>\[\widetilde{Z_1}(\tilde{r}, \tilde{z}) = \Re \left( \int^{\pi/2}_{-\pi/2} J(\zeta) \, \mathrm{d} \theta \right)\]</div>
+<p>By using <a class="reference internal" href="#integrate-one-over-zeta"><span class="std std-numref">Lemma 2</span></a>, one has</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-24">
+<span class="eqno">(43)<a class="headerlink" href="#equation-theory-manual-theory-24" title="Permalink to this equation">¶</a></span>\[Z_1 = \widetilde{Z_1} - \frac{\pi}{k \sqrt{\tilde{r}^2 + \tilde{z}^2}}\]</div>
+<p>Both the original Delhommeau’s method and Xie’s variant are implemented in Capytaine.</p>
+</section>
+</section>
+<section id="in-finite-depth">
+<h3><a class="toc-backref" href="#id34" role="doc-backlink">In finite depth</a><a class="headerlink" href="#in-finite-depth" title="Permalink to this heading">¶</a></h3>
+<section id="id15">
+<h4><a class="toc-backref" href="#id35" role="doc-backlink">Green function</a><a class="headerlink" href="#id15" title="Permalink to this heading">¶</a></h4>
+<p>TODO</p>
+</section>
+<section id="id16">
+<h4><a class="toc-backref" href="#id36" role="doc-backlink">Gradient of the Green function</a><a class="headerlink" href="#id16" title="Permalink to this heading">¶</a></h4>
+<p>TODO</p>
+</section>
+</section>
+<section id="symmetries">
+<h3><a class="toc-backref" href="#id37" role="doc-backlink">Symmetries</a><a class="headerlink" href="#symmetries" title="Permalink to this heading">¶</a></h3>
+<p>The first term of <a class="reference internal" href="#equation-green-function">(13)</a> is invariant under all rotations and translations, whereas the other terms are invariant under isometric transformations that don’t change the vertical coordinate (reflection across a vertical plane, rotation around a vertical axis, translation following an horizontal vector).</p>
+</section>
+</section>
+<section id="discretization">
+<h2><a class="toc-backref" href="#id38" role="doc-backlink">Discretization</a><a class="headerlink" href="#discretization" title="Permalink to this heading">¶</a></h2>
+<p>The equations <a class="reference internal" href="#equation-continuous-source-formulation">(11)</a> and <a class="reference internal" href="#equation-diff-continuous-source-formulation">(12)</a> can be discretized using a collocation method.
+Considering a mesh of the surface of the floating body <span class="math notranslate nohighlight">\(\Gamma = \cup_i \Gamma_i\)</span>:</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-25">
+<span class="eqno">(44)<a class="headerlink" href="#equation-theory-manual-theory-25" title="Permalink to this equation">¶</a></span>\[\begin{split}\Phi_i   &amp; = \Phi(x_i), \\
+\sigma_i &amp; = \sigma(x_i), \\
+u_i      &amp; = (u \cdot n)(x_i) \\
+S_{ij}   &amp; = \iint_{\Gamma_j} G(x_i, y) \mathrm{dS}(y), \\
+V_{ij}   &amp; = \iint_{\Gamma_j} \nabla_{x_i} G(x_i, y) \cdot n \, \mathrm{dS}(y),\end{split}\]</div>
+<p>where for all <span class="math notranslate nohighlight">\(i\)</span>, <span class="math notranslate nohighlight">\(x_i\)</span> is the center of the face <span class="math notranslate nohighlight">\(\Gamma_i\)</span>.
+Each element of the matrices <span class="math notranslate nohighlight">\(S\)</span> and <span class="math notranslate nohighlight">\(V\)</span> can be seen as the interaction between two faces of the mesh.</p>
+<p>The matrices <span class="math notranslate nohighlight">\(S\)</span> and <span class="math notranslate nohighlight">\(V\)</span> relates the vectors <span class="math notranslate nohighlight">\(\Phi\)</span>, <span class="math notranslate nohighlight">\(u\)</span> and <span class="math notranslate nohighlight">\(\sigma\)</span> through the following approximations of <a class="reference internal" href="#equation-continuous-source-formulation">(11)</a> and <a class="reference internal" href="#equation-diff-continuous-source-formulation">(12)</a>:</p>
+<div class="math notranslate nohighlight" id="equation-discrete-bem-problem">
+<span class="eqno">(45)<a class="headerlink" href="#equation-discrete-bem-problem" title="Permalink to this equation">¶</a></span>\[\Phi = S \sigma, \qquad u = \left( \frac{\mathbb{I}}{2} + V \right) \sigma.\]</div>
+<p>The resolution of the discrete problem with Nemoh consists of two main steps:</p>
+<ol class="arabic simple">
+<li><p>The evaluation of the coefficients of the complex-valued matrices <span class="math notranslate nohighlight">\(S\)</span> and <span class="math notranslate nohighlight">\(V\)</span></p></li>
+<li><p>The resolution of the complex-valued linear problem <span class="math notranslate nohighlight">\(K \sigma = \left( \frac{\mathbb{I}}{2} + V \right) \sigma = u\)</span>.</p></li>
+</ol>
+<p>Once <span class="math notranslate nohighlight">\(\sigma\)</span> has been computed, <span class="math notranslate nohighlight">\(\Phi\)</span> can be easily deduced.
+Then other magnitudes such as the Froude-Krylov forces or the added mass can be derived.</p>
+<figure class="align-default" id="id21">
+<div class="mermaid">
+            flowchart TD;
+    h[Water depth] --&gt; gf(Assembling matrices);
+    ω[Wave frequency ω] --&gt; gf(Assembling matrices);
+    m[Mesh] --&gt; gf;
+    gf -- K matrix --&gt; ls(Linear solver);
+    un[Normal velocity on hull] --&gt; ls;
+    gf -- S matrix --&gt; mvp(Matrix vector product);
+    ls -- sources distribution σ --&gt; mvp;
+    mvp -- potential distribution Φ --&gt; int(&quot;Integrate on mesh&quot;);
+    m --&gt; int;
+    int --&gt; f[&quot;Hydrodynamic forces\n(aka added mass and radiation damping)&quot;]
+
+    classDef input fill:#FFAAAA,color:#550000,stroke:#113939
+    classDef step fill:#88BBBB,color:#003333,stroke:#226666
+    classDef output fill:#FFE3AA,color:#553900,stroke:#AA8439
+    class ω,m,un,h input
+    class gf,ls,mvp,int step
+    class f output
+        </div><figcaption>
+<p><span class="caption-number">Fig. 1 </span><span class="caption-text">A simplified flowchart of the internals of Capytaine solver</span><a class="headerlink" href="#id21" title="Permalink to this image">¶</a></p>
+</figcaption>
+</figure>
+</section>
+<section id="post-processing">
+<h2><a class="toc-backref" href="#id39" role="doc-backlink">Post-processing</a><a class="headerlink" href="#post-processing" title="Permalink to this heading">¶</a></h2>
+<section id="forces-on-body-surfaces">
+<h3><a class="toc-backref" href="#id40" role="doc-backlink">Forces on body surfaces</a><a class="headerlink" href="#forces-on-body-surfaces" title="Permalink to this heading">¶</a></h3>
+<p>Forces acting on body surfaces are computed by integration of the pressure field. They can be decomposed into three contributions:</p>
+<ol class="arabic simple">
+<li><p>The Froude-Krylov forces <span class="math notranslate nohighlight">\(F_{FK, i}\)</span>, from the integration of the incident wave field pressure (incoming plane waves); <span class="math notranslate nohighlight">\(i\)</span> denotes the i-th degree of freedom</p></li>
+<li><p>The diffraction forces <span class="math notranslate nohighlight">\(F_{D, i}\)</span>, from the integration of the diffracted wave field (all bodies held fixed)</p></li>
+<li><p>The radiation forces <span class="math notranslate nohighlight">\(F_{R, ij}\)</span>, from the result of the radiation problem with radiating degree of freedom <span class="math notranslate nohighlight">\(j\)</span> and influenced degree of freedom <span class="math notranslate nohighlight">\(i\)</span></p></li>
+</ol>
+</section>
+<section id="dynamic-coupling-and-impedance">
+<h3><a class="toc-backref" href="#id41" role="doc-backlink">Dynamic coupling and impedance</a><a class="headerlink" href="#dynamic-coupling-and-impedance" title="Permalink to this heading">¶</a></h3>
+<p>Consider a body or a system of bodies. The general linear equation of motion can be expressed in time domain as</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-26">
+<span class="eqno">(46)<a class="headerlink" href="#equation-theory-manual-theory-26" title="Permalink to this equation">¶</a></span>\[M_{ij} \ddot{x}_j + C_{ij} \dot{x}_j + K_{ij} x_j = F_i,\]</div>
+<p>and in frequency domain, with the assumed time dependence <span class="math notranslate nohighlight">\(x(t) = \mathrm{Re} \left( X e^{-j \omega t} \right)\)</span>,</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-27">
+<span class="eqno">(47)<a class="headerlink" href="#equation-theory-manual-theory-27" title="Permalink to this equation">¶</a></span>\[\left[-\omega^2M_{ij} - j \omega C_{ij} + K_{ij}\right] X_j = F_i,\]</div>
+<p>where <span class="math notranslate nohighlight">\(M_{ij}\)</span> is the inertia matrix, accounting for the mass distribution, <span class="math notranslate nohighlight">\(C_{ij}\)</span> is the mechanical damping matrix, <span class="math notranslate nohighlight">\(K_{ij}\)</span> is the stiffness matrix which comprises mechanical and hydrostatic effects, and <span class="math notranslate nohighlight">\(F_i\)</span> are generic external forces.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The hydrostatic contribution to matrix <span class="math notranslate nohighlight">\(K_{ij}\)</span> accounts for a variation of hydrostatic force in direction <span class="math notranslate nohighlight">\(i\)</span> due to a unit motion in direction <span class="math notranslate nohighlight">\(j\)</span>. It is a geometric property of the body.</p>
+</div>
+<p>Forces <span class="math notranslate nohighlight">\(F_i\)</span> can be decomposed as</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-28">
+<span class="eqno">(48)<a class="headerlink" href="#equation-theory-manual-theory-28" title="Permalink to this equation">¶</a></span>\[F_i = F_{FK, i} + F_{D, i} + F_{R, ij}\]</div>
+<p>and <span class="math notranslate nohighlight">\(F_{R, ij}\)</span> can be further rewritten as</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-29">
+<span class="eqno">(49)<a class="headerlink" href="#equation-theory-manual-theory-29" title="Permalink to this equation">¶</a></span>\[F_{R, ij} = \left[\omega^2 A_{ij} + j\omega B_{ij}\right] X_j\]</div>
+<p>where <span class="math notranslate nohighlight">\(A_{ij}\)</span> is the added mass matrix and <span class="math notranslate nohighlight">\(B_{ij}\)</span> is the radiation damping matrix; these properties are thus obtained from the real and imaginary parts of the radiation force. The full system becomes</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-30">
+<span class="eqno">(50)<a class="headerlink" href="#equation-theory-manual-theory-30" title="Permalink to this equation">¶</a></span>\[\left[-\omega^2 (M_{ij} + A_{ij}) - j \omega (C_{ij} + B_{ij}) + K_{ij}\right] X_j = F_{FK, i} + F_{D, i}\]</div>
+<p>that is</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-31">
+<span class="eqno">(51)<a class="headerlink" href="#equation-theory-manual-theory-31" title="Permalink to this equation">¶</a></span>\[H X = F_{ex}\]</div>
+<p>where <span class="math notranslate nohighlight">\(H\)</span> denotes the following transfer function matrix</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-32">
+<span class="eqno">(52)<a class="headerlink" href="#equation-theory-manual-theory-32" title="Permalink to this equation">¶</a></span>\[H_{ij} = \left[-\omega^2 (M_{ij} + A_{ij}) - j \omega (C_{ij} + B_{ij}) + K_{ij}\right]\]</div>
+<p>and <span class="math notranslate nohighlight">\(F_{ex}\)</span> denotes the excitation force.</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-33">
+<span class="eqno">(53)<a class="headerlink" href="#equation-theory-manual-theory-33" title="Permalink to this equation">¶</a></span>\[F_{ex, i} = F_{FK, i} + F_{D, i}.\]</div>
+<p>The oscillation amplitude is obtained by solving the complex-valued linear system.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Matrices <span class="math notranslate nohighlight">\(A_{ij}\)</span> and <span class="math notranslate nohighlight">\(B_{ij}\)</span> depend on <span class="math notranslate nohighlight">\(\omega\)</span>, and so does <span class="math notranslate nohighlight">\(H_{ij}\)</span> and <span class="math notranslate nohighlight">\(X_j\)</span>.</p>
+</div>
+</section>
+<section id="free-surface-elevation">
+<h3><a class="toc-backref" href="#id42" role="doc-backlink">Free surface elevation</a><a class="headerlink" href="#free-surface-elevation" title="Permalink to this heading">¶</a></h3>
+<p>The potential at the reference surface <span class="math notranslate nohighlight">\(z = 0\)</span> can be connected to the free surface elevation by the dynamic condition</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-34">
+<span class="eqno">(54)<a class="headerlink" href="#equation-theory-manual-theory-34" title="Permalink to this equation">¶</a></span>\[\dfrac{\partial \phi}{\partial t} = - g \eta\]</div>
+<p>which, in frequency domain, is</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-35">
+<span class="eqno">(55)<a class="headerlink" href="#equation-theory-manual-theory-35" title="Permalink to this equation">¶</a></span>\[\eta = \dfrac{j \omega}{g} \Phi\]</div>
+<p>For a fully coupled problem (bodies free to oscillate, i.e. diffraction and radiation combined), the free surface elevation can be computed as</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-theory-36">
+<span class="eqno">(56)<a class="headerlink" href="#equation-theory-manual-theory-36" title="Permalink to this equation">¶</a></span>\[\eta = \eta_{\text{incident}} + \eta_{\text{diffracted}} -j \omega \sum_i \eta_{\text{radiated}, i}   X_i\]</div>
+<p>where factor <span class="math notranslate nohighlight">\(-j \omega\)</span> transforms <span class="math notranslate nohighlight">\(\eta_{\text{radiated}, i}\)</span> from the radiated wave field corresponding to unit oscillation velocity to the field corresponding to unit oscillation amplitude.</p>
+</section>
+<section id="far-field-coefficients">
+<h3><a class="toc-backref" href="#id43" role="doc-backlink">Far-field coefficients</a><a class="headerlink" href="#far-field-coefficients" title="Permalink to this heading">¶</a></h3>
+<p>TODO</p>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Theory manual</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Theory manual</a></li>
+<li class="toctree-l2"><a class="reference internal" href="bibliography.html">Bibliography</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Theory manual</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Theory manual</a></li>
+      <li>Next: <a href="bibliography.html" title="next chapter">Bibliography</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/theory_manual/theory.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/theory_manual/theory.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

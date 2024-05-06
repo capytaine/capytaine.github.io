@@ -1,0 +1,383 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>capytaine.bodies.predefined.cylinders &#8212; capytaine 1.0 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/proof.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../../../_static/proof.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.bodies.predefined.cylinders</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;Generate meshes of cylinders and disks&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="k">import</span> <span class="n">product</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">capytaine.meshes.geometry</span> <span class="k">import</span> <span class="n">xOy_Plane</span><span class="p">,</span> <span class="n">xOz_Plane</span><span class="p">,</span> <span class="n">yOz_Plane</span><span class="p">,</span> <span class="n">e_x</span><span class="p">,</span> <span class="n">e_z</span><span class="p">,</span> <span class="n">Oz_axis</span>
+<span class="kn">from</span> <span class="nn">capytaine.meshes.meshes</span> <span class="k">import</span> <span class="n">Mesh</span>
+<span class="kn">from</span> <span class="nn">capytaine.meshes.collections</span> <span class="k">import</span> <span class="n">CollectionOfMeshes</span>
+<span class="kn">from</span> <span class="nn">capytaine.meshes.symmetric</span> <span class="k">import</span> <span class="n">TranslationalSymmetricMesh</span><span class="p">,</span> <span class="n">AxialSymmetricMesh</span><span class="p">,</span> <span class="n">ReflectionSymmetricMesh</span>
+<span class="kn">from</span> <span class="nn">capytaine.bodies.bodies</span> <span class="k">import</span> <span class="n">FloatingBody</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="c1">##########</span>
+<span class="c1">#  Disk  #</span>
+<span class="c1">##########</span>
+
+<div class="viewcode-block" id="Disk"><a class="viewcode-back" href="../../../../developer_manual/api/capytaine.bodies.predefined.cylinders.html#capytaine.bodies.predefined.cylinders.Disk">[docs]</a><span class="k">class</span> <span class="nc">Disk</span><span class="p">(</span><span class="n">FloatingBody</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;(One-sided) disk&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+                 <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                 <span class="n">reflection_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">axial_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate the mesh of a vertical disk.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        radius : float, optional</span>
+<span class="sd">            radius of the disk</span>
+<span class="sd">        resolution : 2-ple of int, optional</span>
+<span class="sd">            number of panels along a radius and around the disk</span>
+<span class="sd">        center : 3-ple or array of shape (3,), optional</span>
+<span class="sd">            position of the geometric center of the disk</span>
+<span class="sd">        normal: 3-ple of floats, optional</span>
+<span class="sd">            normal vector, default: along x axis</span>
+<span class="sd">        axial_symmetry : bool, optional</span>
+<span class="sd">            if True, use the axial symmetry to speed up the computations</span>
+<span class="sd">        reflection_symmetry : bool, optional</span>
+<span class="sd">            if True, use the reflection symmetry to speed up the computations</span>
+<span class="sd">        name : str, optional</span>
+<span class="sd">            a string naming the floating body</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">assert</span> <span class="n">radius</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Radius of the disk mesh should be given as a positive value.&quot;</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">resolution</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;Resolution of a disk should be given as a couple a values.&quot;</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">([</span><span class="n">h</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">resolution</span><span class="p">]),</span> <span class="s2">&quot;Resolution of the disk mesh should be given as positive values.&quot;</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">([</span><span class="n">i</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">resolution</span><span class="p">]),</span> <span class="s2">&quot;Resolution of a disk should be given as integer values.&quot;</span>
+
+        <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">center</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;Position of the center of a disk should be given a 3-ple of values.&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">radius</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometric_center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+        <span class="n">nr</span><span class="p">,</span> <span class="n">ntheta</span> <span class="o">=</span> <span class="n">resolution</span>
+
+        <span class="k">if</span> <span class="n">reflection_symmetry</span> <span class="ow">and</span> <span class="n">ntheta</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;To use the reflection symmetry of the mesh, &quot;</span>
+                             <span class="s2">&quot;it should have an even number of panels in this direction.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">reflection_symmetry</span> <span class="ow">and</span> <span class="n">axial_symmetry</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Disk generators with both symmetries have not been implemented.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;disk_{next(Mesh._ids)}&quot;</span>
+
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">f</span><span class="s2">&quot;New disk body of radius </span><span class="si">{radius}</span><span class="s2"> and resolution (</span><span class="si">{nr}</span><span class="s2">, </span><span class="si">{ntheta}</span><span class="s2">), named </span><span class="si">{name}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">reflection_symmetry</span><span class="p">:</span>
+            <span class="n">half_mesh</span> <span class="o">=</span> <span class="n">Disk</span><span class="o">.</span><span class="n">generate_disk_mesh</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">,</span> <span class="n">theta_max</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>
+                                                <span class="n">nr</span><span class="o">=</span><span class="n">nr</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="n">ntheta</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span>
+                                                <span class="n">name</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;half_of_</span><span class="si">{name}</span><span class="s2">_mesh&quot;</span><span class="p">)</span>
+            <span class="n">mesh</span> <span class="o">=</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">(</span><span class="n">half_mesh</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="n">xOz_Plane</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">_mesh&quot;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">axial_symmetry</span><span class="p">:</span>
+            <span class="n">mesh_slice</span> <span class="o">=</span> <span class="n">Disk</span><span class="o">.</span><span class="n">generate_disk_mesh</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">,</span> <span class="n">theta_max</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">ntheta</span><span class="p">,</span>
+                                                <span class="n">nr</span><span class="o">=</span><span class="n">nr</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                                <span class="n">name</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;slice_of_</span><span class="si">{name}</span><span class="s2">_mesh&quot;</span><span class="p">)</span>
+            <span class="n">mesh_slice</span><span class="o">.</span><span class="n">rotate_around_center_to_align_vectors</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">e_x</span><span class="p">,</span> <span class="n">e_z</span><span class="p">)</span>  <span class="c1"># Convoluted way to avoid a warning message in AxialSymmetry...</span>
+            <span class="n">mesh</span> <span class="o">=</span> <span class="n">AxialSymmetricMesh</span><span class="p">(</span><span class="n">mesh_slice</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">Oz_axis</span><span class="p">,</span> <span class="n">nb_repetitions</span><span class="o">=</span><span class="n">ntheta</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">_mesh&quot;</span><span class="p">)</span>
+            <span class="n">mesh</span><span class="o">.</span><span class="n">rotate_around_center_to_align_vectors</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">e_z</span><span class="p">,</span> <span class="n">e_x</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mesh</span> <span class="o">=</span> <span class="n">Disk</span><span class="o">.</span><span class="n">generate_disk_mesh</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="p">,</span> <span class="n">nr</span><span class="o">=</span><span class="n">nr</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="n">ntheta</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">_mesh&quot;</span><span class="p">)</span>
+
+        <span class="n">mesh</span><span class="o">.</span><span class="n">rotate_around_center_to_align_vectors</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mesh</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">normal</span><span class="p">)</span>
+        <span class="n">mesh</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">center</span><span class="p">)</span>
+        <span class="n">FloatingBody</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Disk.generate_disk_mesh"><a class="viewcode-back" href="../../../../developer_manual/api/capytaine.bodies.predefined.cylinders.html#capytaine.bodies.predefined.cylinders.Disk.generate_disk_mesh">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">generate_disk_mesh</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">theta_max</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span>
+                           <span class="n">nr</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                           <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                           <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mesh</span><span class="p">:</span>
+        <span class="n">theta_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">theta_max</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">r_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">nr</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(((</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">nr</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">product</span><span class="p">(</span><span class="n">r_range</span><span class="p">,</span> <span class="n">theta_range</span><span class="p">)):</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="o">+</span><span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="o">-</span><span class="n">r</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+        <span class="n">panels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ntheta</span><span class="o">*</span><span class="n">nr</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nr</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ntheta</span><span class="p">))):</span>
+            <span class="n">panels</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">j</span><span class="o">+</span><span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                <span class="n">j</span><span class="o">+</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">panels</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">mesh</span><span class="o">.</span><span class="n">merge_duplicates</span><span class="p">()</span>
+        <span class="n">mesh</span><span class="o">.</span><span class="n">heal_triangles</span><span class="p">()</span>
+        <span class="n">mesh</span><span class="o">.</span><span class="n">rotate_around_center_to_align_vectors</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">mesh</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">normal</span><span class="p">)</span>
+        <span class="n">mesh</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">center</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">mesh</span></div></div>
+
+
+<span class="c1">##############</span>
+<span class="c1">#  Cylinder  #</span>
+<span class="c1">##############</span>
+
+<div class="viewcode-block" id="HorizontalCylinder"><a class="viewcode-back" href="../../../../developer_manual/api/capytaine.bodies.predefined.cylinders.html#capytaine.bodies.predefined.cylinders.HorizontalCylinder">[docs]</a><span class="k">class</span> <span class="nc">HorizontalCylinder</span><span class="p">(</span><span class="n">FloatingBody</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                 <span class="n">nx</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">nr</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                 <span class="n">clever</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate the mesh of an horizontal cylinder.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        length : float, optional</span>
+<span class="sd">            length of the cylinder</span>
+<span class="sd">        radius : float, optional</span>
+<span class="sd">            radius of the cylinder</span>
+<span class="sd">        center : 3-ple or array of shape (3,), optional</span>
+<span class="sd">            position of the geometric center of the cylinder</span>
+<span class="sd">        nx : int, optional</span>
+<span class="sd">            number of circular slices</span>
+<span class="sd">        ntheta : int, optional</span>
+<span class="sd">            number of panels along a circular slice of the cylinder</span>
+<span class="sd">        nr : int, optional</span>
+<span class="sd">            number of panels along a radius on the extremities of the cylinder</span>
+<span class="sd">        clever : bool, optional</span>
+<span class="sd">            if True, uses the mesh symmetries</span>
+<span class="sd">        name : str, optional</span>
+<span class="sd">            a string naming the floating body</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="n">length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">=</span> <span class="n">radius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometric_center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;cylinder_{next(Mesh._ids)}&quot;</span>
+
+        <span class="n">open_cylinder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_generate_open_cylinder_mesh</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ntheta</span><span class="p">,</span> <span class="n">f</span><span class="s2">&quot;body_of_</span><span class="si">{name}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">nr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">side</span> <span class="o">=</span> <span class="n">Disk</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])),</span> <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                        <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="n">nr</span><span class="p">,</span> <span class="n">ntheta</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;side_of_</span><span class="si">{name}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mesh</span>
+
+            <span class="n">other_side</span> <span class="o">=</span> <span class="n">side</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;other_side_of_</span><span class="si">{name}</span><span class="s2">_mesh&quot;</span><span class="p">)</span>
+            <span class="n">other_side</span><span class="o">.</span><span class="n">mirror</span><span class="p">(</span><span class="n">yOz_Plane</span><span class="p">)</span>
+
+            <span class="n">mesh</span> <span class="o">=</span> <span class="n">CollectionOfMeshes</span><span class="p">((</span><span class="n">open_cylinder</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="n">other_side</span><span class="p">))</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mesh</span> <span class="o">=</span> <span class="n">open_cylinder</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">clever</span><span class="p">:</span>
+            <span class="n">mesh</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span>
+            <span class="n">mesh</span><span class="o">.</span><span class="n">merge_duplicates</span><span class="p">()</span>
+            <span class="n">mesh</span><span class="o">.</span><span class="n">heal_triangles</span><span class="p">()</span>
+
+        <span class="n">mesh</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">geometric_center</span><span class="p">)</span>
+        <span class="n">mesh</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">_mesh&quot;</span>
+
+        <span class="n">FloatingBody</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_generate_open_cylinder_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nx</span><span class="p">,</span> <span class="n">ntheta</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Open horizontal cylinder using the symmetry to speed up the computations&quot;&quot;&quot;</span>
+        <span class="n">theta_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">theta_max</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">//</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">/</span><span class="n">nx</span><span class="p">])</span>
+
+        <span class="c1"># Nodes</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(((</span><span class="n">ntheta</span><span class="o">//</span><span class="mi">2</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">product</span><span class="p">(</span><span class="n">theta</span><span class="p">,</span> <span class="n">X</span><span class="p">)):</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+            <span class="n">nodes</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+        <span class="n">nodes</span> <span class="o">+=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+
+        <span class="c1"># Connectivities</span>
+        <span class="n">panels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">ntheta</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">//</span><span class="mi">2</span><span class="p">)):</span>
+            <span class="n">panels</span><span class="p">[</span><span class="n">k</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">half_ring</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">panels</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;half_ring_of_</span><span class="si">{name}</span><span class="s2">_mesh&quot;</span><span class="p">)</span>
+
+        <span class="n">ring</span> <span class="o">=</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">(</span><span class="n">half_ring</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="n">xOz_Plane</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;ring_of_</span><span class="si">{name}</span><span class="s2">_mesh&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">nx</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ring</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">TranslationalSymmetricMesh</span><span class="p">(</span><span class="n">ring</span><span class="p">,</span> <span class="n">translation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">/</span> <span class="n">nx</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]),</span>
+                                              <span class="n">nb_repetitions</span><span class="o">=</span><span class="n">nx</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">_mesh&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">volume</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">length</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">radius</span><span class="o">**</span><span class="mi">2</span></div>
+
+
+<div class="viewcode-block" id="VerticalCylinder"><a class="viewcode-back" href="../../../../developer_manual/api/capytaine.bodies.predefined.cylinders.html#capytaine.bodies.predefined.cylinders.VerticalCylinder">[docs]</a><span class="k">class</span> <span class="nc">VerticalCylinder</span><span class="p">(</span><span class="n">FloatingBody</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                 <span class="n">nx</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">nr</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                 <span class="n">clever</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Generate the mesh of a vertical cylinder.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        length : float, optional</span>
+<span class="sd">            length of the cylinder</span>
+<span class="sd">        radius : float, optional</span>
+<span class="sd">            radius of the cylinder</span>
+<span class="sd">        center : 3-ple or array of shape (3,), optional</span>
+<span class="sd">            position of the geometric center of the cylinder</span>
+<span class="sd">        nx : int, optional</span>
+<span class="sd">            number of circular slices</span>
+<span class="sd">        ntheta : int, optional</span>
+<span class="sd">            number of panels along a circular slice of the cylinder</span>
+<span class="sd">        nr : int, optional</span>
+<span class="sd">            number of panels along a radius on the extremities of the cylinder</span>
+<span class="sd">        clever : bool, optional</span>
+<span class="sd">            if True, uses the mesh symmetries</span>
+<span class="sd">        name : str, optional</span>
+<span class="sd">            a string naming the floating body</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">length</span> <span class="o">=</span> <span class="n">length</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">radius</span> <span class="o">=</span> <span class="n">radius</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">geometric_center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;cylinder_{next(Mesh._ids)}&quot;</span>
+
+        <span class="n">open_cylinder</span> <span class="o">=</span> <span class="n">AxialSymmetricMesh</span><span class="o">.</span><span class="n">from_profile</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">z</span><span class="p">:</span> <span class="n">radius</span><span class="p">,</span>
+            <span class="n">z_range</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">nx</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+            <span class="n">nphi</span><span class="o">=</span><span class="n">ntheta</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">nr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">top_side</span> <span class="o">=</span> <span class="n">Disk</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span>
+                            <span class="n">axial_symmetry</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                            <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="n">nr</span><span class="p">,</span> <span class="n">ntheta</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;top_side_of_</span><span class="si">{name}</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">mesh</span>
+
+            <span class="n">bottom_side</span> <span class="o">=</span> <span class="n">top_side</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">f</span><span class="s2">&quot;bottom_side_of_</span><span class="si">{name}</span><span class="s2">_mesh&quot;</span><span class="p">)</span>
+            <span class="n">bottom_side</span><span class="o">.</span><span class="n">mirror</span><span class="p">(</span><span class="n">xOy_Plane</span><span class="p">)</span>
+
+            <span class="n">mesh</span> <span class="o">=</span> <span class="n">AxialSymmetricMesh</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span><span class="n">open_cylinder</span><span class="p">,</span> <span class="n">top_side</span><span class="p">,</span> <span class="n">bottom_side</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mesh</span> <span class="o">=</span> <span class="n">open_cylinder</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">clever</span><span class="p">:</span>
+            <span class="n">mesh</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span>
+            <span class="n">mesh</span><span class="o">.</span><span class="n">merge_duplicates</span><span class="p">()</span>
+            <span class="n">mesh</span><span class="o">.</span><span class="n">heal_triangles</span><span class="p">()</span>
+
+        <span class="n">mesh</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">center</span><span class="p">)</span>
+        <span class="n">mesh</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">f</span><span class="s2">&quot;</span><span class="si">{name}</span><span class="s2">_mesh&quot;</span>
+
+        <span class="n">FloatingBody</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

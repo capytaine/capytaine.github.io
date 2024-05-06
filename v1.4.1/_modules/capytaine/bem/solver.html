@@ -1,0 +1,386 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>capytaine.bem.solver &#8212; capytaine 1.4.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css" />
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/jquery.js"></script>
+    <script src="../../../_static/underscore.js"></script>
+    <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/proof.js"></script>
+    <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.bem.solver</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;Solver for the BEM problem.</span>
+
+<span class="sd">Example</span>
+<span class="sd">-------</span>
+
+<span class="sd">::</span>
+
+<span class="sd">    problem = RadiationProblem(...)</span>
+<span class="sd">    result = BEMSolver(green_functions=..., engine=...).solve(problem)</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+
+<span class="kn">from</span> <span class="nn">capytaine.bem.problems_and_results</span> <span class="kn">import</span> <span class="n">LinearPotentialFlowProblem</span>
+<span class="kn">from</span> <span class="nn">capytaine.green_functions.delhommeau</span> <span class="kn">import</span> <span class="n">Delhommeau</span>
+<span class="kn">from</span> <span class="nn">capytaine.bem.engines</span> <span class="kn">import</span> <span class="n">BasicMatrixEngine</span><span class="p">,</span> <span class="n">HierarchicalToeplitzMatrixEngine</span>
+<span class="kn">from</span> <span class="nn">capytaine.io.xarray</span> <span class="kn">import</span> <span class="n">problems_from_dataset</span><span class="p">,</span> <span class="n">assemble_dataset</span><span class="p">,</span> <span class="n">kochin_data_array</span>
+<span class="kn">from</span> <span class="nn">capytaine.tools.optional_imports</span> <span class="kn">import</span> <span class="n">silently_import_optional_dependency</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<div class="viewcode-block" id="BEMSolver"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver">[docs]</a><span class="k">class</span> <span class="nc">BEMSolver</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Solver for linear potential flow problems.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    green_function: AbstractGreenFunction</span>
+<span class="sd">        Object handling the computation of the Green function.</span>
+<span class="sd">    engine: MatrixEngine</span>
+<span class="sd">        Object handling the building of matrices and the resolution of linear systems with these matrices.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    exportable_settings : dict</span>
+<span class="sd">        Settings of the solver that can be saved to reinit the same solver later.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">green_function</span><span class="o">=</span><span class="n">Delhommeau</span><span class="p">(),</span> <span class="n">engine</span><span class="o">=</span><span class="n">BasicMatrixEngine</span><span class="p">()):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span> <span class="o">=</span> <span class="n">green_function</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">engine</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">,</span>
+                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">exportable_settings</span>
+            <span class="p">}</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+<div class="viewcode-block" id="BEMSolver.from_exported_settings"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.from_exported_settings">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_exported_settings</span><span class="p">(</span><span class="n">settings</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+
+<div class="viewcode-block" id="BEMSolver.solve"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve">[docs]</a>    <span class="k">def</span> <span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Solve the linear potential flow problem.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        problem: LinearPotentialFlowProblem</span>
+<span class="sd">            the problem to be solved</span>
+<span class="sd">        keep_details: bool, optional</span>
+<span class="sd">            if True, store the sources and the potential on the floating body in the output object</span>
+<span class="sd">            (default: True)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        LinearPotentialFlowResult</span>
+<span class="sd">            an object storing the problem data and its results</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Solve </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="n">problem</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">problem</span><span class="o">.</span><span class="n">wavelength</span> <span class="o">&lt;</span> <span class="mi">8</span><span class="o">*</span><span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="o">.</span><span class="n">max</span><span class="p">():</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Resolution of the mesh (8×max_radius=</span><span class="si">{</span><span class="mi">8</span><span class="o">*</span><span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">) &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;might be insufficient for this wavelength (wavelength=</span><span class="si">{</span><span class="n">problem</span><span class="o">.</span><span class="n">wavelength</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">)!&quot;</span><span class="p">)</span>
+
+        <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
+            <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+            <span class="n">problem</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">sea_bottom</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span>
+        <span class="p">)</span>
+        <span class="n">sources</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">linear_solver</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">boundary_condition</span><span class="p">)</span>
+        <span class="n">potential</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">sources</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">make_results_container</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">keep_details</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">sources</span> <span class="o">=</span> <span class="n">sources</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">potential</span> <span class="o">=</span> <span class="n">potential</span>
+
+        <span class="k">for</span> <span class="n">influenced_dof_name</span><span class="p">,</span> <span class="n">influenced_dof_vectors</span> <span class="ow">in</span> <span class="n">problem</span><span class="o">.</span><span class="n">influenced_dofs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Scalar product on each face:</span>
+            <span class="n">influenced_dof_normal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">influenced_dof_vectors</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="c1"># Sum over all faces:</span>
+            <span class="n">integrated_potential</span> <span class="o">=</span> <span class="o">-</span> <span class="n">problem</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">potential</span> <span class="o">*</span> <span class="n">influenced_dof_normal</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">)</span>
+            <span class="c1"># Store result:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">store_force</span><span class="p">(</span><span class="n">influenced_dof_name</span><span class="p">,</span> <span class="n">integrated_potential</span><span class="p">)</span>
+            <span class="c1"># Depending of the type of problem, the force will be kept as a complex-valued Froude-Krylov force</span>
+            <span class="c1"># or stored as a couple of added mass and radiation damping coefficients.</span>
+
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Done!&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">result</span></div>
+
+<div class="viewcode-block" id="BEMSolver.solve_all"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve_all">[docs]</a>    <span class="k">def</span> <span class="nf">solve_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problems</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Solve several problems.</span>
+<span class="sd">        Optional keyword arguments are passed to `BEMSolver.solve`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        problems: list of LinearPotentialFlowProblem</span>
+<span class="sd">            several problems to be solved</span>
+<span class="sd">        n_jobs: int, optional (default: 1)</span>
+<span class="sd">            the number of jobs to run in parallel using the optional dependency `joblib`</span>
+<span class="sd">            By defaults: do not use joblib and solve sequentially.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of LinearPotentialFlowResult</span>
+<span class="sd">            the solved problems</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">n_jobs</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># force sequential resolution</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">pb</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">problems</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">joblib</span> <span class="o">=</span> <span class="n">silently_import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;joblib&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">joblib</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ImportError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Setting the `n_jobs` argument to </span><span class="si">{</span><span class="n">n_jobs</span><span class="si">}</span><span class="s2"> requires the missing optional dependency &#39;joblib&#39;.&quot;</span><span class="p">)</span>
+            <span class="n">groups_of_problems</span> <span class="o">=</span> <span class="n">LinearPotentialFlowProblem</span><span class="o">.</span><span class="n">_group_for_parallel_resolution</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
+            <span class="n">groups_of_results</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">Parallel</span><span class="p">(</span><span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)(</span><span class="n">joblib</span><span class="o">.</span><span class="n">delayed</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solve_all</span><span class="p">)(</span><span class="n">grp</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">grp</span> <span class="ow">in</span> <span class="n">groups_of_problems</span><span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">res</span> <span class="k">for</span> <span class="n">grp</span> <span class="ow">in</span> <span class="n">groups_of_results</span> <span class="k">for</span> <span class="n">res</span> <span class="ow">in</span> <span class="n">grp</span><span class="p">]</span>  <span class="c1"># flatten the nested list</span>
+            <span class="k">return</span> <span class="n">results</span></div>
+
+<div class="viewcode-block" id="BEMSolver.fill_dataset"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset">[docs]</a>    <span class="k">def</span> <span class="nf">fill_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">bodies</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Solve a set of problems defined by the coordinates of an xarray dataset.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dataset : xarray Dataset</span>
+<span class="sd">            dataset containing the problems parameters: frequency, radiating_dof, water_depth, ...</span>
+<span class="sd">        bodies : FloatingBody or list of FloatingBody</span>
+<span class="sd">            The body or bodies involved in the problems</span>
+<span class="sd">            They should all have different names.</span>
+<span class="sd">        n_jobs: int, optional (default: 1)</span>
+<span class="sd">            the number of jobs to run in parallel using the optional dependency `joblib`</span>
+<span class="sd">            By defaults: do not use joblib and solve sequentially.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        xarray Dataset</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;start_of_computation&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                 <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">}</span>
+        <span class="n">problems</span> <span class="o">=</span> <span class="n">problems_from_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">bodies</span><span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;theta&#39;</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
+            <span class="n">kochin</span> <span class="o">=</span> <span class="n">kochin_data_array</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">])</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">dataset</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kochin</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
+            <span class="n">dataset</span> <span class="o">=</span> <span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">dataset</span></div>
+
+<div class="viewcode-block" id="BEMSolver.get_potential_on_mesh"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.get_potential_on_mesh">[docs]</a>    <span class="k">def</span> <span class="nf">get_potential_on_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">chunk_size</span><span class="o">=</span><span class="mi">50</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the potential on a mesh for the potential field of a previously solved problem.</span>
+<span class="sd">        Since the interaction matrix does not need to be computed in full to compute the matrix-vector product,</span>
+<span class="sd">        only a few lines are evaluated at a time to reduce the memory cost of the operation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result : LinearPotentialFlowResult</span>
+<span class="sd">            the return of the BEM solver</span>
+<span class="sd">        mesh : Mesh or CollectionOfMeshes</span>
+<span class="sd">            a mesh</span>
+<span class="sd">        chunk_size: int, optional</span>
+<span class="sd">            Number of lines to compute in the matrix.</span>
+<span class="sd">            (legacy, should be passed as an engine setting instead).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        array of shape (mesh.nb_faces,)</span>
+<span class="sd">            potential on the faces of the mesh</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        Exception: if the :code:`Result` object given as input does not contain the source distribution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Compute potential on </span><span class="si">{</span><span class="n">mesh</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;The values of the sources of </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2"> cannot been found.</span>
+<span class="s2">            They probably have not been stored by the solver because the option keep_details=True have not been set.</span>
+<span class="s2">            Please re-run the resolution with this option.&quot;&quot;&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">chunk_size</span> <span class="o">&gt;</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">:</span>
+            <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_S_matrix</span><span class="p">(</span>
+                <span class="n">mesh</span><span class="p">,</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">sea_bottom</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span>
+            <span class="p">)</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">):</span>
+                <span class="n">faces_to_extract</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">min</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">chunk_size</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">)))</span>
+                <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_S_matrix</span><span class="p">(</span>
+                    <span class="n">mesh</span><span class="o">.</span><span class="n">extract_faces</span><span class="p">(</span><span class="n">faces_to_extract</span><span class="p">),</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+                    <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">sea_bottom</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span>
+                <span class="p">)</span>
+                <span class="n">phi</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">chunk_size</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span>
+
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Done computing potential on </span><span class="si">{</span><span class="n">mesh</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">phi</span></div>
+
+<div class="viewcode-block" id="BEMSolver.get_free_surface_elevation"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.get_free_surface_elevation">[docs]</a>    <span class="k">def</span> <span class="nf">get_free_surface_elevation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">result</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Compute the elevation of the free surface on a mesh for a previously solved problem.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        result : LinearPotentialFlowResult</span>
+<span class="sd">            the return of the solver</span>
+<span class="sd">        free_surface : FreeSurface</span>
+<span class="sd">            a meshed free surface</span>
+<span class="sd">        keep_details : bool, optional</span>
+<span class="sd">            if True, keep the free surface elevation in the LinearPotentialFlowResult (default:False)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        array of shape (free_surface.nb_faces,)</span>
+<span class="sd">            the free surface elevation on each faces of the meshed free surface</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        Exception: if the :code:`Result` object given as input does not contain the source distribution.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">fs_elevation</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">result</span><span class="o">.</span><span class="n">omega</span><span class="o">/</span><span class="n">result</span><span class="o">.</span><span class="n">g</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_potential_on_mesh</span><span class="p">(</span><span class="n">result</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">keep_details</span><span class="p">:</span>
+            <span class="n">result</span><span class="o">.</span><span class="n">fs_elevation</span><span class="p">[</span><span class="n">free_surface</span><span class="p">]</span> <span class="o">=</span> <span class="n">fs_elevation</span>
+        <span class="k">return</span> <span class="n">fs_elevation</span></div></div>
+
+
+<span class="c1"># LEGACY INTERFACE</span>
+
+<span class="k">def</span> <span class="nf">_arguments</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns the name of the arguments of the function f&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">f</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_varnames</span><span class="p">[:</span><span class="n">f</span><span class="o">.</span><span class="vm">__code__</span><span class="o">.</span><span class="n">co_argcount</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Nemoh"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.Nemoh">[docs]</a><span class="k">class</span> <span class="nc">Nemoh</span><span class="p">(</span><span class="n">BEMSolver</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Solver for the BEM problem based on Nemoh&#39;s Green function. Legacy API.</span>
+<span class="sd">    Parameters are dispatched to the Delhommeau class and to the engine</span>
+<span class="sd">    (BasicMatrixEngine or HierarchicalToeplitzMatrixEngine).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">):</span>
+        <span class="n">green_function</span> <span class="o">=</span> <span class="n">Delhommeau</span><span class="p">(</span>
+           <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">params</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_arguments</span><span class="p">(</span><span class="n">Delhommeau</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)}</span>
+	<span class="p">)</span>
+        <span class="k">if</span> <span class="s1">&#39;hierarchical_matrices&#39;</span> <span class="ow">in</span> <span class="n">params</span> <span class="ow">and</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;hierarchical_matrices&#39;</span><span class="p">]:</span>
+            <span class="n">engine</span> <span class="o">=</span> <span class="n">HierarchicalToeplitzMatrixEngine</span><span class="p">(</span>
+               <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">params</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_arguments</span><span class="p">(</span><span class="n">HierarchicalToeplitzMatrixEngine</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)}</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">engine</span> <span class="o">=</span> <span class="n">BasicMatrixEngine</span><span class="p">(</span>
+               <span class="o">**</span><span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">params</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">params</span> <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">_arguments</span><span class="p">(</span><span class="n">BasicMatrixEngine</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)}</span>
+            <span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">green_function</span><span class="o">=</span><span class="n">green_function</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="n">engine</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Nemoh.build_matrices"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.Nemoh.build_matrices">[docs]</a>    <span class="k">def</span> <span class="nf">build_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Legacy API.&quot;&quot;&quot;</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">args</span> <span class="o">+</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="p">,)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

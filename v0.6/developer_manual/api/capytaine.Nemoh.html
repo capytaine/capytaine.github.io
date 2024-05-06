@@ -1,0 +1,405 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>capytaine.Nemoh module &#8212; capytaine 0.6 documentation</title>
+    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/proof.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../_static/proof.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="capytaine.bodies module" href="capytaine.bodies.html" />
+    <link rel="prev" title="capytaine.ui.mpl_free_surface_animation module" href="capytaine.ui.mpl_free_surface_animation.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-capytaine.Nemoh">
+<span id="capytaine-nemoh-module"></span><h1>capytaine.Nemoh module<a class="headerlink" href="#module-capytaine.Nemoh" title="Permalink to this headline">¶</a></h1>
+<p>Solver for the BEM problem based on Nemoh’s Green function.</p>
+<p class="rubric">Example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span> <span class="o">=</span> <span class="n">RadiationProblem</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">Nemoh</span><span class="p">()</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="capytaine.Nemoh.Nemoh">
+<em class="property">class </em><code class="descclassname">capytaine.Nemoh.</code><code class="descname">Nemoh</code><span class="sig-paren">(</span><em>npinte=251</em>, <em>use_symmetries=True</em>, <em>ACA_distance=inf</em>, <em>ACA_tol=0.01</em>, <em>cache_rankine_matrices=True</em>, <em>matrix_cache_size=1</em>, <em>linear_solver='gmres'</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/Nemoh.html#Nemoh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.Nemoh.Nemoh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.7)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Solver for the BEM problem based on Nemoh’s Green function.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>npinte</strong> (<em>int, optional</em>) – Number of points for the evaluation of the tabulated elementary integrals w.r.t. <span class="math notranslate nohighlight">\(theta\)</span>
+used for the computation of the Green function (default: 251)</li>
+<li><strong>use_symmetries</strong> (<em>bool, optional</em>) – if True, use the symmetries of the meshes when computing matrices and solving linear system</li>
+<li><strong>ACA_distance</strong> (<em>float, optional</em>) – Above this distance, the ACA is used to approximate the matrix with a low-rank block.</li>
+<li><strong>ACA_tol</strong> (<em>float, optional</em>) – The tolerance of the ACA when building a low-rank matrix.</li>
+<li><strong>cache_rankine_matrices</strong> (<em>bool, optional</em>) – If True, cache intermediate matrices when computing the influence matrices,
+if False, cache only the final result.</li>
+<li><strong>matrix_cache_size</strong> (<em>int, optional</em>) – number of matrices to keep in cache</li>
+<li><strong>linear_solver</strong> (<em>str or function, optional</em>) – Setting of the numerical solver for linear problems Ax = b.
+It can be set with the name of a preexisting solver (available: “direct” [default], “gmres”, “store_lu”)
+or by passing directly a solver function.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Variables:</th><td class="field-body"><p class="first last"><a class="reference internal" href="#capytaine.Nemoh.tabulated_integrals" title="capytaine.Nemoh.tabulated_integrals"><strong>tabulated_integrals</strong></a> (<em>3-ple of arrays</em>) – Tabulated integrals for the computation of the Green function.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="attribute">
+<dt id="capytaine.Nemoh.Nemoh.available_linear_solvers">
+<code class="descname">available_linear_solvers</code><em class="property"> = {'direct': &lt;function solve_directly&gt;, 'gmres': &lt;function solve_gmres&gt;, 'store_lu': &lt;function solve_storing_lu&gt;}</em><a class="headerlink" href="#capytaine.Nemoh.Nemoh.available_linear_solvers" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="capytaine.Nemoh.Nemoh.build_matrices">
+<code class="descname">build_matrices</code><span class="sig-paren">(</span><em>mesh1</em>, <em>mesh2</em>, <em>free_surface=0.0</em>, <em>sea_bottom=-inf</em>, <em>wavenumber=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/Nemoh.html#Nemoh.build_matrices"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.Nemoh.Nemoh.build_matrices" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the S and K influence matrices between mesh1 and mesh2.
+In brief, it calls <cite>build_matrices_rankine</cite> and <cite>build_matrices_wave</cite> and sum their outputs.
+It also adds <span class="math notranslate nohighlight">\(\mathbb{I}/2\)</span> matrix to <span class="math notranslate nohighlight">\(V\)</span> to get <span class="math notranslate nohighlight">\(K\)</span>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mesh1</strong> (<em>Mesh or CollectionOfMeshes</em>) – mesh of the receiving body (where the potential is measured)</li>
+<li><strong>mesh2</strong> (<em>Mesh or CollectionOfMeshes</em>) – mesh of the source body (over which the source distribution is integrated)</li>
+<li><strong>free_surface</strong> (<em>float, optional</em>) – position of the free surface (default: <span class="math notranslate nohighlight">\(z = 0\)</span>)</li>
+<li><strong>sea_bottom</strong> (<em>float, optional</em>) – position of the sea bottom (default: <span class="math notranslate nohighlight">\(z = -\infty\)</span>)</li>
+<li><strong>wavenumber</strong> (<em>float, optional</em>) – wavenumber (default: 1.0)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">couple of influence matrices</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">couple of matrix-like objects (either 2D arrays or BlockMatrix objects)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.Nemoh.Nemoh.build_matrices_rankine">
+<code class="descname">build_matrices_rankine</code><span class="sig-paren">(</span><em>mesh1</em>, <em>mesh2</em>, <em>free_surface=0.0</em>, <em>sea_bottom=-inf</em>, <em>wavenumber=1.0</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/Nemoh.html#Nemoh.build_matrices_rankine"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.Nemoh.Nemoh.build_matrices_rankine" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the Rankine part of the S and V influence matrices between mesh1 and mesh2.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mesh1</strong> (<em>Mesh or CollectionOfMeshes</em>) – mesh of the receiving body (where the potential is measured)</li>
+<li><strong>mesh2</strong> (<em>Mesh or CollectionOfMeshes</em>) – mesh of the source body (over which the source distribution is integrated)</li>
+<li><strong>free_surface</strong> (<em>float, optional</em>) – position of the free surface (default: <span class="math notranslate nohighlight">\(z = 0\)</span>)</li>
+<li><strong>sea_bottom</strong> (<em>float, optional</em>) – position of the sea bottom (default: <span class="math notranslate nohighlight">\(z = -\infty\)</span>)</li>
+<li><strong>wavenumber</strong> (<em>float, optional</em>) – wavenumber (default: 1.0)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">couple of influence matrices</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">couple of real-valued matrix-like objects (either 2D arrays or BlockMatrix objects)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.Nemoh.Nemoh.build_matrices_wave">
+<code class="descname">build_matrices_wave</code><span class="sig-paren">(</span><em>mesh1</em>, <em>mesh2</em>, <em>free_surface</em>, <em>sea_bottom</em>, <em>wavenumber</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/Nemoh.html#Nemoh.build_matrices_wave"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.Nemoh.Nemoh.build_matrices_wave" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build the wave part of the influence matrices between mesh1 and mesh2.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>mesh1</strong> (<em>Mesh or CollectionOfMeshes</em>) – mesh of the receiving body (where the potential is measured)</li>
+<li><strong>mesh2</strong> (<em>Mesh or CollectionOfMeshes</em>) – mesh of the source body (over which the source distribution is integrated)</li>
+<li><strong>free_surface</strong> (<em>float, optional</em>) – position of the free surface (default: <span class="math notranslate nohighlight">\(z = 0\)</span>)</li>
+<li><strong>sea_bottom</strong> (<em>float, optional</em>) – position of the sea bottom (default: <span class="math notranslate nohighlight">\(z = -\infty\)</span>)</li>
+<li><strong>wavenumber</strong> (<em>float, optional</em>) – wavenumber (default: 1.0)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">couple of influence matrices</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">couple of complex-valued matrix-like objects (either 2D arrays or BlockMatrix objects)</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.Nemoh.Nemoh.fill_dataset">
+<code class="descname">fill_dataset</code><span class="sig-paren">(</span><em>dataset</em>, <em>bodies</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/Nemoh.html#Nemoh.fill_dataset"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.Nemoh.Nemoh.fill_dataset" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve a set of problems defined by the coordinates of an xarray dataset.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dataset</strong> (<em>xarray Dataset</em>) – dataset containing the problems parameters: frequency, radiating_dof, water_depth, …</li>
+<li><strong>bodies</strong> (<em>list of FloatingBody</em>) – the bodies involved in the problems</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"></p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">xarray Dataset</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.Nemoh.Nemoh.get_free_surface_elevation">
+<code class="descname">get_free_surface_elevation</code><span class="sig-paren">(</span><em>result</em>, <em>free_surface</em>, <em>keep_details=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/Nemoh.html#Nemoh.get_free_surface_elevation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.Nemoh.Nemoh.get_free_surface_elevation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the elevation of the free surface on a mesh for a previously solved problem.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>result</strong> (<em>LinearPotentialFlowResult</em>) – the return of Nemoh’s solver</li>
+<li><strong>free_surface</strong> (<em>FreeSurface</em>) – a meshed free surface</li>
+<li><strong>keep_details</strong> (<em>bool, optional</em>) – if True, keep the free surface elevation in the LinearPotentialFlowResult (default:False)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">the free surface elevation on each faces of the meshed free surface</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">array of shape (free_surface.nb_faces,)</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">Exception: if the <code class="code docutils literal notranslate"><span class="pre">Result</span></code> object given as input does not contain the source distribution.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.Nemoh.Nemoh.get_potential_on_mesh">
+<code class="descname">get_potential_on_mesh</code><span class="sig-paren">(</span><em>result</em>, <em>mesh</em>, <em>chunk_size=50</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/Nemoh.html#Nemoh.get_potential_on_mesh"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.Nemoh.Nemoh.get_potential_on_mesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the potential on a mesh for the potential field of a previously solved problem.
+Since the interaction matrix does not need to be computed in full to compute the matrix-vector product,
+only a few lines are evaluated at a time to reduce the memory cost of the operation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>result</strong> (<em>LinearPotentialFlowResult</em>) – the return of Nemoh’s solver</li>
+<li><strong>mesh</strong> (<em>Mesh or CollectionOfMeshes</em>) – a mesh</li>
+<li><strong>chunk_size</strong> (<em>int, optional</em>) – Number of lines to compute in the matrix.</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">potential on the faces of the mesh</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first">array of shape (mesh.nb_faces,)</p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Raises:</th><td class="field-body"><p class="first last">Exception: if the <code class="code docutils literal notranslate"><span class="pre">Result</span></code> object given as input does not contain the source distribution.</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.Nemoh.Nemoh.solve">
+<code class="descname">solve</code><span class="sig-paren">(</span><em>problem</em>, <em>keep_details=True</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/Nemoh.html#Nemoh.solve"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.Nemoh.Nemoh.solve" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve the BEM problem using Nemoh.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>problem</strong> (<em>LinearPotentialFlowProblem</em>) – the problem to be solved</li>
+<li><strong>keep_details</strong> (<em>bool, optional</em>) – if True, store the sources and the potential on the floating body in the output object
+(default: True)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">an object storing the problem data and its results</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last"><a class="reference internal" href="capytaine.results.html#capytaine.results.LinearPotentialFlowResult" title="capytaine.results.LinearPotentialFlowResult">LinearPotentialFlowResult</a></p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="capytaine.Nemoh.Nemoh.solve_all">
+<code class="descname">solve_all</code><span class="sig-paren">(</span><em>problems</em>, <em>**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/Nemoh.html#Nemoh.solve_all"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#capytaine.Nemoh.Nemoh.solve_all" title="Permalink to this definition">¶</a></dt>
+<dd><p>Solve several problems.
+Optional keyword arguments are passed to <cite>Nemoh.solve</cite>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>problems</strong> (<em>list of LinearPotentialFlowProblem</em>) – several problems to be solved</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">the solved problems</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list of LinearPotentialFlowResult</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="attribute">
+<dt id="capytaine.Nemoh.tabulated_integrals">
+<code class="descclassname">capytaine.Nemoh.</code><code class="descname">tabulated_integrals</code><a class="headerlink" href="#capytaine.Nemoh.tabulated_integrals" title="Permalink to this definition">¶</a></dt>
+<dd><p>xr,xz,apd = initialize_tabulated_integrals(ir,jz,npinte)</p>
+<p>Wrapper for <code class="docutils literal notranslate"><span class="pre">initialize_tabulated_integrals</span></code>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>ir</strong> (<em>input int</em>)</li>
+<li><strong>jz</strong> (<em>input int</em>)</li>
+<li><strong>npinte</strong> (<em>input int</em>)</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last"><ul class="simple">
+<li><strong>xr</strong> (<em>rank-1 array(‘d’) with bounds (ir)</em>)</li>
+<li><strong>xz</strong> (<em>rank-1 array(‘d’) with bounds (jz)</em>)</li>
+<li><strong>apd</strong> (<em>rank-4 array(‘d’) with bounds (ir,jz,2,2)</em>)</li>
+</ul>
+</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../installation.html">Installation for developers</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="modules.html">API documentation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Developer manual</a><ul>
+  <li><a href="modules.html">API documentation</a><ul>
+  <li><a href="capytaine.html">capytaine package</a><ul>
+      <li>Previous: <a href="capytaine.ui.mpl_free_surface_animation.html" title="previous chapter">capytaine.ui.mpl_free_surface_animation module</a></li>
+      <li>Next: <a href="capytaine.bodies.html" title="next chapter">capytaine.bodies module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/developer_manual/api/capytaine.Nemoh.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/developer_manual/api/capytaine.Nemoh.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,143 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Code structure &#8212; capytaine 0.5 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/proof.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/proof.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API documentation" href="api/modules.html" />
+    <link rel="prev" title="Installation for developers" href="installation.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="code-structure">
+<h1>Code structure<a class="headerlink" href="#code-structure" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="core-of-the-code">
+<h2>Core of the code<a class="headerlink" href="#core-of-the-code" title="Permalink to this headline">¶</a></h2>
+<p>The core of the code is <code class="docutils literal notranslate"><span class="pre">Nemoh.py</span></code> and the Fortran files in <code class="docutils literal notranslate"><span class="pre">NemohCore</span></code>.</p>
+<p>The Fortran files are mostly used to evaluate the Green function and integrate it to build the influence matrices. This is split into two files: <code class="docutils literal notranslate"><span class="pre">Green_Rankine.f90</span></code> deals with the <span class="math notranslate nohighlight">\(1/r\)</span> part of the Green function whereas <code class="docutils literal notranslate"><span class="pre">Green_wave.f90</span></code> deals with the wave part of the Green function.</p>
+<p>In <code class="docutils literal notranslate"><span class="pre">Nemoh.py</span></code> the linear system is solved and the added mass, radiation damping or diffraction are deduced.
+In this file, the decorators <code class="code docutils literal notranslate"><span class="pre">&#64;use_symmetries</span></code> and <code class="code docutils literal notranslate"><span class="pre">&#64;lru_cache</span></code> are optimizations of the code.
+For debugging, they can be removed and the code should run the same (but more slowly).</p>
+<p>The files <code class="docutils literal notranslate"><span class="pre">bodies.py</span></code>, <code class="docutils literal notranslate"><span class="pre">problems.py</span></code> and <code class="docutils literal notranslate"><span class="pre">results.py</span></code> are supporting modules.
+The first one contains the <code class="docutils literal notranslate"><span class="pre">FloatingBody</span></code> class which is basically the union of a <code class="docutils literal notranslate"><span class="pre">Mesh</span></code> from the <code class="docutils literal notranslate"><span class="pre">meshmagick</span></code> library and some degrees of freedom.
+The latter two contain classes storing the linear potential flow problems and their solutions.</p>
+<p>Some simple floating bodies with geometrical shapes can be generated using the submodule <code class="docutils literal notranslate"><span class="pre">geometric_bodies</span></code>.</p>
+</div>
+<div class="section" id="more-advanced-features">
+<h2>More advanced features<a class="headerlink" href="#more-advanced-features" title="Permalink to this headline">¶</a></h2>
+<p>The files <code class="docutils literal notranslate"><span class="pre">symmetries.py</span></code> and <code class="docutils literal notranslate"><span class="pre">Toeplitz_matrices.py</span></code> are used to speed up the computations for symmetric bodies (see <a class="reference internal" href="../theory_manual/bibliography.html#ad18" id="id1">[AD18]</a>).
+The submodule <code class="docutils literal notranslate"><span class="pre">tools.vtk</span></code> contains some routines to display the mesh and the free surface in 3D using VTK.</p>
+</div>
+<div class="section" id="user-interface">
+<h2>User interface<a class="headerlink" href="#user-interface" title="Permalink to this headline">¶</a></h2>
+<p>The file <code class="docutils literal notranslate"><span class="pre">cli.py</span></code> contains an experimental command-line interface.
+The module <code class="docutils literal notranslate"><span class="pre">tools.import_export</span></code> contains also some helper functions to interface with Nemoh 2 format.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table Of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User manual</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation for developers</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Code structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/modules.html">API documentation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Developer manual</a><ul>
+      <li>Previous: <a href="installation.html" title="previous chapter">Installation for developers</a></li>
+      <li>Next: <a href="api/modules.html" title="next chapter">API documentation</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/developer_manual/code_structure.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2018, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.7.7</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.11</a>
+      
+      |
+      <a href="../_sources/developer_manual/code_structure.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

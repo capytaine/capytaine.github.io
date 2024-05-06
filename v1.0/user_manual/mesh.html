@@ -1,0 +1,386 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Meshes and floating bodies &#8212; capytaine 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/proof.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="../_static/proof.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Setting up a problem" href="problem_setup.html" />
+    <link rel="prev" title="Tutorial" href="tutorial.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="meshes-and-floating-bodies">
+<h1>Meshes and floating bodies<a class="headerlink" href="#meshes-and-floating-bodies" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="importing-a-mesh">
+<h2>Importing a mesh<a class="headerlink" href="#importing-a-mesh" title="Permalink to this headline">¶</a></h2>
+<p>To create a new body using an existing mesh file, use the following syntax:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">capytaine</span> <span class="k">import</span> <span class="n">FloatingBody</span>
+
+<span class="n">body</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s1">&#39;path/to/mesh.dat&#39;</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="s1">&#39;nemoh&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The above example uses <a class="reference external" href="https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-mesh-192932.kjsp">Nemoh’s mesh format</a>.</p>
+<p>Thanks to Meshmagick, numerous other mesh format can be imported.
+The file format can be given with the <code class="code docutils literal notranslate"><span class="pre">file_format</span></code> optional argument.
+If no format is given, the code will try to infer it from the file extension:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">body</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s1">&#39;path/to/mesh.msh&#39;</span><span class="p">)</span>  <span class="c1"># gmsh file</span>
+</pre></div>
+</div>
+<p>The formats currently supported by Meshmagick in reading are the following (from the documentation of Meshmagick):</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="22%" />
+<col width="34%" />
+<col width="44%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">File
+extension</th>
+<th class="head">Software</th>
+<th class="head">Keywords</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>.mar</td>
+<td>NEMOH <a class="footnote-reference" href="#f1" id="id1">[1]</a></td>
+<td>nemoh, mar</td>
+</tr>
+<tr class="row-odd"><td>.nem</td>
+<td>NEMOH <a class="footnote-reference" href="#f1" id="id2">[1]</a></td>
+<td>nemoh_mesh, nem</td>
+</tr>
+<tr class="row-even"><td>.gdf</td>
+<td>WAMIT <a class="footnote-reference" href="#f2" id="id3">[2]</a></td>
+<td>wamit, gdf</td>
+</tr>
+<tr class="row-odd"><td>.inp</td>
+<td>DIODORE <a class="footnote-reference" href="#f3" id="id4">[3]</a></td>
+<td>diodore-inp, inp</td>
+</tr>
+<tr class="row-even"><td>.DAT</td>
+<td>DIODORE <a class="footnote-reference" href="#f3" id="id5">[3]</a></td>
+<td>diodore-dat</td>
+</tr>
+<tr class="row-odd"><td>.hst</td>
+<td>HYDROSTAR <a class="footnote-reference" href="#f4" id="id6">[4]</a></td>
+<td>hydrostar, hst</td>
+</tr>
+<tr class="row-even"><td>.nat</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>natural, nat</td>
+</tr>
+<tr class="row-odd"><td>.msh</td>
+<td>GMSH 2 <a class="footnote-reference" href="#f5" id="id7">[5]</a></td>
+<td>gmsh, msh</td>
+</tr>
+<tr class="row-even"><td>.rad</td>
+<td>RADIOSS</td>
+<td>rad, radioss</td>
+</tr>
+<tr class="row-odd"><td>.stl</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>stl</td>
+</tr>
+<tr class="row-even"><td>.vtu</td>
+<td>PARAVIEW <a class="footnote-reference" href="#f6" id="id8">[6]</a></td>
+<td>vtu</td>
+</tr>
+<tr class="row-odd"><td>.vtp</td>
+<td>PARAVIEW <a class="footnote-reference" href="#f6" id="id9">[6]</a></td>
+<td>vtp</td>
+</tr>
+<tr class="row-even"><td>.vtk</td>
+<td>PARAVIEW <a class="footnote-reference" href="#f6" id="id10">[6]</a></td>
+<td>paraview-legacy, vtk</td>
+</tr>
+<tr class="row-odd"><td>.tec</td>
+<td>TECPLOT <a class="footnote-reference" href="#f7" id="id11">[7]</a></td>
+<td>tecplot, tec</td>
+</tr>
+<tr class="row-even"><td>.med</td>
+<td>SALOME <a class="footnote-reference" href="#f8" id="id12">[8]</a></td>
+<td>med, salome</td>
+</tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="f1" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[1]</td><td><em>(<a class="fn-backref" href="#id1">1</a>, <a class="fn-backref" href="#id2">2</a>)</em> NEMOH is an open source BEM Software for seakeeping developped at
+Ecole Centrale de Nantes (LHEEA)</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="f2" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id3">[2]</a></td><td>WAMIT is a BEM Software for seakeeping developped by WAMIT, Inc.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="f3" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[3]</td><td><em>(<a class="fn-backref" href="#id4">1</a>, <a class="fn-backref" href="#id5">2</a>)</em> DIODORE is a BEM Software for seakeeping developped by PRINCIPIA</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="f4" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id6">[4]</a></td><td>HYDROSTAR is a BEM Software for seakeeping developped by
+BUREAU VERITAS</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="f5" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id7">[5]</a></td><td>GMSH is an open source meshing software developped by C. Geuzaine
+and J.-F. Remacle. Version 4 of the file format is not supported at the
+moment.</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="f6" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label">[6]</td><td><em>(<a class="fn-backref" href="#id8">1</a>, <a class="fn-backref" href="#id9">2</a>, <a class="fn-backref" href="#id10">3</a>)</em> PARAVIEW is an open source visualization software developped by
+Kitware</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="f7" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id11">[7]</a></td><td>TECPLOT is a visualization software developped by Tecplot</td></tr>
+</tbody>
+</table>
+<table class="docutils footnote" frame="void" id="f8" rules="none">
+<colgroup><col class="label" /><col /></colgroup>
+<tbody valign="top">
+<tr><td class="label"><a class="fn-backref" href="#id12">[8]</a></td><td>SALOME-MECA is an open source software for computational mechanics
+developped by EDF-R&amp;D</td></tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="display">
+<h2>Display<a class="headerlink" href="#display" title="Permalink to this headline">¶</a></h2>
+<p>Use the <code class="code docutils literal notranslate"><span class="pre">show</span></code> method to display the body in 3D using VTK:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">body</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="geometric-transformations">
+<h2>Geometric transformations<a class="headerlink" href="#geometric-transformations" title="Permalink to this headline">¶</a></h2>
+<p>Several functions are available to transform existing bodies and meshes.</p>
+<p>Most transformation methods exist in two versions:</p>
+<ul class="simple">
+<li>one, named as a infinitive verb (<cite>translate</cite>, <cite>rotate</cite>, …), is an in-place transformation;</li>
+<li>the other, named as a past participle (<cite>translated</cite>, <cite>rotated</cite>, …), is the
+same transformation but returning a new object.</li>
+</ul>
+<p>In most cases, performance is not significant and the latter method should be
+preferred since it makes code slightly easier to debug.</p>
+<p>Below is a list of most of the available methods.
+All of them can be applied to both meshes or to floating bodies, in which case
+the degrees of freedom will also be transformed:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># TRANSLATIONS</span>
+<span class="n">body</span><span class="o">.</span><span class="n">translated_x</span><span class="p">(</span><span class="mf">10.0</span><span class="p">)</span>
+<span class="n">body</span><span class="o">.</span><span class="n">translated_y</span><span class="p">(</span><span class="mf">10.0</span><span class="p">)</span>
+<span class="n">body</span><span class="o">.</span><span class="n">translated_z</span><span class="p">(</span><span class="mf">10.0</span><span class="p">)</span>
+<span class="n">body</span><span class="o">.</span><span class="n">translated</span><span class="p">([</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">5.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">])</span>
+
+<span class="c1"># Translation such that point_a would become equal to point_b</span>
+<span class="n">body</span><span class="o">.</span><span class="n">translated_point_to_point</span><span class="p">(</span><span class="n">point_a</span><span class="o">=</span><span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">],</span> <span class="n">point_b</span><span class="o">=</span><span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>
+
+<span class="c1"># ROTATIONS</span>
+<span class="n">body</span><span class="o">.</span><span class="n">rotated_x</span><span class="p">(</span><span class="mf">3.14</span><span class="o">/</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># Rotation of pi/5 around the Ox axis</span>
+<span class="n">body</span><span class="o">.</span><span class="n">rotated_y</span><span class="p">(</span><span class="mf">3.14</span><span class="o">/</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># Rotation of pi/5 around the Oy axis</span>
+<span class="n">body</span><span class="o">.</span><span class="n">rotated_z</span><span class="p">(</span><span class="mf">3.14</span><span class="o">/</span><span class="mi">5</span><span class="p">)</span>  <span class="c1"># Rotation of pi/5 around the Oz axis</span>
+
+<span class="c1"># Rotation of pi/5 around an arbitrary axis.</span>
+<span class="kn">from</span> <span class="nn">capytaine</span> <span class="k">import</span> <span class="n">Axis</span>
+<span class="n">my_axis</span> <span class="o">=</span> <span class="n">Axis</span><span class="p">(</span><span class="n">vector</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">point</span><span class="o">=</span><span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">])</span>
+<span class="n">body</span><span class="o">.</span><span class="n">rotated</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="n">my_axis</span><span class="p">,</span> <span class="n">angle</span><span class="o">=</span><span class="mf">3.14</span><span class="o">/</span><span class="mi">5</span><span class="p">)</span>
+
+<span class="c1"># Rotation around a point such that vec1 would become equal to vec2</span>
+<span class="n">body</span><span class="o">.</span><span class="n">rotated_around_center_to_align_vector</span><span class="p">(</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+    <span class="n">vec1</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">7</span><span class="p">),</span>
+    <span class="n">vec2</span><span class="o">=</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="c1"># REFLECTIONS</span>
+<span class="kn">from</span> <span class="nn">capytaine</span> <span class="k">import</span> <span class="n">Plane</span>
+<span class="n">body</span><span class="o">.</span><span class="n">mirrored</span><span class="p">(</span><span class="n">Plane</span><span class="p">(</span><span class="n">normal</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">point</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">]))</span>
+</pre></div>
+</div>
+<p>All the above method can also be applied to <a class="reference internal" href="../developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Plane" title="capytaine.meshes.geometry.Plane"><code class="xref py py-class docutils literal notranslate"><span class="pre">Plane</span></code></a>
+and <a class="reference internal" href="../developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Axis" title="capytaine.meshes.geometry.Axis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Axis</span></code></a> objects.</p>
+</div>
+<div class="section" id="joining">
+<h2>Joining<a class="headerlink" href="#joining" title="Permalink to this headline">¶</a></h2>
+<p>Meshes and bodies can be merged together with the <code class="code docutils literal notranslate"><span class="pre">+</span></code> operator:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">both_bodies</span> <span class="o">=</span> <span class="n">body_1</span> <span class="o">+</span> <span class="n">body_2</span>
+</pre></div>
+</div>
+<p>The <code class="code docutils literal notranslate"><span class="pre">+</span></code> operation is associative, that is <code class="code docutils literal notranslate"><span class="pre">(body_1</span> <span class="pre">+</span> <span class="pre">body_2)</span> <span class="pre">+</span> <span class="pre">body_3</span></code>
+is equivalent to <code class="code docutils literal notranslate"><span class="pre">body_1</span> <span class="pre">+</span> <span class="pre">(body_2</span> <span class="pre">+</span> <span class="pre">body_3)</span></code>.
+It is also commutative, up to some internal details which are usually not relevant.
+However for more than two bodies, it is recommended to use instead the
+<code class="code docutils literal notranslate"><span class="pre">join_bodies</span></code> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">all_bodies</span> <span class="o">=</span> <span class="n">body_1</span><span class="o">.</span><span class="n">join_bodies</span><span class="p">(</span><span class="n">body_2</span><span class="p">,</span> <span class="n">body_3</span><span class="p">,</span> <span class="n">body_4</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>When two floating bodies with dofs are merged, the resulting body inherits from
+the dofs of the individual bodies with the new name <code class="code docutils literal notranslate"><span class="pre">body_name__dof_name</span></code>.
+For instance:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">body_1</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+<span class="n">body_2</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+<span class="n">both_bodies</span> <span class="o">=</span> <span class="n">body_1</span> <span class="o">+</span> <span class="n">body_2</span>
+<span class="k">assert</span> <span class="s1">&#39;body_1__Heave&#39;</span> <span class="ow">in</span> <span class="n">both_bodies</span><span class="o">.</span><span class="n">dofs</span>
+<span class="k">assert</span> <span class="s1">&#39;body_2__Heave&#39;</span> <span class="ow">in</span> <span class="n">both_bodies</span><span class="o">.</span><span class="n">dofs</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="clipping">
+<h2>Clipping<a class="headerlink" href="#clipping" title="Permalink to this headline">¶</a></h2>
+<p>Meshes and bodies can be clipped with the <code class="code docutils literal notranslate"><span class="pre">clip</span></code> and <code class="code docutils literal notranslate"><span class="pre">clipped</span></code> methods.
+As for the geometric transformations, the former is in-place whereas the second
+returns a new object.
+These methods take a <a class="reference internal" href="../developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Plane" title="capytaine.meshes.geometry.Plane"><code class="xref py py-class docutils literal notranslate"><span class="pre">Plane</span></code></a>
+object as argument. The plane is defined by a point belonging to it and a normal
+vector:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">xOy_Plane</span> <span class="o">=</span> <span class="n">Plane</span><span class="p">(</span><span class="n">point</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+<span class="n">clipped_body</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">xOy_Plane</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Beware that the orientation of the normal vector of the <code class="code docutils literal notranslate"><span class="pre">Plane</span></code> will
+determine which part of the mesh will be returned:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">higher_part</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">Plane</span><span class="p">(</span><span class="n">point</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
+<span class="n">lower_part</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">Plane</span><span class="p">(</span><span class="n">point</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+<span class="c1"># body = lower_part + higher_part</span>
+</pre></div>
+</div>
+<p>The method <code class="code docutils literal notranslate"><span class="pre">keep_immersed_part</span></code> will clip the body (by default in-place)
+with respect to two horizontal planes at <span class="math notranslate nohighlight">\(z=0\)</span> and <span class="math notranslate nohighlight">\(z=-h\)</span>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">clipped_body</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">keep_immersed_part</span><span class="p">(</span><span class="n">sea_bottom</span><span class="o">=-</span><span class="mi">10</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation for users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Meshes and floating bodies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="problem_setup.html">Setting up a problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resolution.html">Resolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="outputs.html">Outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="post_pro.html">Post-processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="cookbook.html">Cookbook</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">User manual</a><ul>
+      <li>Previous: <a href="tutorial.html" title="previous chapter">Tutorial</a></li>
+      <li>Next: <a href="problem_setup.html" title="next chapter">Setting up a problem</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/user_manual/mesh.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/user_manual/mesh.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

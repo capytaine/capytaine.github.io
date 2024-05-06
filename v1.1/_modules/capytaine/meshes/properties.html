@@ -1,0 +1,281 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>capytaine.meshes.properties &#8212; capytaine 1.1 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script type="text/javascript" src="../../../_static/proof.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.meshes.properties</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python</span>
+<span class="c1"># coding: utf-8</span>
+<span class="sd">&quot;&quot;&quot;Helper functions to compute some properties of the mesh.</span>
+<span class="sd">Based on meshmagick &lt;https://github.com/LHEEA/meshmagick&gt; by François Rongère.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin, based on the work of François Rongère</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+
+<div class="viewcode-block" id="compute_faces_properties"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.properties.html#capytaine.meshes.properties.compute_faces_properties">[docs]</a><span class="k">def</span> <span class="nf">compute_faces_properties</span><span class="p">(</span><span class="n">mesh</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the faces properties of the mesh&quot;&quot;&quot;</span>
+
+    <span class="c1"># faces_areas, faces_normals, faces_centers = mm.get_all_faces_properties(mesh._vertices, mesh._faces)</span>
+    <span class="n">nf</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span>
+
+    <span class="c1"># triangle_mask = _faces[:, 0] == _faces[:, -1]</span>
+    <span class="c1"># nb_triangles = np.sum(triangle_mask)</span>
+    <span class="c1"># quads_mask = np.invert(triangle_mask)</span>
+    <span class="c1"># nb_quads = nf - nb_triangles</span>
+
+    <span class="n">faces_areas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nf</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+    <span class="n">faces_normals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nf</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+    <span class="n">faces_centers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nf</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float</span><span class="p">)</span>
+
+    <span class="c1"># Collectively dealing with triangles</span>
+    <span class="c1"># triangles = _faces[triangle_mask]</span>
+    <span class="n">triangles_id</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">triangles_ids</span>
+    <span class="n">triangles</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">_faces</span><span class="p">[</span><span class="n">triangles_id</span><span class="p">]</span>
+
+    <span class="n">triangles_normals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">triangles</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]]</span> <span class="o">-</span> <span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">triangles</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]],</span>
+                                 <span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">triangles</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]]</span> <span class="o">-</span> <span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">triangles</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]])</span>
+    <span class="n">triangles_areas</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">triangles_normals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">faces_normals</span><span class="p">[</span><span class="n">triangles_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">triangles_normals</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(([</span><span class="n">triangles_areas</span><span class="p">,</span> <span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">faces_areas</span><span class="p">[</span><span class="n">triangles_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">triangles_areas</span> <span class="o">/</span> <span class="mf">2.</span>
+    <span class="n">faces_centers</span><span class="p">[</span><span class="n">triangles_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">triangles</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.</span>
+
+    <span class="c1"># Collectively dealing with quads</span>
+    <span class="n">quads_id</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">quadrangles_ids</span>
+    <span class="n">quads</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">_faces</span><span class="p">[</span><span class="n">quads_id</span><span class="p">]</span>
+    <span class="c1"># quads = _faces[quads_mask]</span>
+
+    <span class="n">quads_normals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">quads</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]]</span> <span class="o">-</span> <span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">quads</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]],</span>
+                             <span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">quads</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]]</span> <span class="o">-</span> <span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">quads</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]])</span>
+    <span class="n">faces_normals</span><span class="p">[</span><span class="n">quads_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">quads_normals</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(([</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">quads_normals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">a1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">quads</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]]</span> <span class="o">-</span> <span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">quads</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]],</span>
+                                 <span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">quads</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]]</span> <span class="o">-</span> <span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">quads</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span>
+    <span class="n">a2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">quads</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]]</span> <span class="o">-</span> <span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">quads</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]],</span>
+                                 <span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">quads</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]]</span> <span class="o">-</span> <span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">quads</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.5</span>
+    <span class="n">faces_areas</span><span class="p">[</span><span class="n">quads_id</span><span class="p">]</span> <span class="o">=</span> <span class="n">a1</span> <span class="o">+</span> <span class="n">a2</span>
+
+    <span class="n">c1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">quads</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mf">3.</span>
+    <span class="n">c2</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">quads</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">:</span><span class="mi">4</span><span class="p">]],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">+</span> <span class="n">mesh</span><span class="o">.</span><span class="n">_vertices</span><span class="p">[</span><span class="n">quads</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]])</span> <span class="o">/</span> <span class="mf">3.</span>
+
+    <span class="n">faces_centers</span><span class="p">[</span><span class="n">quads_id</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(([</span><span class="n">a1</span><span class="p">,</span> <span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">c1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(([</span><span class="n">a2</span><span class="p">,</span> <span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">c2</span><span class="p">)</span>
+    <span class="n">faces_centers</span><span class="p">[</span><span class="n">quads_id</span><span class="p">]</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(([</span><span class="n">faces_areas</span><span class="p">[</span><span class="n">quads_id</span><span class="p">],</span> <span class="p">]</span> <span class="o">*</span> <span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="n">faces_radiuses</span> <span class="o">=</span> <span class="n">compute_radiuses</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">faces_centers</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;faces_areas&#39;</span><span class="p">:</span> <span class="n">faces_areas</span><span class="p">,</span>
+            <span class="s1">&#39;faces_normals&#39;</span><span class="p">:</span> <span class="n">faces_normals</span><span class="p">,</span>
+            <span class="s1">&#39;faces_centers&#39;</span><span class="p">:</span> <span class="n">faces_centers</span><span class="p">,</span>
+            <span class="s1">&#39;faces_radiuses&#39;</span><span class="p">:</span> <span class="n">faces_radiuses</span><span class="p">,</span>
+            <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="compute_radiuses"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.properties.html#capytaine.meshes.properties.compute_radiuses">[docs]</a><span class="k">def</span> <span class="nf">compute_radiuses</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">faces_centers</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the radiuses of the faces of the mesh.</span>
+
+<span class="sd">    The radius is defined here as the maximal distance between the center</span>
+<span class="sd">    of mass of a cell and one of its points.&quot;&quot;&quot;</span>
+
+    <span class="c1"># Coordinates of all the vertices grouped by face</span>
+    <span class="n">faces_vertices</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span> <span class="p">:]</span>
+    <span class="c1"># faces_vertices.shape == (nb_faces, 4, 3)</span>
+
+    <span class="c1"># Reorder the axes for array broadcasting below</span>
+    <span class="n">faces_vertices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">moveaxis</span><span class="p">(</span><span class="n">faces_vertices</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="c1"># faces_vertices.shape == (4, nb_faces, 3)</span>
+
+    <span class="c1"># Get all the vectors between the center of faces and their vertices.</span>
+    <span class="n">radial_vector</span> <span class="o">=</span> <span class="n">faces_centers</span> <span class="o">-</span> <span class="n">faces_vertices</span>
+    <span class="c1"># radial_vector.shape == (4, nb_faces, 3)</span>
+
+    <span class="c1"># Keep the maximum length</span>
+    <span class="n">faces_radiuses</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">radial_vector</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="c1"># faces_radiuses.shape = (nb_faces)</span>
+
+    <span class="k">return</span> <span class="n">faces_radiuses</span></div>
+
+
+<div class="viewcode-block" id="compute_connectivity"><a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.properties.html#capytaine.meshes.properties.compute_connectivity">[docs]</a><span class="k">def</span> <span class="nf">compute_connectivity</span><span class="p">(</span><span class="n">mesh</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Compute the connectivities of the mesh.</span>
+
+<span class="sd">    It concerns further connectivity than simple faces/vertices connectivities. It computes the vertices / vertices, vertices / faces and faces / faces connectivities.</span>
+
+<span class="sd">    Note</span>
+<span class="sd">    ----</span>
+<span class="sd">    * Note that if the mesh is not conformal, the algorithm may not perform correctly</span>
+
+<span class="sd">    TODO: The computation of boundaries should be in the future computed with help of VTK</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">nv</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_vertices</span>
+    <span class="n">nf</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span>
+
+    <span class="n">mesh_closed</span> <span class="o">=</span> <span class="kc">True</span>
+
+    <span class="c1"># Building connectivities</span>
+
+    <span class="c1"># Establishing v_v and v_f connectivities</span>
+    <span class="n">v_v</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nv</span><span class="p">)])</span>
+    <span class="n">v_f</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nv</span><span class="p">)])</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">iface</span><span class="p">,</span> <span class="n">face</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">_faces</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">face</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">face</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">face_w</span> <span class="o">=</span> <span class="n">face</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">face_w</span> <span class="o">=</span> <span class="n">face</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="n">iV</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">face_w</span><span class="p">):</span>
+            <span class="n">v_f</span><span class="p">[</span><span class="n">iV</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">iface</span><span class="p">)</span>
+            <span class="n">v_v</span><span class="p">[</span><span class="n">face_w</span><span class="p">[</span><span class="n">index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">iV</span><span class="p">)</span>
+            <span class="n">v_v</span><span class="p">[</span><span class="n">iV</span><span class="p">]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">face_w</span><span class="p">[</span><span class="n">index</span> <span class="o">-</span> <span class="mi">1</span><span class="p">])</span>
+
+    <span class="c1"># Connectivity f_f</span>
+    <span class="n">boundary_edges</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="n">f_f</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span> <span class="nb">set</span><span class="p">())</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nf</span><span class="p">)])</span>
+    <span class="k">for</span> <span class="n">ivertex</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nv</span><span class="p">):</span>
+        <span class="n">set1</span> <span class="o">=</span> <span class="n">v_f</span><span class="p">[</span><span class="n">ivertex</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">iadj_v</span> <span class="ow">in</span> <span class="n">v_v</span><span class="p">[</span><span class="n">ivertex</span><span class="p">]:</span>
+            <span class="n">set2</span> <span class="o">=</span> <span class="n">v_f</span><span class="p">[</span><span class="n">iadj_v</span><span class="p">]</span>
+            <span class="n">intersection</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">set1</span> <span class="o">&amp;</span> <span class="n">set2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">intersection</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">f_f</span><span class="p">[</span><span class="n">intersection</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">intersection</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                <span class="n">f_f</span><span class="p">[</span><span class="n">intersection</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">intersection</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">intersection</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">boundary_face</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">_faces</span><span class="p">[</span><span class="n">intersection</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+                <span class="k">if</span> <span class="n">boundary_face</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">boundary_face</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="n">boundary_face</span> <span class="o">=</span> <span class="n">boundary_face</span><span class="p">[:</span><span class="mi">3</span><span class="p">]</span>
+                <span class="n">ids</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">((</span><span class="n">boundary_face</span> <span class="o">==</span> <span class="n">ivertex</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">boundary_face</span> <span class="o">==</span> <span class="n">iadj_v</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="n">ids</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">ids</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">i_v_orig</span><span class="p">,</span> <span class="n">i_v_target</span> <span class="o">=</span> <span class="n">boundary_face</span><span class="p">[</span><span class="n">ids</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">i_v_target</span><span class="p">,</span> <span class="n">i_v_orig</span> <span class="o">=</span> <span class="n">boundary_face</span><span class="p">[</span><span class="n">ids</span><span class="p">]</span>
+
+                <span class="n">boundary_edges</span><span class="p">[</span><span class="n">i_v_orig</span><span class="p">]</span> <span class="o">=</span> <span class="n">i_v_target</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s1">&#39;Unexpected error while computing mesh connectivities&#39;</span><span class="p">)</span>
+
+    <span class="c1"># Computing boundaries</span>
+    <span class="n">boundaries</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="c1"># TODO: calculer des boundaries fermees et ouvertes (closed_boundaries et open_boundaries) et mettre dans dict</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">boundary</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+            <span class="n">i_v0_init</span><span class="p">,</span> <span class="n">i_v1</span> <span class="o">=</span> <span class="n">boundary_edges</span><span class="o">.</span><span class="n">popitem</span><span class="p">()</span>
+            <span class="n">boundary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i_v0_init</span><span class="p">)</span>
+            <span class="n">boundary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i_v1</span><span class="p">)</span>
+            <span class="n">i_v0</span> <span class="o">=</span> <span class="n">i_v1</span>
+
+            <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">i_v1</span> <span class="o">=</span> <span class="n">boundary_edges</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">i_v0</span><span class="p">)</span>
+                    <span class="n">boundary</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i_v1</span><span class="p">)</span>
+                    <span class="n">i_v0</span> <span class="o">=</span> <span class="n">i_v1</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">boundary</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">boundary</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Boundary is not closed !!!&#39;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">boundaries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">boundary</span><span class="p">)</span>
+                    <span class="k">break</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">break</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s1">&#39;v_v&#39;</span><span class="p">:</span> <span class="n">v_v</span><span class="p">,</span>
+            <span class="s1">&#39;v_f&#39;</span><span class="p">:</span> <span class="n">v_f</span><span class="p">,</span>
+            <span class="s1">&#39;f_f&#39;</span><span class="p">:</span> <span class="n">f_f</span><span class="p">,</span>
+            <span class="s1">&#39;boundaries&#39;</span><span class="p">:</span> <span class="n">boundaries</span><span class="p">}</span></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,318 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+    <title>capytaine.matrices.low_rank module &#8212; capytaine 1.4.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/proof.css" />
+    <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+    <script src="../../_static/jquery.js"></script>
+    <script src="../../_static/underscore.js"></script>
+    <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/proof.js"></script>
+    <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="capytaine.meshes.clipper module" href="capytaine.meshes.clipper.html" />
+    <link rel="prev" title="capytaine.matrices.linear_solvers module" href="capytaine.matrices.linear_solvers.html" />
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-capytaine.matrices.low_rank">
+<span id="capytaine-matrices-low-rank-module"></span><h1>capytaine.matrices.low_rank module<a class="headerlink" href="#module-capytaine.matrices.low_rank" title="Permalink to this heading">¶</a></h1>
+<p>This module implements a class to describe a low-rank matrix as the tensor product of two smaller matrices.
+In particular, an implementation of the Adaptive Cross Approximation is used to build such a matrix.</p>
+<p>It takes inspiration from the following works:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/matthieuaussal/gypsilab">openHmx module from Gypsilab by Matthieu Aussal (GPL licensed)</a></p></li>
+<li><p><a class="reference external" href="https://github.com/maekke97/HierarchicalMatrices">HierarchicalMatrices by Markus Neumann (GPL licensed)</a></p></li>
+</ul>
+<dl class="py class">
+<dt class="sig sig-object py" id="capytaine.matrices.low_rank.LowRankMatrix">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">capytaine.matrices.low_rank.</span></span><span class="sig-name descname"><span class="pre">LowRankMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">right_matrix</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/matrices/low_rank.html#LowRankMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.matrices.low_rank.LowRankMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Matrix defined as the tensor product of two small matrices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>left_matrix</strong> (<em>numpy.array</em>) – Matrix of shape (nb_cols, rank).</p></li>
+<li><p><strong>right_matrix</strong> (<em>numpy.array</em>) – Matrix of shape (rank, nb_rows).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>shape</strong> (<em>Tuple</em><em>[</em><em>int</em><em>, </em><em>int</em><em>]</em>) – The shape of the full matrix.</p></li>
+<li><p><strong>rank</strong> (<em>int</em>) – The rank of the full matrix.</p></li>
+<li><p><strong>dtype</strong> (<em>numpy.dtype</em>) – Type of data in the matrix.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.matrices.low_rank.LowRankMatrix.astype">
+<span class="sig-name descname"><span class="pre">astype</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dtype</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/matrices/low_rank.html#LowRankMatrix.astype"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.matrices.low_rank.LowRankMatrix.astype" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.matrices.low_rank.LowRankMatrix.density">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">density</span></span><a class="headerlink" href="#capytaine.matrices.low_rank.LowRankMatrix.density" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.matrices.low_rank.LowRankMatrix.from_full_matrix_with_ACA">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_full_matrix_with_ACA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/matrices/low_rank.html#LowRankMatrix.from_full_matrix_with_ACA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.matrices.low_rank.LowRankMatrix.from_full_matrix_with_ACA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a low rank matrix from a full matrix using Adaptive Cross Approximation.
+The user should provide either the <cite>max_rank</cite> optional argument or the <cite>tol</cite> optional argument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>full_matrix</strong> (<em>numpy.array</em>) – The matrix that will be approximated.</p></li>
+<li><p><strong>max_rank</strong> (<em>int, optional</em>) – The maximum rank allowed for the output low rank matrix.
+The default value is half the size of the full matrix, that is no gain in storage space.</p></li>
+<li><p><strong>tol</strong> (<em>float, optional</em>) – The tolerance on the relative error (default: 0).
+If the Frobenius norm of the increment is lower than the tolerance, the iteration stops.
+If the tolerance is set to 0, the resulting matrix will have the maximum rank defined by <cite>max_rank</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#capytaine.matrices.low_rank.LowRankMatrix" title="capytaine.matrices.low_rank.LowRankMatrix">LowRankMatrix</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.matrices.low_rank.LowRankMatrix.from_full_matrix_with_SVD">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_full_matrix_with_SVD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">full_matrix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_rank</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/matrices/low_rank.html#LowRankMatrix.from_full_matrix_with_SVD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.matrices.low_rank.LowRankMatrix.from_full_matrix_with_SVD" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a low rank matrix from a full matrix using Singular Value Decomposition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>full_matrix</strong> (<em>numpy array</em>) – The matrix that will be approximated.</p></li>
+<li><p><strong>max_rank</strong> (<em>int</em>) – Rank of the low-rank approximation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#capytaine.matrices.low_rank.LowRankMatrix" title="capytaine.matrices.low_rank.LowRankMatrix">LowRankMatrix</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.matrices.low_rank.LowRankMatrix.from_function_with_ACA">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_function_with_ACA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_cols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_rank=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol=0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.float64'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/matrices/low_rank.html#LowRankMatrix.from_function_with_ACA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.matrices.low_rank.LowRankMatrix.from_function_with_ACA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a low rank matrix from a function using Adaptive Cross Approximation.
+The user should provide either the <cite>max_rank</cite> optional argument or the <cite>tol</cite> optional argument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>func</strong> (<em>Function</em>) – Function such that <cite>func(i, j)</cite> returns the value of the (i, j) entry of the full matrix.</p></li>
+<li><p><strong>nb_rows</strong> (<em>int</em>) – Number of rows in the full matrix.</p></li>
+<li><p><strong>nb_cols</strong> (<em>int</em>) – Number of cols in the full matrix.</p></li>
+<li><p><strong>max_rank</strong> (<em>int, optional</em>) – The maximum rank allowed for the output low rank matrix.
+The default value is half the size of the full matrix, that is no gain in storage space.</p></li>
+<li><p><strong>tol</strong> (<em>float, optional</em>) – The tolerance on the relative error (default: 0).
+If the Frobenius norm of the increment is lower than the tolerance, the iteration stops.
+If the tolerance is set to 0, the resulting matrix will have the maximum rank defined by <cite>max_rank</cite>.</p></li>
+<li><p><strong>dtype</strong> (<em>numpy.dtype, optional</em>) – Type of the data returned by the function.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#capytaine.matrices.low_rank.LowRankMatrix" title="capytaine.matrices.low_rank.LowRankMatrix">LowRankMatrix</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.matrices.low_rank.LowRankMatrix.from_rows_and_cols_functions_with_ACA">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_rows_and_cols_functions_with_ACA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">get_row_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_col_func</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_cols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_rank=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol=0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.float64'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/matrices/low_rank.html#LowRankMatrix.from_rows_and_cols_functions_with_ACA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.matrices.low_rank.LowRankMatrix.from_rows_and_cols_functions_with_ACA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a low rank matrix from functions using Adaptive Cross Approximation.
+The user should provide either the <cite>max_rank</cite> optional argument or the <cite>tol</cite> optional argument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>get_row_func</strong> (<em>Function</em>) – Function such that <cite>get_row_func(i)</cite> returns the <cite>i</cite>-th row of the full matrix.</p></li>
+<li><p><strong>get_col_func</strong> (<em>Function</em>) – Function such that <cite>get_col_func(j)</cite> returns the <cite>j</cite>-th column of the full matrix.</p></li>
+<li><p><strong>nb_rows</strong> (<em>int</em>) – Number of rows in the full matrix.</p></li>
+<li><p><strong>nb_cols</strong> (<em>int</em>) – Number of columns in the full matrix.</p></li>
+<li><p><strong>max_rank</strong> (<em>int, optional</em>) – The maximum rank allowed for the output low rank matrix.
+The default value is half the size of the full matrix, that is no gain in storage space.</p></li>
+<li><p><strong>tol</strong> (<em>float, optional</em>) – The tolerance on the relative error (default: 0).
+If the Frobenius norm of the increment is lower than the tolerance, the iteration stops.
+If the tolerance is set to 0, the resulting matrix will have the maximum rank defined by <cite>max_rank</cite>.</p></li>
+<li><p><strong>dtype</strong> (<em>numpy.dtype, optional</em>) – The type of data in the low rank matrix (default: float64).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference internal" href="#capytaine.matrices.low_rank.LowRankMatrix" title="capytaine.matrices.low_rank.LowRankMatrix">LowRankMatrix</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.matrices.low_rank.LowRankMatrix.from_rows_and_cols_functions_with_multi_ACA">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_rows_and_cols_functions_with_multi_ACA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">get_row</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_col</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_rows</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_cols</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nb_matrices=1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">id_main=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_rank=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol=0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dtype=&lt;class</span> <span class="pre">'numpy.float64'&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/matrices/low_rank.html#LowRankMatrix.from_rows_and_cols_functions_with_multi_ACA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.matrices.low_rank.LowRankMatrix.from_rows_and_cols_functions_with_multi_ACA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create several low rank matrices while running an Adaptive Cross Approximation.
+The user should provide either the <cite>max_rank</cite> optional argument or the <cite>tol</cite> optional argument.</p>
+<p>In Capytaine, the routines evaluating the influence matrices return the values of two matrices
+(S and V) at once, because there is a lot of common computations in their evaluation.
+The present function can be used to build the ACA of one of them while getting at the same time
+an approximation of the other for free.</p>
+<p>Freely adapted from the routine hmxACA.m from Gypsilab.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>get_row</strong> (<em>Function</em>) – Function such that <cite>get_row(i)</cite> returns the <cite>i</cite>-th row of all the full matrices.</p></li>
+<li><p><strong>get_col</strong> (<em>Function</em>) – Function such that <cite>get_col(j)</cite> returns the <cite>j</cite>-th column of all the full matrices.</p></li>
+<li><p><strong>nb_rows</strong> (<em>int</em>) – Number of rows in all full matrices.</p></li>
+<li><p><strong>nb_cols</strong> (<em>int</em>) – Number of columns in all full matrices.</p></li>
+<li><p><strong>nb_matrices</strong> (<em>int, optional</em>) – The number of matrices approximated at the same time.</p></li>
+<li><p><strong>id_main</strong> (<em>int, optional</em>) – The matrix used primarily in the ACA.</p></li>
+<li><p><strong>max_rank</strong> (<em>int, optional</em>) – The maximum rank allowed for both output low rank matrices.
+The default value is half the size of the full matrix, that is no gain in storage space.</p></li>
+<li><p><strong>tol</strong> (<em>float, optional</em>) – The tolerance on the relative error (default: 0).
+If the Frobenius norm of the increment is lower than the tolerance, the iteration stops.
+If the tolerance is set to 0, the resulting matrix will have the maximum rank defined by <cite>max_rank</cite>.</p></li>
+<li><p><strong>dtype</strong> (<em>numpy.dtype, optional</em>) – The type of data in both low rank matrices (default: float64).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>List[<a class="reference internal" href="#capytaine.matrices.low_rank.LowRankMatrix" title="capytaine.matrices.low_rank.LowRankMatrix">LowRankMatrix</a>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.matrices.low_rank.LowRankMatrix.full_matrix">
+<span class="sig-name descname"><span class="pre">full_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/matrices/low_rank.html#LowRankMatrix.full_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.matrices.low_rank.LowRankMatrix.full_matrix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="capytaine.matrices.low_rank.LowRankMatrix.ndim">
+<span class="sig-name descname"><span class="pre">ndim</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#capytaine.matrices.low_rank.LowRankMatrix.ndim" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.matrices.low_rank.LowRankMatrix.recompress">
+<span class="sig-name descname"><span class="pre">recompress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/matrices/low_rank.html#LowRankMatrix.recompress"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.matrices.low_rank.LowRankMatrix.recompress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recompress the matrix to a lower rank. Based on the routine hmxQRSVD.m from Gipsylab.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.matrices.low_rank.LowRankMatrix.sparcity">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sparcity</span></span><a class="headerlink" href="#capytaine.matrices.low_rank.LowRankMatrix.sparcity" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.matrices.low_rank.LowRankMatrix.stored_data_size">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">stored_data_size</span></span><a class="headerlink" href="#capytaine.matrices.low_rank.LowRankMatrix.stored_data_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="capytaine.matrices.low_rank.NoConvergenceOfACA">
+<em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">capytaine.matrices.low_rank.</span></span><span class="sig-name descname"><span class="pre">NoConvergenceOfACA</span></span><a class="reference internal" href="../../_modules/capytaine/matrices/low_rank.html#NoConvergenceOfACA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.matrices.low_rank.NoConvergenceOfACA" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../installation.html">Installation for developers</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../overview.html">Overview of the modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">API documentation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Developer manual</a><ul>
+  <li><a href="../overview.html">Overview of the modules</a><ul>
+      <li>Previous: <a href="capytaine.matrices.linear_solvers.html" title="previous chapter">capytaine.matrices.linear_solvers module</a></li>
+      <li>Next: <a href="capytaine.meshes.clipper.html" title="next chapter">capytaine.meshes.clipper module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../../_sources/developer_manual/api/capytaine.matrices.low_rank.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.0.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../../_sources/developer_manual/api/capytaine.matrices.low_rank.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

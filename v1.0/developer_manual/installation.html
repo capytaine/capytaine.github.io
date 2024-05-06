@@ -1,0 +1,160 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Installation for developers &#8212; capytaine 1.0 documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" type="text/css" href="../_static/proof.css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script type="text/javascript" src="../_static/proof.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Overview of the modules" href="overview.html" />
+    <link rel="prev" title="Developer manual" href="index.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="installation-for-developers">
+<h1>Installation for developers<a class="headerlink" href="#installation-for-developers" title="Permalink to this headline">¶</a></h1>
+<p>Capytaine requires <strong>Python 3.6</strong> or higher.
+It has been successfully tested on Python 3.6 and 3.7, and Numpy 1.15 and 1.16.</p>
+<p>It is recommended to use a <a class="reference external" href="https://conda.io/docs/user-guide/tasks/manage-environments.html">conda environment</a>.</p>
+<p>Ensure that Numpy is installed in your enviroment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">conda</span> <span class="n">install</span> <span class="n">numpy</span>
+</pre></div>
+</div>
+<p>You’ll also need a Fortran compiler:</p>
+<ul>
+<li><p class="first">On Linux, you can install <cite>gfortran</cite> with the package manager of your distribution (e.g. <cite>sudo apt install gfortran</cite>).</p>
+</li>
+<li><p class="first">On Windows, the code can be compiled with MinGW.
+Add the directory with the <cite>gfortran</cite> binary to your path. For instance with <cite>set PATH=C:\mingw-w64\x86_64-7.2.0-posix-seh-rt_v5-rev1\mingw64\bin;%PATH%</cite>.
+You should also let Python know about the compiler by creating a file with the following two lines:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">echo</span> <span class="p">[</span><span class="n">build</span><span class="p">]</span>
+<span class="n">echo</span> <span class="n">compiler</span><span class="o">=</span><span class="n">mingw32</span>
+</pre></div>
+</div>
+<p>as <cite>C:\path\to\anaconda\Lib\distutils\distutils.cfg</cite>.</p>
+</li>
+</ul>
+<p>Then, download the source code from Github web interface or using <code class="docutils literal notranslate"><span class="pre">git</span></code> with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">mancellin</span><span class="o">/</span><span class="n">capytaine</span>
+</pre></div>
+</div>
+<p>In the main directory of Capytaine (where <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> is located), run the following command to compile the Fortran code:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">build_ext</span> <span class="o">--</span><span class="n">inplace</span>
+</pre></div>
+</div>
+<p>Re-run this command later to recompile the code if you change one of the Fortran files.</p>
+<p>Add the current directory to the Python path with the following command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">e</span> <span class="o">.</span>
+</pre></div>
+</div>
+<p>(This last two commands are included into the <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> of the main directory.
+They can be run by <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">develop</span></code>.
+The command <code class="docutils literal notranslate"><span class="pre">make</span> <span class="pre">clean</span></code> deletes the binaries.)</p>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h3><a href="../index.html">Table of Contents</a></h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User manual</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer manual</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Installation for developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview.html">Overview of the modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/modules.html">API documentation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Developer manual</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Developer manual</a></li>
+      <li>Next: <a href="overview.html" title="next chapter">Overview of the modules</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/developer_manual/installation.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.4</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="../_sources/developer_manual/installation.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
