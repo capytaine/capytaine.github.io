@@ -66,16 +66,15 @@ The scripts can be downloaded individually as Python files from the <a class="re
 <li><p><a class="reference internal" href="#animation-of-the-rao" id="id12">Animation of the RAO</a></p></li>
 <li><p><a class="reference internal" href="#kochin-function" id="id13">Kochin function</a></p></li>
 <li><p><a class="reference internal" href="#haskind-s-relation" id="id14">Haskind’s relation</a></p></li>
-<li><p><a class="reference internal" href="#symmetric-body" id="id15">Symmetric body</a></p></li>
-<li><p><a class="reference internal" href="#axisymmetric-body" id="id16">Axisymmetric body</a></p></li>
+<li><p><a class="reference internal" href="#axisymmetric-body" id="id15">Axisymmetric body</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#advanced-examples" id="id17">Advanced examples</a></p>
+<li><p><a class="reference internal" href="#advanced-examples" id="id16">Advanced examples</a></p>
 <ul>
-<li><p><a class="reference internal" href="#convergence-study" id="id18">Convergence study</a></p></li>
-<li><p><a class="reference internal" href="#plot-the-influence-matrix" id="id19">Plot the influence matrix</a></p></li>
-<li><p><a class="reference internal" href="#compare-two-implementations-of-the-green-function" id="id20">Compare two implementations of the Green function</a></p></li>
-<li><p><a class="reference internal" href="#use-a-custom-green-function" id="id21">Use a custom Green function</a></p></li>
+<li><p><a class="reference internal" href="#convergence-study" id="id17">Convergence study</a></p></li>
+<li><p><a class="reference internal" href="#plot-the-influence-matrix" id="id18">Plot the influence matrix</a></p></li>
+<li><p><a class="reference internal" href="#compare-two-implementations-of-the-green-function" id="id19">Compare two implementations of the Green function</a></p></li>
+<li><p><a class="reference internal" href="#use-a-custom-green-function" id="id20">Use a custom Green function</a></p></li>
 </ul>
 </li>
 </ul>
@@ -678,39 +677,8 @@ diffraction problem.</p>
 </pre></div>
 </div>
 </section>
-<section id="symmetric-body">
-<h3><a class="toc-backref" href="#id15" role="doc-backlink">Symmetric body</a><a class="headerlink" href="#symmetric-body" title="Link to this heading">¶</a></h3>
-<p>This example loads a mesh from a file, keeps only a part of it and defines a symmetric body from this
-half.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
-
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
-
-<span class="c1"># Load a mesh</span>
-<span class="n">original_mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">()</span>
-
-<span class="c1"># METHOD 1</span>
-<span class="c1"># Get the indices of the panels such that the center is in the half-space y &gt; 0.</span>
-<span class="n">indices_of_some_faces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">original_mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">half_mesh</span> <span class="o">=</span> <span class="n">original_mesh</span><span class="o">.</span><span class="n">extract_faces</span><span class="p">(</span><span class="n">indices_of_some_faces</span><span class="p">)</span>
-
-<span class="c1"># METHOD 2</span>
-<span class="c1"># Clip the mesh</span>
-<span class="n">half_mesh</span> <span class="o">=</span> <span class="n">original_mesh</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">plane</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">xOz_Plane</span><span class="p">)</span>
-
-<span class="c1"># Define a new body by reflecting the half mesh across the xOz plane.</span>
-<span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
-    <span class="n">cpt</span><span class="o">.</span><span class="n">ReflectionSymmetricMesh</span><span class="p">(</span><span class="n">half_mesh</span><span class="p">,</span> <span class="n">cpt</span><span class="o">.</span><span class="n">xOz_Plane</span><span class="p">),</span>
-    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;symmetric_body&quot;</span><span class="p">)</span>
-
-<span class="c1"># Display the body with VTK.</span>
-<span class="n">body</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</pre></div>
-</div>
-</section>
 <section id="axisymmetric-body">
-<h3><a class="toc-backref" href="#id16" role="doc-backlink">Axisymmetric body</a><a class="headerlink" href="#axisymmetric-body" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Axisymmetric body</a><a class="headerlink" href="#axisymmetric-body" title="Link to this heading">¶</a></h3>
 <p>This example generates an axisymmetric mesh from a profile function and solves radiation problems for
 this floating body.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
@@ -766,9 +734,9 @@ this floating body.</p>
 </section>
 </section>
 <section id="advanced-examples">
-<h2><a class="toc-backref" href="#id17" role="doc-backlink">Advanced examples</a><a class="headerlink" href="#advanced-examples" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id16" role="doc-backlink">Advanced examples</a><a class="headerlink" href="#advanced-examples" title="Link to this heading">¶</a></h2>
 <section id="convergence-study">
-<h3><a class="toc-backref" href="#id18" role="doc-backlink">Convergence study</a><a class="headerlink" href="#convergence-study" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id17" role="doc-backlink">Convergence study</a><a class="headerlink" href="#convergence-study" title="Link to this heading">¶</a></h3>
 <p>This example runs a mesh convergence study for a submerged cylinder.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">pi</span>
@@ -816,7 +784,7 @@ this floating body.</p>
 </div>
 </section>
 <section id="plot-the-influence-matrix">
-<h3><a class="toc-backref" href="#id19" role="doc-backlink">Plot the influence matrix</a><a class="headerlink" href="#plot-the-influence-matrix" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">Plot the influence matrix</a><a class="headerlink" href="#plot-the-influence-matrix" title="Link to this heading">¶</a></h3>
 <p>This example plots the influence matrix for an horizontal cylinder.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
@@ -852,7 +820,7 @@ this floating body.</p>
 </div>
 </section>
 <section id="compare-two-implementations-of-the-green-function">
-<h3><a class="toc-backref" href="#id20" role="doc-backlink">Compare two implementations of the Green function</a><a class="headerlink" href="#compare-two-implementations-of-the-green-function" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id19" role="doc-backlink">Compare two implementations of the Green function</a><a class="headerlink" href="#compare-two-implementations-of-the-green-function" title="Link to this heading">¶</a></h3>
 <p>This is an example of comparison of two implementations of the Green function.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
@@ -891,7 +859,7 @@ this floating body.</p>
 </div>
 </section>
 <section id="use-a-custom-green-function">
-<h3><a class="toc-backref" href="#id21" role="doc-backlink">Use a custom Green function</a><a class="headerlink" href="#use-a-custom-green-function" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Use a custom Green function</a><a class="headerlink" href="#use-a-custom-green-function" title="Link to this heading">¶</a></h3>
 <p>This is an example of how to implement a custom Green function.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
@@ -996,7 +964,8 @@ this floating body.</p>
 <li class="toctree-l2"><a class="reference internal" href="installation.html">Installation for users</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mesh.html">Meshes and floating bodies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mesh.html">Meshes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="body.html">Floating body</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hydrostatics.html">Hydrostatics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="problem_setup.html">Setting up a problem</a></li>
 <li class="toctree-l2"><a class="reference internal" href="resolution.html">Resolution</a></li>
