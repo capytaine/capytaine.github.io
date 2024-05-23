@@ -46,7 +46,7 @@
 <p>Floating bodies to be used in radiation-diffraction problems.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="capytaine.bodies.bodies.FloatingBody">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">capytaine.bodies.bodies.</span></span><span class="sig-name descname"><span class="pre">FloatingBody</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dofs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center_of_mass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">capytaine.bodies.bodies.</span></span><span class="sig-name descname"><span class="pre">FloatingBody</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dofs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center_of_mass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lid_mesh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="capytaine.meshes.geometry.html#capytaine.meshes.geometry.ClippableMixin" title="capytaine.meshes.geometry.ClippableMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClippableMixin</span></code></a>, <a class="reference internal" href="capytaine.meshes.geometry.html#capytaine.meshes.geometry.Abstract3DObject" title="capytaine.meshes.geometry.Abstract3DObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">Abstract3DObject</span></code></a></p>
 <p>A floating body described as a mesh and some degrees of freedom.</p>
 <p>The mesh structure is stored as a Mesh from capytaine.mesh.mesh or a
@@ -58,8 +58,11 @@ defines the displacement of the center of the face in frequency domain.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>mesh</strong> (<em>Mesh or CollectionOfMeshes, optional</em>) – the mesh describing the geometry of the floating body.
+<li><p><strong>mesh</strong> (<em>Mesh or CollectionOfMeshes, optional</em>) – the mesh describing the geometry of the hull of the floating body.
 If none is given, a empty one is created.</p></li>
+<li><p><strong>lid_mesh</strong> (<em>Mesh or CollectionOfMeshes or None, optional</em>) – a mesh of an internal lid for irregular frequencies removal.
+Unlike the mesh of the hull, no dof is defined on the lid_mesh.
+If none is given, none is used when solving the Boundary Integral Equation.</p></li>
 <li><p><strong>dofs</strong> (<em>dict, optional</em>) – the degrees of freedom of the body.
 If none is given, a empty dictionary is initialized.</p></li>
 <li><p><strong>mass</strong> (<em>float or None, optional</em>) – the mass of the body in kilograms.
@@ -341,19 +344,22 @@ research” 16.1 (1994): 47-59.
 <dt class="sig sig-object py" id="capytaine.bodies.bodies.FloatingBody.extract_faces">
 <span class="sig-name descname"><span class="pre">extract_faces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_faces_to_extract</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.extract_faces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.extract_faces" title="Link to this definition">¶</a></dt>
 <dd><p>Create a new FloatingBody by extracting some faces from the mesh.
-The dofs evolve accordingly.</p>
+The dofs evolve accordingly.
+The lid_mesh, center_of_mass, mass and hydrostatics data are discarded.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.bodies.bodies.FloatingBody.from_file">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_format</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#capytaine.bodies.bodies.FloatingBody" title="capytaine.bodies.bodies.FloatingBody"><span class="pre">FloatingBody</span></a></span></span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.from_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.from_file" title="Link to this definition">¶</a></dt>
-<dd><p>Create a FloatingBody from a mesh file using meshmagick.</p>
+<dd><p>Create a FloatingBody from a mesh file using meshmagick.
+Kinda deprecated, use cpt.load_mesh instead.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.bodies.bodies.FloatingBody.from_meshio">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_meshio</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#capytaine.bodies.bodies.FloatingBody" title="capytaine.bodies.bodies.FloatingBody"><span class="pre">FloatingBody</span></a></span></span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.from_meshio"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.from_meshio" title="Link to this definition">¶</a></dt>
-<dd><p>Create a FloatingBody from a meshio mesh object.</p>
+<dd><p>Create a FloatingBody from a meshio mesh object.
+Kinda deprecated, use cpt.load_mesh instead.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -382,6 +388,11 @@ The dofs evolve accordingly.</p>
 <em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">longitudinal_metacentric_radius</span></span><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.longitudinal_metacentric_radius" title="Link to this definition">¶</a></dt>
 <dd><p>Returns longitudinal metacentric radius of the mesh.</p>
 </dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.bodies.bodies.FloatingBody.mesh_including_lid">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mesh_including_lid</span></span><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.mesh_including_lid" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.bodies.bodies.FloatingBody.minced">
@@ -433,7 +444,9 @@ Only powers of 2 are supported at the moment.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.bodies.bodies.FloatingBody.sliced_by_plane">
 <span class="sig-name descname"><span class="pre">sliced_by_plane</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.sliced_by_plane"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.sliced_by_plane" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Return the same body, but replace the mesh by a set of two meshes
+corresponding to each sides of the plane.</p>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.bodies.bodies.FloatingBody.surface_integral">

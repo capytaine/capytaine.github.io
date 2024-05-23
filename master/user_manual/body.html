@@ -60,6 +60,24 @@ the variants defined in Capytaine, such as a
 Meshes from <cite>meshio</cite> can also be given directly to the <code class="docutils literal notranslate"><span class="pre">FloatingBody</span></code>
 constructor without calling <a class="reference internal" href="../developer_manual/api/capytaine.io.meshio.html#capytaine.io.meshio.load_from_meshio" title="capytaine.io.meshio.load_from_meshio"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_from_meshio()</span></code></a>.</p>
 </section>
+<section id="lid-mesh">
+<h3>Lid mesh<a class="headerlink" href="#lid-mesh" title="Link to this heading">¶</a></h3>
+<p>For irregular frequencies removal, a second mesh can be provided when defining
+the body. It is meant to be a mesh of a lid of the part of the free surface
+that is inside the body. The lid can either on the free surface or slightly
+below. This mesh is ignored for many computations (such as hydrostatics) and is
+only used when solving a BEM problem.</p>
+<p>It is set as in the following example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span> <span class="n">lid_mesh</span><span class="o">=</span><span class="n">lid_mesh</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Once a lid mesh has been defined, it is automatically used for irregular
+frequencies removal without any other action from the user.</p>
+<p>Currently, meshes with a symmetry are not supported, in the sense that the
+computation will be done without using the symmetries when a lid is added. This
+should be improved to support at least vertical symmetry plane in a future
+version.</p>
+</section>
 <section id="dofs">
 <h3>Dofs<a class="headerlink" href="#dofs" title="Link to this heading">¶</a></h3>
 <p>The degrees of freedom are defined as a Python dictionary associating the name
