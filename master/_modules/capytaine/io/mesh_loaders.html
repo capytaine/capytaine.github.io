@@ -53,7 +53,7 @@
 <span class="kn">from</span> <span class="nn">capytaine.meshes.meshes</span> <span class="kn">import</span> <span class="n">Mesh</span>
 <span class="kn">from</span> <span class="nn">capytaine.meshes.symmetric</span> <span class="kn">import</span> <span class="n">ReflectionSymmetricMesh</span>
 <span class="kn">from</span> <span class="nn">capytaine.meshes.geometry</span> <span class="kn">import</span> <span class="n">xOz_Plane</span><span class="p">,</span> <span class="n">yOz_Plane</span>
-<span class="kn">from</span> <span class="nn">capytaine.tools.optional_imports</span> <span class="kn">import</span> <span class="n">import_optional_dependency</span>
+<span class="kn">from</span> <span class="nn">capytaine.tools.optional_imports</span> <span class="kn">import</span> <span class="n">import_optional_dependency</span><span class="p">,</span> <span class="n">silently_import_optional_dependency</span>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -68,14 +68,15 @@
 
 <div class="viewcode-block" id="load_mesh">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.mesh_loaders.html#capytaine.io.mesh_loaders.load_mesh">[docs]</a>
-<span class="k">def</span> <span class="nf">load_mesh</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">load_mesh</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Driver function that loads every mesh file format known by meshmagick.</span>
 <span class="sd">    Dispatch to one of the other function depending on file_format.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    filename: str</span>
-<span class="sd">        name of the mesh file on disk</span>
+<span class="sd">    mesh: str or meshio object</span>
+<span class="sd">        Either the path to the mesh on disk</span>
+<span class="sd">        or a meshio object to be loaded with the dedicated method</span>
 <span class="sd">    file_format: str, optional</span>
 <span class="sd">        format of the mesh defined in the extension_dict dictionary</span>
 <span class="sd">    name: str, optional</span>
@@ -86,6 +87,13 @@
 <span class="sd">    Mesh or SymmetricMesh</span>
 <span class="sd">        the loaded mesh</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">meshio</span> <span class="o">=</span> <span class="n">silently_import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;meshio&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">meshio</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">meshio</span><span class="o">.</span><span class="n">_mesh</span><span class="o">.</span><span class="n">Mesh</span><span class="p">):</span>
+        <span class="kn">from</span> <span class="nn">capytaine.io.meshio</span> <span class="kn">import</span> <span class="n">load_from_meshio</span>
+        <span class="k">return</span> <span class="n">load_from_meshio</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">mesh</span>
+
     <span class="n">_check_file</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">file_format</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -97,7 +105,8 @@
 
     <span class="n">loader</span> <span class="o">=</span> <span class="n">extension_dict</span><span class="p">[</span><span class="n">file_format</span><span class="p">]</span>
 
-    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span> <span class="n">name</span> <span class="o">=</span> <span class="n">filename</span>
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">filename</span>
 
     <span class="k">return</span> <span class="n">loader</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span></div>
 

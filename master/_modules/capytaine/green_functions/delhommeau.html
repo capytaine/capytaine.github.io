@@ -104,6 +104,12 @@
 <span class="sd">        Either :code:`&quot;legacy&quot;` or :code:`&quot;scaled_nemoh3&quot;`, which are the two</span>
 <span class="sd">        methods currently implemented.</span>
 <span class="sd">        Default: :code:`&quot;scaled_nemoh3&quot;`</span>
+<span class="sd">    tabulation_cache_dir: str or None, optional</span>
+<span class="sd">        Directory in which to save the tabulation file(s).</span>
+<span class="sd">        If None, the tabulation is not saved on disk.</span>
+<span class="sd">        Default: calls capytaine.tools.cache_on_disk.cache_directory(), which</span>
+<span class="sd">        returns the value of the environment variable CAPYTAINE_CACHE_DIR if</span>
+<span class="sd">        set, or else the default cache directory on your system.</span>
 <span class="sd">    finite_depth_prony_decomposition_method: string, optional</span>
 <span class="sd">        The implementation of the Prony decomposition used to compute the</span>
 <span class="sd">        finite water_depth Green function. Accepted values: :code:`&#39;fortran&#39;`</span>
@@ -143,6 +149,7 @@
                  <span class="n">tabulation_zmin</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_zmin&quot;</span><span class="p">],</span>
                  <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_nb_integration_points&quot;</span><span class="p">],</span>
                  <span class="n">tabulation_grid_shape</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_grid_shape&quot;</span><span class="p">],</span>
+                 <span class="n">tabulation_cache_dir</span><span class="o">=</span><span class="n">cache_directory</span><span class="p">(),</span>
                  <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;finite_depth_prony_decomposition_method&quot;</span><span class="p">],</span>
                  <span class="n">floating_point_precision</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;floating_point_precision&quot;</span><span class="p">],</span>
                  <span class="n">gf_singularities</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;gf_singularities&quot;</span><span class="p">],</span>
@@ -168,7 +175,16 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">floating_point_precision</span> <span class="o">=</span> <span class="n">floating_point_precision</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_nb_integration_points</span> <span class="o">=</span> <span class="n">tabulation_nb_integration_points</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_create_or_load_tabulation</span><span class="p">(</span><span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span> <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span> <span class="n">tabulation_nb_integration_points</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_cache_dir</span> <span class="o">=</span> <span class="n">tabulation_cache_dir</span>
+        <span class="k">if</span> <span class="n">tabulation_cache_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_tabulation</span><span class="p">(</span><span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span>
+                                    <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
+                                    <span class="n">tabulation_nb_integration_points</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_or_load_tabulation</span><span class="p">(</span><span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span>
+                                            <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
+                                            <span class="n">tabulation_nb_integration_points</span><span class="p">,</span>
+                                            <span class="n">tabulation_cache_dir</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_prony_decomposition_method</span> <span class="o">=</span> <span class="n">finite_depth_prony_decomposition_method</span>
 
@@ -212,7 +228,8 @@
 
     <span class="k">def</span> <span class="nf">_create_or_load_tabulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span>
                                    <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
-                                   <span class="n">tabulation_nb_integration_points</span><span class="p">):</span>
+                                   <span class="n">tabulation_nb_integration_points</span><span class="p">,</span>
+                                   <span class="n">tabulation_cache_dir</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;This method either:</span>
 <span class="sd">            - loads an existing tabulation saved on disk</span>
 <span class="sd">            - generates a new tabulation with the data provided as argument and save it on disk.</span>
@@ -227,7 +244,7 @@
             <span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span> <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
             <span class="n">tabulation_nb_integration_points</span>
         <span class="p">)</span>
-        <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">cache_directory</span><span class="p">(),</span> <span class="n">filename</span><span class="p">)</span>
+        <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tabulation_cache_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading tabulation from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
@@ -237,21 +254,28 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span> <span class="o">=</span> <span class="n">loaded_arrays</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Precomputing tabulation, it may take a few seconds.&quot;</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">default_r_spacing</span><span class="p">(</span>
-                    <span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape_index</span>
-                    <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">default_z_spacing</span><span class="p">(</span>
-                    <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape_index</span>
-                    <span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">construct_tabulation</span><span class="p">(</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span><span class="p">,</span> <span class="n">tabulation_nb_integration_points</span><span class="p">,</span>
-                    <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_tabulation</span><span class="p">(</span><span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span>
+                                    <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
+                                    <span class="n">tabulation_nb_integration_points</span><span class="p">)</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Saving tabulation in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
             <span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span>
                 <span class="n">filepath</span><span class="p">,</span> <span class="n">r_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span><span class="p">,</span> <span class="n">z_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span><span class="p">,</span>
                 <span class="n">values</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span>
             <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_create_tabulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span>
+                                   <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
+                                   <span class="n">tabulation_nb_integration_points</span><span class="p">):</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Precomputing tabulation, it may take a few seconds.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">default_r_spacing</span><span class="p">(</span>
+                <span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape_index</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">default_z_spacing</span><span class="p">(</span>
+                <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape_index</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">construct_tabulation</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span><span class="p">,</span> <span class="n">tabulation_nb_integration_points</span><span class="p">,</span>
+                <span class="p">)</span>
 
 <div class="viewcode-block" id="Delhommeau.find_best_exponential_decomposition">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau.find_best_exponential_decomposition">[docs]</a>
@@ -281,8 +305,8 @@
 <span class="sd">            the amplitude and growth rates of the exponentials</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
-        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Compute Prony decomposition in finite water_depth Green function &quot;</span>
-                  <span class="sa">f</span><span class="s2">&quot;for dimless_omega=%.2e and dimless_wavenumber=%.2e&quot;</span><span class="p">,</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Compute Prony decomposition in finite water_depth Green function &quot;</span>
+                  <span class="s2">&quot;for dimless_omega=</span><span class="si">%.2e</span><span class="s2"> and dimless_wavenumber=</span><span class="si">%.2e</span><span class="s2">&quot;</span><span class="p">,</span>
                   <span class="n">dimensionless_omega</span><span class="p">,</span> <span class="n">dimensionless_wavenumber</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_prony_decomposition_method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;python&#39;</span><span class="p">:</span>
