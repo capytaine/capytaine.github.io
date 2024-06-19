@@ -155,14 +155,7 @@ The <code class="code docutils literal notranslate"><span class="pre">center_of_
 <span class="c1"># dict_keys([&#39;Surge&#39;, &#39;Sway&#39;, &#39;Heave&#39;, &#39;Roll&#39;, &#39;Pitch&#39;, &#39;Yaw&#39;])</span>
 </pre></div>
 </div>
-<p>Dofs can also be defined manually, for instance to model a flexible body. For this purpose, one has to define a list a vectors where each vector is the displacement of the body at the center of a face:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="s2">&quot;x-shear&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[(</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">z</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="ow">in</span> <span class="n">sphere</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">]</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-<span class="c1"># dict_keys([&#39;Surge&#39;, &#39;Sway&#39;, &#39;Heave&#39;, &#39;Roll&#39;, &#39;Pitch&#39;, &#39;Yaw&#39;, &#39;x-shear&#39;])</span>
-</pre></div>
-</div>
+<p>Dofs can also be defined manually, for instance to model a flexible body, see <a class="reference internal" href="body.html"><span class="doc">Floating body</span></a>.</p>
 </section>
 <section id="hydrostatics">
 <h3>Hydrostatics<a class="headerlink" href="#hydrostatics" title="Link to this heading">¶</a></h3>
@@ -173,23 +166,22 @@ The <code class="code docutils literal notranslate"><span class="pre">center_of_
 <span class="c1"># 3.82267415555807</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">hydrostatics</span><span class="p">[</span><span class="s2">&quot;hydrostatic_stiffness&quot;</span><span class="p">])</span>
-<span class="c1"># &lt;xarray.DataArray &#39;hydrostatic_stiffness&#39; (influenced_dof: 7, radiating_dof: 7)&gt;</span>
+<span class="c1"># &lt;xarray.DataArray &#39;hydrostatic_stiffness&#39; (influenced_dof: 6, radiating_dof: 6)&gt; Size: 288B</span>
 <span class="c1"># [...]</span>
 <span class="c1"># Coordinates:</span>
-<span class="c1">#   * influenced_dof  (influenced_dof) &lt;U7 &#39;Surge&#39; &#39;Sway&#39; ... &#39;Yaw&#39; &#39;x-shear&#39;</span>
-<span class="c1">#   * radiating_dof   (radiating_dof) &lt;U7 &#39;Surge&#39; &#39;Sway&#39; ... &#39;Yaw&#39; &#39;x-shear&#39;</span>
+<span class="c1">#   * influenced_dof  (influenced_dof) &lt;U5 120B &#39;Surge&#39; &#39;Sway&#39; ... &#39;Pitch&#39; &#39;Yaw&#39;</span>
+<span class="c1">#   * radiating_dof   (radiating_dof) &lt;U5 120B &#39;Surge&#39; &#39;Sway&#39; ... &#39;Pitch&#39; &#39;Yaw&#39;</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">hydrostatics</span><span class="p">[</span><span class="s2">&quot;inertia_matrix&quot;</span><span class="p">])</span>
-<span class="c1"># &lt;xarray.DataArray &#39;inertia_matrix&#39; (influenced_dof: 7, radiating_dof: 7)&gt;</span>
+<span class="c1"># &lt;xarray.DataArray &#39;inertia_matrix&#39; (influenced_dof: 6, radiating_dof: 6)&gt; Size: 288B</span>
 <span class="c1"># [...]</span>
 <span class="c1"># Coordinates:</span>
-<span class="c1">#   * influenced_dof  (influenced_dof) &lt;U7 &#39;Surge&#39; &#39;Sway&#39; ... &#39;Yaw&#39; &#39;x-shear&#39;</span>
-<span class="c1">#   * radiating_dof   (radiating_dof) &lt;U7 &#39;Surge&#39; &#39;Sway&#39; ... &#39;Yaw&#39; &#39;x-shear&#39;</span>
+<span class="c1">#   * influenced_dof  (influenced_dof) &lt;U5 120B &#39;Surge&#39; &#39;Sway&#39; ... &#39;Pitch&#39; &#39;Yaw&#39;</span>
+<span class="c1">#   * radiating_dof   (radiating_dof) &lt;U5 120B &#39;Surge&#39; &#39;Sway&#39; ... &#39;Pitch&#39; &#39;Yaw&#39;</span>
 </pre></div>
 </div>
-<p>The matrices here are <span class="math notranslate nohighlight">\(7 \times 7\)</span> matrices as we have defined seven dofs for our sphere.
-The matrices are stored as <code class="code docutils literal notranslate"><span class="pre">DataArray</span></code> from the <a class="reference external" href="https://xarray.dev/">xarray</a> package (see below for an example of usage).
-Note that the inertia matrix can only be computed for rigid bodies (assuming constant density). The matrix was filled with <code class="code docutils literal notranslate"><span class="pre">NaN</span></code> for the generalized dof <code class="code docutils literal notranslate"><span class="pre">x-shear</span></code>.</p>
+<p>The matrices here are <span class="math notranslate nohighlight">\(6 \times 6\)</span> matrices as we have defined seven dofs for our sphere.
+The matrices are stored as <code class="code docutils literal notranslate"><span class="pre">DataArray</span></code> from the <a class="reference external" href="https://xarray.dev/">xarray</a> package (see below for an example of usage).</p>
 </section>
 <section id="defining-linear-potential-flow-problems">
 <h3>Defining linear potential flow problems.<a class="headerlink" href="#defining-linear-potential-flow-problems" title="Link to this heading">¶</a></h3>
@@ -212,9 +204,9 @@ Since we are using their default value, we could have defined the radiation prob
 </div>
 <p>Some more parameters are automatically computed, such as:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">)</span>
-<span class="c1"># 0.1019367991845056</span>
+<span class="c1"># 0.10471975511965977</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">period</span><span class="p">)</span>
-<span class="c1"># 6.283185307179586</span>
+<span class="c1"># 6.199134450374511</span>
 </pre></div>
 </div>
 <p>Capytaine also implement a <code class="code docutils literal notranslate"><span class="pre">DiffractionProblem</span></code> class which does not take a <code class="code docutils literal notranslate"><span class="pre">radiating_dof</span></code> argument but instead requires a <code class="code docutils literal notranslate"><span class="pre">wave_direction</span></code> in radians:</p>
@@ -236,19 +228,21 @@ Let us now solve the problem we defined earlier:</p>
 <p>The <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a> method returns a result object. The result object contains all of the data from
 the problem it comes from:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">omega</span><span class="p">)</span>
-<span class="c1"># 1.0</span>
+<span class="c1"># 1.0135584826362327</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 <span class="c1"># &quot;my buoy&quot;</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">radiating_dof</span><span class="p">)</span>
 <span class="c1"># &quot;Heave&quot;</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">period</span><span class="p">)</span>
-<span class="c1"># 6.283185307179586</span>
+<span class="c1"># 6.199134450374511</span>
 </pre></div>
 </div>
 <p>Of course, it also stores some output data. Since we solved a radiation problem, we can now access
 the added mass and radiation damping:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">added_masses</span><span class="p">)</span>
-<span class="c1"># {&#39;Surge&#39;: -2.2737367544323206e-13, &#39;Sway&#39;: 2.8421709430404007e-13, &#39;Heave&#39;: 2207.842170942399, &#39;Roll&#39;: -5.3290705182007514e-14, &#39;Pitch&#39;: 1.3289369604763124e-13, &#39;Yaw&#39;: -4.0933040491086855e -15, &#39;x-shear&#39;: 1.3677947663381929e-13}</span>
+<span class="c1"># {&#39;Surge&#39;: -1.6599836869615906e-13, &#39;Sway&#39;: -1.3833197391346588e-13,</span>
+<span class="c1">#  &#39;Heave&#39;: 2208.927428982037, &#39;Roll&#39;: 0.0,</span>
+<span class="c1">#  &#39;Pitch&#39;: 3.804129282620312e-14, &#39;Yaw&#39;: 1.018450117785757e-14}</span>
 </pre></div>
 </div>
 <p>The <code class="code docutils literal notranslate"><span class="pre">added_masses</span></code> dictionary stores the resulting force on each of the “influenced dofs” of the body.
@@ -257,13 +251,21 @@ In this example, the radiating dof is heave and the reaction force in the
 respect to the one in the <span class="math notranslate nohighlight">\(z\)</span> direction
 (<code class="code docutils literal notranslate"><span class="pre">result.added_masses['Heave']</span></code>).</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">radiation_dampings</span><span class="p">)</span>
-<span class="c1"># {&#39;Surge&#39;: -9.103828801926284e-15, &#39;Sway&#39;: 0.0, &#39;Heave&#39;: 13.623038091677039, &#39;Roll&#39;: -1.7486012 637846216e-15, &#39;Pitch&#39;: 3.4937330806172895e-15, &#39;Yaw&#39;: 9.7897500502683e-17, &#39;x-shear&#39;: 7.271960811294775e-15}</span>
+<span class="c1"># {&#39;Surge&#39;: -3.3080217785235813e-14, &#39;Sway&#39;: 2.8041509115961483e-14,</span>
+   <span class="s1">&#39;Heave&#39;</span><span class="p">:</span> <span class="mf">14.803762085499228</span><span class="p">,</span> <span class="s1">&#39;Roll&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mf">2.820581483343782e-15</span><span class="p">,</span>
+   <span class="s1">&#39;Pitch&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mf">2.6596988016482022e-15</span><span class="p">,</span> <span class="s1">&#39;Yaw&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mf">4.486075343117886e-17</span><span class="p">}</span>
 </pre></div>
 </div>
 <p>The same thing hold for the diffraction problem:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">diffraction_result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">diffraction_problem</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">diffraction_result</span><span class="o">.</span><span class="n">forces</span><span class="p">)</span>
-<span class="c1"># {&#39;Surge&#39;: (1.2789769243681803e-13+2.1760371282653068e-13j), &#39;Sway&#39;: (5.9629097739514805-1923.8976950141728j), &#39;Heave&#39;: (-1802.7102076027684-10.957655022820937j), &#39;Roll&#39;: (-0.010382265075485009+4.15060693393701j), &#39;Pitch&#39;: (-7.799316747991725e-14+2.8310687127941492e-14j), &#39;Yaw&#39;: (-1.2477555116385028e-15+7.261633298807041e-14j), &#39;x-shear&#39;: (-8.43769498715119e-14-2.0972112935169207e-13j)}</span>
+<span class="c1"># {&#39;Surge&#39;: np.complex128(2.5934809855243657e-13+2.2870594307278225e-13j),</span>
+<span class="c1">#  &#39;Sway&#39;: np.complex128(5.969301397957423-1928.0584773706814j),</span>
+<span class="c1">#  &#39;Heave&#39;: np.complex128(-1802.2378814572921-10.9509664655968j),</span>
+<span class="c1">#  &#39;Roll&#39;: np.complex128(-0.010423009597921862+4.185948400947856j),</span>
+<span class="c1">#  &#39;Pitch&#39;: np.complex128(-3.319566843629218e-14+2.0039525594484076e-14j),</span>
+<span class="c1">#  &#39;Yaw&#39;: np.complex128(-6.444497858876913e-15+5.167800131833467e-14j)</span>
+<span class="c1">#  }</span>
 </pre></div>
 </div>
 </section>
