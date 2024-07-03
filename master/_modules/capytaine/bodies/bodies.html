@@ -41,8 +41,8 @@
             
   <h1>Source code for capytaine.bodies.bodies</h1><div class="highlight"><pre>
 <span></span><span class="sd">&quot;&quot;&quot;Floating bodies to be used in radiation-diffraction problems.&quot;&quot;&quot;</span>
-<span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin</span>
-<span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
+<span class="c1"># Copyright (C) 2017-2024 Matthieu Ancellin</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/capytaine/capytaine&gt;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">copy</span>
@@ -54,6 +54,7 @@
 
 <span class="kn">from</span> <span class="nn">capytaine.meshes.collections</span> <span class="kn">import</span> <span class="n">CollectionOfMeshes</span>
 <span class="kn">from</span> <span class="nn">capytaine.meshes.geometry</span> <span class="kn">import</span> <span class="n">Abstract3DObject</span><span class="p">,</span> <span class="n">ClippableMixin</span><span class="p">,</span> <span class="n">Plane</span><span class="p">,</span> <span class="n">inplace_transformation</span>
+<span class="kn">from</span> <span class="nn">capytaine.meshes.properties</span> <span class="kn">import</span> <span class="n">connected_components</span><span class="p">,</span> <span class="n">connected_components_of_waterline</span>
 <span class="kn">from</span> <span class="nn">capytaine.meshes.meshes</span> <span class="kn">import</span> <span class="n">Mesh</span>
 <span class="kn">from</span> <span class="nn">capytaine.meshes.symmetric</span> <span class="kn">import</span> <span class="n">build_regular_array_of_meshes</span>
 <span class="kn">from</span> <span class="nn">capytaine.bodies.dofs</span> <span class="kn">import</span> <span class="n">RigidBodyDofsPlaceholder</span>
@@ -1221,6 +1222,46 @@
             <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">8</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="mi">8</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="mi">8</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+<div class="viewcode-block" id="FloatingBody.first_irregular_frequency_estimate">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.first_irregular_frequency_estimate">[docs]</a>
+    <span class="k">def</span> <span class="nf">first_irregular_frequency_estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mf">9.81</span><span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Estimates the angular frequency of the lowest irregular</span>
+<span class="sd">        frequency.</span>
+<span class="sd">        This is based on the formula for the lowest irregular frequency of a</span>
+<span class="sd">        parallelepiped of size :math:`L \times B` and draft :math:`H`:</span>
+
+<span class="sd">        .. math::</span>
+<span class="sd">            \omega = \sqrt{</span>
+<span class="sd">                        \frac{\pi g \sqrt{\frac{1}{B^2} + \frac{1}{L^2}}}</span>
+<span class="sd">                             {\tanh\left(\pi H \sqrt{\frac{1}{B^2} + \frac{1}{L^2}} \right)}</span>
+<span class="sd">                     }</span>
+
+<span class="sd">        The formula is applied to all shapes to get an estimate that is usually</span>
+<span class="sd">        conservative.</span>
+<span class="sd">        The definition of a lid (supposed to be fully covering and horizontal)</span>
+<span class="sd">        is taken into account.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">draft</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">draft</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
+            <span class="k">if</span> <span class="n">draft</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+        <span class="c1"># Look for the x and y span of each components (e.g. for multibody) and</span>
+        <span class="c1"># keep the one causing the lowest irregular frequency.</span>
+        <span class="c1"># The draft is supposed to be same for all components.</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">connected_components</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">ccomp</span> <span class="ow">in</span> <span class="n">connected_components_of_waterline</span><span class="p">(</span><span class="n">comp</span><span class="p">):</span>
+                <span class="n">x_span</span> <span class="o">=</span> <span class="n">ccomp</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">ccomp</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="n">y_span</span> <span class="o">=</span> <span class="n">ccomp</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">ccomp</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x_span</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">y_span</span><span class="p">)</span>
+                <span class="n">omega_comp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">g</span><span class="o">*</span><span class="n">p</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">draft</span><span class="o">*</span><span class="n">p</span><span class="p">)))</span>
+                <span class="n">omega</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">omega_comp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">omega</span></div>
+
 
 <div class="viewcode-block" id="FloatingBody.cluster_bodies">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.cluster_bodies">[docs]</a>

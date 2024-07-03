@@ -40,8 +40,8 @@
           <div class="body" role="main">
             
   <h1>Source code for capytaine.bem.solver</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin</span>
-<span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
+<span></span><span class="c1"># Copyright (C) 2017-2024 Matthieu Ancellin</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/capytaine/capytaine&gt;</span>
 <span class="sd">&quot;&quot;&quot;Solver for the BEM problem.</span>
 
 <span class="sd">.. code-block:: python</span>
@@ -142,7 +142,9 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Solve </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="n">problem</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">_check_wavelength</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength</span><span class="p">([</span><span class="n">problem</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">_check_wavelength</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength_and_mesh_resolution</span><span class="p">([</span><span class="n">problem</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength_and_irregular_frequencies</span><span class="p">([</span><span class="n">problem</span><span class="p">])</span>
 
         <span class="k">if</span> <span class="n">problem</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="n">omega</span><span class="p">,</span> <span class="n">wavenumber</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">encounter_omega</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">encounter_wavenumber</span>
@@ -215,7 +217,9 @@
 <span class="sd">        list of LinearPotentialFlowResult</span>
 <span class="sd">            the solved problems</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">_check_wavelength</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">_check_wavelength</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength_and_mesh_resolution</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength_and_irregular_frequencies</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">n_jobs</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># force sequential resolution</span>
             <span class="n">problems</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
@@ -238,7 +242,7 @@
 
 
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">_check_wavelength</span><span class="p">(</span><span class="n">problems</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_check_wavelength_and_mesh_resolution</span><span class="p">(</span><span class="n">problems</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Display a warning if some of the problems have a mesh resolution</span>
 <span class="sd">        that might not be sufficient for the given wavelength.&quot;&quot;&quot;</span>
         <span class="n">risky_problems</span> <span class="o">=</span> <span class="p">[</span><span class="n">pb</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">problems</span>
@@ -249,20 +253,49 @@
             <span class="n">freq_type</span> <span class="o">=</span> <span class="n">risky_problems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">provided_freq_type</span>
             <span class="n">freq</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">freq_type</span><span class="p">)</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mesh resolution for </span><span class="si">{</span><span class="n">pb</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;The resolution of the mesh of the body </span><span class="si">{</span><span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2"> might &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;be insufficient for </span><span class="si">{</span><span class="n">freq_type</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">freq</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                     <span class="s2">&quot;This warning appears because the largest panel of this mesh &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;has radius </span><span class="si">{</span><span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> &gt; wavelength/8.&quot;</span>
-                    <span class="p">)</span>
+                        <span class="sa">f</span><span class="s2">&quot;The resolution of the mesh of the body </span><span class="si">{</span><span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2"> might &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;be insufficient for </span><span class="si">{</span><span class="n">freq_type</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">freq</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                        <span class="s2">&quot;This warning appears because the largest panel of this mesh &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;has radius </span><span class="si">{</span><span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> &gt; wavelength/8.&quot;</span>
+                        <span class="p">)</span>
         <span class="k">elif</span> <span class="n">nb_risky_problems</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">freq_type</span> <span class="o">=</span> <span class="n">risky_problems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">provided_freq_type</span>
             <span class="n">freqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">freq_type</span><span class="p">))</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">risky_problems</span><span class="p">])</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mesh resolution for </span><span class="si">{</span><span class="n">nb_risky_problems</span><span class="si">}</span><span class="s2"> problems:</span><span class="se">\n</span><span class="s2">&quot;</span>
-                         <span class="s2">&quot;The resolution of the mesh might be insufficient &quot;</span>
+                        <span class="s2">&quot;The resolution of the mesh might be insufficient &quot;</span>
                         <span class="sa">f</span><span class="s2">&quot;for </span><span class="si">{</span><span class="n">freq_type</span><span class="si">}</span><span class="s2"> ranging from </span><span class="si">{</span><span class="n">freqs</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">freqs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                         <span class="s2">&quot;This warning appears when the largest panel of this mesh &quot;</span>
-                         <span class="s2">&quot;has radius &gt; wavelength/8.&quot;</span>
-                    <span class="p">)</span>
+                        <span class="s2">&quot;This warning appears when the largest panel of this mesh &quot;</span>
+                        <span class="s2">&quot;has radius &gt; wavelength/8.&quot;</span>
+                        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_wavelength_and_irregular_frequencies</span><span class="p">(</span><span class="n">problems</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Display a warning if some of the problems might encounter irregular frequencies.&quot;&quot;&quot;</span>
+        <span class="n">risky_problems</span> <span class="o">=</span> <span class="p">[</span><span class="n">pb</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">problems</span>
+                          <span class="k">if</span> <span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">first_irregular_frequency_estimate</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">pb</span><span class="o">.</span><span class="n">omega</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">]</span>
+        <span class="n">nb_risky_problems</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">risky_problems</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nb_risky_problems</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">problems</span><span class="p">):</span>
+                <span class="n">recommendation</span> <span class="o">=</span> <span class="s2">&quot;Setting a lid for the floating body is recommended.&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">recommendation</span> <span class="o">=</span> <span class="s2">&quot;The lid might need to be closer to the free surface.&quot;</span>
+            <span class="k">if</span> <span class="n">nb_risky_problems</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">pb</span> <span class="o">=</span> <span class="n">risky_problems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="n">freq_type</span> <span class="o">=</span> <span class="n">risky_problems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">provided_freq_type</span>
+                <span class="n">freq</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">freq_type</span><span class="p">)</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Irregular frequencies for </span><span class="si">{</span><span class="n">pb</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;The body </span><span class="si">{</span><span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2"> might display irregular frequencies &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;for </span><span class="si">{</span><span class="n">freq_type</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">freq</span><span class="si">}</span><span class="s2"> &gt; .</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="o">+</span> <span class="n">recommendation</span>
+                            <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">nb_risky_problems</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">freq_type</span> <span class="o">=</span> <span class="n">risky_problems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">provided_freq_type</span>
+                <span class="n">freqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">freq_type</span><span class="p">))</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">risky_problems</span><span class="p">])</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Irregular frequencies for </span><span class="si">{</span><span class="n">nb_risky_problems</span><span class="si">}</span><span class="s2"> problems:</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;Irregular frequencies might be encountered &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;for </span><span class="si">{</span><span class="n">freq_type</span><span class="si">}</span><span class="s2"> ranging from </span><span class="si">{</span><span class="n">freqs</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">freqs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="o">+</span> <span class="n">recommendation</span>
+                            <span class="p">)</span>
 
 <div class="viewcode-block" id="BEMSolver.fill_dataset">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset">[docs]</a>
