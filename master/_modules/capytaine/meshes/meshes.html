@@ -52,7 +52,7 @@
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 
 <span class="kn">from</span> <span class="nn">capytaine.meshes.geometry</span> <span class="kn">import</span> <span class="n">Abstract3DObject</span><span class="p">,</span> <span class="n">ClippableMixin</span><span class="p">,</span> <span class="n">Plane</span><span class="p">,</span> <span class="n">inplace_transformation</span><span class="p">,</span> <span class="n">xOy_Plane</span>
-<span class="kn">from</span> <span class="nn">capytaine.meshes.properties</span> <span class="kn">import</span> <span class="n">compute_faces_properties</span>
+<span class="kn">from</span> <span class="nn">capytaine.meshes.properties</span> <span class="kn">import</span> <span class="n">compute_faces_properties</span><span class="p">,</span> <span class="n">connected_components</span><span class="p">,</span> <span class="n">connected_components_of_waterline</span>
 <span class="kn">from</span> <span class="nn">capytaine.meshes.surface_integrals</span> <span class="kn">import</span> <span class="n">SurfaceIntegralsMixin</span>
 <span class="kn">from</span> <span class="nn">capytaine.meshes.quality</span> <span class="kn">import</span> <span class="p">(</span><span class="n">merge_duplicates</span><span class="p">,</span> <span class="n">heal_normals</span><span class="p">,</span> <span class="n">remove_unused_vertices</span><span class="p">,</span>
                                       <span class="n">heal_triangles</span><span class="p">,</span> <span class="n">remove_degenerated_faces</span><span class="p">)</span>
@@ -857,6 +857,99 @@
         <span class="k">if</span> <span class="n">closed_mesh</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">heal_normals</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="c1">##########</span>
+    <span class="c1">#  Lids  #</span>
+    <span class="c1">##########</span>
+
+<div class="viewcode-block" id="Mesh.lowest_lid_position">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.lowest_lid_position">[docs]</a>
+    <span class="k">def</span> <span class="nf">lowest_lid_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega_max</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mf">9.81</span><span class="p">):</span>
+        <span class="n">z_lid</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">connected_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">ccomp</span> <span class="ow">in</span> <span class="n">connected_components_of_waterline</span><span class="p">(</span><span class="n">comp</span><span class="p">):</span>
+                <span class="n">x_span</span> <span class="o">=</span> <span class="n">ccomp</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">ccomp</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="n">y_span</span> <span class="o">=</span> <span class="n">ccomp</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">ccomp</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x_span</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">y_span</span><span class="p">)</span>
+                <span class="n">z_lid_comp</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">arctanh</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">g</span><span class="o">*</span><span class="n">p</span><span class="o">/</span><span class="n">omega_max</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+                <span class="n">z_lid</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">z_lid</span><span class="p">,</span> <span class="n">z_lid_comp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mf">0.9</span><span class="o">*</span><span class="n">z_lid</span>  <span class="c1"># Add a small safety margin</span></div>
+
+
+<div class="viewcode-block" id="Mesh.generate_lid">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.generate_lid">[docs]</a>
+    <span class="k">def</span> <span class="nf">generate_lid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">faces_max_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create internal free surface lid based on rectangular mesh</span>
+<span class="sd">        The body is updated into double body with internal mesh</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        z: float</span>
+<span class="sd">            Vertical position of the lid. Default: 0.0</span>
+<span class="sd">        faces_max_radius: float</span>
+<span class="sd">            resolution of the mesh of the lid.</span>
+<span class="sd">            Default: mean of hull mesh resolution.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Mesh</span>
+<span class="sd">            lid of internal surface</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">from</span> <span class="nn">capytaine.meshes.predefined.rectangles</span> <span class="kn">import</span> <span class="n">mesh_rectangle</span>
+
+        <span class="n">clipped_hull_mesh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">Plane</span><span class="p">(</span><span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">point</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">z</span><span class="p">)))</span>
+        <span class="c1"># Alternatively: could keep only faces below z without proper clipping,</span>
+        <span class="c1"># and it would work similarly.</span>
+
+        <span class="k">if</span> <span class="n">clipped_hull_mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;lid for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="n">x_span</span> <span class="o">=</span> <span class="n">clipped_hull_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">clipped_hull_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">y_span</span> <span class="o">=</span> <span class="n">clipped_hull_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">clipped_hull_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">x_mean</span> <span class="o">=</span> <span class="p">(</span><span class="n">clipped_hull_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">clipped_hull_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">y_mean</span> <span class="o">=</span> <span class="p">(</span><span class="n">clipped_hull_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">+</span> <span class="n">clipped_hull_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span><span class="o">/</span><span class="mi">2</span>
+
+        <span class="k">if</span> <span class="n">faces_max_radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">faces_max_radius</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">clipped_hull_mesh</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="p">)</span>
+
+        <span class="n">candidate_lid_mesh</span> <span class="o">=</span> <span class="n">mesh_rectangle</span><span class="p">(</span>
+                <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mf">1.1</span><span class="o">*</span><span class="n">y_span</span><span class="p">,</span> <span class="mf">1.1</span><span class="o">*</span><span class="n">x_span</span><span class="p">),</span>  <span class="c1"># TODO Fix mesh_rectangle</span>
+                <span class="n">faces_max_radius</span><span class="o">=</span><span class="n">faces_max_radius</span><span class="p">,</span>
+                <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="n">x_mean</span><span class="p">,</span> <span class="n">y_mean</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span>
+                <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">),</span>
+                <span class="p">)</span>
+
+        <span class="n">candidate_lid_points</span> <span class="o">=</span> <span class="n">candidate_lid_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+
+        <span class="n">hull_faces</span> <span class="o">=</span> <span class="n">clipped_hull_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="n">clipped_hull_mesh</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+        <span class="n">edges_of_hull_faces</span> <span class="o">=</span> <span class="n">hull_faces</span><span class="p">[:,</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">hull_faces</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:]</span>  <span class="c1"># Vectors between two consecutive points in a face</span>
+        <span class="c1"># edges_of_hull_faces.shape = (nb_full_faces, 4, 2)</span>
+        <span class="n">lid_points_in_local_coords</span> <span class="o">=</span> <span class="n">candidate_lid_points</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">hull_faces</span><span class="p">[:,</span> <span class="p">:,</span> <span class="p">:]</span>
+        <span class="c1"># lid_points_in_local_coords.shape = (nb_candidate_lid_points, nb_full_faces, 4, 2)</span>
+        <span class="n">side_of_hull_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">lid_points_in_local_coords</span><span class="p">,</span> <span class="n">edges_of_hull_faces</span><span class="p">)</span>
+        <span class="c1"># side_of_hull_edges.shape = (nb_candidate_lid_points, nb_full_faces, 4)</span>
+        <span class="n">point_is_above_panel</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">side_of_hull_edges</span> <span class="o">&lt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">side_of_hull_edges</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="c1"># point_is_above_panel.shape = (nb_candidate_lid_points, nb_full_faces)</span>
+
+        <span class="c1"># For all point in candidate_lid_points, and for all edges of all faces of</span>
+        <span class="c1"># the hull mesh, check on which side of the edge is the point by using a</span>
+        <span class="c1"># cross product.</span>
+        <span class="c1"># If a point on the same side of all edges of a face, then it is inside.</span>
+
+        <span class="n">nb_panels_below_point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">point_is_above_panel</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">needs_lid</span> <span class="o">=</span> <span class="p">(</span><span class="n">nb_panels_below_point</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">nonzero</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">lid_faces</span> <span class="o">=</span> <span class="n">candidate_lid_mesh</span><span class="o">.</span><span class="n">faces</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">candidate_lid_mesh</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span> <span class="n">needs_lid</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span> <span class="p">:]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lid_faces</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;lid for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+
+        <span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">candidate_lid_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="n">lid_faces</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;lid for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="n">lid_mesh</span><span class="o">.</span><span class="n">heal_mesh</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">lid_mesh</span></div>
+
 
     <span class="nd">@inplace_transformation</span>
     <span class="k">def</span> <span class="nf">with_normal_vector_going_down</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>

@@ -454,11 +454,31 @@ also accepts methods from the <cite>Quadpy</cite> package:</p>
 </section>
 <section id="extracting-or-generating-a-lid">
 <h2>Extracting or generating a lid<a class="headerlink" href="#extracting-or-generating-a-lid" title="Link to this heading">¶</a></h2>
-<p>If you loaded a mesh file already containing a lid on the <span class="math notranslate nohighlight">\(z=0\)</span> plane, the hull and the lid can be split with the <a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.extract_lid" title="capytaine.meshes.meshes.Mesh.extract_lid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">extract_lid()</span></code></a> method:</p>
+<p>If you loaded a mesh file already containing a lid on the <span class="math notranslate nohighlight">\(z=0\)</span> plane,
+the hull and the lid can be split with the
+<a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.extract_lid" title="capytaine.meshes.meshes.Mesh.extract_lid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">extract_lid()</span></code></a> method:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">full_mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="n">hull_mesh</span><span class="p">,</span> <span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">full_mesh</span><span class="o">.</span><span class="n">extract_lid</span><span class="p">()</span>
 </pre></div>
 </div>
+<p>If your mesh does not have a lid, and you’d like to have irregular frequencies
+removal, you can generate a lid using
+<a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.generate_lid" title="capytaine.meshes.meshes.Mesh.generate_lid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generate_lid()</span></code></a> as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">hull_mesh</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">(</span><span class="n">z</span><span class="o">=-</span><span class="mf">0.1</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Here the mesh is generated below the free surface, as Capytaine currently
+more robustly supports lid meshes below the free surface although they
+might not totally cancel all irregular frequencies.</p>
+<p>An estimate of the lowest position at which the lid can be put for a given
+frequency can be computed as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">hull_mesh</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">hull_mesh</span><span class="o">.</span><span class="n">lowest_lid_position</span><span class="p">(</span><span class="n">omega_max</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>The resolution of the lid mesh can be set with the <code class="docutils literal notranslate"><span class="pre">faces_max_radius</span></code>
+argument. By default, the mean resolution of the hull mesh is used.</p>
+<p>See <a class="reference internal" href="body.html"><span class="doc">Floating body</span></a> for detail on how to assign a lid mesh when defining a floating
+body.</p>
 </section>
 </section>
 

@@ -54,27 +54,28 @@ The scripts can be downloaded individually as Python files from the <a class="re
 <li><p><a class="reference internal" href="#added-mass-of-a-rigid-body" id="id3">Added mass of a rigid body</a></p></li>
 <li><p><a class="reference internal" href="#custom-degree-of-freedom" id="id4">Custom degree of freedom</a></p></li>
 <li><p><a class="reference internal" href="#influence-of-the-water-depth" id="id5">Influence of the water depth</a></p></li>
-<li><p><a class="reference internal" href="#simulation-with-several-bodies" id="id6">Simulation with several bodies</a></p></li>
-<li><p><a class="reference internal" href="#plot-pressure-on-hull" id="id7">Plot pressure on hull</a></p></li>
-<li><p><a class="reference internal" href="#free-surface-elevation" id="id8">Free surface elevation</a></p></li>
-<li><p><a class="reference internal" href="#comparison-with-hydrostatics-from-meshmagick" id="id9">Comparison with hydrostatics from Meshmagick</a></p></li>
+<li><p><a class="reference internal" href="#irregular-frequencies-removal" id="id6">Irregular frequencies removal</a></p></li>
+<li><p><a class="reference internal" href="#simulation-with-several-bodies" id="id7">Simulation with several bodies</a></p></li>
+<li><p><a class="reference internal" href="#plot-pressure-on-hull" id="id8">Plot pressure on hull</a></p></li>
+<li><p><a class="reference internal" href="#free-surface-elevation" id="id9">Free surface elevation</a></p></li>
+<li><p><a class="reference internal" href="#comparison-with-hydrostatics-from-meshmagick" id="id10">Comparison with hydrostatics from Meshmagick</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#intermediate-examples" id="id10">Intermediate examples</a></p>
+<li><p><a class="reference internal" href="#intermediate-examples" id="id11">Intermediate examples</a></p>
 <ul>
-<li><p><a class="reference internal" href="#animated-free-surface-elevation" id="id11">Animated free surface elevation</a></p></li>
-<li><p><a class="reference internal" href="#animation-of-the-rao" id="id12">Animation of the RAO</a></p></li>
-<li><p><a class="reference internal" href="#kochin-function" id="id13">Kochin function</a></p></li>
-<li><p><a class="reference internal" href="#haskind-s-relation" id="id14">Haskind’s relation</a></p></li>
-<li><p><a class="reference internal" href="#axisymmetric-body" id="id15">Axisymmetric body</a></p></li>
+<li><p><a class="reference internal" href="#animated-free-surface-elevation" id="id12">Animated free surface elevation</a></p></li>
+<li><p><a class="reference internal" href="#animation-of-the-rao" id="id13">Animation of the RAO</a></p></li>
+<li><p><a class="reference internal" href="#kochin-function" id="id14">Kochin function</a></p></li>
+<li><p><a class="reference internal" href="#haskind-s-relation" id="id15">Haskind’s relation</a></p></li>
+<li><p><a class="reference internal" href="#axisymmetric-body" id="id16">Axisymmetric body</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#advanced-examples" id="id16">Advanced examples</a></p>
+<li><p><a class="reference internal" href="#advanced-examples" id="id17">Advanced examples</a></p>
 <ul>
-<li><p><a class="reference internal" href="#convergence-study" id="id17">Convergence study</a></p></li>
-<li><p><a class="reference internal" href="#plot-the-influence-matrix" id="id18">Plot the influence matrix</a></p></li>
-<li><p><a class="reference internal" href="#compare-two-implementations-of-the-green-function" id="id19">Compare two implementations of the Green function</a></p></li>
-<li><p><a class="reference internal" href="#use-a-custom-green-function" id="id20">Use a custom Green function</a></p></li>
+<li><p><a class="reference internal" href="#convergence-study" id="id18">Convergence study</a></p></li>
+<li><p><a class="reference internal" href="#plot-the-influence-matrix" id="id19">Plot the influence matrix</a></p></li>
+<li><p><a class="reference internal" href="#compare-two-implementations-of-the-green-function" id="id20">Compare two implementations of the Green function</a></p></li>
+<li><p><a class="reference internal" href="#use-a-custom-green-function" id="id21">Use a custom Green function</a></p></li>
 </ul>
 </li>
 </ul>
@@ -262,8 +263,89 @@ The diffraction force on the “x-shear” dof is zero when the wave comes from 
 </pre></div>
 </div>
 </section>
+<section id="irregular-frequencies-removal">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Irregular frequencies removal</a><a class="headerlink" href="#irregular-frequencies-removal" title="Link to this heading">¶</a></h3>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+
+<span class="n">cpt</span><span class="o">.</span><span class="n">set_logging</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+
+<span class="n">radius</span> <span class="o">=</span> <span class="mf">12.5</span>
+<span class="n">draught</span> <span class="o">=</span> <span class="mf">37.5</span>
+<span class="n">n_radius</span> <span class="o">=</span> <span class="mi">15</span>
+<span class="n">n_theta</span> <span class="o">=</span> <span class="mi">25</span>
+<span class="n">n_z</span> <span class="o">=</span> <span class="mi">30</span>
+
+<span class="c1"># Define the range of frequencies to solve</span>
+<span class="n">omega_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">2.25</span><span class="p">,</span> <span class="mi">50</span><span class="p">)</span>
+
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
+
+<span class="k">def</span> <span class="nf">compute_excitation_force</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">omega_range</span><span class="p">):</span>
+    <span class="n">problems</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">cpt</span><span class="o">.</span><span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">omega</span> <span class="ow">in</span> <span class="n">omega_range</span>
+    <span class="p">]</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;excitation_force&#39;</span><span class="p">]</span>
+
+
+<span class="c1"># Initialize floating body by generating a geometric mesh</span>
+<span class="n">cylinder_mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_vertical_cylinder</span><span class="p">(</span>
+    <span class="n">length</span><span class="o">=</span><span class="n">draught</span><span class="o">*</span><span class="mi">2</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">faces_max_radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="p">)</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+
+<span class="c1">### Body Without Lid (Body A)</span>
+<span class="n">body_1</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">cylinder_mesh</span><span class="p">)</span>
+<span class="n">body_1</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
+
+<span class="c1">### Body With Lid at z = -3.699 (Body B)</span>
+<span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">cylinder_mesh</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">(</span><span class="n">z</span><span class="o">=-</span><span class="mf">3.699</span><span class="p">)</span>
+<span class="n">body_2</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">cylinder_mesh</span><span class="p">,</span> <span class="n">lid_mesh</span><span class="o">=</span><span class="n">lid_mesh</span><span class="p">)</span>
+<span class="n">body_2</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
+
+<span class="c1">### Body With Lid at z = auto (Body C)</span>
+<span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">cylinder_mesh</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">cylinder_mesh</span><span class="o">.</span><span class="n">lowest_lid_position</span><span class="p">(</span><span class="n">omega_max</span><span class="o">=</span><span class="n">omega_range</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+<span class="n">body_3</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">cylinder_mesh</span><span class="p">,</span> <span class="n">lid_mesh</span><span class="o">=</span><span class="n">lid_mesh</span><span class="p">)</span>
+<span class="n">body_3</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
+
+<span class="n">force_1</span> <span class="o">=</span> <span class="n">compute_excitation_force</span><span class="p">(</span><span class="n">body_1</span><span class="p">,</span> <span class="n">omega_range</span><span class="p">)</span>
+<span class="n">force_2</span> <span class="o">=</span> <span class="n">compute_excitation_force</span><span class="p">(</span><span class="n">body_2</span><span class="p">,</span> <span class="n">omega_range</span><span class="p">)</span>
+<span class="n">force_3</span> <span class="o">=</span> <span class="n">compute_excitation_force</span><span class="p">(</span><span class="n">body_3</span><span class="p">,</span> <span class="n">omega_range</span><span class="p">)</span>
+
+<span class="c1"># Plot the added mass of each dofs as a function of the frequency</span>
+<span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">omega_range</span><span class="p">,</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">force_1</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">influenced_dof</span><span class="o">=</span><span class="s1">&#39;Surge&#39;</span><span class="p">)),</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;+&#39;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s1">&#39;no lid&#39;</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">omega_range</span><span class="p">,</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">force_2</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">influenced_dof</span><span class="o">=</span><span class="s1">&#39;Surge&#39;</span><span class="p">)),</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;*&#39;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="sa">r</span><span class="s1">&#39;$z = -3.699$m&#39;</span>
+<span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+    <span class="n">omega_range</span><span class="p">,</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">force_3</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">influenced_dof</span><span class="o">=</span><span class="s1">&#39;Surge&#39;</span><span class="p">)),</span>
+    <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;x&#39;</span><span class="p">,</span>
+    <span class="n">label</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span>
+<span class="p">)</span>
+
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$\omega$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;$F_1 (abs)$&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">tight_layout</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</pre></div>
+</div>
+</section>
 <section id="simulation-with-several-bodies">
-<h3><a class="toc-backref" href="#id6" role="doc-backlink">Simulation with several bodies</a><a class="headerlink" href="#simulation-with-several-bodies" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id7" role="doc-backlink">Simulation with several bodies</a><a class="headerlink" href="#simulation-with-several-bodies" title="Link to this heading">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># coding: utf-8</span>
 
@@ -315,7 +397,7 @@ The diffraction force on the “x-shear” dof is zero when the wave comes from 
 </div>
 </section>
 <section id="plot-pressure-on-hull">
-<h3><a class="toc-backref" href="#id7" role="doc-backlink">Plot pressure on hull</a><a class="headerlink" href="#plot-pressure-on-hull" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id8" role="doc-backlink">Plot pressure on hull</a><a class="headerlink" href="#plot-pressure-on-hull" title="Link to this heading">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
 <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
@@ -335,7 +417,7 @@ The diffraction force on the “x-shear” dof is zero when the wave comes from 
 </div>
 </section>
 <section id="free-surface-elevation">
-<h3><a class="toc-backref" href="#id8" role="doc-backlink">Free surface elevation</a><a class="headerlink" href="#free-surface-elevation" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id9" role="doc-backlink">Free surface elevation</a><a class="headerlink" href="#free-surface-elevation" title="Link to this heading">¶</a></h3>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -362,7 +444,7 @@ The diffraction force on the “x-shear” dof is zero when the wave comes from 
 </div>
 </section>
 <section id="comparison-with-hydrostatics-from-meshmagick">
-<h3><a class="toc-backref" href="#id9" role="doc-backlink">Comparison with hydrostatics from Meshmagick</a><a class="headerlink" href="#comparison-with-hydrostatics-from-meshmagick" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id10" role="doc-backlink">Comparison with hydrostatics from Meshmagick</a><a class="headerlink" href="#comparison-with-hydrostatics-from-meshmagick" title="Link to this heading">¶</a></h3>
 <p>Hydrostatic and inertia properties can be computed independently via Capytaine or Meshmagick.
 This script compares them both with analytical expression for a simple geometric object.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
@@ -435,9 +517,9 @@ This script compares them both with analytical expression for a simple geometric
 </section>
 </section>
 <section id="intermediate-examples">
-<h2><a class="toc-backref" href="#id10" role="doc-backlink">Intermediate examples</a><a class="headerlink" href="#intermediate-examples" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id11" role="doc-backlink">Intermediate examples</a><a class="headerlink" href="#intermediate-examples" title="Link to this heading">¶</a></h2>
 <section id="animated-free-surface-elevation">
-<h3><a class="toc-backref" href="#id11" role="doc-backlink">Animated free surface elevation</a><a class="headerlink" href="#animated-free-surface-elevation" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id12" role="doc-backlink">Animated free surface elevation</a><a class="headerlink" href="#animated-free-surface-elevation" title="Link to this heading">¶</a></h3>
 <p>This example solves a diffraction problem, it computes the free surface elevation and shows it as a
 3D animation.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
@@ -490,7 +572,7 @@ This script compares them both with analytical expression for a simple geometric
 </div>
 </section>
 <section id="animation-of-the-rao">
-<h3><a class="toc-backref" href="#id12" role="doc-backlink">Animation of the RAO</a><a class="headerlink" href="#animation-of-the-rao" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id13" role="doc-backlink">Animation of the RAO</a><a class="headerlink" href="#animation-of-the-rao" title="Link to this heading">¶</a></h3>
 <p>This script generates the animation of the RAO motion for a wave incoming in front of a ship,
 such as the one used on the main page of this documentation.
 This script requires the mesh of the ship <code class="code docutils literal notranslate"><span class="pre">boat_200.mar</span></code>. It can be
@@ -560,7 +642,7 @@ downloaded from: <a class="reference external" href="https://raw.githubuserconte
 </div>
 </section>
 <section id="kochin-function">
-<h3><a class="toc-backref" href="#id13" role="doc-backlink">Kochin function</a><a class="headerlink" href="#kochin-function" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id14" role="doc-backlink">Kochin function</a><a class="headerlink" href="#kochin-function" title="Link to this heading">¶</a></h3>
 <p>This example computes the Kochin function for a surging buoy and plot the results.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">pi</span>
@@ -605,7 +687,7 @@ downloaded from: <a class="reference external" href="https://raw.githubuserconte
 </div>
 </section>
 <section id="haskind-s-relation">
-<h3><a class="toc-backref" href="#id14" role="doc-backlink">Haskind’s relation</a><a class="headerlink" href="#haskind-s-relation" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id15" role="doc-backlink">Haskind’s relation</a><a class="headerlink" href="#haskind-s-relation" title="Link to this heading">¶</a></h3>
 <p>This example computes the excitation force from the radiation potential
 using Haskind’s relation. The result is compared with the one obtained by
 direct integration of the potentials from incident waves and from the
@@ -678,7 +760,7 @@ diffraction problem.</p>
 </div>
 </section>
 <section id="axisymmetric-body">
-<h3><a class="toc-backref" href="#id15" role="doc-backlink">Axisymmetric body</a><a class="headerlink" href="#axisymmetric-body" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id16" role="doc-backlink">Axisymmetric body</a><a class="headerlink" href="#axisymmetric-body" title="Link to this heading">¶</a></h3>
 <p>This example generates an axisymmetric mesh from a profile function and solves radiation problems for
 this floating body.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
@@ -734,9 +816,9 @@ this floating body.</p>
 </section>
 </section>
 <section id="advanced-examples">
-<h2><a class="toc-backref" href="#id16" role="doc-backlink">Advanced examples</a><a class="headerlink" href="#advanced-examples" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id17" role="doc-backlink">Advanced examples</a><a class="headerlink" href="#advanced-examples" title="Link to this heading">¶</a></h2>
 <section id="convergence-study">
-<h3><a class="toc-backref" href="#id17" role="doc-backlink">Convergence study</a><a class="headerlink" href="#convergence-study" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id18" role="doc-backlink">Convergence study</a><a class="headerlink" href="#convergence-study" title="Link to this heading">¶</a></h3>
 <p>This example runs a mesh convergence study for a submerged cylinder.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">numpy</span> <span class="kn">import</span> <span class="n">pi</span>
@@ -784,7 +866,7 @@ this floating body.</p>
 </div>
 </section>
 <section id="plot-the-influence-matrix">
-<h3><a class="toc-backref" href="#id18" role="doc-backlink">Plot the influence matrix</a><a class="headerlink" href="#plot-the-influence-matrix" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id19" role="doc-backlink">Plot the influence matrix</a><a class="headerlink" href="#plot-the-influence-matrix" title="Link to this heading">¶</a></h3>
 <p>This example plots the influence matrix for an horizontal cylinder.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
@@ -820,7 +902,7 @@ this floating body.</p>
 </div>
 </section>
 <section id="compare-two-implementations-of-the-green-function">
-<h3><a class="toc-backref" href="#id19" role="doc-backlink">Compare two implementations of the Green function</a><a class="headerlink" href="#compare-two-implementations-of-the-green-function" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id20" role="doc-backlink">Compare two implementations of the Green function</a><a class="headerlink" href="#compare-two-implementations-of-the-green-function" title="Link to this heading">¶</a></h3>
 <p>This is an example of comparison of two implementations of the Green function.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
@@ -859,7 +941,7 @@ this floating body.</p>
 </div>
 </section>
 <section id="use-a-custom-green-function">
-<h3><a class="toc-backref" href="#id20" role="doc-backlink">Use a custom Green function</a><a class="headerlink" href="#use-a-custom-green-function" title="Link to this heading">¶</a></h3>
+<h3><a class="toc-backref" href="#id21" role="doc-backlink">Use a custom Green function</a><a class="headerlink" href="#use-a-custom-green-function" title="Link to this heading">¶</a></h3>
 <p>This is an example of how to implement a custom Green function.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
