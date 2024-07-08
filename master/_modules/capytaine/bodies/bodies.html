@@ -363,7 +363,7 @@
 
 <div class="viewcode-block" id="FloatingBody.disp_mass">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.disp_mass">[docs]</a>
-    <span class="k">def</span> <span class="nf">disp_mass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">disp_mass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">disp_mass</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="n">rho</span><span class="p">)</span></div>
 
 
@@ -617,7 +617,9 @@
             <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Cannot compute hydrostatics stiffness on </span><span class="si">{}</span><span class="s2"> since no dof has been defined.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
 
         <span class="k">def</span> <span class="nf">divergence_dof</span><span class="p">(</span><span class="n">influenced_dof</span><span class="p">):</span>
-            <span class="k">if</span> <span class="n">divergence</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">influenced_dof</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="o">*</span><span class="n">TRANSLATION_DOFS_DIRECTIONS</span><span class="p">,</span> <span class="o">*</span><span class="n">ROTATION_DOFS_AXIS</span><span class="p">]:</span>
+                <span class="k">return</span> <span class="mf">0.0</span>  <span class="c1"># Dummy value that is not actually used afterwards.</span>
+            <span class="k">elif</span> <span class="n">divergence</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="mf">0.0</span>
             <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">divergence</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">influenced_dof</span> <span class="ow">in</span> <span class="n">divergence</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
                 <span class="k">return</span> <span class="n">divergence</span><span class="p">[</span><span class="n">influenced_dof</span><span class="p">]</span>
@@ -644,7 +646,7 @@
 
 <div class="viewcode-block" id="FloatingBody.compute_rigid_body_inertia">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.compute_rigid_body_inertia">[docs]</a>
-    <span class="k">def</span> <span class="nf">compute_rigid_body_inertia</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span> <span class="n">output_type</span><span class="o">=</span><span class="s2">&quot;body_dofs&quot;</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">compute_rigid_body_inertia</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">,</span> <span class="n">output_type</span><span class="o">=</span><span class="s2">&quot;body_dofs&quot;</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Inertia Mass matrix of the body for 6 rigid DOFs.</span>
 
@@ -734,8 +736,8 @@
 
         <span class="k">if</span> <span class="n">output_type</span> <span class="o">==</span> <span class="s2">&quot;body_dofs&quot;</span><span class="p">:</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">non_rigid_dofs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Non-rigid dofs: </span><span class="si">{</span><span class="n">non_rigid_dofs</span><span class="si">}</span><span class="s2"> are detected and </span><span class="se">\</span>
-<span class="s2">respective inertia coefficients are assigned as NaN.&quot;</span><span class="p">)</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Non-rigid dofs </span><span class="si">{</span><span class="n">non_rigid_dofs</span><span class="si">}</span><span class="s2"> detected: their </span><span class="se">\</span>
+<span class="s2">inertia coefficients are assigned as NaN.&quot;</span><span class="p">)</span>
 
             <span class="n">inertia_matrix_xr</span> <span class="o">=</span> <span class="n">total_mass_xr</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">influenced_dof</span><span class="o">=</span><span class="n">body_dof_names</span><span class="p">,</span>
                                                   <span class="n">radiating_dof</span><span class="o">=</span><span class="n">body_dof_names</span><span class="p">)</span>
