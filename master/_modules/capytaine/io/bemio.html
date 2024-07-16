@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>capytaine.io.bemio &#8212; capytaine 2.2.1.dev documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=12dfc556" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css?v=e9a64e30" />
+    <script src="../../../_static/documentation_options.js?v=ee2e9fa2"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/proof.js?v=41e9dd12"></script>
+    <script src="https://unpkg.com/mermaid@10.2.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <script defer data-domain="capytaine.github.io" src="https://plausible.io/js/script.js"></script>
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+
+  </head><body>
+  
+
+    <div class="document">
+<div id="new-doc-warning-banner" style="width:100%; background-color:#ADD8E6; text-align: center;">This page is part of the documentation of the development version 2.2.1 of Capytaine.<br><a href="https://capytaine.github.io/stable/">Latest stable version is available here.</a></div>
+    
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.io.bemio</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">newton</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1">#######################</span>
+<span class="c1">#  Import from Bemio  #</span>
+<span class="c1">#######################</span>
+
+<div class="viewcode-block" id="dataframe_from_bemio">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.bemio.html#capytaine.io.bemio.dataframe_from_bemio">[docs]</a>
+<span class="k">def</span> <span class="nf">dataframe_from_bemio</span><span class="p">(</span><span class="n">bemio_obj</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">wavelength</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Transform a :class:`bemio.data_structures.bem.HydrodynamicData` into a</span>
+<span class="sd">        :class:`pandas.DataFrame`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        bemio_obj: Bemio data_stuctures.bem.HydrodynamicData class</span>
+<span class="sd">            Loaded NEMOH, AQWA, or WAMIT data created using `bemio.io.nemoh.read`,</span>
+<span class="sd">            `bemio.io.aqwa.read`, or `bemio.io.wamit.read` functions, respectively.</span>
+<span class="sd">        wavenumber: bool</span>
+<span class="sd">            If True, the coordinate &#39;wavenumber&#39; will be added to the output dataset.</span>
+<span class="sd">        wavelength: bool</span>
+<span class="sd">            If True, the coordinate &#39;wavelength&#39; will be added to the output dataset.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+
+    <span class="n">dofs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="s1">&#39;Surge&#39;</span><span class="p">,</span> <span class="s1">&#39;Sway&#39;</span><span class="p">,</span> <span class="s1">&#39;Heave&#39;</span><span class="p">,</span> <span class="s1">&#39;Roll&#39;</span><span class="p">,</span> <span class="s1">&#39;Pitch&#39;</span><span class="p">,</span> <span class="s1">&#39;Yaw&#39;</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">num_bodies</span><span class="p">):</span>
+        <span class="n">difr_dict</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">rad_dict</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">rho</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">rho</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">g</span>
+
+        <span class="k">if</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">water_depth</span> <span class="o">==</span> <span class="s1">&#39;infinite&#39;</span><span class="p">:</span>
+            <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">water_depth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+
+        <span class="k">if</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">bem_code</span> <span class="o">==</span> <span class="s1">&#39;WAMIT&#39;</span><span class="p">:</span> <span class="c1"># WAMIT coefficients need to be dimensionalized</span>
+            <span class="n">from_wamit</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="k">for</span> <span class="n">omega_idx</span><span class="p">,</span> <span class="n">omega</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">w</span><span class="p">)):</span>
+
+            <span class="c1"># DiffractionProblem variable equivalents</span>
+            <span class="k">for</span> <span class="n">dir_idx</span><span class="p">,</span> <span class="nb">dir</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">wave_dir</span><span class="p">):</span>
+                <span class="n">temp_dict</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;body_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">water_depth</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;omega&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">omega</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;period&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">omega</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;rho&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rho</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;forward_speed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;wave_direction&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;influenced_dof&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dofs</span>
+
+                <span class="k">if</span> <span class="n">wavenumber</span> <span class="ow">or</span> <span class="n">wavelength</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">or</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">:</span>
+                        <span class="n">k</span> <span class="o">=</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">k</span> <span class="o">=</span> <span class="n">newton</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">],</span> <span class="n">x0</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span><span class="o">/</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="n">wavenumber</span><span class="p">:</span>
+                        <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;wavenumber&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">k</span>
+
+                    <span class="k">if</span> <span class="n">wavelength</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+                            <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;wavelength&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;wavelength&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">k</span>
+
+                <span class="n">Fexc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ex</span><span class="o">.</span><span class="n">re</span><span class="p">[:,</span> <span class="n">dir_idx</span><span class="p">,</span> <span class="n">omega_idx</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">from_wamit</span><span class="p">:</span>
+                    <span class="n">Fexc</span><span class="o">.</span><span class="n">real</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ex</span><span class="o">.</span><span class="n">re</span><span class="p">[:,</span> <span class="n">dir_idx</span><span class="p">,</span> <span class="n">omega_idx</span><span class="p">]</span> <span class="o">*</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">g</span>
+                    <span class="n">Fexc</span><span class="o">.</span><span class="n">imag</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ex</span><span class="o">.</span><span class="n">im</span><span class="p">[:,</span> <span class="n">dir_idx</span><span class="p">,</span> <span class="n">omega_idx</span><span class="p">]</span> <span class="o">*</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">g</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">Fexc</span><span class="o">.</span><span class="n">real</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ex</span><span class="o">.</span><span class="n">re</span><span class="p">[:,</span> <span class="n">dir_idx</span><span class="p">,</span> <span class="n">omega_idx</span><span class="p">]</span>
+                    <span class="n">Fexc</span><span class="o">.</span><span class="n">imag</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ex</span><span class="o">.</span><span class="n">im</span><span class="p">[:,</span> <span class="n">dir_idx</span><span class="p">,</span> <span class="n">omega_idx</span><span class="p">]</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;diffraction_force&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Fexc</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">Fexc_fk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ex</span><span class="o">.</span><span class="n">fk</span><span class="o">.</span><span class="n">re</span><span class="p">[:,</span> <span class="n">dir_idx</span><span class="p">,</span> <span class="n">omega_idx</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">from_wamit</span><span class="p">:</span>
+                        <span class="n">Fexc_fk</span><span class="o">.</span><span class="n">real</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ex</span><span class="o">.</span><span class="n">fk</span><span class="o">.</span><span class="n">re</span><span class="p">[:,</span> <span class="n">dir_idx</span><span class="p">,</span> <span class="n">omega_idx</span><span class="p">]</span> <span class="o">*</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">g</span>
+                        <span class="n">Fexc_fk</span><span class="o">.</span><span class="n">imag</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ex</span><span class="o">.</span><span class="n">fk</span><span class="o">.</span><span class="n">im</span><span class="p">[:,</span> <span class="n">dir_idx</span><span class="p">,</span> <span class="n">omega_idx</span><span class="p">]</span> <span class="o">*</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">g</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">Fexc_fk</span><span class="o">.</span><span class="n">real</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ex</span><span class="o">.</span><span class="n">fk</span><span class="o">.</span><span class="n">re</span><span class="p">[:,</span> <span class="n">dir_idx</span><span class="p">,</span> <span class="n">omega_idx</span><span class="p">]</span>
+                        <span class="n">Fexc_fk</span><span class="o">.</span><span class="n">imag</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ex</span><span class="o">.</span><span class="n">fk</span><span class="o">.</span><span class="n">im</span><span class="p">[:,</span> <span class="n">dir_idx</span><span class="p">,</span> <span class="n">omega_idx</span><span class="p">]</span>
+                    <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;Froude_Krylov_force&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Fexc_fk</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                        <span class="c1"># LOG.warning(&#39;\tNo Froude-Krylov forces found for &#39; + bemio_obj.body[i].name + &#39; at &#39; + str(dir) + \</span>
+                        <span class="c1">#       &#39; degrees (omega = &#39; + str(omega) + &#39;), replacing with zeros.&#39;)</span>
+                        <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;Froude_Krylov_force&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">ex</span><span class="o">.</span><span class="n">re</span><span class="p">[:,</span> <span class="n">dir_idx</span><span class="p">,</span> <span class="n">omega_idx</span><span class="p">]</span><span class="o">.</span><span class="n">size</span><span class="p">,),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+
+                <span class="n">difr_dict</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp_dict</span><span class="p">)</span>
+
+            <span class="c1"># RadiationProblem + Hydrostatics variable equivalents</span>
+            <span class="k">for</span> <span class="n">radiating_dof_idx</span><span class="p">,</span> <span class="n">radiating_dof</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">dofs</span><span class="p">):</span>
+                <span class="n">temp_dict</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;body_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">water_depth</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;omega&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">omega</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;rho&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rho</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">g</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;forward_speed&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;wave_direction&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;influenced_dof&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dofs</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;radiating_dof&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">radiating_dof</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">am</span><span class="o">.</span><span class="n">all</span><span class="p">[</span><span class="n">radiating_dof_idx</span><span class="p">,</span> <span class="p">:,</span> <span class="n">omega_idx</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+                <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;radiation_damping&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">bemio_obj</span><span class="o">.</span><span class="n">body</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">rd</span><span class="o">.</span><span class="n">all</span><span class="p">[</span><span class="n">radiating_dof_idx</span><span class="p">,</span> <span class="p">:,</span> <span class="n">omega_idx</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+
+                <span class="k">if</span> <span class="n">from_wamit</span><span class="p">:</span>
+                    <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">rho</span>
+                    <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;radiation_damping&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;radiation_damping&#39;</span><span class="p">]</span> <span class="o">*</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">omega</span>
+
+                <span class="k">if</span> <span class="n">wavenumber</span> <span class="ow">or</span> <span class="n">wavelength</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">or</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">20</span><span class="p">:</span>
+                        <span class="n">k</span> <span class="o">=</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">k</span> <span class="o">=</span> <span class="n">newton</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span><span class="o">/</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">],</span> <span class="n">x0</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span><span class="o">/</span><span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;water_depth&#39;</span><span class="p">]</span>
+
+                    <span class="k">if</span> <span class="n">wavenumber</span><span class="p">:</span>
+                        <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;wavenumber&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">k</span>
+
+                    <span class="k">if</span> <span class="n">wavelength</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">k</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+                            <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;wavelength&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">temp_dict</span><span class="p">[</span><span class="s1">&#39;wavelength&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">k</span>
+
+                <span class="n">rad_dict</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">temp_dict</span><span class="p">)</span>
+
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span>
+        <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">difr_dict</span><span class="p">)</span><span class="o">.</span><span class="n">explode</span><span class="p">([</span><span class="s1">&#39;influenced_dof&#39;</span><span class="p">,</span> <span class="s1">&#39;diffraction_force&#39;</span><span class="p">,</span> <span class="s1">&#39;Froude_Krylov_force&#39;</span><span class="p">]),</span>
+        <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">rad_dict</span><span class="p">)</span><span class="o">.</span><span class="n">explode</span><span class="p">([</span><span class="s1">&#39;influenced_dof&#39;</span><span class="p">,</span> <span class="s1">&#39;added_mass&#39;</span><span class="p">,</span> <span class="s1">&#39;radiation_damping&#39;</span><span class="p">])</span>
+        <span class="p">])</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">astype</span><span class="p">({</span><span class="s1">&#39;added_mass&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="s1">&#39;radiation_damping&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">,</span> <span class="s1">&#39;diffraction_force&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span> <span class="s1">&#39;Froude_Krylov_force&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">})</span>
+
+    <span class="k">return</span> <span class="n">df</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">capytaine</a></h1>
+
+
+
+<p class="blurb">a Python-based linear potential flow BEM solver</p>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.4</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

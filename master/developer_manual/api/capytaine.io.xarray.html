@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>capytaine.io.xarray module &#8212; capytaine 2.2.1.dev documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=12dfc556" />
+    <link rel="stylesheet" type="text/css" href="../../_static/proof.css?v=e9a64e30" />
+    <script src="../../_static/documentation_options.js?v=ee2e9fa2"></script>
+    <script src="../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/proof.js?v=41e9dd12"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="capytaine.post_pro package" href="capytaine.post_pro.html" />
+    <link rel="prev" title="capytaine.bem.solver module" href="capytaine.bem.solver.html" />
+    <script defer data-domain="capytaine.github.io" src="https://plausible.io/js/script.js"></script>
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+
+  </head><body>
+  
+
+    <div class="document">
+<div id="new-doc-warning-banner" style="width:100%; background-color:#ADD8E6; text-align: center;">This page is part of the documentation of the development version 2.2.1 of Capytaine.<br><a href="https://capytaine.github.io/stable/">Latest stable version is available here.</a></div>
+    
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-capytaine.io.xarray">
+<span id="capytaine-io-xarray-module"></span><h1>capytaine.io.xarray module<a class="headerlink" href="#module-capytaine.io.xarray" title="Link to this heading">¶</a></h1>
+<p>Tools to use xarray Datasets as inputs and outputs.</p>
+<div class="admonition-todo admonition" id="id1">
+<p class="admonition-title">Todo</p>
+<p>This module could be tidied up a bit and some methods merged or
+uniformized.</p>
+</div>
+<dl class="py function">
+<dt class="sig sig-object py" id="capytaine.io.xarray.assemble_dataset">
+<span class="sig-prename descclassname"><span class="pre">capytaine.io.xarray.</span></span><span class="sig-name descname"><span class="pre">assemble_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">omega</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavenumber</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavelength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">period</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hydrostatics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">attrs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="reference internal" href="../../_modules/capytaine/io/xarray.html#assemble_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.io.xarray.assemble_dataset" title="Link to this definition">¶</a></dt>
+<dd><p>Transform a list of <code class="xref py py-class docutils literal notranslate"><span class="pre">LinearPotentialFlowResult</span></code> into a <code class="xref py py-class docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>.</p>
+<div class="admonition-todo admonition" id="id2">
+<p class="admonition-title">Todo</p>
+<p>The <code class="code docutils literal notranslate"><span class="pre">mesh</span></code> option to store information on the mesh could be improved.
+It could store the full mesh in the dataset to ensure the reproducibility of
+the results.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>results</strong> (<em>list of LinearPotentialFlowResult</em>) – The results that will be read.</p></li>
+<li><p><strong>omega</strong> (<em>bool, optional</em>) – If True, the coordinate ‘omega’ will be added to the output dataset.</p></li>
+<li><p><strong>wavenumber</strong> (<em>bool, optional</em>) – If True, the coordinate ‘wavenumber’ will be added to the output dataset.</p></li>
+<li><p><strong>wavelength</strong> (<em>bool, optional</em>) – If True, the coordinate ‘wavelength’ will be added to the output dataset.</p></li>
+<li><p><strong>period</strong> (<em>bool, optional</em>) – If True, the coordinate ‘period’ will be added to the output dataset.</p></li>
+<li><p><strong>mesh</strong> (<em>bool, optional</em>) – If True, store some infos on the mesh in the output dataset.</p></li>
+<li><p><strong>hydrostatics</strong> (<em>bool, optional</em>) – If True, store the hydrostatic data in the output dataset if they exist.</p></li>
+<li><p><strong>attrs</strong> (<em>dict, optional</em>) – Attributes that should be added to the output dataset.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="capytaine.io.xarray.collect_records">
+<span class="sig-prename descclassname"><span class="pre">capytaine.io.xarray.</span></span><span class="sig-name descname"><span class="pre">collect_records</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/io/xarray.html#collect_records"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.io.xarray.collect_records" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="capytaine.io.xarray.hydrostatics_dataset">
+<span class="sig-prename descclassname"><span class="pre">capytaine.io.xarray.</span></span><span class="sig-name descname"><span class="pre">hydrostatics_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bodies</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody" title="capytaine.bodies.bodies.FloatingBody"><span class="pre">FloatingBody</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="reference internal" href="../../_modules/capytaine/io/xarray.html#hydrostatics_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.io.xarray.hydrostatics_dataset" title="Link to this definition">¶</a></dt>
+<dd><p>Create a dataset by looking for ‘inertia_matrix’ and ‘hydrostatic_stiffness’
+for each of the bodies in the list passed as argument.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="capytaine.io.xarray.kochin_data_array">
+<span class="sig-prename descclassname"><span class="pre">capytaine.io.xarray.</span></span><span class="sig-name descname"><span class="pre">kochin_data_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">results</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.LinearPotentialFlowResult" title="capytaine.bem.problems_and_results.LinearPotentialFlowResult"><span class="pre">LinearPotentialFlowResult</span></a><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">theta_range</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">float</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="reference internal" href="../../_modules/capytaine/io/xarray.html#kochin_data_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.io.xarray.kochin_data_array" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the Kochin function for a list of results and fills a dataset.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="capytaine.post_pro.kochin.html#capytaine.post_pro.kochin.compute_kochin" title="capytaine.post_pro.kochin.compute_kochin"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_kochin()</span></code></a></dt><dd><p>The present function is just a wrapper around <code class="code docutils literal notranslate"><span class="pre">compute_kochin</span></code>.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="capytaine.io.xarray.merge_complex_values">
+<span class="sig-prename descclassname"><span class="pre">capytaine.io.xarray.</span></span><span class="sig-name descname"><span class="pre">merge_complex_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="reference internal" href="../../_modules/capytaine/io/xarray.html#merge_complex_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.io.xarray.merge_complex_values" title="Link to this definition">¶</a></dt>
+<dd><p>Return a new Dataset where real-valued arrays of shape (2, …)
+have been replaced by complex-valued arrays of shape (…).</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#capytaine.io.xarray.separate_complex_values" title="capytaine.io.xarray.separate_complex_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">separate_complex_values()</span></code></a></dt><dd><p>The invert operation</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="capytaine.io.xarray.problems_from_dataset">
+<span class="sig-prename descclassname"><span class="pre">capytaine.io.xarray.</span></span><span class="sig-name descname"><span class="pre">problems_from_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bodies</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody" title="capytaine.bodies.bodies.FloatingBody"><span class="pre">FloatingBody</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody" title="capytaine.bodies.bodies.FloatingBody"><span class="pre">FloatingBody</span></a><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><a class="reference internal" href="capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.LinearPotentialFlowProblem" title="capytaine.bem.problems_and_results.LinearPotentialFlowProblem"><span class="pre">LinearPotentialFlowProblem</span></a><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../../_modules/capytaine/io/xarray.html#problems_from_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.io.xarray.problems_from_dataset" title="Link to this definition">¶</a></dt>
+<dd><p>Generate a list of problems from a test matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>xarray Dataset</em>) – Test matrix containing the problems parameters.</p></li>
+<li><p><strong>bodies</strong> (<em>FloatingBody or list of FloatingBody</em>) – The bodies on which the computations of the test matrix will be applied.
+They should all have different names.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of <a class="reference internal" href="capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.LinearPotentialFlowProblem" title="capytaine.bem.problems_and_results.LinearPotentialFlowProblem">LinearPotentialFlowProblem</a></p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ValueError</strong> – if required fields are missing in the dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="capytaine.io.xarray.separate_complex_values">
+<span class="sig-prename descclassname"><span class="pre">capytaine.io.xarray.</span></span><span class="sig-name descname"><span class="pre">separate_complex_values</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ds</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Dataset</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">Dataset</span></span></span><a class="reference internal" href="../../_modules/capytaine/io/xarray.html#separate_complex_values"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.io.xarray.separate_complex_values" title="Link to this definition">¶</a></dt>
+<dd><p>Return a new Dataset where complex-valued arrays of shape (…)
+have been replaced by real-valued arrays of shape (2, …).</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#capytaine.io.xarray.merge_complex_values" title="capytaine.io.xarray.merge_complex_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">merge_complex_values()</span></code></a></dt><dd><p>The invert operation</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">capytaine</a></h1>
+
+
+
+<p class="blurb">a Python-based linear potential flow BEM solver</p>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../installation.html">Installation for developers</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../overview.html">Overview of the modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">API documentation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Developer manual</a><ul>
+  <li><a href="../overview.html">Overview of the modules</a><ul>
+      <li>Previous: <a href="capytaine.bem.solver.html" title="previous chapter">capytaine.bem.solver module</a></li>
+      <li>Next: <a href="capytaine.post_pro.html" title="next chapter">capytaine.post_pro package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.4</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+      |
+      <a href="../../_sources/developer_manual/api/capytaine.io.xarray.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

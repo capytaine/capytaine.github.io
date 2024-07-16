@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>capytaine.io.legacy &#8212; capytaine 2.2.1.dev documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=12dfc556" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css?v=e9a64e30" />
+    <script src="../../../_static/documentation_options.js?v=ee2e9fa2"></script>
+    <script src="../../../_static/doctools.js?v=9a2dae69"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/proof.js?v=41e9dd12"></script>
+    <script src="https://unpkg.com/mermaid@10.2.0/dist/mermaid.min.js"></script>
+    <script>mermaid.initialize({startOnLoad:true});</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <script defer data-domain="capytaine.github.io" src="https://plausible.io/js/script.js"></script>
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+
+  </head><body>
+  
+
+    <div class="document">
+<div id="new-doc-warning-banner" style="width:100%; background-color:#ADD8E6; text-align: center;">This page is part of the documentation of the development version 2.2.1 of Capytaine.<br><a href="https://capytaine.github.io/stable/">Latest stable version is available here.</a></div>
+    
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.io.legacy</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Import or export Nemoh.cal files for backward compatibility with Nemoh 2.&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">capytaine.bem.solver</span> <span class="kn">import</span> <span class="n">BEMSolver</span>
+<span class="kn">from</span> <span class="nn">capytaine.io.xarray</span> <span class="kn">import</span> <span class="n">assemble_dataset</span>
+<span class="kn">from</span> <span class="nn">capytaine.io.mesh_writers</span> <span class="kn">import</span> <span class="n">write_MAR</span>
+<span class="kn">from</span> <span class="nn">capytaine.bodies.bodies</span> <span class="kn">import</span> <span class="n">FloatingBody</span>
+<span class="kn">from</span> <span class="nn">capytaine.bem.problems_and_results</span> <span class="kn">import</span> <span class="n">DiffractionProblem</span><span class="p">,</span> <span class="n">RadiationProblem</span>
+<span class="kn">from</span> <span class="nn">capytaine.meshes.geometry</span> <span class="kn">import</span> <span class="n">Axis</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="import_cal_file">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.legacy.html#capytaine.io.legacy.import_cal_file">[docs]</a>
+<span class="k">def</span> <span class="nf">import_cal_file</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Read a Nemoh.cal file and return a list of problems.&quot;&quot;&quot;</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cal_file</span><span class="p">:</span>
+
+        <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>  <span class="c1"># Unused line.</span>
+        <span class="n">rho</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">water_depth</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="n">water_depth</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">water_depth</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+        <span class="n">xeff</span><span class="p">,</span> <span class="n">yeff</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+
+        <span class="n">bodies</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>  <span class="c1"># Unused line.</span>
+        <span class="n">nb_bodies</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_bodies</span><span class="p">):</span>
+            <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>  <span class="c1"># Unused line.</span>
+            <span class="n">mesh_file</span> <span class="o">=</span> <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+            <span class="n">mesh_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filepath</span><span class="p">),</span> <span class="n">mesh_file</span><span class="p">)</span>  <span class="c1"># mesh path are relative to Nemoh.cal</span>
+            <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>  <span class="c1"># Number of points, number of panels (unused)</span>
+
+            <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">mesh_file</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s1">&#39;.py&#39;</span><span class="p">:</span>
+                <span class="kn">from</span> <span class="nn">importlib.util</span> <span class="kn">import</span> <span class="n">spec_from_file_location</span><span class="p">,</span> <span class="n">module_from_spec</span>
+                <span class="n">spec</span> <span class="o">=</span> <span class="n">spec_from_file_location</span><span class="p">(</span><span class="s2">&quot;body_initialization_module&quot;</span><span class="p">,</span> <span class="n">mesh_file</span><span class="p">)</span>
+                <span class="n">body_initialization</span> <span class="o">=</span> <span class="n">module_from_spec</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+                <span class="n">spec</span><span class="o">.</span><span class="n">loader</span><span class="o">.</span><span class="n">exec_module</span><span class="p">(</span><span class="n">body_initialization</span><span class="p">)</span>
+                <span class="n">body</span> <span class="o">=</span> <span class="n">body_initialization</span><span class="o">.</span><span class="n">body</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">body</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="n">mesh_file</span><span class="p">)</span>
+
+            <span class="n">nb_dofs</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">i_dof</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_dofs</span><span class="p">):</span>
+                <span class="n">dof_data</span> <span class="o">=</span> <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">dof_data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">direction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">dof_data</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]])</span>
+                    <span class="n">body</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">direction</span><span class="o">=</span><span class="n">direction</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="nb">int</span><span class="p">(</span><span class="n">dof_data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">direction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">dof_data</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]])</span>
+                    <span class="n">center_of_mass</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">dof_data</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">7</span><span class="p">]])</span>
+                    <span class="n">body</span><span class="o">.</span><span class="n">add_rotation_dof</span><span class="p">(</span><span class="n">Axis</span><span class="p">(</span><span class="n">vector</span><span class="o">=</span><span class="n">direction</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="n">center_of_mass</span><span class="p">))</span>
+
+            <span class="n">nb_forces</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">i_force</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_forces</span><span class="p">):</span>
+                <span class="n">force_data</span> <span class="o">=</span> <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+                <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">force_data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">direction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">force_data</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]])</span>
+                <span class="k">elif</span> <span class="nb">int</span><span class="p">(</span><span class="n">force_data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="n">direction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">force_data</span><span class="p">[</span><span class="mi">1</span><span class="p">:</span><span class="mi">4</span><span class="p">]])</span>
+                    <span class="n">center_of_mass</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">force_data</span><span class="p">[</span><span class="mi">4</span><span class="p">:</span><span class="mi">7</span><span class="p">]])</span>
+            <span class="c1"># TODO: use the generalized forces.</span>
+
+            <span class="n">nb_additional_lines</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_additional_lines</span><span class="p">):</span>
+                <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>  <span class="c1"># The additional lines are just ignored.</span>
+
+            <span class="n">bodies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">nb_bodies</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">bodies</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="o">.</span><span class="n">join_bodies</span><span class="p">(</span><span class="o">*</span><span class="n">bodies</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">bodies</span> <span class="o">=</span> <span class="n">bodies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>  <span class="c1"># Unused line.</span>
+        <span class="n">frequency_data_string_without_comment</span> <span class="o">=</span> <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;!&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">frequency_data</span> <span class="o">=</span> <span class="n">frequency_data_string_without_comment</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>  <span class="c1"># Nemoh v2 format</span>
+            <span class="n">omega_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">type_of_frequency_data</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">type_of_frequency_data</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># angular frequency</span>
+                <span class="n">omega_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="k">elif</span> <span class="n">type_of_frequency_data</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>  <span class="c1"># frequency</span>
+                <span class="n">omega_range</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="k">elif</span> <span class="n">type_of_frequency_data</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>  <span class="c1"># period</span>
+                <span class="n">omega_range</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="mi">3</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">frequency_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Cannot parse the frequency data </span><span class="se">\&quot;</span><span class="si">{</span><span class="n">frequency_data_string_without_comment</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2"> in </span><span class="si">{</span><span class="n">filepath</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+
+        <span class="n">direction_data</span> <span class="o">=</span> <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">direction_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">direction_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">direction_data</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">direction_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">direction_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">180</span><span class="o">*</span><span class="n">direction_range</span>  <span class="c1"># conversion from degrees to radians.</span>
+
+        <span class="c1"># The options below are not implemented yet.</span>
+
+        <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>  <span class="c1"># Unused line.</span>
+        <span class="n">irf_data</span> <span class="o">=</span> <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+        <span class="n">show_pressure</span> <span class="o">=</span> <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span>
+        <span class="n">kochin_data</span> <span class="o">=</span> <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+        <span class="n">kochin_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">kochin_data</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">float</span><span class="p">(</span><span class="n">kochin_data</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">kochin_data</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">free_surface_data</span> <span class="o">=</span> <span class="n">cal_file</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+    <span class="c1"># Generate Capytaine&#39;s problem objects</span>
+    <span class="n">env_args</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">bodies</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="n">rho</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="n">g</span><span class="p">)</span>
+    <span class="n">problems</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">omega</span> <span class="ow">in</span> <span class="n">omega_range</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">direction</span> <span class="ow">in</span> <span class="n">direction_range</span><span class="p">:</span>
+            <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">wave_direction</span><span class="o">=</span><span class="n">direction</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">,</span> <span class="o">**</span><span class="n">env_args</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">bodies</span><span class="o">.</span><span class="n">dofs</span><span class="p">:</span>
+            <span class="n">problems</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">,</span> <span class="o">**</span><span class="n">env_args</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">problems</span></div>
+
+
+
+<div class="viewcode-block" id="export_as_Nemoh_directory">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.legacy.html#capytaine.io.legacy.export_as_Nemoh_directory">[docs]</a>
+<span class="k">def</span> <span class="nf">export_as_Nemoh_directory</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">directory_name</span><span class="p">,</span> <span class="n">omega_range</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Export radiation problems as Nemoh 2.0 directory (experimental).</span>
+
+<span class="sd">    TODO: Diffraction problem.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    problem : RadiationProblem</span>
+<span class="sd">        the problem that should be exported</span>
+<span class="sd">    directory_name : string</span>
+<span class="sd">        path to the directory</span>
+<span class="sd">    omega_range : list of float or array of float, optional</span>
+<span class="sd">        the exported problem will be set up with the following linear range:</span>
+<span class="sd">        linspace(min(omega_range), max(omega_range), len(omega_range))</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">directory_name</span><span class="p">):</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;Exporting problem in already existing directory: </span><span class="si">{</span><span class="n">directory_name</span><span class="si">}</span>
+<span class="s2">             You might be overwriting existing files!&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">directory_name</span><span class="p">)</span>
+
+    <span class="c1"># Export the mesh</span>
+    <span class="n">write_MAR</span><span class="p">(</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory_name</span><span class="p">,</span> <span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">.dat&#39;</span><span class="p">),</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span>
+        <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span>
+        <span class="c1"># xOz_symmetry=isinstance(problem.body, ReflectionSymmetry)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Set range of frequencies</span>
+    <span class="k">if</span> <span class="n">omega_range</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">omega_nb_steps</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="n">omega_start</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">omega</span>
+        <span class="n">omega_stop</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">omega</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">omega_nb_steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">omega_range</span><span class="p">)</span>
+        <span class="n">omega_start</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">omega_range</span><span class="p">)</span>
+        <span class="n">omega_stop</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">omega_range</span><span class="p">)</span>
+
+    <span class="c1"># Write Nemoh.cal</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory_name</span><span class="p">,</span> <span class="s2">&quot;Nemoh.cal&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">nemoh_cal</span><span class="p">:</span>
+        <span class="n">nemoh_cal</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                <span class="n">DEFAULT_NEMOH_CAL</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">rho</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">rho</span><span class="p">,</span>
+                    <span class="n">g</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">g</span><span class="p">,</span>
+                    <span class="n">depth</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">water_depth</span> <span class="k">if</span> <span class="n">problem</span><span class="o">.</span><span class="n">water_depth</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="k">else</span> <span class="mi">0</span><span class="p">,</span>
+                    <span class="n">mesh_filename</span><span class="o">=</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s1">.dat&#39;</span><span class="p">,</span>
+                    <span class="n">mesh_vertices</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_vertices</span><span class="p">,</span>
+                    <span class="n">mesh_faces</span><span class="o">=</span><span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span>
+                    <span class="n">omega_nb_steps</span><span class="o">=</span><span class="n">omega_nb_steps</span><span class="p">,</span>
+                    <span class="n">omega_start</span><span class="o">=</span><span class="n">omega_start</span><span class="p">,</span>
+                    <span class="n">omega_stop</span><span class="o">=</span><span class="n">omega_stop</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+    <span class="c1"># Write input.txt</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory_name</span><span class="p">,</span> <span class="s2">&quot;input.txt&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">input_txt</span><span class="p">:</span>
+        <span class="n">input_txt</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">DEFAULT_INPUT_TXT</span><span class="p">)</span>
+
+    <span class="c1"># Write ID.dat</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">directory_name</span><span class="p">,</span> <span class="s2">&quot;ID.dat&quot;</span><span class="p">),</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">id_dat</span><span class="p">:</span>
+        <span class="n">id_dat</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;1</span><span class="se">\n</span><span class="s2">.&quot;</span><span class="p">)</span></div>
+
+
+
+<span class="n">DEFAULT_NEMOH_CAL</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;--- Environment ------------------------------------------------------------------------------------------------------------------</span>
+<span class="si">{rho}</span><span class="s2">			! RHO			! KG/M**3	! Fluid specific volume</span>
+<span class="si">{g}</span><span class="s2">				! G			! M/S**2	! Gravity</span>
+<span class="si">{depth}</span><span class="s2">			! DEPTH			! M		! Water depth</span>
+<span class="s2">0.	0.			! XEFF YEFF		! M		! Wave measurement point</span>
+<span class="s2">--- Description of floating bodies -----------------------------------------------------------------------------------------------</span>
+<span class="s2">1				! Number of bodies</span>
+<span class="s2">--- Body 1 -----------------------------------------------------------------------------------------------------------------------</span>
+<span class="si">{mesh_filename}</span>
+<span class="si">{mesh_vertices}</span><span class="s2"> </span><span class="si">{mesh_faces}</span>
+<span class="s2">1				! Number of degrees of freedom</span>
+<span class="s2">1 0. 0. 1. 0. 0. 0.		! Heave</span>
+<span class="s2">1				! Number of resulting generalised forces</span>
+<span class="s2">1 0. 0. 1. 0. 0. 0.		! Heave</span>
+<span class="s2">0				! Number of lines of additional information</span>
+<span class="s2">--- Load cases to be solved -------------------------------------------------------------------------------------------------------</span>
+<span class="si">{omega_nb_steps}</span><span class="s2"> </span><span class="si">{omega_start}</span><span class="s2"> </span><span class="si">{omega_stop}</span><span class="s2"> ! Frequencies range</span>
+<span class="s2">0	0.	0.		! Number of wave directions, Min and Max (degrees)</span>
+<span class="s2">--- Post processing ---------------------------------------------------------------------------------------------------------------</span>
+<span class="s2">0	0.1	10.		! IRF				! IRF calculation (0 for no calculation), time step and duration</span>
+<span class="s2">0				! Show pressure</span>
+<span class="s2">0	0.	180.		! Kochin function		! Number of directions of calculation (0 for no calculations), Min and Max (degrees)</span>
+<span class="s2">0	0	100.	100.	! Free surface elevation	! Number of points in x direction (0 for no calcutions) and y direction and dimensions of domain in x and y direction</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+<span class="n">DEFAULT_INPUT_TXT</span> <span class="o">=</span> <span class="s2">&quot;&quot;&quot;--- Calculation parameters ------------------------------------------------------------------------------------</span>
+<span class="s2">1				! Indiq_solver		! -		! Solver (0) Direct Gauss (1) GMRES (2) GMRES with FMM acceleration (2 not implemented yet)</span>
+<span class="s2">20				! IRES			! -		! Restart parameter for GMRES</span>
+<span class="s2">5.E-07				! TOL_GMRES		! -		! Stopping criterion for GMRES</span>
+<span class="s2">100				! MAXIT			! -		! Maximum iterations for GMRES</span>
+<span class="s2">1				! Sav_potential		! -		! Save potential for visualization</span>
+<span class="s2">&quot;&quot;&quot;</span>
+
+
+<div class="viewcode-block" id="write_dataset_as_tecplot_files">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.legacy.html#capytaine.io.legacy.write_dataset_as_tecplot_files">[docs]</a>
+<span class="k">def</span> <span class="nf">write_dataset_as_tecplot_files</span><span class="p">(</span><span class="n">results_directory</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write some of the data from a xarray dataset into legacy tecplot file outputs.&quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="s1">&#39;added_mass&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">results_directory</span><span class="p">,</span> <span class="s1">&#39;RadiationCoefficients.tec&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fi</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;radiating_dof&#39;</span><span class="p">])</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;...</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">radiating_dof</span><span class="p">:</span>
+                <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">dof</span><span class="o">.</span><span class="n">values</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">omega</span><span class="p">:</span>
+                    <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  </span><span class="si">{</span><span class="n">o</span><span class="o">.</span><span class="n">values</span><span class="si">:</span><span class="s1">e</span><span class="si">}</span><span class="s1">  &#39;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">dof2</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">influenced_dof</span><span class="p">:</span>
+                        <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">omega</span><span class="o">=</span><span class="n">o</span><span class="p">,</span><span class="w"> </span><span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span><span class="w"> </span><span class="n">influenced_dof</span><span class="o">=</span><span class="n">dof2</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="si">:</span><span class="s2">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
+                        <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;radiation_damping&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">omega</span><span class="o">=</span><span class="n">o</span><span class="p">,</span><span class="w"> </span><span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span><span class="w"> </span><span class="n">influenced_dof</span><span class="o">=</span><span class="n">dof2</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="si">:</span><span class="s2">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
+                    <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s1">&#39;diffraction_force&#39;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">data</span><span class="p">[</span><span class="s1">&#39;excitation_force&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;Froude_Krylov_force&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;diffraction_force&#39;</span><span class="p">]</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">results_directory</span><span class="p">,</span> <span class="s1">&#39;ExcitationForce.tec&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fi</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">influenced_dof</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+                <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;...</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">wave_direction</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">wave_direction</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;angle=</span><span class="si">{</span><span class="n">wave_direction</span><span class="si">}</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">o</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">omega</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                    <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;  </span><span class="si">{</span><span class="n">o</span><span class="si">:</span><span class="s1">e</span><span class="si">}</span><span class="s1">  &#39;</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">influenced_dof</span><span class="p">:</span>
+                        <span class="n">val</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;excitation_force&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">omega</span><span class="o">=</span><span class="n">o</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="n">wave_direction</span><span class="p">,</span> <span class="n">influenced_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+                        <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="si">:</span><span class="s1">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                        <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
+                        <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;</span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">val</span><span class="p">)</span><span class="si">:</span><span class="s1">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+                        <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;  &#39;</span><span class="p">)</span>
+                    <span class="n">fi</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_hydrostatics_writer</span><span class="p">(</span><span class="n">hydrostatics_file_path</span><span class="p">,</span> <span class="n">kh_file_path</span><span class="p">,</span> <span class="n">body</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Write the Hydrostatics.dat and KH.dat files&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">hydrostatics_file_path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">hf</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">):</span>
+            <span class="n">line</span> <span class="o">=</span>  <span class="sa">f</span><span class="s1">&#39;XF = </span><span class="si">{</span><span class="n">body</span><span class="o">.</span><span class="n">center_of_buoyancy</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="si">:</span><span class="s1">7.4f</span><span class="si">}</span><span class="s1"> - XG = </span><span class="si">{</span><span class="n">body</span><span class="o">.</span><span class="n">center_of_mass</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="si">:</span><span class="s1">7.4f</span><span class="si">}</span><span class="s1"> </span><span class="se">\n</span><span class="s1">&#39;</span>
+            <span class="n">hf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Displacement = </span><span class="si">{</span><span class="n">body</span><span class="o">.</span><span class="n">volume</span><span class="si">:</span><span class="s1">1.6E</span><span class="si">}</span><span class="s1">&#39;</span>
+        <span class="n">hf</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="n">hf</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="n">kh_file_path</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span><span class="o">.</span><span class="n">values</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s1">&#39;</span><span class="si">%1.6E</span><span class="s1">&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="export_hydrostatics">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.legacy.html#capytaine.io.legacy.export_hydrostatics">[docs]</a>
+<span class="k">def</span> <span class="nf">export_hydrostatics</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">,</span> <span class="n">bodies</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Export rigid body hydrostatics in Nemoh&#39;s format (KH.dat and Hydrostatics.dat).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    hydrostatics_directory: string</span>
+<span class="sd">        Path to the directory in which the data will be written (two files per body)</span>
+<span class="sd">    bodies: FloatingBody or list of FloatingBody</span>
+<span class="sd">        The body or the list of bodies. Each body is assumed to be a single</span>
+<span class="sd">        rigid body with 6 dofs. Each FloatingBody object is expected to have an</span>
+<span class="sd">        `inertia_matrix` and a `hydrostatic_stiffness` parameter.</span>
+
+<span class="sd">    Return</span>
+<span class="sd">    ------</span>
+<span class="sd">    None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">):</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;Exporting problem in already existing directory: </span><span class="si">{</span><span class="n">hydrostatics_directory</span><span class="si">}</span>
+<span class="s2">             You might be overwriting existing files!&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bodies</span><span class="p">,</span> <span class="n">FloatingBody</span><span class="p">):</span>
+        <span class="n">bodies</span> <span class="o">=</span> <span class="p">[</span><span class="n">bodies</span><span class="p">]</span>
+
+    <span class="n">hydrostatics_file_name</span> <span class="o">=</span> <span class="s2">&quot;Hydrostatics.dat&quot;</span>
+    <span class="n">kh_file_name</span> <span class="o">=</span> <span class="s2">&quot;KH.dat&quot;</span>
+
+    <span class="n">body_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bodies</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">body_count</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">bodies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">hydrostatics_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">,</span> <span class="n">hydrostatics_file_name</span><span class="p">)</span>
+        <span class="n">kh_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">,</span> <span class="n">kh_file_name</span><span class="p">)</span>
+        <span class="n">_hydrostatics_writer</span><span class="p">(</span><span class="n">hydrostatics_file_path</span><span class="p">,</span> <span class="n">kh_file_path</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">bodies</span><span class="p">):</span>
+            <span class="n">hydrostatics_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;Hydrostatics_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.dat&quot;</span><span class="p">)</span>
+            <span class="n">kh_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">hydrostatics_directory</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;KH_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">.dat&quot;</span><span class="p">)</span>
+            <span class="n">_hydrostatics_writer</span><span class="p">(</span><span class="n">hydrostatics_file_path</span><span class="p">,</span> <span class="n">kh_file_path</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="run_cal_file">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.legacy.html#capytaine.io.legacy.run_cal_file">[docs]</a>
+<span class="k">def</span> <span class="nf">run_cal_file</span><span class="p">(</span><span class="n">paramfile</span><span class="p">):</span>
+    <span class="n">problems</span> <span class="o">=</span> <span class="n">import_cal_file</span><span class="p">(</span><span class="n">paramfile</span><span class="p">)</span>
+    <span class="n">solver</span> <span class="o">=</span> <span class="n">BEMSolver</span><span class="p">()</span>
+    <span class="n">results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+    <span class="n">results_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">paramfile</span><span class="p">),</span> <span class="s1">&#39;results&#39;</span><span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">results_directory</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">FileExistsError</span><span class="p">:</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The output directory (</span><span class="si">{</span><span class="n">results_directory</span><span class="si">}</span><span class="s2">) already exists. You might be overwriting existing data.&quot;</span><span class="p">)</span>
+
+    <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Write results in legacy tecplot format.&quot;</span><span class="p">)</span>
+    <span class="n">write_dataset_as_tecplot_files</span><span class="p">(</span><span class="n">results_directory</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">capytaine</a></h1>
+
+
+
+<p class="blurb">a Python-based linear potential flow BEM solver</p>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 7.4.4</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 0.7.16</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
