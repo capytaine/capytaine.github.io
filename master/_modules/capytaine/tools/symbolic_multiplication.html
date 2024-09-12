@@ -41,7 +41,17 @@
           <div class="body" role="main">
             
   <h1>Source code for capytaine.tools.symbolic_multiplication</h1><div class="highlight"><pre>
-<span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span></span><span class="sd">&quot;&quot;&quot;This module is used for the handling of zero and infinite frequencies.</span>
+<span class="sd">In this cases, the magnitudes that the solver has to manipulate are in the form of ω times a non-zero term.</span>
+<span class="sd">Instead of evaluating this multiplication as zero of infinity, we keep it symbolic using the class defined here.</span>
+
+<span class="sd">The frequency can be provided to the solver as something like</span>
+<span class="sd">`SymbolicMultiplication(&quot;0&quot;, 1.0)` (that is zero) and the solver will return an</span>
+<span class="sd">output of the form `SymbolicMultiplication(&quot;0&quot;, np.array(...))`</span>
+<span class="sd">(that is also actually zero, except we may be intested in the non-zero array).</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">functools</span> <span class="kn">import</span> <span class="n">wraps</span><span class="p">,</span> <span class="n">total_ordering</span>
 
 <div class="viewcode-block" id="SymbolicMultiplication">
@@ -132,9 +142,9 @@
 
     <span class="k">def</span> <span class="fm">__float__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">&quot;0&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="mf">0.0</span>
+            <span class="k">return</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">&quot;∞&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
@@ -149,6 +159,12 @@
 <div class="viewcode-block" id="supporting_symbolic_multiplication">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.symbolic_multiplication.html#capytaine.tools.symbolic_multiplication.supporting_symbolic_multiplication">[docs]</a>
 <span class="k">def</span> <span class="nf">supporting_symbolic_multiplication</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    When this decorator is applied to a function, this function can now take</span>
+<span class="sd">    as input a `SymbolicMultiplication` object. The function is applied on the</span>
+<span class="sd">    `value` part of the `SymbolicMultiplication` without modifying the</span>
+<span class="sd">    `symbol`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
     <span class="k">def</span> <span class="nf">wrapped_f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;symbol&#39;</span><span class="p">):</span>
