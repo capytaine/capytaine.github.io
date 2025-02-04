@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>capytaine.meshes.meshes &#8212; capytaine 2.3.dev documentation</title>
-    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=686e5160" />
     <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../../../_static/proof.css?v=e9a64e30" />
@@ -53,25 +53,25 @@ window.addEventListener("load", () => mermaid.run());
 <span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin, based on the work of François Rongère</span>
 <span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
 
-<span class="kn">import</span> <span class="nn">logging</span>
-<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">count</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">count</span>
 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span> <span class="nn">capytaine.meshes.geometry</span> <span class="kn">import</span> <span class="n">Abstract3DObject</span><span class="p">,</span> <span class="n">ClippableMixin</span><span class="p">,</span> <span class="n">Plane</span><span class="p">,</span> <span class="n">inplace_transformation</span><span class="p">,</span> <span class="n">xOy_Plane</span>
-<span class="kn">from</span> <span class="nn">capytaine.meshes.properties</span> <span class="kn">import</span> <span class="n">compute_faces_properties</span><span class="p">,</span> <span class="n">connected_components</span><span class="p">,</span> <span class="n">connected_components_of_waterline</span>
-<span class="kn">from</span> <span class="nn">capytaine.meshes.surface_integrals</span> <span class="kn">import</span> <span class="n">SurfaceIntegralsMixin</span>
-<span class="kn">from</span> <span class="nn">capytaine.meshes.quality</span> <span class="kn">import</span> <span class="p">(</span><span class="n">merge_duplicates</span><span class="p">,</span> <span class="n">heal_normals</span><span class="p">,</span> <span class="n">remove_unused_vertices</span><span class="p">,</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">Abstract3DObject</span><span class="p">,</span> <span class="n">ClippableMixin</span><span class="p">,</span> <span class="n">Plane</span><span class="p">,</span> <span class="n">inplace_transformation</span><span class="p">,</span> <span class="n">xOy_Plane</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_faces_properties</span><span class="p">,</span> <span class="n">connected_components</span><span class="p">,</span> <span class="n">connected_components_of_waterline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.surface_integrals</span><span class="w"> </span><span class="kn">import</span> <span class="n">SurfaceIntegralsMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.quality</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span><span class="n">merge_duplicates</span><span class="p">,</span> <span class="n">heal_normals</span><span class="p">,</span> <span class="n">remove_unused_vertices</span><span class="p">,</span>
                                       <span class="n">heal_triangles</span><span class="p">,</span> <span class="n">remove_degenerated_faces</span><span class="p">)</span>
-<span class="kn">from</span> <span class="nn">capytaine.tools.optional_imports</span> <span class="kn">import</span> <span class="n">import_optional_dependency</span>
-<span class="kn">from</span> <span class="nn">capytaine.meshes.quadratures</span> <span class="kn">import</span> <span class="n">compute_quadrature_on_faces</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.optional_imports</span><span class="w"> </span><span class="kn">import</span> <span class="n">import_optional_dependency</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.quadratures</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_quadrature_on_faces</span>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Mesh">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh">[docs]</a>
-<span class="k">class</span> <span class="nc">Mesh</span><span class="p">(</span><span class="n">ClippableMixin</span><span class="p">,</span> <span class="n">SurfaceIntegralsMixin</span><span class="p">,</span> <span class="n">Abstract3DObject</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Mesh</span><span class="p">(</span><span class="n">ClippableMixin</span><span class="p">,</span> <span class="n">SurfaceIntegralsMixin</span><span class="p">,</span> <span class="n">Abstract3DObject</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A class to handle unstructured 2D meshes in a 3D space.</span>
 
 <span class="sd">    Parameters</span>
@@ -92,7 +92,7 @@ window.addEventListener("load", () => mermaid.run());
 
     <span class="n">_ids</span> <span class="o">=</span> <span class="n">count</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># A counter for automatic naming of new meshes.</span>
 
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">faces</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">quadrature_method</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vertices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">faces</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">quadrature_method</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="n">vertices</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">vertices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
@@ -113,14 +113,14 @@ window.addEventListener("load", () => mermaid.run());
 
         <span class="bp">self</span><span class="o">.</span><span class="n">quadrature_method</span> <span class="o">=</span> <span class="n">quadrature_method</span>
 
-    <span class="k">def</span> <span class="nf">__short_str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__short_str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(..., name=</span><span class="se">\&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">)&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(vertices=[[... </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_vertices</span><span class="si">}</span><span class="s2"> vertices ...]], &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;faces=[[... </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_faces</span><span class="si">}</span><span class="s2"> faces ...]], name=</span><span class="se">\&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">)&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># shift = len(self.__class__.__name__) + 1</span>
         <span class="c1"># vert_str = np.array_repr(self.vertices).replace(&#39;\n&#39;, &#39;\n&#39; + (shift + 9)*&#39; &#39;)</span>
         <span class="c1"># faces_str = np.array_repr(self.faces).replace(&#39;\n&#39;, &#39;\n&#39; + (shift + 6)*&#39; &#39;)</span>
@@ -128,49 +128,49 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(vertices=[[... </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_vertices</span><span class="si">}</span><span class="s2"> vertices ...]], &quot;</span>
                 <span class="sa">f</span><span class="s2">&quot;faces=[[... </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_faces</span><span class="si">}</span><span class="s2"> faces ...]], name=</span><span class="se">\&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">)&quot;</span><span class="p">)</span>
 
-    <span class="k">def</span> <span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
         <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">())</span>
 
-    <span class="k">def</span> <span class="nf">__rich_repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">class</span> <span class="nc">CustomRepr</span><span class="p">:</span>
-            <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__rich_repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">class</span><span class="w"> </span><span class="nc">CustomRepr</span><span class="p">:</span>
+            <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">kind</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">kind</span> <span class="o">=</span> <span class="n">kind</span>
-            <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
                 <span class="k">return</span> <span class="s2">&quot;[[... </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> ...]]&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">kind</span><span class="p">)</span>
         <span class="k">yield</span> <span class="s2">&quot;vertices&quot;</span><span class="p">,</span> <span class="n">CustomRepr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_vertices</span><span class="p">,</span> <span class="s2">&quot;vertices&quot;</span><span class="p">)</span>
         <span class="k">yield</span> <span class="s2">&quot;faces&quot;</span><span class="p">,</span> <span class="n">CustomRepr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="s2">&quot;faces&quot;</span><span class="p">)</span>
         <span class="k">yield</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">nb_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nb_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the number of vertices in the mesh.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vertices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the vertices array coordinate of the mesh.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vertices</span>
 
     <span class="nd">@vertices</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_vertices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
         <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vertices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> \
             <span class="s2">&quot;Vertices of a mesh should be provided as a sequence of 3-ple.&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">nb_faces</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nb_faces</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the number of faces in the mesh.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_faces</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">faces</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">faces</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the faces connectivity array of the mesh.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_faces</span>
 
     <span class="nd">@faces</span><span class="o">.</span><span class="n">setter</span>
-    <span class="k">def</span> <span class="nf">faces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">faces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
         <span class="n">faces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">faces</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">faces</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">),</span> \
             <span class="s2">&quot;Faces of a mesh should be provided as positive integers (ids of vertices)&quot;</span>
@@ -183,7 +183,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.copy">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.copy">[docs]</a>
-    <span class="k">def</span> <span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a copy of the current mesh instance.</span>
 
 <span class="sd">        Parameters</span>
@@ -196,7 +196,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        Mesh</span>
 <span class="sd">            mesh instance copy</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">copy</span><span class="w"> </span><span class="kn">import</span> <span class="n">deepcopy</span>
         <span class="n">new_mesh</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">new_mesh</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
@@ -205,31 +205,31 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.merged">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.merged">[docs]</a>
-    <span class="k">def</span> <span class="nf">merged</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">merged</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Dummy method to be generalized for collections of meshes.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span></div>
 
 
 <div class="viewcode-block" id="Mesh.tree_view">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.tree_view">[docs]</a>
-    <span class="k">def</span> <span class="nf">tree_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">tree_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Dummy method to be generalized for collections of meshes.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="Mesh.path_to_leaf">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.path_to_leaf">[docs]</a>
-    <span class="k">def</span> <span class="nf">path_to_leaf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">path_to_leaf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Dummy method to be generalized for collection of meshes.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="p">[[]]</span></div>
 
 
 <div class="viewcode-block" id="Mesh.to_meshmagick">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.to_meshmagick">[docs]</a>
-    <span class="k">def</span> <span class="nf">to_meshmagick</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_meshmagick</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert the Mesh object as a Mesh object from meshmagick.</span>
 <span class="sd">        Mostly for debugging.&quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">meshmagick.mesh</span> <span class="kn">import</span> <span class="n">Mesh</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">meshmagick.mesh</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mesh</span>
         <span class="n">meshmagick_mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
         <span class="n">meshmagick_mesh</span><span class="o">.</span><span class="n">heal_mesh</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">meshmagick_mesh</span></div>
@@ -241,7 +241,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.get_face">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.get_face">[docs]</a>
-    <span class="k">def</span> <span class="nf">get_face</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">face_id</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_face</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">face_id</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the face described by its vertices connectivity.</span>
 
 <span class="sd">        Parameters</span>
@@ -262,7 +262,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.extract_one_face">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.extract_one_face">[docs]</a>
-    <span class="k">def</span> <span class="nf">extract_one_face</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_face</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_one_face</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_face</span><span class="p">):</span>
         <span class="n">vertices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">[</span><span class="n">id_face</span><span class="p">,</span> <span class="p">:],</span> <span class="p">:]</span>
         <span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]),</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;single_face_from_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -275,7 +275,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.extract_faces">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.extract_faces">[docs]</a>
-    <span class="k">def</span> <span class="nf">extract_faces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_faces_to_extract</span><span class="p">,</span> <span class="n">return_index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_faces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">id_faces_to_extract</span><span class="p">,</span> <span class="n">return_index</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Extracts a new mesh from a selection of faces ids</span>
 
@@ -330,8 +330,8 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.sliced_by_plane">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.sliced_by_plane">[docs]</a>
-    <span class="k">def</span> <span class="nf">sliced_by_plane</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">Plane</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">capytaine.meshes.collections</span> <span class="kn">import</span> <span class="n">CollectionOfMeshes</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sliced_by_plane</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">Plane</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">CollectionOfMeshes</span>
         <span class="n">faces_ids_on_one_side</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">plane</span><span class="o">.</span><span class="n">distance_to_point</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">faces_ids_on_one_side</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">faces_ids_on_one_side</span><span class="p">)</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
@@ -348,7 +348,7 @@ window.addEventListener("load", () => mermaid.run());
     <span class="c1">#####################</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">center_of_mass_of_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">center_of_mass_of_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;(Non-weighted) center of mass of the nodes of the mesh.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;center_of_mass_of_nodes&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">:</span>
             <span class="n">center_of_mass_of_nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
@@ -357,7 +357,7 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;center_of_mass_of_nodes&#39;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">diameter_of_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">diameter_of_nodes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Maximum distance between two nodes of the mesh.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;diameter_of_nodes&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">:</span>
             <span class="n">diameter_of_nodes</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
@@ -372,42 +372,42 @@ window.addEventListener("load", () => mermaid.run());
     <span class="c1">######################</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">faces_areas</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">faces_areas</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the array of faces areas of the mesh.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;faces_areas&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">compute_faces_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;faces_areas&#39;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">faces_centers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">faces_centers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the array of faces centers of the mesh.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;faces_centers&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">compute_faces_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;faces_centers&#39;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">faces_normals</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">faces_normals</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the array of faces normals of the mesh.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;faces_normals&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">compute_faces_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;faces_normals&#39;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">faces_radiuses</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">faces_radiuses</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the array of faces radiuses of the mesh.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;faces_radiuses&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">compute_faces_properties</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;faces_radiuses&#39;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">quadrature_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">quadrature_points</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="s1">&#39;quadrature&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">compute_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">quadrature_method</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;quadrature&#39;</span><span class="p">]</span>
 
 <div class="viewcode-block" id="Mesh.compute_quadrature">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.compute_quadrature">[docs]</a>
-    <span class="k">def</span> <span class="nf">compute_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_quadrature</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">heal_triangles</span><span class="p">()</span>
         <span class="n">all_faces</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">[:,</span> <span class="p">:],</span> <span class="p">:]</span>
         <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -427,7 +427,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.is_triangle">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.is_triangle">[docs]</a>
-    <span class="k">def</span> <span class="nf">is_triangle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">face_id</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">is_triangle</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">face_id</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns if a face is a triangle</span>
 
 <span class="sd">        Parameters</span>
@@ -439,7 +439,7 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_faces</span><span class="p">[</span><span class="n">face_id</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_faces</span><span class="p">[</span><span class="n">face_id</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
 
 
-    <span class="k">def</span> <span class="nf">_compute_triangles_quadrangles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_compute_triangles_quadrangles</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">triangle_mask</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_faces</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">_faces</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
         <span class="n">quadrangles_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">invert</span><span class="p">(</span><span class="n">triangle_mask</span><span class="p">)</span>
         <span class="n">triangles_quadrangles</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;triangles_ids&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">triangle_mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">],</span>
@@ -447,28 +447,28 @@ window.addEventListener("load", () => mermaid.run());
         <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">triangles_quadrangles</span><span class="p">)</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">triangles_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">triangles_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the array of ids of triangle shaped faces.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;triangles_ids&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_triangles_quadrangles</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;triangles_ids&#39;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">nb_triangles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nb_triangles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the number of triangles in the mesh.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;triangles_ids&#39;</span><span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_triangles_quadrangles</span><span class="p">()</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;triangles_ids&#39;</span><span class="p">])</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">quadrangles_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">quadrangles_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the array of ids of quadrangle shaped faces.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;triangles_ids&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_triangles_quadrangles</span><span class="p">()</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;quadrangles_ids&#39;</span><span class="p">]</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">nb_quadrangles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nb_quadrangles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the number of quadrangles in the mesh.&quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="s1">&#39;triangles_ids&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_compute_triangles_quadrangles</span><span class="p">()</span>
@@ -479,7 +479,7 @@ window.addEventListener("load", () => mermaid.run());
     <span class="c1">#############</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">axis_aligned_bbox</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">axis_aligned_bbox</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get the axis aligned bounding box of the mesh.</span>
 
 <span class="sd">        Returns</span>
@@ -496,7 +496,7 @@ window.addEventListener("load", () => mermaid.run());
             <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="mi">6</span><span class="p">))</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span> <span class="nf">squared_axis_aligned_bbox</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">squared_axis_aligned_bbox</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a squared axis aligned bounding box of the mesh.</span>
 
 <span class="sd">        Returns</span>
@@ -517,15 +517,15 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.show">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.show">[docs]</a>
-    <span class="k">def</span> <span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">show_vtk</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Mesh.show_vtk">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.show_vtk">[docs]</a>
-    <span class="k">def</span> <span class="nf">show_vtk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">show_vtk</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Shows the mesh in the vtk viewer&quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">capytaine.ui.vtk.mesh_viewer</span> <span class="kn">import</span> <span class="n">MeshViewer</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.ui.vtk.mesh_viewer</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeshViewer</span>
 
         <span class="n">viewer</span> <span class="o">=</span> <span class="n">MeshViewer</span><span class="p">()</span>
         <span class="n">viewer</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -535,7 +535,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.show_matplotlib">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.show_matplotlib">[docs]</a>
-    <span class="k">def</span> <span class="nf">show_matplotlib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">show_matplotlib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ax</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">normal_vectors</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">scale_normal_vector</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">saveas</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">color_field</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                         <span class="n">cbar_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -562,7 +562,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        Other parameters are passed to Poly3DCollection.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">matplotlib</span> <span class="o">=</span> <span class="n">import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">)</span>
-        <span class="kn">import</span> <span class="nn">importlib</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
         <span class="n">plt</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s2">&quot;matplotlib.pyplot&quot;</span><span class="p">)</span>
         <span class="n">cm</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s2">&quot;matplotlib.cm&quot;</span><span class="p">)</span>
 
@@ -635,7 +635,7 @@ window.addEventListener("load", () => mermaid.run());
     <span class="c1">################################</span>
 
     <span class="nd">@inplace_transformation</span>
-    <span class="k">def</span> <span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">translate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Translates the mesh in 3D giving the 3 distances along coordinate axes.</span>
 
 <span class="sd">        Parameters</span>
@@ -651,7 +651,7 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="nd">@inplace_transformation</span>
-    <span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rotate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">angle</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Rotate the mesh of a given angle around an axis.</span>
 
 <span class="sd">        Parameters</span>
@@ -666,7 +666,7 @@ window.addEventListener("load", () => mermaid.run());
 
     <span class="c1"># OTHER</span>
     <span class="nd">@inplace_transformation</span>
-    <span class="k">def</span> <span class="nf">flip_normals</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">flip_normals</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Flips every normals of the mesh.&quot;&quot;&quot;</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_faces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fliplr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_faces</span><span class="p">)</span>
@@ -674,7 +674,7 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="nd">@inplace_transformation</span>
-    <span class="k">def</span> <span class="nf">mirror</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mirror</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Flip the mesh with respect to a plane.</span>
 
 <span class="sd">        Parameters</span>
@@ -688,15 +688,15 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.symmetrized">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.symmetrized">[docs]</a>
-    <span class="k">def</span> <span class="nf">symmetrized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">capytaine.meshes.symmetric</span> <span class="kn">import</span> <span class="n">ReflectionSymmetricMesh</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">symmetrized</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.symmetric</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReflectionSymmetricMesh</span>
         <span class="n">half</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">plane</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_half&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">(</span><span class="n">half</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="n">plane</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;symmetrized_of_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
     <span class="nd">@inplace_transformation</span>
-    <span class="k">def</span> <span class="nf">clip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
-        <span class="kn">from</span> <span class="nn">capytaine.meshes.clipper</span> <span class="kn">import</span> <span class="n">clip</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.clipper</span><span class="w"> </span><span class="kn">import</span> <span class="n">clip</span>
         <span class="n">clipped_self</span> <span class="o">=</span> <span class="n">clip</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="n">plane</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span> <span class="o">=</span> <span class="n">clipped_self</span><span class="o">.</span><span class="n">vertices</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">faces</span> <span class="o">=</span> <span class="n">clipped_self</span><span class="o">.</span><span class="n">faces</span>
@@ -704,7 +704,7 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">return</span> <span class="bp">self</span>
 
     <span class="nd">@inplace_transformation</span>
-    <span class="k">def</span> <span class="nf">triangulate_quadrangles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">triangulate_quadrangles</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Triangulates every quadrangles of the mesh by simple splitting.</span>
 <span class="sd">        Each quadrangle gives two triangles.</span>
 
@@ -742,12 +742,12 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.join_meshes">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.join_meshes">[docs]</a>
-    <span class="k">def</span> <span class="nf">join_meshes</span><span class="p">(</span><span class="o">*</span><span class="n">meshes</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="kn">from</span> <span class="nn">capytaine.meshes.collections</span> <span class="kn">import</span> <span class="n">CollectionOfMeshes</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">join_meshes</span><span class="p">(</span><span class="o">*</span><span class="n">meshes</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">CollectionOfMeshes</span>
         <span class="k">return</span> <span class="n">CollectionOfMeshes</span><span class="p">(</span><span class="n">meshes</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span></div>
 
 
-    <span class="k">def</span> <span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh_to_add</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh_to_add</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;Mesh&#39;</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span><span class="n">mesh_to_add</span><span class="p">)</span>
 
     <span class="c1">####################</span>
@@ -772,14 +772,14 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.as_set_of_faces">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.as_set_of_faces">[docs]</a>
-    <span class="k">def</span> <span class="nf">as_set_of_faces</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_set_of_faces</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">frozenset</span><span class="p">(</span><span class="nb">frozenset</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">vertex</span><span class="p">)</span> <span class="k">for</span> <span class="n">vertex</span> <span class="ow">in</span> <span class="n">face</span><span class="p">)</span> <span class="k">for</span> <span class="n">face</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">])</span></div>
 
 
 <div class="viewcode-block" id="Mesh.from_set_of_faces">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.from_set_of_faces">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span> <span class="nf">from_set_of_faces</span><span class="p">(</span><span class="n">set_of_faces</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_set_of_faces</span><span class="p">(</span><span class="n">set_of_faces</span><span class="p">):</span>
         <span class="n">faces</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">vertices</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">face</span> <span class="ow">in</span> <span class="n">set_of_faces</span><span class="p">:</span>
@@ -801,13 +801,13 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="o">=</span><span class="n">faces</span><span class="p">)</span></div>
 
 
-    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">NotImplemented</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_set_of_faces</span><span class="p">()</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="n">as_set_of_faces</span><span class="p">()</span>
 
-    <span class="k">def</span> <span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="s1">&#39;hash&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;hash&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">as_set_of_faces</span><span class="p">())</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__internals__</span><span class="p">[</span><span class="s1">&#39;hash&#39;</span><span class="p">]</span>
@@ -818,36 +818,36 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.merge_duplicates">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.merge_duplicates">[docs]</a>
-    <span class="k">def</span> <span class="nf">merge_duplicates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">merge_duplicates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">merge_duplicates</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Mesh.heal_normals">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.heal_normals">[docs]</a>
-    <span class="k">def</span> <span class="nf">heal_normals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">heal_normals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">heal_normals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Mesh.remove_unused_vertices">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.remove_unused_vertices">[docs]</a>
-    <span class="k">def</span> <span class="nf">remove_unused_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_unused_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">remove_unused_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Mesh.heal_triangles">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.heal_triangles">[docs]</a>
-    <span class="k">def</span> <span class="nf">heal_triangles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">heal_triangles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">heal_triangles</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Mesh.remove_degenerated_faces">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.remove_degenerated_faces">[docs]</a>
-    <span class="k">def</span> <span class="nf">remove_degenerated_faces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">remove_degenerated_faces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">remove_degenerated_faces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
     <span class="nd">@inplace_transformation</span>
-    <span class="k">def</span> <span class="nf">heal_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">closed_mesh</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">heal_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">closed_mesh</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Heals the mesh for different tests available.</span>
 
 <span class="sd">        It applies:</span>
@@ -872,7 +872,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.lowest_lid_position">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.lowest_lid_position">[docs]</a>
-    <span class="k">def</span> <span class="nf">lowest_lid_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega_max</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mf">9.81</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lowest_lid_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega_max</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mf">9.81</span><span class="p">):</span>
         <span class="n">z_lid</span> <span class="o">=</span> <span class="mf">0.0</span>
         <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">connected_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
             <span class="k">for</span> <span class="n">ccomp</span> <span class="ow">in</span> <span class="n">connected_components_of_waterline</span><span class="p">(</span><span class="n">comp</span><span class="p">):</span>
@@ -886,7 +886,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.generate_lid">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.generate_lid">[docs]</a>
-    <span class="k">def</span> <span class="nf">generate_lid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">faces_max_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_lid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">faces_max_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a mesh of the internal free surface of the body.</span>
 
@@ -903,7 +903,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        Mesh</span>
 <span class="sd">            lid of internal surface</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span> <span class="nn">capytaine.meshes.predefined.rectangles</span> <span class="kn">import</span> <span class="n">mesh_rectangle</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.predefined.rectangles</span><span class="w"> </span><span class="kn">import</span> <span class="n">mesh_rectangle</span>
 
         <span class="n">clipped_hull_mesh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">Plane</span><span class="p">(</span><span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">point</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">z</span><span class="p">)))</span>
         <span class="c1"># Alternatively: could keep only faces below z without proper clipping,</span>
@@ -960,7 +960,7 @@ window.addEventListener("load", () => mermaid.run());
 
 
     <span class="nd">@inplace_transformation</span>
-    <span class="k">def</span> <span class="nf">with_normal_vector_going_down</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_normal_vector_going_down</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># For lid meshes for irregular frequencies removal</span>
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,))):</span>
             <span class="c1"># The mesh is horizontal with normal vectors going up</span>
@@ -969,7 +969,7 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span>
 
-    <span class="k">def</span> <span class="nf">_face_on_plane</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_face</span><span class="p">,</span> <span class="n">plane</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_face_on_plane</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">i_face</span><span class="p">,</span> <span class="n">plane</span><span class="p">):</span>
         <span class="k">return</span> <span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[</span><span class="n">i_face</span><span class="p">,</span> <span class="p">:]</span> <span class="ow">in</span> <span class="n">plane</span>
                 <span class="ow">and</span> <span class="n">plane</span><span class="o">.</span><span class="n">is_orthogonal_to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[</span><span class="n">i_face</span><span class="p">,</span> <span class="p">:])</span>
@@ -977,7 +977,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.extract_lid">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.extract_lid">[docs]</a>
-    <span class="k">def</span> <span class="nf">extract_lid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="n">xOy_Plane</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_lid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="n">xOy_Plane</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Split the mesh into a mesh of the hull and a mesh of the lid.</span>
 <span class="sd">        By default, the lid is composed of the horizontal faces on the z=0 plane.</span>

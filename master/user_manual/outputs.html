@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
     <title>Outputs &#8212; capytaine 2.3.dev documentation</title>
-    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=686e5160" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../_static/proof.css?v=e9a64e30" />
@@ -106,7 +106,7 @@ the hull, under the same form as the potential above:</p>
 <p>If you have a list of <code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowResult</span></code>, you can assemble
 them in a xarray dataset for a more convenient post-processing. Use the
 following syntax:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">capytaine</span> <span class="kn">import</span> <span class="n">assemble_dataset</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="kn">import</span> <span class="n">assemble_dataset</span>
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">assemble_dataset</span><span class="p">(</span><span class="n">list_of_results</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -163,8 +163,8 @@ recommended, available <a class="reference external" href="https://github.com/mi
 question must be read into a Bemio <code class="code docutils literal notranslate"><span class="pre">data_structures.ben.HydrodynamicData</span></code> class, which is
 then called by <cite>assemble_dataset</cite>. For example, to create an xarray dataset from a WAMIT
 <code class="code docutils literal notranslate"><span class="pre">.out</span></code> file:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">bemio.io.wamit</span> <span class="kn">import</span> <span class="n">read</span> <span class="k">as</span> <span class="n">read_wamit</span>
-<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">bemio.io.wamit</span><span class="w"> </span><span class="kn">import</span> <span class="n">read</span> <span class="k">as</span> <span class="n">read_wamit</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
 <span class="n">bemio_data</span> <span class="o">=</span> <span class="n">read_wamit</span><span class="p">(</span><span class="s2">&quot;myfile.out&quot;</span><span class="p">)</span>
 <span class="n">my_dataset</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">(</span><span class="n">bemio_data</span><span class="p">,</span> <span class="n">hydrostatics</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
@@ -192,13 +192,13 @@ in the above example since the rigid body mass matrix cannot be calculated.</p>
 <h3>Complex numbers<a class="headerlink" href="#complex-numbers" title="Link to this heading">¶</a></h3>
 <p>The netCDF standard does not handle complex numbers.
 As a workaround, the complex-valued array can be saved as a bigger real-valued array with the help of the <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#module-capytaine.io.xarray" title="capytaine.io.xarray"><code class="xref py py-mod docutils literal notranslate"><span class="pre">capytaine.io.xarray</span></code></a> module:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">capytaine.io.xarray</span> <span class="kn">import</span> <span class="n">separate_complex_values</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">separate_complex_values</span>
 <span class="n">separate_complex_values</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">to_netcdf</span><span class="p">(</span><span class="s2">&quot;path/to/dataset.nc&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The dataset can then be reloaded by:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
-<span class="kn">from</span> <span class="nn">capytaine.io.xarray</span> <span class="kn">import</span> <span class="n">merge_complex_values</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">merge_complex_values</span>
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">merge_complex_values</span><span class="p">(</span><span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="s2">&quot;path/to/dataset.nc&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -225,9 +225,9 @@ It leads to the error <code class="code docutils literal notranslate"><span clas
 <h2>Saving the rotation center of rigid bodies<a class="headerlink" href="#saving-the-rotation-center-of-rigid-bodies" title="Link to this heading">¶</a></h2>
 <p>Some software downstream of Capytaine, such as <a class="reference external" href="https://github.com/BEMRosetta/BEMRosetta">BEMRosetta</a>, require the NetCDF file to store the rotation center of each body.
 While this is not yet done automatically by Capytaine, it can be added to the dataset manually as in the following example, which is an extension of the <a class="reference internal" href="quickstart.html"><span class="doc">Quickstart</span></a> example:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
-<span class="kn">import</span> <span class="nn">capytaine</span> <span class="k">as</span> <span class="nn">cpt</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
 
 <span class="n">body_1</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
             <span class="n">mesh</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
@@ -259,7 +259,7 @@ While this is not yet done automatically by Capytaine, it can be added to the da
 <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;center_of_mass&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s2">&quot;rigid_body_component&quot;</span><span class="p">,</span> <span class="s2">&quot;point_coordinates&quot;</span><span class="p">],</span> <span class="p">[</span><span class="n">body</span><span class="o">.</span><span class="n">center_of_mass</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">list_of_bodies</span><span class="p">])</span>
 
 <span class="c1"># Export to NetCDF file</span>
-<span class="kn">from</span> <span class="nn">capytaine.io.xarray</span> <span class="kn">import</span> <span class="n">separate_complex_values</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">separate_complex_values</span>
 <span class="n">separate_complex_values</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">to_netcdf</span><span class="p">(</span><span class="s2">&quot;dataset.nc&quot;</span><span class="p">,</span>
                                            <span class="n">encoding</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;radiating_dof&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;U&#39;</span><span class="p">},</span>
                                                      <span class="s1">&#39;influenced_dof&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;U&#39;</span><span class="p">}})</span>
@@ -272,7 +272,7 @@ While this is not yet done automatically by Capytaine, it can be added to the da
 <p>The example below uses the <code class="docutils literal notranslate"><span class="pre">openpyxl</span></code> library (that can be installed with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">openpyxl</span></code>) to export a dataset to Excel format:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span><span class="p">[[</span><span class="s2">&quot;added_mass&quot;</span><span class="p">,</span> <span class="s2">&quot;radiation_damping&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="s2">&quot;radiation_data.xlsx&quot;</span><span class="p">)</span>
 
-<span class="kn">from</span> <span class="nn">capytaine.io.xarray</span> <span class="kn">import</span> <span class="n">separate_complex_values</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">separate_complex_values</span>
 <span class="n">separate_complex_values</span><span class="p">(</span><span class="n">dataset</span><span class="p">[[</span><span class="s2">&quot;Froude_Krylov_force&quot;</span><span class="p">,</span> <span class="s2">&quot;diffraction_force&quot;</span><span class="p">]])</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="s2">&quot;diffraction_data.xlsx&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -289,12 +289,12 @@ Since this export method poorly supports complex number, the <a class="reference
 <li><p>Displacement volume</p></li>
 </ul>
 <p>They are stored in two files (<code class="code docutils literal notranslate"><span class="pre">Hydrostatics.dat</span></code> and <code class="code docutils literal notranslate"><span class="pre">KH.dat</span></code>) for each body, using the following syntax:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">capytaine.io.legacy</span> <span class="kn">import</span> <span class="n">export_hydrostatics</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.legacy</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_hydrostatics</span>
 <span class="n">export_hydrostatics</span><span class="p">(</span><span class="s2">&quot;directory_to_save_hydrostatics_data&quot;</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>for a single rigid body or, e.g.,:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">capytaine.io.legacy</span> <span class="kn">import</span> <span class="n">export_hydrostatics</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.legacy</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_hydrostatics</span>
 <span class="n">export_hydrostatics</span><span class="p">(</span><span class="s2">&quot;directory_to_save_hydrostatics_data&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">body_1</span><span class="p">,</span> <span class="n">body_2</span><span class="p">,</span> <span class="n">body_3</span><span class="p">])</span>
 </pre></div>
 </div>
@@ -313,7 +313,7 @@ Since this export method poorly supports complex number, the <a class="reference
 <p>This feature is experimental.</p>
 </div>
 <p>The following code will write files named <code class="code docutils literal notranslate"><span class="pre">RadiationCoefficients.tec</span></code> and <code class="code docutils literal notranslate"><span class="pre">ExcitationForce.tec</span></code> in a format matching the one of Nemoh 2.0:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">capytaine.io.legacy</span> <span class="kn">import</span> <span class="n">write_dataset_as_tecplot_files</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.legacy</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_dataset_as_tecplot_files</span>
 <span class="n">write_dataset_as_tecplot_files</span><span class="p">(</span><span class="s2">&quot;path/to/directory&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
 </pre></div>
 </div>
