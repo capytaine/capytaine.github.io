@@ -58,6 +58,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <span class="sd">&quot;&quot;&quot;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -204,7 +205,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="BEMSolver.solve_all">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve_all">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">solve_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problems</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;indirect&#39;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">progress_bar</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problems</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;indirect&#39;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">progress_bar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve several problems.</span>
 <span class="sd">        Optional keyword arguments are passed to `BEMSolver.solve`.</span>
 
@@ -217,8 +218,11 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        n_jobs: int, optional (default: 1)</span>
 <span class="sd">            the number of jobs to run in parallel using the optional dependency `joblib`</span>
 <span class="sd">            By defaults: do not use joblib and solve sequentially.</span>
-<span class="sd">        progress_bar: bool, optional (default: True)</span>
-<span class="sd">            Display a progress bar while solving</span>
+<span class="sd">        progress_bar: bool, optional</span>
+<span class="sd">            Display a progress bar while solving.</span>
+<span class="sd">            If no value is provided to this method directly,</span>
+<span class="sd">            check whether the environment variable `CAPYTAINE_PROGRESS_BAR` is defined</span>
+<span class="sd">            and otherwise default to True.</span>
 <span class="sd">        _check_wavelength: bool, optional (default: True)</span>
 <span class="sd">            If True, the frequencies are compared to the mesh resolution and</span>
 <span class="sd">            the estimated first irregular frequency to warn the user.</span>
@@ -231,6 +235,18 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">if</span> <span class="n">_check_wavelength</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength_and_mesh_resolution</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength_and_irregular_frequencies</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">progress_bar</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;CAPYTAINE_PROGRESS_BAR&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
+                <span class="n">env_var</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;CAPYTAINE_PROGRESS_BAR&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">env_var</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;true&#39;</span><span class="p">,</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;t&#39;</span><span class="p">}:</span>
+                    <span class="n">progress_bar</span> <span class="o">=</span> <span class="kc">True</span>
+                <span class="k">elif</span> <span class="n">env_var</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;false&#39;</span><span class="p">,</span> <span class="s1">&#39;0&#39;</span><span class="p">,</span> <span class="s1">&#39;f&#39;</span><span class="p">}:</span>
+                    <span class="n">progress_bar</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Invalid value &#39;</span><span class="si">{}</span><span class="s2">&#39; for the environment variable CAPYTAINE_PROGRESS_BAR.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;CAPYTAINE_PROGRESS_BAR&quot;</span><span class="p">]))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">progress_bar</span> <span class="o">=</span> <span class="kc">True</span>
 
         <span class="k">if</span> <span class="n">n_jobs</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># force sequential resolution</span>
             <span class="n">problems</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
@@ -327,8 +343,11 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        n_jobs: int, optional (default: 1)</span>
 <span class="sd">            the number of jobs to run in parallel using the optional dependency `joblib`</span>
 <span class="sd">            By defaults: do not use joblib and solve sequentially.</span>
-<span class="sd">        progress_bar: bool, optional (default: True)</span>
-<span class="sd">            Display a progress bar while solving</span>
+<span class="sd">        progress_bar: bool, optional</span>
+<span class="sd">            Display a progress bar while solving.</span>
+<span class="sd">            If no value is provided to this method directly,</span>
+<span class="sd">            check whether the environment variable `CAPYTAINE_PROGRESS_BAR` is defined</span>
+<span class="sd">            and otherwise default to True.</span>
 <span class="sd">        _check_wavelength: bool, optional (default: True)</span>
 <span class="sd">            If True, the frequencies are compared to the mesh resolution and</span>
 <span class="sd">            the estimated first irregular frequency to warn the user.</span>
