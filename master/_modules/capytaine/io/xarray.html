@@ -373,6 +373,8 @@ window.addEventListener("load", () => mermaid.run());
 
     <span class="n">error_msg</span> <span class="o">=</span> <span class="s1">&#39;The first argument of `assemble_dataset` must be either a list of LinearPotentialFlowResult or a bemio.io object&#39;</span>
     <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="s1">&#39;__iter__&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Iterable provided to `assemble_dataset` is empty.&quot;</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="k">if</span> <span class="s1">&#39;capytaine&#39;</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="vm">__module__</span><span class="p">:</span>
                 <span class="n">bemio_import</span> <span class="o">=</span> <span class="kc">False</span>
@@ -542,6 +544,46 @@ window.addEventListener("load", () => mermaid.run());
     <span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">attrs</span><span class="p">)</span>
     <span class="n">dataset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;capytaine_version&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">__version__</span>
     <span class="k">return</span> <span class="n">dataset</span></div>
+
+
+
+<div class="viewcode-block" id="assemble_matrices">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.assemble_matrices">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">assemble_matrices</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Simplified version of assemble_dataset, returning only bare matrices.</span>
+<span class="sd">    Meant mainly for teaching without introducing Xarray to beginers.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    results: list of LinearPotentialFlowResult</span>
+<span class="sd">        The results that will be read.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    3-ple of (np.arrays or None)</span>
+<span class="sd">        The added mass matrix, the radiation damping matrix and the excitation force.</span>
+<span class="sd">        If the data are no available in the results, returns None instead.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="s2">&quot;added_mass&quot;</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">added_mass</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">A</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="s2">&quot;radiation_damping&quot;</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_2d</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">radiation_damping</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">B</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="s2">&quot;excitation_force&quot;</span> <span class="ow">in</span> <span class="n">ds</span><span class="p">:</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">ds</span><span class="o">.</span><span class="n">excitation_force</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">squeeze</span><span class="p">())</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">F</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">F</span></div>
+
 
 
 
