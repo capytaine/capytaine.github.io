@@ -53,10 +53,47 @@ window.addEventListener("load", () => mermaid.run());
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mesh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">CollectionOfMeshes</span>
+
 <div class="viewcode-block" id="AbstractGreenFunction">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.abstract_green_function.html#capytaine.green_functions.abstract_green_function.AbstractGreenFunction">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">AbstractGreenFunction</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Abstract method to evaluate the Green function.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_colocation_points_and_normals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">CollectionOfMeshes</span><span class="p">):</span>
+            <span class="n">collocation_points</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_centers</span>
+            <span class="n">nb_collocation_points</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">nb_faces</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">adjoint_double_layer</span><span class="p">:</span> <span class="c1"># Computing the D matrix</span>
+                <span class="n">early_dot_product_normals</span> <span class="o">=</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_normals</span>
+            <span class="k">else</span><span class="p">:</span> <span class="c1"># Computing the K matrix</span>
+                <span class="n">early_dot_product_normals</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_normals</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="c1"># This is used when computing potential or velocity at given points in postprocessing</span>
+            <span class="n">collocation_points</span> <span class="o">=</span> <span class="n">mesh1</span>
+            <span class="n">nb_collocation_points</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">adjoint_double_layer</span><span class="p">:</span> <span class="c1"># Computing the D matrix</span>
+                <span class="n">early_dot_product_normals</span> <span class="o">=</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_normals</span>
+            <span class="k">else</span><span class="p">:</span> <span class="c1"># Computing the K matrix</span>
+                <span class="n">early_dot_product_normals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nb_collocation_points</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+                <span class="c1"># Dummy argument since this method is meant to be used either</span>
+                <span class="c1"># - to compute potential, then only S is needed and early_dot_product_normals is irrelevant,</span>
+                <span class="c1"># - to compute velocity, then the adjoint full gradient is needed and early_dot_product is False and this value is unused.</span>
+                <span class="c1"># TODO: add an only_S argument and return an error here if (early_dot_product and not only_S)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unrecognized first input for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">.evaluate:</span><span class="se">\n</span><span class="si">{</span><span class="n">mesh1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">collocation_points</span><span class="p">,</span> <span class="n">early_dot_product_normals</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_init_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="p">):</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">early_dot_product</span> <span class="k">else</span> <span class="mi">3</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
 
 <div class="viewcode-block" id="AbstractGreenFunction.evaluate">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.abstract_green_function.html#capytaine.green_functions.abstract_green_function.AbstractGreenFunction.evaluate">[docs]</a>
@@ -139,7 +176,7 @@ window.addEventListener("load", () => mermaid.run());
       &#169;2024, Matthieu Ancellin.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.0</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
     </div>
