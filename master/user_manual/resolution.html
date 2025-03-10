@@ -191,8 +191,9 @@ precision of the low-rank matrices.</p>
 </section>
 <section id="solving-the-problem">
 <h2>Solving the problem<a class="headerlink" href="#solving-the-problem" title="Link to this heading">¶</a></h2>
-<p>Once the solver has been initialized, it can be used to solve problems with the <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a> method:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;indirect&#39;</span><span class="p">)</span>
+<p>Once the solver has been initialized, it can be used to solve problems with the
+<a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;indirect&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The optional argument <code class="code docutils literal notranslate"><span class="pre">keep_details</span></code> (default value: <code class="code docutils literal notranslate"><span class="pre">True</span></code>)
@@ -201,17 +202,26 @@ result object. These data are necessary for some post-processing such as the
 computation of the Kochin function or the reconstruction of the free surface
 elevation. However, when only the force on the body is of interest, they can be
 discarded to save space in memory.</p>
-<p>The optional argument <code class="code docutils literal notranslate"><span class="pre">method</span></code> (default value: <code class="code docutils literal notranslate"><span class="pre">indirect</span></code>) controls
-the approach employed to solve for the potential velocity solutions. Two
-methods are implemented including 1) direct method (also known as “potential
-formulation”, among other names), and 2) indirect method (also known as “source
-formulation”). The direct method appears to be slightly more accurate on some
-test cases but only allows for the computation of the forces on the floating
-body. Any other post-processing requires the indirect method.</p>
+<p>The optional argument <code class="code docutils literal notranslate"><span class="pre">method</span></code> (default value: <code class="code docutils literal notranslate"><span class="pre">&quot;indirect&quot;</span></code>) controls
+the approach employed to solve for the potential velocity solutions.
+Two methods are implemented:</p>
+<ol class="arabic simple">
+<li><p>direct method (also known as “potential formulation”, among other names)
+with <code class="code docutils literal notranslate"><span class="pre">method=&quot;direct&quot;</span></code>,</p></li>
+<li><p>indirect method (also known as “source formulation”), by default and with
+<code class="code docutils literal notranslate"><span class="pre">method=&quot;indirect&quot;</span></code>.</p></li>
+</ol>
+<p>The direct method appears to be slightly more accurate on some
+test cases (especially when thin plates are involved) but is only implemented
+for the computation of the forces on the floating body without forward speed.
+Any other post-processing (e.g. free surface elevation) and forward speed
+currently require the indirect method.</p>
 <p>A list of problems can be solved at once in an optimal order with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">list_of_results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">list_of_problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">list_of_results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">list_of_problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;indirect&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>where <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve_all" title="capytaine.bem.solver.BEMSolver.solve_all"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve_all()</span></code></a> accepts the same
+optional keyword arguments as <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a>.</p>
 </section>
 <section id="progress-bar">
 <h2>Progress bar<a class="headerlink" href="#progress-bar" title="Link to this heading">¶</a></h2>
