@@ -72,6 +72,7 @@ window.addEventListener("load", () => mermaid.run());
     <span class="n">tabulation_zmin</span><span class="o">=-</span><span class="mf">251.0</span><span class="p">,</span>
     <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="mi">1001</span><span class="p">,</span>
     <span class="n">tabulation_grid_shape</span><span class="o">=</span><span class="s2">&quot;scaled_nemoh3&quot;</span><span class="p">,</span>
+    <span class="n">finite_depth_method</span><span class="o">=</span><span class="s2">&quot;newer&quot;</span><span class="p">,</span>
     <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="s2">&quot;fortran&quot;</span><span class="p">,</span>
     <span class="n">floating_point_precision</span><span class="o">=</span><span class="s2">&quot;float64&quot;</span><span class="p">,</span>
     <span class="n">gf_singularities</span><span class="o">=</span><span class="s2">&quot;low_freq&quot;</span><span class="p">,</span>
@@ -115,6 +116,8 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        Default: calls capytaine.tools.cache_on_disk.cache_directory(), which</span>
 <span class="sd">        returns the value of the environment variable CAPYTAINE_CACHE_DIR if</span>
 <span class="sd">        set, or else the default cache directory on your system.</span>
+<span class="sd">    finite_depth_method: string, optional</span>
+<span class="sd">        The method used to compute the finite depth Green function.</span>
 <span class="sd">    finite_depth_prony_decomposition_method: string, optional</span>
 <span class="sd">        The implementation of the Prony decomposition used to compute the</span>
 <span class="sd">        finite water_depth Green function. Accepted values: :code:`&#39;fortran&#39;`</span>
@@ -137,7 +140,9 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        Compiled Fortran module with functions used to compute the Green</span>
 <span class="sd">        function.</span>
 <span class="sd">    tabulation_grid_shape_index: int</span>
-<span class="sd">        Integer passed to Fortran code to describe which method is used.</span>
+<span class="sd">    gf_singularities_index: int</span>
+<span class="sd">    finite_depth_method_index: int</span>
+<span class="sd">        Integers passed to Fortran code to describe which method is used.</span>
 <span class="sd">    tabulated_r_range: numpy.array of shape (tabulation_nr,) and type floating_point_precision</span>
 <span class="sd">    tabulated_z_range: numpy.array of shape (tabulation_nz,) and type floating_point_precision</span>
 <span class="sd">        Coordinates of the tabulation points.</span>
@@ -155,6 +160,7 @@ window.addEventListener("load", () => mermaid.run());
                  <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_nb_integration_points&quot;</span><span class="p">],</span>
                  <span class="n">tabulation_grid_shape</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_grid_shape&quot;</span><span class="p">],</span>
                  <span class="n">tabulation_cache_dir</span><span class="o">=</span><span class="n">cache_directory</span><span class="p">(),</span>
+                 <span class="n">finite_depth_method</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;finite_depth_method&quot;</span><span class="p">],</span>
                  <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;finite_depth_prony_decomposition_method&quot;</span><span class="p">],</span>
                  <span class="n">floating_point_precision</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;floating_point_precision&quot;</span><span class="p">],</span>
                  <span class="n">gf_singularities</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;gf_singularities&quot;</span><span class="p">],</span>
@@ -176,6 +182,13 @@ window.addEventListener("load", () => mermaid.run());
                 <span class="s1">&#39;low_freq_with_rankine_part&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">low_freq_with_rankine_part</span><span class="p">,</span>
                               <span class="p">}</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities_index</span> <span class="o">=</span> <span class="n">fortran_enum</span><span class="p">[</span><span class="n">gf_singularities</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_method</span> <span class="o">=</span> <span class="n">finite_depth_method</span>
+        <span class="n">fortran_enum</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;legacy&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">legacy_finite_depth</span><span class="p">,</span>
+                <span class="s1">&#39;newer&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">newer_finite_depth</span><span class="p">,</span>
+                              <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_method_index</span> <span class="o">=</span> <span class="n">fortran_enum</span><span class="p">[</span><span class="n">finite_depth_method</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">floating_point_precision</span> <span class="o">=</span> <span class="n">floating_point_precision</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_nb_integration_points</span> <span class="o">=</span> <span class="n">tabulation_nb_integration_points</span>
@@ -201,6 +214,7 @@ window.addEventListener("load", () => mermaid.run());
             <span class="s1">&#39;tabulation_zmin&#39;</span><span class="p">:</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
             <span class="s1">&#39;tabulation_nb_integration_points&#39;</span><span class="p">:</span> <span class="n">tabulation_nb_integration_points</span><span class="p">,</span>
             <span class="s1">&#39;tabulation_grid_shape&#39;</span><span class="p">:</span> <span class="n">tabulation_grid_shape</span><span class="p">,</span>
+            <span class="s1">&#39;finite_depth_method&#39;</span><span class="p">:</span> <span class="n">finite_depth_method</span><span class="p">,</span>
             <span class="s1">&#39;finite_depth_prony_decomposition_method&#39;</span><span class="p">:</span> <span class="n">finite_depth_prony_decomposition_method</span><span class="p">,</span>
             <span class="s1">&#39;floating_point_precision&#39;</span><span class="p">:</span> <span class="n">floating_point_precision</span><span class="p">,</span>
             <span class="s1">&#39;gf_singularities&#39;</span><span class="p">:</span> <span class="n">gf_singularities</span><span class="p">,</span>
@@ -430,7 +444,7 @@ window.addEventListener("load", () => mermaid.run());
             <span class="o">*</span><span class="n">mesh2</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">,</span>
             <span class="n">wavenumber</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span>
             <span class="n">coeffs</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">all_tabulation_parameters</span><span class="p">,</span>
-            <span class="n">lamda_exp</span><span class="p">,</span> <span class="n">a_exp</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_method_index</span><span class="p">,</span> <span class="n">lamda_exp</span><span class="p">,</span> <span class="n">a_exp</span><span class="p">,</span>
             <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities_index</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">,</span>
             <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
         <span class="p">)</span>
