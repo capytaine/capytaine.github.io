@@ -142,7 +142,6 @@ window.addEventListener("load", () => mermaid.run());
     <span class="n">fortran_core</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="s2">&quot;capytaine.green_functions.libs.Delhommeau_float64&quot;</span><span class="p">)</span>
     <span class="n">finite_depth_method_index</span> <span class="o">=</span> <span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">fingreen3d_method</span>
     <span class="n">gf_singularities_index</span> <span class="o">=</span> <span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">low_freq</span>
-    <span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;green_function&#39;</span><span class="p">:</span> <span class="s2">&quot;FinGreen3D&quot;</span><span class="p">}</span>
 
     <span class="c1"># Dummy arrays that won&#39;t actually be used by the fortran code.</span>
     <span class="n">a_exp</span><span class="p">,</span> <span class="n">lamda_exp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -154,12 +153,16 @@ window.addEventListener("load", () => mermaid.run());
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">nb_dispersion_roots</span><span class="o">=</span><span class="mi">200</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nb_dispersion_roots</span> <span class="o">=</span> <span class="n">nb_dispersion_roots</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;green_function&#39;</span><span class="p">:</span> <span class="s2">&quot;FinGreen3D&quot;</span><span class="p">,</span>
+            <span class="s1">&#39;nb_dispersion_roots&#39;</span><span class="p">:</span> <span class="n">nb_dispersion_roots</span>
+        <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;FinGreen3D()&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;FinGreen3D(nb_dispersion_roots=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_dispersion_roots</span><span class="si">}</span><span class="s2">)&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="s2">&quot;FinGreen3D()&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;FinGreen3D(nb_dispersion_roots=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_dispersion_roots</span><span class="si">}</span><span class="s2">)&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
         <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">())</span>
@@ -214,6 +217,35 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">if</span> <span class="n">early_dot_product</span><span class="p">:</span> <span class="n">K</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="n">S</span><span class="p">,</span> <span class="n">K</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="HAMS_GF">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.hams.html#capytaine.green_functions.hams.HAMS_GF">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HAMS_GF</span><span class="p">(</span><span class="n">AbstractGreenFunction</span><span class="p">):</span>
+    <span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;green_function&#39;</span><span class="p">:</span> <span class="s2">&quot;HAMS_GF&quot;</span><span class="p">}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">infinite_depth_gf</span> <span class="o">=</span> <span class="n">LiangWuNoblesseGF</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_gf</span> <span class="o">=</span> <span class="n">FinGreen3D</span><span class="p">(</span><span class="n">nb_dispersion_roots</span><span class="o">=</span><span class="mi">200</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;HAMS_GF()&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s2">&quot;HAMS_GF()&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">())</span>
+
+<div class="viewcode-block" id="HAMS_GF.evaluate">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.hams.html#capytaine.green_functions.hams.HAMS_GF.evaluate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">water_depth</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">infinite_depth_gf</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_gf</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="p">)</span></div>
 </div>
 
 </pre></div>
