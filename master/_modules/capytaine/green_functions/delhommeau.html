@@ -332,7 +332,7 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_prony_decomposition_method</span>
 
-        <span class="n">dimensionless_omega</span> <span class="o">=</span> <span class="n">dimensionless_wavenumber</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">dimensionless_wavenumber</span><span class="p">)</span>
+        <span class="n">omega2_h_over_g</span> <span class="o">=</span> <span class="n">dimensionless_wavenumber</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">dimensionless_wavenumber</span><span class="p">)</span>
 
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Compute Prony decomposition in finite water_depth Green function &quot;</span>
                   <span class="s2">&quot;for dimensionless_wavenumber=</span><span class="si">%.2e</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">dimensionless_wavenumber</span><span class="p">)</span>
@@ -341,23 +341,21 @@ window.addEventListener("load", () => mermaid.run());
             <span class="c1"># The function that will be approximated.</span>
             <span class="nd">@np</span><span class="o">.</span><span class="n">vectorize</span>
             <span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
-                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">old_prony_decomposition</span><span class="o">.</span><span class="n">ff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dimensionless_omega</span><span class="p">,</span> <span class="n">dimensionless_wavenumber</span><span class="p">)</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">old_prony_decomposition</span><span class="o">.</span><span class="n">ff</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">omega2_h_over_g</span><span class="p">,</span> <span class="n">dimensionless_wavenumber</span><span class="p">)</span>
 
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">a</span><span class="p">,</span> <span class="n">lamda</span> <span class="o">=</span> <span class="n">find_best_exponential_decomposition</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x_min</span><span class="o">=-</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">x_max</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">n_exp_range</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
             <span class="k">except</span> <span class="n">NoConvergenceError</span><span class="p">:</span>
                 <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;No suitable exponential decomposition has been found&quot;</span>
                             <span class="s2">&quot;for dimensionless_wavenumber=</span><span class="si">%.2e</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">dimensionless_wavenumber</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">lamda</span><span class="p">,</span> <span class="n">a</span><span class="p">])</span>
 
         <span class="k">elif</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;fortran&#39;</span><span class="p">:</span>
-            <span class="n">lamda</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">nexp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">old_prony_decomposition</span><span class="o">.</span><span class="n">lisc</span><span class="p">(</span><span class="n">dimensionless_omega</span><span class="p">,</span> <span class="n">dimensionless_wavenumber</span><span class="p">)</span>
-            <span class="n">lamda</span> <span class="o">=</span> <span class="n">lamda</span><span class="p">[:</span><span class="n">nexp</span><span class="p">]</span>
-            <span class="n">a</span> <span class="o">=</span> <span class="n">a</span><span class="p">[:</span><span class="n">nexp</span><span class="p">]</span>
+            <span class="n">nexp</span><span class="p">,</span> <span class="n">pr_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">old_prony_decomposition</span><span class="o">.</span><span class="n">lisc</span><span class="p">(</span><span class="n">omega2_h_over_g</span><span class="p">,</span> <span class="n">dimensionless_wavenumber</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">pr_d</span><span class="p">[:,</span> <span class="p">:</span><span class="n">nexp</span><span class="p">]</span>
 
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized method name for the Prony decomposition.&quot;</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">lamda</span></div>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unrecognized method name for the Prony decomposition.&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Delhommeau.evaluate">
@@ -394,13 +392,13 @@ window.addEventListener("load", () => mermaid.run());
 
         <span class="k">if</span> <span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span> <span class="c1"># No free surface, only a single Rankine source term</span>
 
-            <span class="n">a_exp</span><span class="p">,</span> <span class="n">lamda_exp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Dummy arrays that won&#39;t actually be used by the fortran code.</span>
+            <span class="n">prony_decomposition</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>  <span class="c1"># Dummy array that won&#39;t actually be used by the fortran code.</span>
 
             <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
 
         <span class="k">elif</span> <span class="n">water_depth</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
 
-            <span class="n">a_exp</span><span class="p">,</span> <span class="n">lamda_exp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># Idem</span>
+            <span class="n">prony_decomposition</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>  <span class="c1"># Idem</span>
 
             <span class="k">if</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
                 <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
@@ -416,9 +414,7 @@ window.addEventListener("load", () => mermaid.run());
             <span class="k">if</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Zero or infinite frequencies not implemented for finite depth.&quot;</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">a_exp</span><span class="p">,</span> <span class="n">lamda_exp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_best_exponential_decomposition</span><span class="p">(</span>
-                    <span class="n">wavenumber</span><span class="o">*</span><span class="n">water_depth</span><span class="p">,</span>
-                <span class="p">)</span>
+                <span class="n">prony_decomposition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_best_exponential_decomposition</span><span class="p">(</span><span class="n">wavenumber</span><span class="o">*</span><span class="n">water_depth</span><span class="p">)</span>
                 <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
 
         <span class="n">collocation_points</span><span class="p">,</span> <span class="n">early_dot_product_normals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_colocation_points_and_normals</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">)</span>
@@ -445,7 +441,7 @@ window.addEventListener("load", () => mermaid.run());
             <span class="o">*</span><span class="n">mesh2</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">,</span>
             <span class="n">wavenumber</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span>
             <span class="n">coeffs</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">all_tabulation_parameters</span><span class="p">,</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_method_index</span><span class="p">,</span> <span class="n">lamda_exp</span><span class="p">,</span> <span class="n">a_exp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dispersion_relation_roots</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_method_index</span><span class="p">,</span> <span class="n">prony_decomposition</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dispersion_relation_roots</span><span class="p">,</span>
             <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities_index</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">,</span>
             <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
         <span class="p">)</span>
