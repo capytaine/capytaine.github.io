@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>capytaine.tools.symbolic_multiplication module &#8212; capytaine 2.3.dev documentation</title>
+    <title>capytaine.tools.timer module &#8212; capytaine 2.3.dev documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
@@ -16,8 +16,8 @@
     <script src="../../_static/proof.js?v=41e9dd12"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="capytaine.tools.timer module" href="capytaine.tools.timer.html" />
-    <link rel="prev" title="capytaine.tools.prony_decomposition module" href="capytaine.tools.prony_decomposition.html" />
+    <link rel="next" title="capytaine.matrices package" href="capytaine.matrices.html" />
+    <link rel="prev" title="capytaine.tools.symbolic_multiplication module" href="capytaine.tools.symbolic_multiplication.html" />
     <script defer data-domain="capytaine.github.io" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
     
@@ -41,33 +41,51 @@
 
           <div class="body" role="main">
             
-  <section id="module-capytaine.tools.symbolic_multiplication">
-<span id="capytaine-tools-symbolic-multiplication-module"></span><h1>capytaine.tools.symbolic_multiplication module<a class="headerlink" href="#module-capytaine.tools.symbolic_multiplication" title="Link to this heading">¶</a></h1>
-<p>This module is used for the handling of zero and infinite frequencies.
-In this cases, the magnitudes that the solver has to manipulate are in the form of ω times a non-zero term.
-Instead of evaluating this multiplication as zero of infinity, we keep it symbolic using the class defined here.</p>
-<p>The frequency can be provided to the solver as something like
-<cite>SymbolicMultiplication(“0”, 1.0)</cite> (that is zero) and the solver will return an
-output of the form <cite>SymbolicMultiplication(“0”, np.array(…))</cite>
-(that is also actually zero, except we may be intested in the non-zero array).</p>
+  <section id="module-capytaine.tools.timer">
+<span id="capytaine-tools-timer-module"></span><h1>capytaine.tools.timer module<a class="headerlink" href="#module-capytaine.tools.timer" title="Link to this heading">¶</a></h1>
+<p>A simple timer class used to measure the time spent in various parts of the BEM solver.</p>
 <dl class="py class">
-<dt class="sig sig-object py" id="capytaine.tools.symbolic_multiplication.SymbolicMultiplication">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">capytaine.tools.symbolic_multiplication.</span></span><span class="sig-name descname"><span class="pre">SymbolicMultiplication</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">symbol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">value</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/symbolic_multiplication.html#SymbolicMultiplication"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.symbolic_multiplication.SymbolicMultiplication" title="Link to this definition">¶</a></dt>
+<dt class="sig sig-object py" id="capytaine.tools.timer.Timer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">capytaine.tools.timer.</span></span><span class="sig-name descname"><span class="pre">Timer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/timer.html#Timer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.timer.Timer" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="capytaine.tools.symbolic_multiplication.SymbolicMultiplication.reshape">
-<span class="sig-name descname"><span class="pre">reshape</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/symbolic_multiplication.html#SymbolicMultiplication.reshape"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.symbolic_multiplication.SymbolicMultiplication.reshape" title="Link to this definition">¶</a></dt>
+<p>A simple timer class that can be used as context manager or as decorator using <cite>wraps_function</cite> method</p>
+<p class="rubric">Example</p>
+<p>timer = Timer()
+with timer:</p>
+<blockquote>
+<div><p>sleep(1.0)</p>
+</div></blockquote>
+<p>print(timer.total)  # 1.0…</p>
+<p>&#64;timer.wraps_function
+def my_function():</p>
+<blockquote>
+<div><p>sleep(0.5)</p>
+</div></blockquote>
+<p>my_function()
+print(timer.total)  # 1.5…
+my_function()
+print(timer.total)  # 2.0…</p>
+<p>print(timer.timings)  # [1.0, 0.5, 0.5]</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.tools.timer.Timer.mean">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">mean</span></span><a class="headerlink" href="#capytaine.tools.timer.Timer.mean" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
-</dd></dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.tools.timer.Timer.nb_timings">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nb_timings</span></span><a class="headerlink" href="#capytaine.tools.timer.Timer.nb_timings" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
-<dl class="py function">
-<dt class="sig sig-object py" id="capytaine.tools.symbolic_multiplication.supporting_symbolic_multiplication">
-<span class="sig-prename descclassname"><span class="pre">capytaine.tools.symbolic_multiplication.</span></span><span class="sig-name descname"><span class="pre">supporting_symbolic_multiplication</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/symbolic_multiplication.html#supporting_symbolic_multiplication"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.symbolic_multiplication.supporting_symbolic_multiplication" title="Link to this definition">¶</a></dt>
-<dd><p>When this decorator is applied to a function, this function can now take
-as input a <cite>SymbolicMultiplication</cite> object. The function is applied on the
-<cite>value</cite> part of the <cite>SymbolicMultiplication</cite> without modifying the
-<cite>symbol</cite>.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.tools.timer.Timer.total">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">total</span></span><a class="headerlink" href="#capytaine.tools.timer.Timer.total" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.tools.timer.Timer.wraps_function">
+<span class="sig-name descname"><span class="pre">wraps_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/timer.html#Timer.wraps_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.timer.Timer.wraps_function" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 </section>
@@ -138,8 +156,8 @@ as input a <cite>SymbolicMultiplication</cite> object. The function is applied o
   <li><a href="../index.html">Developer manual</a><ul>
   <li><a href="../overview.html">Overview of the modules</a><ul>
   <li><a href="capytaine.tools.html">capytaine.tools package</a><ul>
-      <li>Previous: <a href="capytaine.tools.prony_decomposition.html" title="previous chapter">capytaine.tools.prony_decomposition module</a></li>
-      <li>Next: <a href="capytaine.tools.timer.html" title="next chapter">capytaine.tools.timer module</a></li>
+      <li>Previous: <a href="capytaine.tools.symbolic_multiplication.html" title="previous chapter">capytaine.tools.symbolic_multiplication module</a></li>
+      <li>Next: <a href="capytaine.matrices.html" title="next chapter">capytaine.matrices package</a></li>
   </ul></li>
   </ul></li>
   </ul></li>
@@ -166,7 +184,7 @@ as input a <cite>SymbolicMultiplication</cite> object. The function is applied o
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |
-      <a href="../../_sources/developer_manual/api/capytaine.tools.symbolic_multiplication.rst.txt"
+      <a href="../../_sources/developer_manual/api/capytaine.tools.timer.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 
