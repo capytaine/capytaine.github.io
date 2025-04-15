@@ -52,8 +52,8 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">.. todo:: This module could be tidied up a bit and some methods merged or</span>
 <span class="sd">          uniformized.</span>
 <span class="sd">&quot;&quot;&quot;</span>
-<span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin</span>
-<span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
+<span class="c1"># Copyright (C) 2017-2025 Matthieu Ancellin</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/capytaine/capytaine&gt;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
@@ -80,6 +80,16 @@ window.addEventListener("load", () => mermaid.run());
 <span class="c1">#########################</span>
 <span class="c1">#  Reading test matrix  #</span>
 <span class="c1">#########################</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_unsqueeze_dimensions</span><span class="p">(</span><span class="n">data_array</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add scalar coordinates as dimensions of size 1.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">dimensions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dimensions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data_array</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">dimensions</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_array</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">data_array</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">data_array</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data_array</span>
+
 
 <div class="viewcode-block" id="problems_from_dataset">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.problems_from_dataset">[docs]</a>
@@ -202,6 +212,31 @@ window.addEventListener("load", () => mermaid.run());
 
 
 
+<span class="c1">######################</span>
+<span class="c1">#  Dataset creation  #</span>
+<span class="c1">######################</span>
+
+<div class="viewcode-block" id="collect_records">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.collect_records">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">collect_records</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
+    <span class="n">records_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">warned_once_about_no_free_surface</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">warned_once_about_no_free_surface</span><span class="p">:</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Datasets currently only support cases with a free surface (free_surface=0.0).</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;Cases without a free surface (free_surface=inf) are ignored.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;See also https://github.com/mancellin/capytaine/issues/88&quot;</span><span class="p">)</span>
+                <span class="n">warned_once_about_no_free_surface</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">records</span><span class="p">:</span>
+                <span class="n">records_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">records_list</span></div>
+
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_squeeze_dimensions</span><span class="p">(</span><span class="n">data_array</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Remove dimensions if they are of size 1. The coordinates become scalar coordinates.&quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">dimensions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -211,20 +246,6 @@ window.addEventListener("load", () => mermaid.run());
             <span class="n">data_array</span> <span class="o">=</span> <span class="n">data_array</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">drop</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">data_array</span>
 
-
-<span class="k">def</span><span class="w"> </span><span class="nf">_unsqueeze_dimensions</span><span class="p">(</span><span class="n">data_array</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Add scalar coordinates as dimensions of size 1.&quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="n">dimensions</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">dimensions</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">data_array</span><span class="o">.</span><span class="n">coords</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-    <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="n">dimensions</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data_array</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="n">dim</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">data_array</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">data_array</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="n">dim</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">data_array</span>
-
-
-<span class="c1">######################</span>
-<span class="c1">#  Dataset creation  #</span>
-<span class="c1">######################</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_dataset_from_dataframe</span><span class="p">(</span><span class="n">df</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">,</span>
                             <span class="n">variables</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]],</span>
@@ -248,12 +269,8 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        They will appears as dimension in the output dataset only if they have</span>
 <span class="sd">        more than one different values.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">for</span> <span class="n">variable_name</span> <span class="ow">in</span> <span class="n">variables</span><span class="p">:</span>
-        <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="n">df</span><span class="p">[</span><span class="n">variable_name</span><span class="p">]</span><span class="o">.</span><span class="n">notnull</span><span class="p">()]</span><span class="o">.</span><span class="n">dropna</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s1">&#39;columns&#39;</span><span class="p">)</span>  <span class="c1"># Keep only records with non null values of all the variables</span>
     <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">drop_duplicates</span><span class="p">(</span><span class="n">optional_dims</span> <span class="o">+</span> <span class="n">dimensions</span><span class="p">)</span>
     <span class="n">df</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">set_index</span><span class="p">(</span><span class="n">optional_dims</span> <span class="o">+</span> <span class="n">dimensions</span><span class="p">)</span>
-
     <span class="n">da</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">to_xarray</span><span class="p">()[</span><span class="n">variables</span><span class="p">]</span>
     <span class="n">da</span> <span class="o">=</span> <span class="n">_squeeze_dimensions</span><span class="p">(</span><span class="n">da</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="n">optional_dims</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">da</span>
@@ -317,26 +334,6 @@ window.addEventListener("load", () => mermaid.run());
 
     <span class="k">return</span> <span class="n">kochin_data</span></div>
 
-
-
-<div class="viewcode-block" id="collect_records">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.collect_records">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">collect_records</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
-    <span class="n">records_list</span> <span class="o">=</span> <span class="p">[]</span>
-    <span class="n">warned_once_about_no_free_surface</span> <span class="o">=</span> <span class="kc">False</span>
-    <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">warned_once_about_no_free_surface</span><span class="p">:</span>
-                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Datasets currently only support cases with a free surface (free_surface=0.0).</span><span class="se">\n</span><span class="s2">&quot;</span>
-                            <span class="s2">&quot;Cases without a free surface (free_surface=inf) are ignored.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                            <span class="s2">&quot;See also https://github.com/mancellin/capytaine/issues/88&quot;</span><span class="p">)</span>
-                <span class="n">warned_once_about_no_free_surface</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">pass</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">record</span> <span class="ow">in</span> <span class="n">result</span><span class="o">.</span><span class="n">records</span><span class="p">:</span>
-                <span class="n">records_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">records_list</span></div>
 
 
 <div class="viewcode-block" id="assemble_dataset">
@@ -415,12 +412,14 @@ window.addEventListener("load", () => mermaid.run());
     <span class="k">if</span> <span class="s1">&#39;added_mass&#39;</span> <span class="ow">in</span> <span class="n">records</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
         <span class="n">records</span><span class="p">[</span><span class="s2">&quot;radiating_dof&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">records</span><span class="p">[</span><span class="s2">&quot;radiating_dof&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">rad_dof_cat</span><span class="p">)</span>
 
+    <span class="n">kinds_of_results</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">records</span><span class="p">[</span><span class="s1">&#39;kind&#39;</span><span class="p">])</span>
+
     <span class="n">optional_dims</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;rho&#39;</span><span class="p">,</span> <span class="s1">&#39;body_name&#39;</span><span class="p">,</span> <span class="s1">&#39;water_depth&#39;</span><span class="p">,</span> <span class="s1">&#39;forward_speed&#39;</span><span class="p">]</span>
 
     <span class="c1"># RADIATION RESULTS</span>
-    <span class="k">if</span> <span class="s1">&#39;added_mass&#39;</span> <span class="ow">in</span> <span class="n">records</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s2">&quot;RadiationResult&quot;</span> <span class="ow">in</span> <span class="n">kinds_of_results</span><span class="p">:</span>
         <span class="n">radiation_cases</span> <span class="o">=</span> <span class="n">_dataset_from_dataframe</span><span class="p">(</span>
-            <span class="n">records</span><span class="p">,</span>
+            <span class="n">records</span><span class="p">[</span><span class="n">records</span><span class="p">[</span><span class="s1">&#39;kind&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;RadiationResult&quot;</span><span class="p">],</span>
             <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">,</span> <span class="s1">&#39;radiation_damping&#39;</span><span class="p">],</span>
             <span class="n">dimensions</span><span class="o">=</span><span class="p">[</span><span class="n">main_freq_type</span><span class="p">,</span> <span class="s1">&#39;radiating_dof&#39;</span><span class="p">,</span> <span class="s1">&#39;influenced_dof&#39;</span><span class="p">],</span>
             <span class="n">optional_dims</span><span class="o">=</span><span class="n">optional_dims</span> <span class="o">+</span> <span class="p">[</span><span class="s1">&#39;wave_direction&#39;</span><span class="p">])</span>
@@ -431,9 +430,9 @@ window.addEventListener("load", () => mermaid.run());
         <span class="n">dataset</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">merge</span><span class="p">([</span><span class="n">dataset</span><span class="p">,</span> <span class="n">radiation_cases</span><span class="p">])</span>
 
     <span class="c1"># DIFFRACTION RESULTS</span>
-    <span class="k">if</span> <span class="s1">&#39;diffraction_force&#39;</span> <span class="ow">in</span> <span class="n">records</span><span class="o">.</span><span class="n">columns</span><span class="p">:</span>
+    <span class="k">if</span> <span class="s2">&quot;DiffractionResult&quot;</span> <span class="ow">in</span> <span class="n">kinds_of_results</span><span class="p">:</span>
         <span class="n">diffraction_cases</span> <span class="o">=</span> <span class="n">_dataset_from_dataframe</span><span class="p">(</span>
-            <span class="n">records</span><span class="p">,</span>
+            <span class="n">records</span><span class="p">[</span><span class="n">records</span><span class="p">[</span><span class="s1">&#39;kind&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;DiffractionResult&quot;</span><span class="p">],</span>
             <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;diffraction_force&#39;</span><span class="p">,</span> <span class="s1">&#39;Froude_Krylov_force&#39;</span><span class="p">],</span>
             <span class="n">dimensions</span><span class="o">=</span><span class="p">[</span><span class="n">main_freq_type</span><span class="p">,</span> <span class="s1">&#39;wave_direction&#39;</span><span class="p">,</span> <span class="s1">&#39;influenced_dof&#39;</span><span class="p">],</span>
             <span class="n">optional_dims</span><span class="o">=</span><span class="n">optional_dims</span><span class="p">)</span>
