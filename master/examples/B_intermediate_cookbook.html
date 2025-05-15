@@ -14,6 +14,7 @@
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/proof.js?v=41e9dd12"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Advanced cookbook" href="C_advanced_cookbook.html" />
@@ -59,6 +60,7 @@ The scripts can be downloaded individually as Python files from the <a class="re
 <li><p><a class="reference internal" href="#b5-plot-velocity-in-domain" id="id6">B5. Plot velocity in domain</a></p></li>
 <li><p><a class="reference internal" href="#b6-animated-free-surface-elevation" id="id7">B6. Animated free surface elevation</a></p></li>
 <li><p><a class="reference internal" href="#b7-animation-of-the-rao" id="id8">B7. Animation of the RAO</a></p></li>
+<li><p><a class="reference internal" href="#b8-pressure-field-for-zero-or-infinite-frequency" id="id9">B8. Pressure field for zero or infinite frequency</a></p></li>
 </ul>
 </li>
 </ul>
@@ -393,6 +395,39 @@ downloaded from: <a class="reference external" href="https://raw.githubuserconte
     <span class="n">anim</span> <span class="o">=</span> <span class="n">setup_animation</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">fs</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.5</span><span class="p">,</span> <span class="n">wave_amplitude</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="n">pi</span><span class="p">)</span>
     <span class="n">anim</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">camera_position</span><span class="o">=</span><span class="p">(</span><span class="mi">70</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">800</span><span class="p">,</span> <span class="mi">600</span><span class="p">))</span>
     <span class="n">anim</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">&quot;animated_boat.ogv&quot;</span><span class="p">,</span> <span class="n">camera_position</span><span class="o">=</span><span class="p">(</span><span class="mi">70</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">800</span><span class="p">,</span> <span class="mi">600</span><span class="p">))</span>
+</pre></div>
+</div>
+</section>
+<section id="b8-pressure-field-for-zero-or-infinite-frequency">
+<h2><a class="toc-backref" href="#id9" role="doc-backlink">B8. Pressure field for zero or infinite frequency</a><a class="headerlink" href="#b8-pressure-field-for-zero-or-infinite-frequency" title="Link to this heading">¶</a></h2>
+<p>The computations for zero and infinite frequencies are tricky, because several magnitudes such as the pressure are zero or infinity, but they can be expressed as <span class="math notranslate nohighlight">\(\omega\)</span> or <span class="math notranslate nohighlight">\(\omega^2\)</span> times some finite value.
+The example below shows an example of extracting this value.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
+
+<span class="c1"># Initialize an example mesh and test case.</span>
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">()</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)))</span>
+
+<span class="n">pb</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+<span class="c1"># Zero and infinity are accepted values for &quot;omega&quot;, as well as for &quot;period&quot;, &quot;wavelength&quot; and &quot;wavenumber&quot;</span>
+
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">pb</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Heave-heave added mass: </span><span class="si">{</span><span class="n">res</span><span class="o">.</span><span class="n">added_mass</span><span class="p">[</span><span class="s1">&#39;Heave&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">res</span><span class="o">.</span><span class="n">pressure</span><span class="p">)</span>
+<span class="c1"># p is a custom Python object storing the pressure on each panel</span>
+
+<span class="n">i_panel</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># Some panel for testing</span>
+
+<span class="c1"># All pressures are actually infinite</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pressure on panel </span><span class="si">{</span><span class="n">i_panel</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="n">i_panel</span><span class="p">]))</span>
+
+<span class="c1"># However p/omega^2 is finite (hence the finite added mass)</span>
+<span class="n">p_over_omega2</span> <span class="o">=</span> <span class="n">p</span><span class="o">/</span><span class="n">pb</span><span class="o">.</span><span class="n">omega</span><span class="o">**</span><span class="mi">2</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Pressure/omega^2 on panel </span><span class="si">{</span><span class="n">i_panel</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">p_over_omega2</span><span class="p">[</span><span class="n">i_panel</span><span class="p">]</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
