@@ -315,59 +315,103 @@ The scripts can be downloaded individually as Python files from the <a class="re
 <span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.abstract_green_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGreenFunction</span>
 
+
 <span class="k">class</span><span class="w"> </span><span class="nc">MyGreenFunction</span><span class="p">(</span><span class="n">AbstractGreenFunction</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;An example of a custom routine to evaluate the Green function.&quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mesh1</span><span class="p">,</span>
+        <span class="n">mesh2</span><span class="p">,</span>
+        <span class="n">free_surface</span><span class="p">,</span>
+        <span class="n">water_depth</span><span class="p">,</span>
+        <span class="n">wavenumber</span><span class="p">,</span>
+        <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;The main method that needs to be implemented in the class.&quot;&quot;&quot;</span>
 
-        <span class="k">if</span> <span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="n">water_depth</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">adjoint_double_layer</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;MyGreenFunction only implements the adjoint double layer&quot;&quot;&quot;</span>
+            <span class="p">)</span>
 
-            <span class="c1"># Initialize the matrices</span>
-            <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">mesh1</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
-            <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">mesh1</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">free_surface</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="n">water_depth</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+<span class="w">                </span><span class="sd">&quot;&quot;&quot;MyGreenFunction only implements the case without a free surface&quot;&quot;&quot;</span>
+            <span class="p">)</span>
 
-            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mesh1</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">):</span>
-                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">):</span>
-                    <span class="n">area</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
-                    <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="n">j</span><span class="p">:</span>
-                        <span class="c1"># The integral on the face is computed using the value at the center of the face.</span>
-                        <span class="n">r</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:]</span>
-
-                        <span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">area</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">norm</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
-                        <span class="n">K</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">area</span><span class="o">*</span><span class="n">dot</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:])</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">norm</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="c1"># The kernel is singular.</span>
-                        <span class="c1"># When i == j, we can&#39;t use the approximation above for the integral.</span>
-                        <span class="c1"># Below, we take a rough approximation.</span>
-                        <span class="n">S</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">area</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="mi">3</span>
-                        <span class="n">K</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">area</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">pi</span><span class="p">)</span><span class="o">*</span><span class="mi">3</span>
-
-            <span class="k">if</span> <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mesh1</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">):</span>
-                    <span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span><span class="o">/</span><span class="mi">2</span>
-
-            <span class="k">return</span> <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
-
+        <span class="c1"># Initialize the matrices</span>
+        <span class="n">S</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">mesh1</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">early_dot_product</span><span class="p">:</span>
+            <span class="n">gradient_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">mesh1</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span>
+            <span class="n">gradient_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">mesh1</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+        <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">gradient_shape</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mesh1</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">):</span>
+                <span class="n">area</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="n">j</span><span class="p">:</span>
+                    <span class="c1"># Approximation of the integral of the 1/r Green</span>
+                    <span class="c1"># function over the panel by taking the integral over a</span>
+                    <span class="c1"># circle of same center and same area.</span>
+                    <span class="n">S</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">pi</span><span class="p">)</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">area</span> <span class="o">*</span> <span class="n">pi</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">early_dot_product</span><span class="p">:</span>
+                            <span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">early_dot_product</span><span class="p">:</span>
+                            <span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># The integral on the face is computed using the value</span>
+                    <span class="c1"># at the center of the face.</span>
+                    <span class="n">r</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="p">:]</span>
+
+                    <span class="n">S</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="n">area</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">*</span> <span class="n">norm</span><span class="p">(</span><span class="n">r</span><span class="p">))</span>
+                    <span class="n">gradient_rankine</span> <span class="o">=</span> <span class="n">area</span> <span class="o">*</span> <span class="n">r</span> <span class="o">/</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">pi</span> <span class="o">*</span> <span class="n">norm</span><span class="p">(</span><span class="n">r</span><span class="p">)</span> <span class="o">**</span> <span class="mi">3</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">early_dot_product</span><span class="p">:</span>
+                        <span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">gradient_rankine</span><span class="p">,</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="p">:])</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">K</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">gradient_rankine</span>
+
+        <span class="k">return</span> <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
+
 
 <span class="c1"># Define a solver using the Green function above.</span>
-<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">(</span><span class="n">green_function</span><span class="o">=</span><span class="n">MyGreenFunction</span><span class="p">())</span>
+<span class="n">custom_solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">(</span><span class="n">green_function</span><span class="o">=</span><span class="n">MyGreenFunction</span><span class="p">())</span>
+<span class="n">default_solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>  <span class="c1"># for comparison</span>
 
 <span class="c1"># Example of a problem</span>
-<span class="n">sphere</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
-        <span class="n">mesh</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">(</span>
-            <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>          <span class="c1"># Dimension</span>
-            <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">),</span>   <span class="c1"># Position</span>
-            <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">4</span><span class="p">),</span>   <span class="c1"># Fineness of the mesh</span>
-            <span class="p">))</span>
-<span class="n">sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
-<span class="n">problem</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">sphere</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s1">&#39;Heave&#39;</span><span class="p">)</span>
+<span class="n">radius</span> <span class="o">=</span> <span class="mf">1.4</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
+    <span class="n">mesh</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">)),</span>
+    <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+<span class="p">)</span>
+<span class="n">problem</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span>
+    <span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span>
+<span class="p">)</span>
 
-<span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">added_masses</span><span class="p">)</span>
+<span class="n">custom_result</span> <span class="o">=</span> <span class="n">custom_solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+<span class="n">default_result</span> <span class="o">=</span> <span class="n">default_solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Added mass:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Analytical value: </span><span class="si">{</span><span class="mi">2</span><span class="o">/</span><span class="mi">3</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">problem</span><span class="o">.</span><span class="n">rho</span><span class="o">*</span><span class="n">radius</span><span class="o">**</span><span class="mi">3</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Custom solver:    </span><span class="si">{</span><span class="n">custom_result</span><span class="o">.</span><span class="n">added_masses</span><span class="p">[</span><span class="s1">&#39;Surge&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Default solver:   </span><span class="si">{</span><span class="n">default_result</span><span class="o">.</span><span class="n">added_masses</span><span class="p">[</span><span class="s1">&#39;Surge&#39;</span><span class="p">]</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="c1"># The analytical solution is known for this particular test case.</span>
+<span class="c1"># The custom solver might be more accurate. That is probably a coincidence.</span>
+<span class="c1"># Both should converge to the same solution when the mesh is refined.</span>
+
+<span class="nb">print</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Timer:&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Custom solver:  </span><span class="si">{</span><span class="n">custom_solver</span><span class="o">.</span><span class="n">timer</span><span class="p">[</span><span class="s1">&#39;  Green function&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2"> s&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;    Default solver: </span><span class="si">{</span><span class="n">default_solver</span><span class="o">.</span><span class="n">timer</span><span class="p">[</span><span class="s1">&#39;  Green function&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="si">:</span><span class="s2">.1e</span><span class="si">}</span><span class="s2"> s&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
