@@ -93,6 +93,10 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">    engine: MatrixEngine, optional</span>
 <span class="sd">        Object handling the building of matrices and the resolution of linear systems with these matrices.</span>
 <span class="sd">        (default: :class:`~capytaine.bem.engines.BasicMatrixEngine`)</span>
+<span class="sd">    method: string, optional</span>
+<span class="sd">        select boundary integral equation used to solve the problems.</span>
+<span class="sd">        Accepted values: &quot;indirect&quot; (as in e.g. Nemoh), &quot;direct&quot; (as in e.g. WAMIT)</span>
+<span class="sd">        Default value: &quot;indirect&quot;</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -102,9 +106,13 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        Settings of the solver that can be saved to reinit the same solver later.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">green_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">green_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;indirect&quot;</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span> <span class="o">=</span> <span class="n">Delhommeau</span><span class="p">()</span> <span class="k">if</span> <span class="n">green_function</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">green_function</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">BasicMatrixEngine</span><span class="p">()</span> <span class="k">if</span> <span class="n">engine</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">engine</span>
+
+        <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;direct&quot;</span><span class="p">,</span> <span class="s2">&quot;indirect&quot;</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unrecognized method when initializing solver: </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="si">}</span><span class="s2">. Expected </span><span class="se">\&quot;</span><span class="s2">direct</span><span class="se">\&quot;</span><span class="s2"> or </span><span class="se">\&quot;</span><span class="s2">indirect</span><span class="se">\&quot;</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">timer</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Solve total&quot;</span><span class="p">:</span> <span class="n">Timer</span><span class="p">(),</span> <span class="s2">&quot;  Green function&quot;</span><span class="p">:</span> <span class="n">Timer</span><span class="p">(),</span> <span class="s2">&quot;  Linear solver&quot;</span><span class="p">:</span> <span class="n">Timer</span><span class="p">()}</span>
 
@@ -113,7 +121,8 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">try</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">,</span>
-                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">exportable_settings</span>
+                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">,</span>
+                <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
             <span class="p">}</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{}</span>
@@ -148,7 +157,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="BEMSolver.solve">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;indirect&#39;</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve the linear potential flow problem.</span>
 
 <span class="sd">        Parameters</span>
@@ -156,7 +165,9 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        problem: LinearPotentialFlowProblem</span>
 <span class="sd">            the problem to be solved</span>
 <span class="sd">        method: string, optional</span>
-<span class="sd">            select boundary integral approach indirect (i.e.Nemoh)/direct (i.e.WAMIT) (default: indirect)</span>
+<span class="sd">            select boundary integral equation used to solve the problem.</span>
+<span class="sd">            It is recommended to set the method more globally when initializing the solver.</span>
+<span class="sd">            If provided here, the value in argument of `solve` overrides the global one.</span>
 <span class="sd">        keep_details: bool, optional</span>
 <span class="sd">            if True, store the sources and the potential on the floating body in the output object</span>
 <span class="sd">            (default: True)</span>
@@ -181,6 +192,7 @@ window.addEventListener("load", () => mermaid.run());
             <span class="n">omega</span><span class="p">,</span> <span class="n">wavenumber</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">omega</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">wavenumber</span>
 
         <span class="n">linear_solver</span> <span class="o">=</span> <span class="n">supporting_symbolic_multiplication</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">linear_solver</span><span class="p">)</span>
+        <span class="n">method</span> <span class="o">=</span> <span class="n">method</span> <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span>
         <span class="k">if</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;direct&#39;</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">problem</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Direct solver is not able to solve problems with forward speed.&quot;</span><span class="p">)</span>
@@ -245,7 +257,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="BEMSolver.solve_all">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve_all">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">solve_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problems</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;indirect&#39;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">progress_bar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problems</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">progress_bar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve several problems.</span>
 <span class="sd">        Optional keyword arguments are passed to `BEMSolver.solve`.</span>
 
@@ -254,7 +266,9 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        problems: list of LinearPotentialFlowProblem</span>
 <span class="sd">            several problems to be solved</span>
 <span class="sd">        method: string, optional</span>
-<span class="sd">            select boundary integral approach indirect (i.e.Nemoh)/direct (i.e.WAMIT) (default: indirect)</span>
+<span class="sd">            select boundary integral equation used to solve the problems.</span>
+<span class="sd">            It is recommended to set the method more globally when initializing the solver.</span>
+<span class="sd">            If provided here, the value in argument of `solve_all` overrides the global one.</span>
 <span class="sd">        n_jobs: int, optional (default: 1)</span>
 <span class="sd">            the number of jobs to run in parallel using the optional dependency `joblib`</span>
 <span class="sd">            By defaults: do not use joblib and solve sequentially.</span>
@@ -369,7 +383,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="BEMSolver.fill_dataset">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">fill_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">bodies</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;indirect&#39;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fill_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">bodies</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve a set of problems defined by the coordinates of an xarray dataset.</span>
 
 <span class="sd">        Parameters</span>
@@ -380,7 +394,9 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">            The body or bodies involved in the problems</span>
 <span class="sd">            They should all have different names.</span>
 <span class="sd">        method: string, optional</span>
-<span class="sd">            select boundary integral approach indirect (i.e.Nemoh)/direct (i.e.WAMIT) (default: indirect)</span>
+<span class="sd">            select boundary integral equation used to solve the problems.</span>
+<span class="sd">            It is recommended to set the method more globally when initializing the solver.</span>
+<span class="sd">            If provided here, the value in argument of `fill_dataset` overrides the global one.</span>
 <span class="sd">        n_jobs: int, optional (default: 1)</span>
 <span class="sd">            the number of jobs to run in parallel using the optional dependency `joblib`</span>
 <span class="sd">            By defaults: do not use joblib and solve sequentially.</span>
@@ -399,6 +415,8 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;start_of_computation&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
                  <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># Overrides the method in self.exportable_settings</span>
+            <span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
         <span class="n">problems</span> <span class="o">=</span> <span class="n">problems_from_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">bodies</span><span class="p">)</span>
         <span class="k">if</span> <span class="s1">&#39;theta&#39;</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
             <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="n">_check_wavelength</span><span class="p">)</span>

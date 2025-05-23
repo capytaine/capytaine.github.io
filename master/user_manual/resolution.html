@@ -46,12 +46,12 @@
 <h1>Resolution<a class="headerlink" href="#resolution" title="Link to this heading">¶</a></h1>
 <section id="settings-of-the-solver">
 <h2>Settings of the solver<a class="headerlink" href="#settings-of-the-solver" title="Link to this heading">¶</a></h2>
-<p>The <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver" title="capytaine.bem.solver.BEMSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">BEMSolver</span></code></a> class takes two (keyword-only) arguments at the time of its initialization:</p>
+<p>The <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver" title="capytaine.bem.solver.BEMSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">BEMSolver</span></code></a> class takes three (keyword-only) arguments at the time of its initialization:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="kn">import</span> <span class="n">BEMSolver</span>
-<span class="n">solver</span> <span class="o">=</span> <span class="n">BEMSolver</span><span class="p">(</span><span class="n">green_function</span><span class="o">=...</span><span class="p">,</span> <span class="n">engine</span><span class="o">=...</span><span class="p">)</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">BEMSolver</span><span class="p">(</span><span class="n">green_function</span><span class="o">=...</span><span class="p">,</span> <span class="n">engine</span><span class="o">=...</span><span class="p">,</span> <span class="n">method</span><span class="o">=...</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Let us discuss in more details these two objects.</p>
+<p>Let us discuss in more details these parameters.</p>
 <section id="green-function">
 <h3>Green function<a class="headerlink" href="#green-function" title="Link to this heading">¶</a></h3>
 <p>A class used to evaluate the Green function, deriving from <a class="reference internal" href="../developer_manual/api/capytaine.green_functions.abstract_green_function.html#capytaine.green_functions.abstract_green_function.AbstractGreenFunction" title="capytaine.green_functions.abstract_green_function.AbstractGreenFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractGreenFunction</span></code></a>.
@@ -198,21 +198,9 @@ precision of the low-rank matrices.</p>
 </dd>
 </dl>
 </section>
-</section>
-<section id="solving-the-problem">
-<h2>Solving the problem<a class="headerlink" href="#solving-the-problem" title="Link to this heading">¶</a></h2>
-<p>Once the solver has been initialized, it can be used to solve problems with the
-<a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a> method:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;indirect&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The optional argument <code class="code docutils literal notranslate"><span class="pre">keep_details</span></code> (default value: <code class="code docutils literal notranslate"><span class="pre">True</span></code>)
-controls whether the source and potential distributions should be saved in the
-result object. These data are necessary for some post-processing such as the
-computation of the Kochin function or the reconstruction of the free surface
-elevation. However, when only the force on the body is of interest, they can be
-discarded to save space in memory.</p>
-<p>The optional argument <code class="code docutils literal notranslate"><span class="pre">method</span></code> (default value: <code class="code docutils literal notranslate"><span class="pre">&quot;indirect&quot;</span></code>) controls
+<section id="method">
+<h3>Method<a class="headerlink" href="#method" title="Link to this heading">¶</a></h3>
+<p>The argument <code class="code docutils literal notranslate"><span class="pre">method</span></code> (default value: <code class="code docutils literal notranslate"><span class="pre">&quot;indirect&quot;</span></code>) controls
 the approach employed to solve for the potential velocity solutions.
 Two methods are implemented:</p>
 <ol class="arabic simple">
@@ -226,8 +214,29 @@ test cases (especially when thin plates are involved) but is only implemented
 for the computation of the forces on the floating body without forward speed.
 Any other post-processing (e.g. free surface elevation) and forward speed
 currently require the indirect method.</p>
+<p>Since v2.3, the method is a parameter of <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver" title="capytaine.bem.solver.BEMSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">BEMSolver</span></code></a>.
+For backward compatibility, it can also be passed to
+<a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a>,
+<a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve_all" title="capytaine.bem.solver.BEMSolver.solve_all"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve_all()</span></code></a> and
+<a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset" title="capytaine.bem.solver.BEMSolver.fill_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_dataset()</span></code></a>, then overriding the
+general setting of the solver.</p>
+</section>
+</section>
+<section id="solving-the-problem">
+<h2>Solving the problem<a class="headerlink" href="#solving-the-problem" title="Link to this heading">¶</a></h2>
+<p>Once the solver has been initialized, it can be used to solve problems with the
+<a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">result</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The optional argument <code class="code docutils literal notranslate"><span class="pre">keep_details</span></code> (default value: <code class="code docutils literal notranslate"><span class="pre">True</span></code>)
+controls whether the source and potential distributions should be saved in the
+result object. These data are necessary for some post-processing such as the
+computation of the Kochin function or the reconstruction of the free surface
+elevation. However, when only the force on the body is of interest, they can be
+discarded to save space in memory.</p>
 <p>A list of problems can be solved at once in an optimal order with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">list_of_results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">list_of_problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;indirect&quot;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">list_of_results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">list_of_problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>where <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve_all" title="capytaine.bem.solver.BEMSolver.solve_all"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve_all()</span></code></a> accepts the same
