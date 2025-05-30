@@ -178,20 +178,19 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># Try different number of exponentials</span>
     <span class="k">for</span> <span class="n">n_exp</span> <span class="ow">in</span> <span class="n">n_exp_range</span><span class="p">:</span>
-
-        <span class="c1"># The coefficients are computed on a resolution of 4*n_exp+1 ...</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="mi">4</span><span class="o">*</span><span class="n">n_exp</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
         <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># The coefficients are computed on a resolution of 4*n_exp+1 ...</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="mi">4</span><span class="o">*</span><span class="n">n_exp</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">a</span><span class="p">,</span> <span class="n">lamda</span> <span class="o">=</span> <span class="n">exponential_decomposition</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">n_exp</span><span class="p">)</span>
-        <span class="k">except</span> <span class="ne">RuntimeError</span><span class="p">:</span>
+
+            <span class="c1"># ... and they are evaluated on a finer discretization.</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="mi">8</span><span class="o">*</span><span class="n">n_exp</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">error_exponential_decomposition</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">a</span><span class="p">,</span> <span class="n">lamda</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">lamda</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
             <span class="c1"># If something bad happened while computing the decomposition, try</span>
             <span class="c1"># the next one.</span>
             <span class="k">continue</span>
-
-        <span class="c1"># ... and they are evaluated on a finer discretization.</span>
-        <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="mi">8</span><span class="o">*</span><span class="n">n_exp</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">error_exponential_decomposition</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">a</span><span class="p">,</span> <span class="n">lamda</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">lamda</span>
 
     <span class="k">raise</span> <span class="n">PronyDecompositionFailure</span><span class="p">(</span>
             <span class="s2">&quot;No suitable Prony decomposition has been found in &quot;</span>
