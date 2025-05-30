@@ -62,6 +62,8 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">    Uses the same implementation as Delhommeau() for the Rankine and reflected Rankine terms.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">floating_point_precision</span> <span class="o">=</span> <span class="s2">&quot;float64&quot;</span>
+
     <span class="n">fortran_core</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="s2">&quot;capytaine.green_functions.libs.Delhommeau_float64&quot;</span><span class="p">)</span>
     <span class="n">tabulation_grid_shape_index</span> <span class="o">=</span> <span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">liang_wu_noblesse</span>
     <span class="n">gf_singularities_index</span> <span class="o">=</span> <span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">low_freq</span>
@@ -103,7 +105,9 @@ window.addEventListener("load", () => mermaid.run());
 
         <span class="n">collocation_points</span><span class="p">,</span> <span class="n">early_dot_product_normals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_colocation_points_and_normals</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">)</span>
 
-        <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_matrices</span><span class="p">((</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">),</span> <span class="s2">&quot;complex128&quot;</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="n">early_dot_product</span><span class="p">)</span>
+        <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_matrices</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">),</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="n">early_dot_product</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
             <span class="n">collocation_points</span><span class="p">,</span>  <span class="n">early_dot_product_normals</span><span class="p">,</span>
@@ -139,6 +143,8 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">    Uses the same implementation as Delhommeau() for the Rankine and reflected Rankine terms.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">floating_point_precision</span> <span class="o">=</span> <span class="s2">&quot;float64&quot;</span>
+
     <span class="n">fortran_core</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="s2">&quot;capytaine.green_functions.libs.Delhommeau_float64&quot;</span><span class="p">)</span>
     <span class="n">finite_depth_method_index</span> <span class="o">=</span> <span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">fingreen3d_method</span>
     <span class="n">gf_singularities_index</span> <span class="o">=</span> <span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">low_freq</span>
@@ -193,7 +199,9 @@ window.addEventListener("load", () => mermaid.run());
 
         <span class="n">collocation_points</span><span class="p">,</span> <span class="n">early_dot_product_normals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_colocation_points_and_normals</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">)</span>
 
-        <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_matrices</span><span class="p">((</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">),</span> <span class="s2">&quot;complex128&quot;</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="n">early_dot_product</span><span class="p">)</span>
+        <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_matrices</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">),</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="n">early_dot_product</span>
+        <span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
             <span class="n">collocation_points</span><span class="p">,</span>  <span class="n">early_dot_product_normals</span><span class="p">,</span>
@@ -224,6 +232,8 @@ window.addEventListener("load", () => mermaid.run());
 <div class="viewcode-block" id="HAMS_GF">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.hams.html#capytaine.green_functions.hams.HAMS_GF">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">HAMS_GF</span><span class="p">(</span><span class="n">AbstractGreenFunction</span><span class="p">):</span>
+    <span class="n">floating_point_precision</span> <span class="o">=</span> <span class="s2">&quot;float64&quot;</span>
+
     <span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;green_function&#39;</span><span class="p">:</span> <span class="s2">&quot;HAMS_GF&quot;</span><span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
