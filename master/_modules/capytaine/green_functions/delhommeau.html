@@ -177,12 +177,11 @@ window.addEventListener("load", () => mermaid.run());
         <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape_index</span> <span class="o">=</span> <span class="n">fortran_enum</span><span class="p">[</span><span class="n">tabulation_grid_shape</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">=</span> <span class="n">gf_singularities</span>
-        <span class="n">fortran_enum</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities_fortran_enum</span> <span class="o">=</span> <span class="p">{</span>
                 <span class="s1">&#39;high_freq&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">high_freq</span><span class="p">,</span>
                 <span class="s1">&#39;low_freq&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">low_freq</span><span class="p">,</span>
                 <span class="s1">&#39;low_freq_with_rankine_part&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">low_freq_with_rankine_part</span><span class="p">,</span>
-                              <span class="p">}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities_index</span> <span class="o">=</span> <span class="n">fortran_enum</span><span class="p">[</span><span class="n">gf_singularities</span><span class="p">]</span>
+                <span class="p">}</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_method</span> <span class="o">=</span> <span class="n">finite_depth_method</span>
         <span class="n">fortran_enum</span> <span class="o">=</span> <span class="p">{</span>
@@ -404,11 +403,6 @@ window.addEventListener("load", () => mermaid.run());
             <span class="p">(</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">),</span> <span class="n">early_dot_product</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">add_diagonal_term</span><span class="p">(</span>
-                    <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">early_dot_product_normals</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span>
-                    <span class="p">)</span>
-
         <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">add_rankine_term_only</span><span class="p">(</span>
                 <span class="n">collocation_points</span><span class="p">,</span>  <span class="n">early_dot_product_normals</span><span class="p">,</span>
                 <span class="n">mesh2</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span>      <span class="n">mesh2</span><span class="o">.</span><span class="n">faces</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
@@ -417,6 +411,11 @@ window.addEventListener("load", () => mermaid.run());
                 <span class="o">*</span><span class="n">mesh2</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">,</span>
                 <span class="n">adjoint_double_layer</span><span class="p">,</span>
                 <span class="n">S</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">add_diagonal_term</span><span class="p">(</span>
+                    <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">early_dot_product_normals</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span>
+                    <span class="p">)</span>
 
         <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">S</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">K</span><span class="p">)</span>
 
@@ -489,30 +488,40 @@ window.addEventListener("load", () => mermaid.run());
 
         <span class="n">wavenumber</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">wavenumber</span><span class="p">)</span>
 
+        <span class="c1"># Overrides gf_singularities setting in some specific cases, else use the class one.</span>
+        <span class="k">if</span> <span class="n">water_depth</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_method</span> <span class="o">==</span> <span class="s1">&#39;legacy&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">==</span> <span class="s1">&#39;low_freq&#39;</span><span class="p">:</span>
+            <span class="n">gf_singularities</span> <span class="o">=</span> <span class="s2">&quot;low_freq&quot;</span>  <span class="c1"># Reproduce legacy method behavior</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Overriding gf_singularities=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span><span class="si">}</span><span class="s2">&#39; because of finite_depth_method==&#39;legacy&#39;&quot;</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">==</span> <span class="s1">&#39;low_freq&#39;</span><span class="p">:</span>
+            <span class="n">gf_singularities</span> <span class="o">=</span> <span class="s2">&quot;low_freq&quot;</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Overriding gf_singularities=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span><span class="si">}</span><span class="s2">&#39; because of wavenumber==0.0&quot;</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">==</span> <span class="s1">&#39;high_freq&#39;</span><span class="p">:</span>
+            <span class="n">gf_singularities</span> <span class="o">=</span> <span class="s2">&quot;high_freq&quot;</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Overriding gf_singularities=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span><span class="si">}</span><span class="s2">&#39; because of wavenumber==np.inf&quot;</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">==</span> <span class="s1">&#39;low_freq&#39;</span><span class="p">:</span>
+            <span class="n">gf_singularities</span> <span class="o">=</span> <span class="s2">&quot;low_freq&quot;</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Overriding gf_singularities=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span><span class="si">}</span><span class="s2">&#39; because of free surface panels, &quot;</span>
+                <span class="s2">&quot;which are currently only supported by gf_singularities=&#39;low_freq&#39;&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gf_singularities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span>
+        <span class="n">gf_singularities_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities_fortran_enum</span><span class="p">[</span><span class="n">gf_singularities</span><span class="p">]</span>
+
         <span class="k">if</span> <span class="n">water_depth</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
-
-            <span class="n">prony_decomposition</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>  <span class="c1"># Idem</span>
-
-            <span class="k">if</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
-                <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
-            <span class="k">elif</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
-                <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">==</span> <span class="s2">&quot;high_freq&quot;</span><span class="p">:</span>
-                    <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
-                <span class="k">else</span><span class="p">:</span>  <span class="c1"># low_freq or low_freq_with_rankine_part</span>
-                    <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
-
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Finite water_depth</span>
+            <span class="n">prony_decomposition</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>  <span class="c1"># Dummy array that won&#39;t actually be used by the fortran code.</span>
+        <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Zero or infinite frequency are not implemented for finite depth.&quot;</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">prony_decomposition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_best_exponential_decomposition</span><span class="p">(</span><span class="n">wavenumber</span><span class="o">*</span><span class="n">water_depth</span><span class="p">)</span>
-                <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
-
-        <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">)</span>  <span class="c1"># free surface panel</span>
-            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">!=</span> <span class="s2">&quot;low_freq&quot;</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Free surface panels are only supported for cpt.Delhommeau(..., gf_singularities=&#39;low_freq&#39;).&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                    <span class="s2">&quot;Zero or infinite frequency are not implemented for finite depth.&quot;</span>
+                <span class="p">)</span>
+            <span class="n">prony_decomposition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_best_exponential_decomposition</span><span class="p">(</span><span class="n">wavenumber</span><span class="o">*</span><span class="n">water_depth</span><span class="p">)</span>
 
         <span class="c1"># Main call to Fortran code</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
@@ -522,11 +531,16 @@ window.addEventListener("load", () => mermaid.run());
             <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">,</span>   <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="p">,</span>
             <span class="o">*</span><span class="n">mesh2</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">,</span>
             <span class="n">wavenumber</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span>
-            <span class="n">coeffs</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">all_tabulation_parameters</span><span class="p">,</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">all_tabulation_parameters</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_method_index</span><span class="p">,</span> <span class="n">prony_decomposition</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dispersion_relation_roots</span><span class="p">,</span>
-            <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities_index</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">,</span>
+            <span class="n">gf_singularities_index</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">,</span>
             <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
         <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">add_diagonal_term</span><span class="p">(</span>
+                    <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">early_dot_product_normals</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span>
+                    <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">S</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">K</span><span class="p">)):</span>
             <span class="k">raise</span> <span class="n">GreenFunctionEvaluationError</span><span class="p">(</span>

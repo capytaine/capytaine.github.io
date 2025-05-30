@@ -51,7 +51,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">brentq</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.abstract_green_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGreenFunction</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.abstract_green_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGreenFunction</span><span class="p">,</span> <span class="n">GreenFunctionEvaluationError</span>
 
 
 <div class="viewcode-block" id="LiangWuNoblesseGF">
@@ -66,11 +66,10 @@ window.addEventListener("load", () => mermaid.run());
 
     <span class="n">fortran_core</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="s2">&quot;capytaine.green_functions.libs.Delhommeau_float64&quot;</span><span class="p">)</span>
     <span class="n">tabulation_grid_shape_index</span> <span class="o">=</span> <span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">liang_wu_noblesse</span>
-    <span class="n">gf_singularities_index</span> <span class="o">=</span> <span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">low_freq</span>
     <span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;green_function&#39;</span><span class="p">:</span> <span class="s2">&quot;LiangWuNoblesseGF&quot;</span><span class="p">}</span>
 
     <span class="c1"># Dummy arrays that won&#39;t actually be used by the fortran code.</span>
-    <span class="n">prony_decomposition</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">prony_decomposition</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
     <span class="n">dispersion_relation_roots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">finite_depth_method_index</span> <span class="o">=</span> <span class="o">-</span><span class="mi">9999</span>
     <span class="n">tabulation_nb_integration_points</span> <span class="o">=</span> <span class="mi">1</span>
@@ -90,20 +89,22 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="LiangWuNoblesseGF.evaluate">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.hams.html#capytaine.green_functions.hams.LiangWuNoblesseGF.evaluate">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span> <span class="c1"># No free surface, only a single Rankine source term</span>
-            <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
-        <span class="k">elif</span> <span class="n">free_surface</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">water_depth</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
-        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Infinite water depth</span>
-            <span class="k">if</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
-                <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
-            <span class="k">elif</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
-                <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span>
+                 <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                 <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span>
+                 <span class="p">):</span>
 
-        <span class="n">collocation_points</span><span class="p">,</span> <span class="n">early_dot_product_normals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_colocation_points_and_normals</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">or</span> <span class="n">water_depth</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;LiangWuNoblesseGF() is only implemented for infinite depth with a free surface&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="n">gf_singularities_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">high_freq</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gf_singularities_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">low_freq</span>
+
+        <span class="n">collocation_points</span><span class="p">,</span> <span class="n">early_dot_product_normals</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_colocation_points_and_normals</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">)</span>
 
         <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_matrices</span><span class="p">(</span>
             <span class="p">(</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">),</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="n">early_dot_product</span>
@@ -116,19 +117,25 @@ window.addEventListener("load", () => mermaid.run());
             <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">,</span>   <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="p">,</span>
             <span class="o">*</span><span class="n">mesh2</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">,</span>
             <span class="n">wavenumber</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
-            <span class="n">coeffs</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_nb_integration_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape_index</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dummy_param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prony_decomposition</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dispersion_relation_roots</span><span class="p">,</span>
-            <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities_index</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">,</span>
+            <span class="n">gf_singularities_index</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">,</span>
             <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
         <span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">add_diagonal_term</span><span class="p">(</span>
+                    <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">early_dot_product_normals</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span>
+                    <span class="p">)</span>
+
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">S</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">K</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Green function returned a NaN in the interaction matrix.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="n">GreenFunctionEvaluationError</span><span class="p">(</span>
+                    <span class="s2">&quot;Green function returned a NaN in the interaction matrix.</span><span class="se">\n</span><span class="s2">&quot;</span>
                     <span class="s2">&quot;It could be due to overlapping panels.&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">early_dot_product</span><span class="p">:</span> <span class="n">K</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">early_dot_product</span><span class="p">:</span>
+            <span class="n">K</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="n">S</span><span class="p">,</span> <span class="n">K</span></div>
 </div>
@@ -150,7 +157,7 @@ window.addEventListener("load", () => mermaid.run());
     <span class="n">gf_singularities_index</span> <span class="o">=</span> <span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">low_freq</span>
 
     <span class="c1"># Dummy arrays that won&#39;t actually be used by the fortran code.</span>
-    <span class="n">prony_decomposition</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">prony_decomposition</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
     <span class="n">tabulation_nb_integration_points</span> <span class="o">=</span> <span class="mi">1</span>
     <span class="n">tabulated_r_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
     <span class="n">tabulated_z_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
@@ -185,19 +192,20 @@ window.addEventListener("load", () => mermaid.run());
 <div class="viewcode-block" id="FinGreen3D.evaluate">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.hams.html#capytaine.green_functions.hams.FinGreen3D.evaluate">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
         <span class="k">if</span> <span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">or</span> <span class="n">water_depth</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
-        <span class="k">elif</span> <span class="n">free_surface</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">water_depth</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
-            <span class="k">elif</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">coeffs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;FinGreen3D is only implemented for finite depth with a free surface.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;FinGreen3D is only implemented for non-zero and non-infinite frequencies&quot;</span><span class="p">)</span>
 
-        <span class="n">dispersion_relation_roots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_dispersion_relation_roots</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_dispersion_roots</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">)</span>
+        <span class="n">dispersion_relation_roots</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_dispersion_relation_roots</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nb_dispersion_roots</span><span class="p">,</span>
+            <span class="n">wavenumber</span><span class="p">,</span>
+            <span class="n">water_depth</span>
+        <span class="p">)</span>
 
-        <span class="n">collocation_points</span><span class="p">,</span> <span class="n">early_dot_product_normals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_colocation_points_and_normals</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">)</span>
+        <span class="n">collocation_points</span><span class="p">,</span> <span class="n">early_dot_product_normals</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_colocation_points_and_normals</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">)</span>
 
         <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_matrices</span><span class="p">(</span>
             <span class="p">(</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">),</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="n">early_dot_product</span>
@@ -210,19 +218,25 @@ window.addEventListener("load", () => mermaid.run());
             <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">,</span>   <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="p">,</span>
             <span class="o">*</span><span class="n">mesh2</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">,</span>
             <span class="n">wavenumber</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span>
-            <span class="n">coeffs</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_nb_integration_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dummy_param</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span><span class="p">,</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_method_index</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">prony_decomposition</span><span class="p">,</span> <span class="n">dispersion_relation_roots</span><span class="p">,</span>
-            <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities_index</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities_index</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">,</span>
             <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
         <span class="p">)</span>
 
+        <span class="k">if</span> <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">add_diagonal_term</span><span class="p">(</span>
+                    <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">early_dot_product_normals</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span>
+                    <span class="p">)</span>
+
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">S</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">K</span><span class="p">)):</span>
-            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;Green function returned a NaN in the interaction matrix.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="n">GreenFunctionEvaluationError</span><span class="p">(</span>
+                    <span class="s2">&quot;Green function returned a NaN in the interaction matrix.</span><span class="se">\n</span><span class="s2">&quot;</span>
                     <span class="s2">&quot;It could be due to overlapping panels.&quot;</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">early_dot_product</span><span class="p">:</span> <span class="n">K</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">early_dot_product</span><span class="p">:</span>
+            <span class="n">K</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
 
         <span class="k">return</span> <span class="n">S</span><span class="p">,</span> <span class="n">K</span></div>
 </div>
