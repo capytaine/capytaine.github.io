@@ -129,7 +129,7 @@ window.addEventListener("load", () => mermaid.run());
     <span class="c1"># Warn user in case of key with unrecognized name (e.g. misspells)</span>
     <span class="n">keys_in_dataset</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span>
     <span class="n">accepted_keys</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;wave_direction&#39;</span><span class="p">,</span> <span class="s1">&#39;radiating_dof&#39;</span><span class="p">,</span> <span class="s1">&#39;influenced_dof&#39;</span><span class="p">,</span>
-                     <span class="s1">&#39;body_name&#39;</span><span class="p">,</span> <span class="s1">&#39;omega&#39;</span><span class="p">,</span> <span class="s1">&#39;period&#39;</span><span class="p">,</span> <span class="s1">&#39;wavelength&#39;</span><span class="p">,</span> <span class="s1">&#39;wavenumber&#39;</span><span class="p">,</span>
+                     <span class="s1">&#39;body_name&#39;</span><span class="p">,</span> <span class="s1">&#39;omega&#39;</span><span class="p">,</span> <span class="s1">&#39;freq&#39;</span><span class="p">,</span> <span class="s1">&#39;period&#39;</span><span class="p">,</span> <span class="s1">&#39;wavelength&#39;</span><span class="p">,</span> <span class="s1">&#39;wavenumber&#39;</span><span class="p">,</span>
                      <span class="s1">&#39;forward_speed&#39;</span><span class="p">,</span> <span class="s1">&#39;water_depth&#39;</span><span class="p">,</span> <span class="s1">&#39;rho&#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;theta&#39;</span><span class="p">}</span>
     <span class="n">unrecognized_keys</span> <span class="o">=</span> <span class="n">keys_in_dataset</span><span class="o">.</span><span class="n">difference</span><span class="p">(</span><span class="n">accepted_keys</span><span class="p">)</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unrecognized_keys</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
@@ -139,9 +139,9 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Neither &#39;radiating_dof&#39; nor &#39;wave_direction&#39; has been provided in the dataset. &quot;</span>
                 <span class="s2">&quot;No linear potential flow problem can be inferred.&quot;</span><span class="p">)</span>
 
-    <span class="n">frequency_keys</span> <span class="o">=</span> <span class="n">keys_in_dataset</span> <span class="o">&amp;</span> <span class="p">{</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span> <span class="s1">&#39;period&#39;</span><span class="p">,</span> <span class="s1">&#39;wavelength&#39;</span><span class="p">,</span> <span class="s1">&#39;wavenumber&#39;</span><span class="p">}</span>
+    <span class="n">frequency_keys</span> <span class="o">=</span> <span class="n">keys_in_dataset</span> <span class="o">&amp;</span> <span class="p">{</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span> <span class="s1">&#39;freq&#39;</span><span class="p">,</span> <span class="s1">&#39;period&#39;</span><span class="p">,</span> <span class="s1">&#39;wavelength&#39;</span><span class="p">,</span> <span class="s1">&#39;wavenumber&#39;</span><span class="p">}</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">frequency_keys</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Setting problems requires at most one of the following: omega (angular frequency) OR period OR wavenumber OR wavelength.</span><span class="se">\n</span><span class="s2">&quot;</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Setting problems requires at most one of the following: omega (angular frequency) OR freq (in Hz) OR period OR wavenumber OR wavelength.</span><span class="se">\n</span><span class="s2">&quot;</span>
                              <span class="s2">&quot;Received </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">frequency_keys</span><span class="p">))</span>
     <span class="c1"># END SANITY CHECKS</span>
 
@@ -373,7 +373,7 @@ window.addEventListener("load", () => mermaid.run());
 <div class="viewcode-block" id="assemble_dataset">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.assemble_dataset">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">,</span>
-                     <span class="n">omega</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                     <span class="n">omega</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                      <span class="n">mesh</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">hydrostatics</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Transform a list of :class:`LinearPotentialFlowResult` into a :class:`xarray.Dataset`.</span>
 
@@ -387,6 +387,8 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        The results that will be read.</span>
 <span class="sd">    omega: bool, optional</span>
 <span class="sd">        If True, the coordinate &#39;omega&#39; will be added to the output dataset.</span>
+<span class="sd">    freq: bool, optional</span>
+<span class="sd">        If True, the coordinate &#39;freq&#39; will be added to the output dataset.</span>
 <span class="sd">    wavenumber: bool, optional</span>
 <span class="sd">        If True, the coordinate &#39;wavenumber&#39; will be added to the output dataset.</span>
 <span class="sd">    wavelength: bool, optional</span>
@@ -464,6 +466,17 @@ window.addEventListener("load", () => mermaid.run());
         <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;omega&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">omega_ds</span><span class="p">[</span><span class="s1">&#39;omega&#39;</span><span class="p">]</span>
         <span class="n">dataset</span><span class="o">.</span><span class="n">omega</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;long_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Angular frequency&#39;</span>
         <span class="n">dataset</span><span class="o">.</span><span class="n">omega</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;rad/s&#39;</span>
+        
+    <span class="k">if</span> <span class="n">freq</span> <span class="ow">and</span> <span class="n">main_freq_type</span> <span class="o">!=</span> <span class="s2">&quot;freq&quot;</span><span class="p">:</span>
+        <span class="n">freq_ds</span> <span class="o">=</span> <span class="n">_dataset_from_dataframe</span><span class="p">(</span>
+                <span class="n">records</span><span class="p">,</span>
+                <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;freq&#39;</span><span class="p">],</span>
+                <span class="n">dimensions</span><span class="o">=</span><span class="p">[</span><span class="n">main_freq_type</span><span class="p">],</span>
+                <span class="n">optional_dims</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;g&#39;</span><span class="p">,</span> <span class="s1">&#39;water_depth&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">main_freq_type</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;wavelength&#39;</span><span class="p">,</span> <span class="s1">&#39;wavenumber&#39;</span><span class="p">}</span> <span class="k">else</span> <span class="p">[]</span>
+                <span class="p">)</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;freq&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">freq_ds</span><span class="p">[</span><span class="s1">&#39;freq&#39;</span><span class="p">]</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">omega</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;long_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Frequency&#39;</span>
+        <span class="n">dataset</span><span class="o">.</span><span class="n">omega</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s1">&#39;units&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;Hz&#39;</span>
 
     <span class="k">if</span> <span class="n">period</span> <span class="ow">and</span> <span class="n">main_freq_type</span> <span class="o">!=</span> <span class="s2">&quot;period&quot;</span><span class="p">:</span>
         <span class="n">period_ds</span> <span class="o">=</span> <span class="n">_dataset_from_dataframe</span><span class="p">(</span>
