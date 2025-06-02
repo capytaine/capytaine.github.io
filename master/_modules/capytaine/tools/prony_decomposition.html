@@ -61,6 +61,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">toeplitz</span>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">RNG</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">default_rng</span><span class="p">()</span>
 
 
 <div class="viewcode-block" id="exponential_decomposition">
@@ -158,7 +159,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="find_best_exponential_decomposition">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.prony_decomposition.html#capytaine.tools.prony_decomposition.find_best_exponential_decomposition">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">find_best_exponential_decomposition</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">n_exp_range</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">find_best_exponential_decomposition</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">n_exp_range</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">noise_on_domain_points_std</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Tries to construct an exponential decompositoin of the function f on the</span>
 <span class="sd">    domain [x_min, x_max] by testing the number of exponentials in n_exp_range.</span>
 
@@ -174,17 +175,27 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        The decomposition sizes that will be tested</span>
 <span class="sd">    tol: float, optional</span>
 <span class="sd">        The target mean square error.</span>
+<span class="sd">    noise_on_domain_points_std: float, optional</span>
+<span class="sd">        Introduces some random variability on the points where the function is evaluated.</span>
+<span class="sd">        Set this parameter to zero to disable randomness.</span>
 
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Try different number of exponentials</span>
+    <span class="c1"># Try different range of evaluation points to construct the decomposition.</span>
     <span class="k">for</span> <span class="n">n_exp</span> <span class="ow">in</span> <span class="n">n_exp_range</span><span class="p">:</span>
+
+        <span class="c1"># f might be ill-defined at some single specific values</span>
+        <span class="c1"># (for the use-case of delhommeau.py, it is when x = kh exactly).</span>
+        <span class="c1"># Thus we slightly randomize the range of evaluation points for the Prony decomposition.</span>
+        <span class="c1"># This way, if one of the evaluation points hits the singular point, it will most likely not hit it again at the next iteration.</span>
+        <span class="n">x_max_iter</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">noise_on_domain_points_std</span><span class="o">*</span><span class="n">RNG</span><span class="o">.</span><span class="n">uniform</span><span class="p">())</span><span class="o">*</span><span class="n">x_max</span>
+
         <span class="k">try</span><span class="p">:</span>
             <span class="c1"># The coefficients are computed on a resolution of 4*n_exp+1 ...</span>
-            <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="mi">4</span><span class="o">*</span><span class="n">n_exp</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max_iter</span><span class="p">,</span> <span class="mi">4</span><span class="o">*</span><span class="n">n_exp</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
             <span class="n">a</span><span class="p">,</span> <span class="n">lamda</span> <span class="o">=</span> <span class="n">exponential_decomposition</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">n_exp</span><span class="p">)</span>
 
             <span class="c1"># ... and they are evaluated on a finer discretization.</span>
-            <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="mi">8</span><span class="o">*</span><span class="n">n_exp</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">X</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max_iter</span><span class="p">,</span> <span class="mi">8</span><span class="o">*</span><span class="n">n_exp</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">error_exponential_decomposition</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">X</span><span class="p">),</span> <span class="n">a</span><span class="p">,</span> <span class="n">lamda</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">tol</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">a</span><span class="p">,</span> <span class="n">lamda</span>
         <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
