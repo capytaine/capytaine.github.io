@@ -329,6 +329,30 @@ Since this export method poorly supports complex number, the <a class="reference
 </pre></div>
 </div>
 </section>
+<section id="exporting-to-wamit-format">
+<h2>Exporting to WAMIT format<a class="headerlink" href="#exporting-to-wamit-format" title="Link to this heading">¶</a></h2>
+<p>The hydrodynamic results from a Capytaine <code class="docutils literal notranslate"><span class="pre">xarray.Dataset</span></code> can be exported into WAMIT-compatible text files (<code class="docutils literal notranslate"><span class="pre">.1</span></code>, <code class="docutils literal notranslate"><span class="pre">.3</span></code>, <code class="docutils literal notranslate"><span class="pre">.3fk</span></code>, <code class="docutils literal notranslate"><span class="pre">.3sc</span></code>, <code class="docutils literal notranslate"><span class="pre">.hst</span></code>) using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.wamit</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_to_wamit</span>
+<span class="n">export_to_wamit</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="s2">&quot;problem_name&quot;</span><span class="p">,</span> <span class="n">exports</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="s2">&quot;3fk&quot;</span><span class="p">,</span> <span class="s2">&quot;3sc&quot;</span><span class="p">,</span> <span class="s2">&quot;hst&quot;</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>This will produce the following files (depending on the fields present in the dataset):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">problem_name.1</span></code> for added mass and radiation damping coefficients,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">problem_name.3</span></code> for total excitation forces (Froude-Krylov + diffraction),</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">problem_name.3fk</span></code> for Froude-Krylov forces only,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">problem_name.3sc</span></code> for diffraction forces only.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">problem_name.hst</span></code> for hydrostatics results (if supported)</p></li>
+</ul>
+<p>Invalid or unavailable exports are skipped with a warning.</p>
+<p>The length scale used for normalization in WAMIT data is taken by default as
+<span class="math notranslate nohighlight">\(1\)</span> meter.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These exports require that the <code class="docutils literal notranslate"><span class="pre">forward_speed</span></code> in the dataset is zero.
+If not, a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> is raised to avoid exporting inconsistent results.</p>
+</div>
+</section>
 </section>
 
 
