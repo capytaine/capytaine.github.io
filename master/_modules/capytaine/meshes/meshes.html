@@ -920,8 +920,14 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">if</span> <span class="n">faces_max_radius</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">faces_max_radius</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">clipped_hull_mesh</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="p">)</span>
 
+        <span class="n">candidate_lid_size</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="nb">max</span><span class="p">(</span><span class="n">faces_max_radius</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.1</span><span class="o">*</span><span class="n">x_span</span><span class="p">),</span>
+                    <span class="nb">max</span><span class="p">(</span><span class="n">faces_max_radius</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mf">1.1</span><span class="o">*</span><span class="n">y_span</span><span class="p">),</span>
+                <span class="p">)</span>
+        <span class="c1"># The size of the lid is at least the characteristic length of a face</span>
+
         <span class="n">candidate_lid_mesh</span> <span class="o">=</span> <span class="n">mesh_rectangle</span><span class="p">(</span>
-                <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="mf">1.1</span><span class="o">*</span><span class="n">y_span</span><span class="p">,</span> <span class="mf">1.1</span><span class="o">*</span><span class="n">x_span</span><span class="p">),</span>  <span class="c1"># TODO Fix mesh_rectangle</span>
+                <span class="n">size</span><span class="o">=</span><span class="p">(</span><span class="n">candidate_lid_size</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">candidate_lid_size</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>  <span class="c1"># TODO Fix: Exchange x and y in mesh_rectangle</span>
                 <span class="n">faces_max_radius</span><span class="o">=</span><span class="n">faces_max_radius</span><span class="p">,</span>
                 <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="n">x_mean</span><span class="p">,</span> <span class="n">y_mean</span><span class="p">,</span> <span class="n">z</span><span class="p">),</span>
                 <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">),</span>
