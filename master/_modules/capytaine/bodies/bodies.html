@@ -59,6 +59,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.mesh_like_protocol</span><span class="w"> </span><span class="kn">import</span> <span class="n">MeshLike</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">CollectionOfMeshes</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">Abstract3DObject</span><span class="p">,</span> <span class="n">ClippableMixin</span><span class="p">,</span> <span class="n">Plane</span><span class="p">,</span> <span class="n">inplace_transformation</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.properties</span><span class="w"> </span><span class="kn">import</span> <span class="n">connected_components</span><span class="p">,</span> <span class="n">connected_components_of_waterline</span>
@@ -90,10 +91,10 @@ window.addEventListener("load", () => mermaid.run());
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    mesh : Mesh or CollectionOfMeshes, optional</span>
+<span class="sd">    mesh : MeshLike, optional</span>
 <span class="sd">        the mesh describing the geometry of the hull of the floating body.</span>
 <span class="sd">        If none is given, a empty one is created.</span>
-<span class="sd">    lid_mesh : Mesh or CollectionOfMeshes or None, optional</span>
+<span class="sd">    lid_mesh : MeshLike or None, optional</span>
 <span class="sd">        a mesh of an internal lid for irregular frequencies removal.</span>
 <span class="sd">        Unlike the mesh of the hull, no dof is defined on the lid_mesh.</span>
 <span class="sd">        If none is given, none is used when solving the Boundary Integral Equation.</span>
@@ -120,7 +121,7 @@ window.addEventListener("load", () => mermaid.run());
             <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.meshio</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_from_meshio</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">load_from_meshio</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
 
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">CollectionOfMeshes</span><span class="p">):</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">MeshLike</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">mesh</span>
 
         <span class="k">else</span><span class="p">:</span>
@@ -138,7 +139,10 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;dummy_body&quot;</span>
         <span class="k">elif</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;anonymous_body&quot;</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
 
@@ -148,7 +152,7 @@ window.addEventListener("load", () => mermaid.run());
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span> <span class="o">=</span> <span class="kc">None</span>
 
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_vertices</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="s2">&quot;heal_mesh&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_vertices</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">heal_mesh</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">dofs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -194,7 +198,7 @@ window.addEventListener("load", () => mermaid.run());
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">mesh_including_lid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">CollectionOfMeshes</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span><span class="p">])</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span>
 
@@ -1008,9 +1012,9 @@ window.addEventListener("load", () => mermaid.run());
             <span class="k">raise</span> <span class="ne">NotImplementedError</span>  <span class="c1"># TODO</span>
 
         <span class="k">if</span> <span class="n">return_index</span><span class="p">:</span>
-            <span class="n">new_mesh</span><span class="p">,</span> <span class="n">id_v</span> <span class="o">=</span> <span class="n">Mesh</span><span class="o">.</span><span class="n">extract_faces</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">id_faces_to_extract</span><span class="p">,</span> <span class="n">return_index</span><span class="p">)</span>
+            <span class="n">new_mesh</span><span class="p">,</span> <span class="n">id_v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">extract_faces</span><span class="p">(</span><span class="n">id_faces_to_extract</span><span class="p">,</span> <span class="n">return_index</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">new_mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="o">.</span><span class="n">extract_faces</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">id_faces_to_extract</span><span class="p">,</span> <span class="n">return_index</span><span class="p">)</span>
+            <span class="n">new_mesh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">extract_faces</span><span class="p">(</span><span class="n">id_faces_to_extract</span><span class="p">,</span> <span class="n">return_index</span><span class="p">)</span>
         <span class="n">new_body</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="p">(</span><span class="n">new_mesh</span><span class="p">)</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Extract floating body from </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
 
