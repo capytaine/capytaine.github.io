@@ -73,6 +73,9 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">points</span><span class="p">,</span> <span class="n">output_shape</span> <span class="o">=</span> <span class="n">_normalize_points</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="nb">float</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span>
+
     <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">T</span>
     <span class="n">k</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">wavenumber</span>
     <span class="n">h</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">water_depth</span>
@@ -108,8 +111,10 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">    array of shape (3) or (N x 3)</span>
 <span class="sd">        the velocity vectors</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
     <span class="n">points</span><span class="p">,</span> <span class="n">output_shape</span> <span class="o">=</span> <span class="n">_normalize_points</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">)</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">or</span> <span class="nb">float</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">)</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">((</span><span class="o">*</span><span class="n">output_shape</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
 
     <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">T</span>
     <span class="n">k</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="n">wavenumber</span>
@@ -136,7 +141,7 @@ window.addEventListener("load", () => mermaid.run());
 <div class="viewcode-block" id="airy_waves_pressure">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.airy_waves.html#capytaine.bem.airy_waves.airy_waves_pressure">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">airy_waves_pressure</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">pb</span><span class="p">):</span>
-    <span class="k">return</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">pb</span><span class="o">.</span><span class="n">omega</span> <span class="o">*</span> <span class="n">pb</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="n">airy_waves_potential</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">pb</span><span class="p">)</span></div>
+    <span class="k">return</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">omega</span><span class="p">)</span> <span class="o">*</span> <span class="n">pb</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="n">airy_waves_potential</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">pb</span><span class="p">)</span></div>
 
 
 

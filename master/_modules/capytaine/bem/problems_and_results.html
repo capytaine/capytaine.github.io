@@ -75,8 +75,8 @@ window.addEventListener("load", () => mermaid.run());
 <span class="k">class</span><span class="w"> </span><span class="nc">LinearPotentialFlowProblem</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;General class of a potential flow problem.</span>
 
-<span class="sd">    At most one of the following parameter must be provided: omega, period, wavenumber or wavelength.</span>
-<span class="sd">    Internally only omega is stored, hence setting another parameter can lead to small rounding errors.</span>
+<span class="sd">    At most one of the following parameters must be provided:</span>
+<span class="sd">        omega, freq, period, wavenumber or wavelength.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -90,6 +90,8 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        The position of the sea bottom (deprecated: please prefer setting water_depth)</span>
 <span class="sd">    omega: float, optional</span>
 <span class="sd">        The angular frequency of the waves in rad/s</span>
+<span class="sd">    freq: float, optional</span>
+<span class="sd">        The frequency of the waves in Hz</span>
 <span class="sd">    period: float, optional</span>
 <span class="sd">        The period of the waves in s</span>
 <span class="sd">    wavenumber: float, optional</span>
@@ -229,7 +231,6 @@ window.addEventListener("load", () => mermaid.run());
                          <span class="s2">&quot;If you were actually giving an angle in radians, use the modulo operator to give a value between -2π and 2π to disable this warning.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_depth</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
-
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="s2">&quot;Problems with a sea bottom but no free surface have not been implemented.&quot;</span>
             <span class="p">)</span>
@@ -416,9 +417,6 @@ window.addEventListener("load", () => mermaid.run());
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">=</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="o">=</span><span class="n">sea_bottom</span><span class="p">,</span>
                          <span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">,</span> <span class="n">freq</span><span class="o">=</span><span class="n">freq</span><span class="p">,</span> <span class="n">period</span><span class="o">=</span><span class="n">period</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="n">wavenumber</span><span class="p">,</span> <span class="n">wavelength</span><span class="o">=</span><span class="n">wavelength</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="n">wave_direction</span><span class="p">,</span>
                          <span class="n">forward_speed</span><span class="o">=</span><span class="n">forward_speed</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="n">rho</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="n">g</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="p">)</span> <span class="ow">in</span> <span class="p">{</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">}:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;DiffractionProblem does not support zero or infinite frequency.&quot;</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">body</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
 
