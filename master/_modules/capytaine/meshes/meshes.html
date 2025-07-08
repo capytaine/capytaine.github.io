@@ -886,17 +886,19 @@ window.addEventListener("load", () => mermaid.run());
 
 <div class="viewcode-block" id="Mesh.generate_lid">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.generate_lid">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">generate_lid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">faces_max_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_lid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">faces_max_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Return a mesh of the internal free surface of the body.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        z: float</span>
+<span class="sd">        z: float, optional</span>
 <span class="sd">            Vertical position of the lid. Default: 0.0</span>
-<span class="sd">        faces_max_radius: float</span>
+<span class="sd">        faces_max_radius: float, optional</span>
 <span class="sd">            resolution of the mesh of the lid.</span>
 <span class="sd">            Default: mean of hull mesh resolution.</span>
+<span class="sd">        name: str, optional</span>
+<span class="sd">            A name for the new mesh</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -956,10 +958,13 @@ window.addEventListener("load", () => mermaid.run());
 
         <span class="n">lid_faces</span> <span class="o">=</span> <span class="n">candidate_lid_mesh</span><span class="o">.</span><span class="n">faces</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">candidate_lid_mesh</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span> <span class="n">needs_lid</span><span class="p">),</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">),</span> <span class="p">:]</span>
 
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lid_faces</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;lid for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;lid for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
-        <span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">candidate_lid_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="n">lid_faces</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;lid for </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lid_faces</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">candidate_lid_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="n">lid_faces</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
         <span class="n">lid_mesh</span><span class="o">.</span><span class="n">heal_mesh</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">lid_mesh</span></div>
