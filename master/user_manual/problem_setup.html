@@ -195,6 +195,40 @@ The default Green function supports zero and infinite frequency in infinite
 depth, and infinite frequency in finite depth (but not zero frequency in finite
 depth).</p>
 </section>
+<section id="importing-a-dataset-from-bemio">
+<h2>Importing a dataset from Bemio<a class="headerlink" href="#importing-a-dataset-from-bemio" title="Link to this heading">¶</a></h2>
+<p>A DataFrame or a Dataset can also be created from data structures generated
+using the <a class="reference external" href="https://wec-sim.github.io/bemio/">Bemio</a> package, which reads
+hydrodynamic output data from NEMOH, WAMIT, and AQWA. This allows for Capytaine
+post-processing of hydrodynamic data generated from other BEM codes.</p>
+<p>Bemio does not come packaged with Capytaine and needs to to be installed independently.
+Note that <a class="reference external" href="https://github.com/WEC-Sim/bemio/">the base repository of Bemio</a> has been
+archived and is only compatible with Python 2.7.x, so using a Python 3 compatible fork is
+recommended, available <a class="reference external" href="https://github.com/mancellin/bemio">here</a> or installed with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">mancellin</span><span class="o">/</span><span class="n">bemio</span><span class="o">.</span><span class="n">git</span>
+</pre></div>
+</div>
+<p>To build the xarray dataset using Capytaine, the output files from the BEM program in
+question must be read into a Bemio <code class="code docutils literal notranslate"><span class="pre">data_structures.ben.HydrodynamicData</span></code> class, which is
+then called by <cite>assemble_dataframe</cite> or <cite>assemble_dataset</cite>. For example, to
+create an xarray dataset from a WAMIT <code class="code docutils literal notranslate"><span class="pre">.out</span></code> file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">bemio.io.wamit</span><span class="w"> </span><span class="kn">import</span> <span class="n">read</span> <span class="k">as</span> <span class="n">read_wamit</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
+<span class="n">bemio_data</span> <span class="o">=</span> <span class="n">read_wamit</span><span class="p">(</span><span class="s2">&quot;myfile.out&quot;</span><span class="p">)</span>
+<span class="n">my_dataset</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">(</span><span class="n">bemio_data</span><span class="p">,</span> <span class="n">hydrostatics</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The created dataset will only contain quantities that can be directly calculated
+from the values given in the original dataset. Because of this, there may be minor
+differences between the variable names in an xarray dataset build with Bemio and one created
+using <code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowResult</span></code>, even though the format will be identical. For
+example, WAMIT <code class="code docutils literal notranslate"><span class="pre">.out</span></code> files do not contain the radii of gyration needed to calculate
+the moments of inertia, so the <cite>my_dataset[‘inertia_matrix’]</cite> variable would not be included
+in the above example since the rigid body mass matrix cannot be calculated.</p>
+</div>
+</section>
 <section id="legacy-nemoh-cal-parameters-files">
 <h2>Legacy Nemoh.cal parameters files<a class="headerlink" href="#legacy-nemoh-cal-parameters-files" title="Link to this heading">¶</a></h2>
 <p>The <a class="reference external" href="https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-running-192930.kjsp">legacy parameters files from Nemoh</a> can be read by a dedicated function:</p>

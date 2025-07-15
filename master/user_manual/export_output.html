@@ -43,50 +43,101 @@
           <div class="body" role="main">
             
   <section id="export-outputs">
-<h1>Export outputs<a class="headerlink" href="#export-outputs" title="Link to this heading">¶</a></h1>
-<section id="saving-the-dataset-as-netcdf-file">
-<h2>Saving the dataset as NetCDF file<a class="headerlink" href="#saving-the-dataset-as-netcdf-file" title="Link to this heading">¶</a></h2>
-<p>The xarray dataset produced by <code class="xref py py-func docutils literal notranslate"><span class="pre">assemble_dataset</span></code> (or <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset" title="capytaine.bem.solver.BEMSolver.fill_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_dataset</span></code></a>) has a structure close to the NetCDF file format and can easily be saved to this format:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span><span class="o">.</span><span class="n">to_netcdf</span><span class="p">(</span><span class="s2">&quot;path/to/dataset.nc&quot;</span><span class="p">)</span>
+<h1><a class="toc-backref" href="#id1" role="doc-backlink">Export outputs</a><a class="headerlink" href="#export-outputs" title="Link to this heading">¶</a></h1>
+<p>The <code class="docutils literal notranslate"><span class="pre">Dataset</span></code> output format is a standard object from Xarray and all methods from <a class="reference external" href="https://docs.xarray.dev/en/stable/user-guide/io.html">Xarray’s manual</a> can be used to manipulate and export it.
+On top of that, Capytaine provides some wrappers functions to simplify the export into a NetCDF file, as well as into other formats more specific to hydrodynamics.</p>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#export-outputs" id="id1">Export outputs</a></p>
+<ul>
+<li><p><a class="reference internal" href="#exporting-hydrodynamic-dataset" id="id2">Exporting hydrodynamic dataset</a></p>
+<ul>
+<li><p><a class="reference internal" href="#netcdf-format" id="id3">NetCDF format</a></p></li>
+<li><p><a class="reference internal" href="#wamit-format" id="id4">Wamit format</a></p></li>
+<li><p><a class="reference internal" href="#nemoh-format" id="id5">Nemoh format</a></p></li>
+<li><p><a class="reference internal" href="#excel-format" id="id6">Excel format</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#saving-the-rotation-center-of-rigid-bodies-in-netcdf-files" id="id7">Saving the rotation center of rigid bodies in NetCDF files</a></p></li>
+<li><p><a class="reference internal" href="#saving-the-hydrostatics-data-of-rigid-body-ies-in-nemoh-s-format" id="id8">Saving the hydrostatics data of rigid body(ies) in Nemoh’s format</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="exporting-hydrodynamic-dataset">
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">Exporting hydrodynamic dataset</a><a class="headerlink" href="#exporting-hydrodynamic-dataset" title="Link to this heading">¶</a></h2>
+<section id="netcdf-format">
+<h3><a class="toc-backref" href="#id3" role="doc-backlink">NetCDF format</a><a class="headerlink" href="#netcdf-format" title="Link to this heading">¶</a></h3>
+<p>The xarray dataset produced by <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.assemble_dataset" title="capytaine.io.xarray.assemble_dataset"><code class="xref py py-func docutils literal notranslate"><span class="pre">assemble_dataset</span></code></a> (or <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset" title="capytaine.bem.solver.BEMSolver.fill_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_dataset</span></code></a>) has a structure close to the NetCDF file format and can easily be saved to this format by <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.export_dataset" title="capytaine.io.xarray.export_dataset"><code class="xref py py-func docutils literal notranslate"><span class="pre">export_dataset()</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cpt</span><span class="o">.</span><span class="n">export_dataset</span><span class="p">(</span><span class="s2">&quot;path/to/dataset.nc&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;netcdf&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>See the <a class="reference external" href="http://xarray.pydata.org/en/stable/io.html">documentation of xarray</a> for details and options.</p>
-<p>There are however a couple of issues you should be aware of:</p>
-<section id="complex-numbers">
-<h3>Complex numbers<a class="headerlink" href="#complex-numbers" title="Link to this heading">¶</a></h3>
-<p>The netCDF standard does not handle complex numbers.
-As a workaround, the complex-valued array can be saved as a bigger real-valued array with the help of the <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#module-capytaine.io.xarray" title="capytaine.io.xarray"><code class="xref py py-mod docutils literal notranslate"><span class="pre">capytaine.io.xarray</span></code></a> module:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">separate_complex_values</span>
-<span class="n">separate_complex_values</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">to_netcdf</span><span class="p">(</span><span class="s2">&quot;path/to/dataset.nc&quot;</span><span class="p">)</span>
-</pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The netCDF standard does not handle <strong>complex numbers</strong>.</p>
+<p>Capytaine is using a non-standard representation of complex numbers by
+transforming all complex-valued arrays of shape <code class="docutils literal notranslate"><span class="pre">(...)</span></code> into real-valued
+arrays of shape <code class="docutils literal notranslate"><span class="pre">(...,</span> <span class="pre">2)`</span></code> using the functions
+<a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.separate_complex_values" title="capytaine.io.xarray.separate_complex_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">separate_complex_values()</span></code></a> and
+<a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.merge_complex_values" title="capytaine.io.xarray.merge_complex_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">merge_complex_values()</span></code></a> (done automatically by
+<a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.export_dataset" title="capytaine.io.xarray.export_dataset"><code class="xref py py-func docutils literal notranslate"><span class="pre">export_dataset()</span></code></a>).</p>
+<p>See also <a class="reference external" href="https://github.com/PlasmaFAIR/nc-complex">https://github.com/PlasmaFAIR/nc-complex</a> for more context and alternatives.</p>
 </div>
-<p>The dataset can then be reloaded by:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">merge_complex_values</span>
-<span class="n">dataset</span> <span class="o">=</span> <span class="n">merge_complex_values</span><span class="p">(</span><span class="n">xr</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span><span class="s2">&quot;path/to/dataset.nc&quot;</span><span class="p">))</span>
-</pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Exporting more outputs such as pressure field on the hull in a NetCDF
+file is considered in the future.
+See <a class="reference external" href="https://github.com/capytaine/capytaine/issues/520">https://github.com/capytaine/capytaine/issues/520</a> for examples of such outputs.</p>
 </div>
 </section>
-<section id="string-format">
-<h3>String format<a class="headerlink" href="#string-format" title="Link to this heading">¶</a></h3>
-<p>There is an issue with the handling of strings in xarray.
-It affects the coordinates with strings as labels such as <code class="code docutils literal notranslate"><span class="pre">radiating_dof</span></code> and <code class="code docutils literal notranslate"><span class="pre">influenced_dof</span></code>.
-They can be stored in xarray either as NetCDF string objects, which can be written in a NetCDF file, or as Python strings stored as generic Python objects, which cannot be written in a NetCDF file.
-The issue is that the xarray library sometimes changes from one to the other without warnings.
-It leads to the error <code class="code docutils literal notranslate"><span class="pre">ValueError:</span> <span class="pre">unsupported</span> <span class="pre">dtype</span> <span class="pre">for</span> <span class="pre">netCDF4</span> <span class="pre">variable:</span> <span class="pre">object</span></code> when trying to export a dataset.</p>
-<p>This can be fixed by explicitly converting the strings to the right format when exporting the dataset:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">separate_complex_values</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">to_netcdf</span><span class="p">(</span>
-  <span class="s2">&quot;dataset.nc&quot;</span><span class="p">,</span>
-  <span class="n">encoding</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;radiating_dof&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;U&#39;</span><span class="p">},</span>
-            <span class="s1">&#39;influenced_dof&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;U&#39;</span><span class="p">}}</span>
-<span class="p">)</span>
+<section id="wamit-format">
+<h3><a class="toc-backref" href="#id4" role="doc-backlink">Wamit format</a><a class="headerlink" href="#wamit-format" title="Link to this heading">¶</a></h3>
+<p>The hydrodynamic results from a Capytaine <code class="docutils literal notranslate"><span class="pre">xarray.Dataset</span></code> can be exported into WAMIT-compatible text files (<code class="docutils literal notranslate"><span class="pre">.1</span></code>, <code class="docutils literal notranslate"><span class="pre">.3</span></code>, <code class="docutils literal notranslate"><span class="pre">.3fk</span></code>, <code class="docutils literal notranslate"><span class="pre">.3sc</span></code>, <code class="docutils literal notranslate"><span class="pre">.hst</span></code>) using:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cpt</span><span class="o">.</span><span class="n">export_dataset</span><span class="p">(</span><span class="s2">&quot;problem_name&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;wamit&quot;</span><span class="p">,</span> <span class="n">exports</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="s2">&quot;3fk&quot;</span><span class="p">,</span> <span class="s2">&quot;3sc&quot;</span><span class="p">,</span> <span class="s2">&quot;hst&quot;</span><span class="p">))</span>
 </pre></div>
 </div>
-<p>See also <a class="reference external" href="https://github.com/capytaine/capytaine/issues/2">this Github issue</a>.</p>
+<p>This will produce the following files (depending on the fields present in the dataset and the flags passed to the optional <code class="docutils literal notranslate"><span class="pre">exports</span></code> argument):</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">problem_name.1</span></code> for added mass and radiation damping coefficients,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">problem_name.3</span></code> for total excitation forces (Froude-Krylov + diffraction),</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">problem_name.3fk</span></code> for Froude-Krylov forces only,</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">problem_name.3sc</span></code> for diffraction forces only.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">problem_name.hst</span></code> for hydrostatics results (if supported)</p></li>
+</ul>
+<p>Invalid or unavailable exports are skipped with a warning.</p>
+<p>The length scale used for normalization in WAMIT data is taken by default as <span class="math notranslate nohighlight">\(1\)</span> meter.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>These exports require that the <code class="docutils literal notranslate"><span class="pre">forward_speed</span></code> in the dataset is zero.
+If not, a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> is raised to avoid exporting inconsistent results.</p>
+</div>
+</section>
+<section id="nemoh-format">
+<h3><a class="toc-backref" href="#id5" role="doc-backlink">Nemoh format</a><a class="headerlink" href="#nemoh-format" title="Link to this heading">¶</a></h3>
+<p>The following code will write files named <code class="code docutils literal notranslate"><span class="pre">RadiationCoefficients.tec</span></code> and <code class="code docutils literal notranslate"><span class="pre">ExcitationForce.tec</span></code> in a format roughly matching the one of Nemoh 2:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cpt</span><span class="o">.</span><span class="n">export_dataset</span><span class="p">(</span><span class="s2">&quot;path/to/result_dir/&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;nemoh&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This feature is still experimental. Please report issues encountered with this.</p>
+</section>
+<section id="excel-format">
+<h3><a class="toc-backref" href="#id6" role="doc-backlink">Excel format</a><a class="headerlink" href="#excel-format" title="Link to this heading">¶</a></h3>
+<p>Export to Excel format is not currently built in <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.export_dataset" title="capytaine.io.xarray.export_dataset"><code class="xref py py-func docutils literal notranslate"><span class="pre">export_dataset()</span></code></a>.
+This section is meant to show an example of exporting to a format that is not explicitly implemented in Capytaine.
+We use here the <code class="docutils literal notranslate"><span class="pre">openpyxl</span></code> library (that can be installed with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">openpyxl</span></code>) to export a dataset to Excel format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span><span class="p">[[</span><span class="s2">&quot;added_mass&quot;</span><span class="p">,</span> <span class="s2">&quot;radiation_damping&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="s2">&quot;radiation_data.xlsx&quot;</span><span class="p">)</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">separate_complex_values</span>
+<span class="n">separate_complex_values</span><span class="p">(</span><span class="n">dataset</span><span class="p">[[</span><span class="s2">&quot;Froude_Krylov_force&quot;</span><span class="p">,</span> <span class="s2">&quot;diffraction_force&quot;</span><span class="p">]])</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="s2">&quot;diffraction_data.xlsx&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For convenience, the radiation and diffraction data have been stored in separate files.
+Since this export method poorly supports complex number, the <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.separate_complex_values" title="capytaine.io.xarray.separate_complex_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">separate_complex_values</span></code></a> has been used to transform them to a pair of real numbers, as discussed for NetCDF export above.</p>
 </section>
 </section>
-<section id="saving-the-rotation-center-of-rigid-bodies">
-<h2>Saving the rotation center of rigid bodies<a class="headerlink" href="#saving-the-rotation-center-of-rigid-bodies" title="Link to this heading">¶</a></h2>
+<section id="saving-the-rotation-center-of-rigid-bodies-in-netcdf-files">
+<h2><a class="toc-backref" href="#id7" role="doc-backlink">Saving the rotation center of rigid bodies in NetCDF files</a><a class="headerlink" href="#saving-the-rotation-center-of-rigid-bodies-in-netcdf-files" title="Link to this heading">¶</a></h2>
 <p>Saving rotation hydrodynamic coefficients without explicitly defining the rotation axes can be ambiguous and can lead to confusion downstream.
 While this is not done automatically by Capytaine at the moment, it can be added to the dataset manually.
 The example below, which is an extension of the <a class="reference internal" href="quickstart.html"><span class="doc">Quickstart</span></a> example, saves the rotation centers of a multibody problem in a way that is understood notably by <a class="reference external" href="https://github.com/BEMRosetta/BEMRosetta">BEMRosetta</a>:</p>
@@ -124,28 +175,13 @@ The example below, which is an extension of the <a class="reference internal" hr
 <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;center_of_mass&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s2">&quot;rigid_body_component&quot;</span><span class="p">,</span> <span class="s2">&quot;point_coordinates&quot;</span><span class="p">],</span> <span class="p">[</span><span class="n">body</span><span class="o">.</span><span class="n">center_of_mass</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">list_of_bodies</span><span class="p">])</span>
 
 <span class="c1"># Export to NetCDF file</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">separate_complex_values</span>
-<span class="n">separate_complex_values</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span><span class="o">.</span><span class="n">to_netcdf</span><span class="p">(</span><span class="s2">&quot;dataset.nc&quot;</span><span class="p">,</span>
-                                           <span class="n">encoding</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;radiating_dof&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;U&#39;</span><span class="p">},</span>
-                                                     <span class="s1">&#39;influenced_dof&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;U&#39;</span><span class="p">}})</span>
+<span class="n">cpt</span><span class="o">.</span><span class="n">export_dataset</span><span class="p">(</span><span class="s2">&quot;dataset.nc&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;netcdf&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The support for this in Capytaine should be improved in the future.</p>
 </section>
-<section id="exporting-to-excel">
-<h2>Exporting to Excel<a class="headerlink" href="#exporting-to-excel" title="Link to this heading">¶</a></h2>
-<p>The example below uses the <code class="docutils literal notranslate"><span class="pre">openpyxl</span></code> library (that can be installed with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">openpyxl</span></code>) to export a dataset to Excel format:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span><span class="p">[[</span><span class="s2">&quot;added_mass&quot;</span><span class="p">,</span> <span class="s2">&quot;radiation_damping&quot;</span><span class="p">]]</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="s2">&quot;radiation_data.xlsx&quot;</span><span class="p">)</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">separate_complex_values</span>
-<span class="n">separate_complex_values</span><span class="p">(</span><span class="n">dataset</span><span class="p">[[</span><span class="s2">&quot;Froude_Krylov_force&quot;</span><span class="p">,</span> <span class="s2">&quot;diffraction_force&quot;</span><span class="p">]])</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">()</span><span class="o">.</span><span class="n">to_excel</span><span class="p">(</span><span class="s2">&quot;diffraction_data.xlsx&quot;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>For convenience, the radiation and diffraction data have been stored in separate files.
-Since this export method poorly supports complex number, the <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.separate_complex_values" title="capytaine.io.xarray.separate_complex_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">separate_complex_values</span></code></a> has been used to transform them to a pair of real numbers, as discussed for NetCDF export above.</p>
-</section>
 <section id="saving-the-hydrostatics-data-of-rigid-body-ies-in-nemoh-s-format">
-<h2>Saving the hydrostatics data of rigid body(ies) in Nemoh’s format<a class="headerlink" href="#saving-the-hydrostatics-data-of-rigid-body-ies-in-nemoh-s-format" title="Link to this heading">¶</a></h2>
+<h2><a class="toc-backref" href="#id8" role="doc-backlink">Saving the hydrostatics data of rigid body(ies) in Nemoh’s format</a><a class="headerlink" href="#saving-the-hydrostatics-data-of-rigid-body-ies-in-nemoh-s-format" title="Link to this heading">¶</a></h2>
 <p>For a rigid body, or a set of several rigid bodies, the following information can be saved as written by Nemoh’s and read by BEMIO to produce <code class="code docutils literal notranslate"><span class="pre">.h5</span></code> files for WEC-Sim:</p>
 <ul class="simple">
 <li><p>Hydrostatic stiffness matrix,</p></li>
@@ -169,76 +205,6 @@ Since this export method poorly supports complex number, the <a class="reference
 <span class="n">body</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">()</span>
 <span class="n">body</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
 </pre></div>
-</div>
-</section>
-<section id="saving-the-data-as-legacy-tecplot-files">
-<h2>Saving the data as legacy Tecplot files<a class="headerlink" href="#saving-the-data-as-legacy-tecplot-files" title="Link to this heading">¶</a></h2>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>This feature is experimental.</p>
-</div>
-<p>The following code will write files named <code class="code docutils literal notranslate"><span class="pre">RadiationCoefficients.tec</span></code> and <code class="code docutils literal notranslate"><span class="pre">ExcitationForce.tec</span></code> in a format matching the one of Nemoh 2.0:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.legacy</span><span class="w"> </span><span class="kn">import</span> <span class="n">write_dataset_as_tecplot_files</span>
-<span class="n">write_dataset_as_tecplot_files</span><span class="p">(</span><span class="s2">&quot;path/to/directory&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
-</pre></div>
-</div>
-</section>
-<section id="exporting-to-wamit-format">
-<h2>Exporting to WAMIT format<a class="headerlink" href="#exporting-to-wamit-format" title="Link to this heading">¶</a></h2>
-<p>The hydrodynamic results from a Capytaine <code class="docutils literal notranslate"><span class="pre">xarray.Dataset</span></code> can be exported into WAMIT-compatible text files (<code class="docutils literal notranslate"><span class="pre">.1</span></code>, <code class="docutils literal notranslate"><span class="pre">.3</span></code>, <code class="docutils literal notranslate"><span class="pre">.3fk</span></code>, <code class="docutils literal notranslate"><span class="pre">.3sc</span></code>, <code class="docutils literal notranslate"><span class="pre">.hst</span></code>) using:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.wamit</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_to_wamit</span>
-<span class="n">export_to_wamit</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="s2">&quot;problem_name&quot;</span><span class="p">,</span> <span class="n">exports</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="s2">&quot;3fk&quot;</span><span class="p">,</span> <span class="s2">&quot;3sc&quot;</span><span class="p">,</span> <span class="s2">&quot;hst&quot;</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>This will produce the following files (depending on the fields present in the dataset):</p>
-<ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">problem_name.1</span></code> for added mass and radiation damping coefficients,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">problem_name.3</span></code> for total excitation forces (Froude-Krylov + diffraction),</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">problem_name.3fk</span></code> for Froude-Krylov forces only,</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">problem_name.3sc</span></code> for diffraction forces only.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">problem_name.hst</span></code> for hydrostatics results (if supported)</p></li>
-</ul>
-<p>Invalid or unavailable exports are skipped with a warning.</p>
-<p>The length scale used for normalization in WAMIT data is taken by default as
-<span class="math notranslate nohighlight">\(1\)</span> meter.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>These exports require that the <code class="docutils literal notranslate"><span class="pre">forward_speed</span></code> in the dataset is zero.
-If not, a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> is raised to avoid exporting inconsistent results.</p>
-</div>
-</section>
-<section id="building-a-dataset-from-bemio">
-<h2>Building a dataset from Bemio<a class="headerlink" href="#building-a-dataset-from-bemio" title="Link to this heading">¶</a></h2>
-<p>A DataFrame or a Dataset can also be created from data structures generated
-using the <a class="reference external" href="https://wec-sim.github.io/bemio/">Bemio</a> package, which reads
-hydrodynamic output data from NEMOH, WAMIT, and AQWA. This allows for Capytaine
-post-processing of hydrodynamic data generated from other BEM codes.</p>
-<p>Bemio does not come packaged with Capytaine and needs to to be installed independently.
-Note that <a class="reference external" href="https://github.com/WEC-Sim/bemio/">the base repository of Bemio</a> has been
-archived and is only compatible with Python 2.7.x, so using a Python 3 compatible fork is
-recommended, available <a class="reference external" href="https://github.com/mancellin/bemio">here</a> or installed with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">git</span><span class="o">+</span><span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">mancellin</span><span class="o">/</span><span class="n">bemio</span><span class="o">.</span><span class="n">git</span>
-</pre></div>
-</div>
-<p>To build the xarray dataset using Capytaine, the output files from the BEM program in
-question must be read into a Bemio <code class="code docutils literal notranslate"><span class="pre">data_structures.ben.HydrodynamicData</span></code> class, which is
-then called by <cite>assemble_dataframe</cite> or <cite>assemble_dataset</cite>. For example, to
-create an xarray dataset from a WAMIT <code class="code docutils literal notranslate"><span class="pre">.out</span></code> file:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">bemio.io.wamit</span><span class="w"> </span><span class="kn">import</span> <span class="n">read</span> <span class="k">as</span> <span class="n">read_wamit</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
-<span class="n">bemio_data</span> <span class="o">=</span> <span class="n">read_wamit</span><span class="p">(</span><span class="s2">&quot;myfile.out&quot;</span><span class="p">)</span>
-<span class="n">my_dataset</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">(</span><span class="n">bemio_data</span><span class="p">,</span> <span class="n">hydrostatics</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-</pre></div>
-</div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>The created dataset will only contain quantities that can be directly calculated
-from the values given in the original dataset. Because of this, there may be minor
-differences between the variable names in an xarray dataset build with Bemio and one created
-using <code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowResult</span></code>, even though the format will be identical. For
-example, WAMIT <code class="code docutils literal notranslate"><span class="pre">.out</span></code> files do not contain the radii of gyration needed to calculate
-the moments of inertia, so the <cite>my_dataset[‘inertia_matrix’]</cite> variable would not be included
-in the above example since the rigid body mass matrix cannot be calculated.</p>
 </div>
 </section>
 </section>
