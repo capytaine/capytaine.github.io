@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>capytaine.meshes.meshes module &#8212; capytaine 2.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/proof.css?v=e9a64e30" />
+    <script src="../../_static/documentation_options.js?v=57236720"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/proof.js?v=41e9dd12"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="capytaine.meshes.properties module" href="capytaine.meshes.properties.html" />
+    <link rel="prev" title="capytaine.meshes.mesh_like_protocol module" href="capytaine.meshes.mesh_like_protocol.html" />
+    <script defer data-domain="capytaine.github.io" src="https://plausible.io/js/script.js"></script>
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+
+  </head><body>
+  
+
+    <div class="document">
+    
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-capytaine.meshes.meshes">
+<span id="capytaine-meshes-meshes-module"></span><h1>capytaine.meshes.meshes module<a class="headerlink" href="#module-capytaine.meshes.meshes" title="Link to this heading">¶</a></h1>
+<p>This module contains a class to describe the 2D mesh of the surface of a body in a 3D space.
+Based on meshmagick &lt;<a class="reference external" href="https://github.com/LHEEA/meshmagick">https://github.com/LHEEA/meshmagick</a>&gt; by François Rongère.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">capytaine.meshes.meshes.</span></span><span class="sig-name descname"><span class="pre">Mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">faces</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">quadrature_method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="capytaine.meshes.geometry.html#capytaine.meshes.geometry.ClippableMixin" title="capytaine.meshes.geometry.ClippableMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">ClippableMixin</span></code></a>, <a class="reference internal" href="capytaine.meshes.surface_integrals.html#capytaine.meshes.surface_integrals.SurfaceIntegralsMixin" title="capytaine.meshes.surface_integrals.SurfaceIntegralsMixin"><code class="xref py py-class docutils literal notranslate"><span class="pre">SurfaceIntegralsMixin</span></code></a>, <a class="reference internal" href="capytaine.meshes.geometry.html#capytaine.meshes.geometry.Abstract3DObject" title="capytaine.meshes.geometry.Abstract3DObject"><code class="xref py py-class docutils literal notranslate"><span class="pre">Abstract3DObject</span></code></a></p>
+<p>A class to handle unstructured 2D meshes in a 3D space.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vertices</strong> (<em>array_like of shape (nv, 3)</em>) – Array of mesh vertices coordinates.Each line of the array represents one vertex
+coordinates</p></li>
+<li><p><strong>faces</strong> (<em>array_like of shape (nf, 4)</em>) – Arrays of mesh connectivities for faces. Each line of the array represents indices of
+vertices that form the face, expressed in counterclockwise order to ensure outward normals
+description.</p></li>
+<li><p><strong>name</strong> (<em>str, optional</em>) – The name of the mesh. If None, the mesh is given an automatic name based on its internal ID.</p></li>
+<li><p><strong>quadrature_method</strong> (<em>None or str or Quadpy quadrature, optional</em>) – The method used to compute quadrature points in each cells.
+By default: None, that is a one-point first order scheme is used.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.as_set_of_faces">
+<span class="sig-name descname"><span class="pre">as_set_of_faces</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.as_set_of_faces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.as_set_of_faces" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.axis_aligned_bbox">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">axis_aligned_bbox</span></span><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.axis_aligned_bbox" title="Link to this definition">¶</a></dt>
+<dd><p>Get the axis aligned bounding box of the mesh.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(xmin, xmax, ymin, ymax, zmin, zmax)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.center_of_mass_of_nodes">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">center_of_mass_of_nodes</span></span><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.center_of_mass_of_nodes" title="Link to this definition">¶</a></dt>
+<dd><p>(Non-weighted) center of mass of the nodes of the mesh.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.clip">
+<span class="sig-name descname"><span class="pre">clip</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.clip" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.compute_quadrature">
+<span class="sig-name descname"><span class="pre">compute_quadrature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">method</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.compute_quadrature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.compute_quadrature" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.copy">
+<span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#capytaine.meshes.meshes.Mesh" title="capytaine.meshes.meshes.Mesh"><span class="pre">Mesh</span></a></span></span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.copy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.copy" title="Link to this definition">¶</a></dt>
+<dd><p>Get a copy of the current mesh instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>string, optional</em>) – a name for the new mesh</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>mesh instance copy</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#capytaine.meshes.meshes.Mesh" title="capytaine.meshes.meshes.Mesh">Mesh</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.diameter_of_nodes">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">diameter_of_nodes</span></span><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.diameter_of_nodes" title="Link to this definition">¶</a></dt>
+<dd><p>Maximum distance between two nodes of the mesh.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.extract_faces">
+<span class="sig-name descname"><span class="pre">extract_faces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_faces_to_extract</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_index</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.extract_faces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.extract_faces" title="Link to this definition">¶</a></dt>
+<dd><p>Extracts a new mesh from a selection of faces ids</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>id_faces_to_extract</strong> (<em>ndarray</em>) – Indices of faces that have to be extracted</p></li>
+<li><p><strong>return_index</strong> (<em>bool, optional</em>) – Flag to output old indices</p></li>
+<li><p><strong>name</strong> (<em>string, optional</em>) – Name for the new mesh</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A new Mesh instance composed of the extracted faces</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#capytaine.meshes.meshes.Mesh" title="capytaine.meshes.meshes.Mesh">Mesh</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.extract_lid">
+<span class="sig-name descname"><span class="pre">extract_lid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">plane=Plane(normal=[0.</span> <span class="pre">0.</span> <span class="pre">1.],</span> <span class="pre">point=[0.</span> <span class="pre">0.</span> <span class="pre">0.])</span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.extract_lid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.extract_lid" title="Link to this definition">¶</a></dt>
+<dd><p>Split the mesh into a mesh of the hull and a mesh of the lid.
+By default, the lid is composed of the horizontal faces on the z=0 plane.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>plane</strong> (<em>Plane</em>) – The plane on which to look for lid faces.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>hull mesh and lid mesh</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2-ple of <a class="reference internal" href="#capytaine.meshes.meshes.Mesh" title="capytaine.meshes.meshes.Mesh">Mesh</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.extract_one_face">
+<span class="sig-name descname"><span class="pre">extract_one_face</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id_face</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.extract_one_face"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.extract_one_face" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.faces">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">faces</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.faces" title="Link to this definition">¶</a></dt>
+<dd><p>Get the faces connectivity array of the mesh.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.faces_areas">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">faces_areas</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.faces_areas" title="Link to this definition">¶</a></dt>
+<dd><p>Get the array of faces areas of the mesh.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.faces_centers">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">faces_centers</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.faces_centers" title="Link to this definition">¶</a></dt>
+<dd><p>Get the array of faces centers of the mesh.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.faces_normals">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">faces_normals</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.faces_normals" title="Link to this definition">¶</a></dt>
+<dd><p>Get the array of faces normals of the mesh.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.faces_radiuses">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">faces_radiuses</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.faces_radiuses" title="Link to this definition">¶</a></dt>
+<dd><p>Get the array of faces radiuses of the mesh.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.flip_normals">
+<span class="sig-name descname"><span class="pre">flip_normals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.flip_normals" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.from_set_of_faces">
+<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_set_of_faces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">set_of_faces</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.from_set_of_faces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.from_set_of_faces" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.generate_lid">
+<span class="sig-name descname"><span class="pre">generate_lid</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">faces_max_radius</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.generate_lid"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.generate_lid" title="Link to this definition">¶</a></dt>
+<dd><p>Return a mesh of the internal free surface of the body.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z</strong> (<em>float, optional</em>) – Vertical position of the lid. Default: 0.0</p></li>
+<li><p><strong>faces_max_radius</strong> (<em>float, optional</em>) – resolution of the mesh of the lid.
+Default: mean of hull mesh resolution.</p></li>
+<li><p><strong>name</strong> (<em>str, optional</em>) – A name for the new mesh</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>lid of internal surface</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#capytaine.meshes.meshes.Mesh" title="capytaine.meshes.meshes.Mesh">Mesh</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.get_face">
+<span class="sig-name descname"><span class="pre">get_face</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">face_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.get_face"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.get_face" title="Link to this definition">¶</a></dt>
+<dd><p>Get the face described by its vertices connectivity.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>face_id</strong> (<em>int</em>) – Face id</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If the face is a triangle, the array has 3 components, else it has 4 (quadrangle)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.heal_mesh">
+<span class="sig-name descname"><span class="pre">heal_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.heal_mesh" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.heal_normals">
+<span class="sig-name descname"><span class="pre">heal_normals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.heal_normals"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.heal_normals" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.heal_triangles">
+<span class="sig-name descname"><span class="pre">heal_triangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.heal_triangles"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.heal_triangles" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.is_triangle">
+<span class="sig-name descname"><span class="pre">is_triangle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">face_id</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.is_triangle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.is_triangle" title="Link to this definition">¶</a></dt>
+<dd><p>Returns if a face is a triangle</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>face_id</strong> (<em>int</em>) – Face id</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.join_meshes">
+<span class="sig-name descname"><span class="pre">join_meshes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.join_meshes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.join_meshes" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.lowest_lid_position">
+<span class="sig-name descname"><span class="pre">lowest_lid_position</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">omega_max</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">9.81</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.lowest_lid_position"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.lowest_lid_position" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.merge_duplicates">
+<span class="sig-name descname"><span class="pre">merge_duplicates</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.merge_duplicates"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.merge_duplicates" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.merged">
+<span class="sig-name descname"><span class="pre">merged</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.merged"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.merged" title="Link to this definition">¶</a></dt>
+<dd><p>Dummy method to be generalized for collections of meshes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.mirror">
+<span class="sig-name descname"><span class="pre">mirror</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.mirror" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.nb_faces">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nb_faces</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.nb_faces" title="Link to this definition">¶</a></dt>
+<dd><p>Get the number of faces in the mesh.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.nb_quadrangles">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nb_quadrangles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.nb_quadrangles" title="Link to this definition">¶</a></dt>
+<dd><p>Get the number of quadrangles in the mesh.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.nb_triangles">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nb_triangles</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.nb_triangles" title="Link to this definition">¶</a></dt>
+<dd><p>Get the number of triangles in the mesh.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.nb_vertices">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nb_vertices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">int</span></em><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.nb_vertices" title="Link to this definition">¶</a></dt>
+<dd><p>Get the number of vertices in the mesh.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.path_to_leaf">
+<span class="sig-name descname"><span class="pre">path_to_leaf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.path_to_leaf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.path_to_leaf" title="Link to this definition">¶</a></dt>
+<dd><p>Dummy method to be generalized for collection of meshes.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.quadrangles_ids">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">quadrangles_ids</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.quadrangles_ids" title="Link to this definition">¶</a></dt>
+<dd><p>Get the array of ids of quadrangle shaped faces.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.quadrature_points">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">quadrature_points</span></span><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.quadrature_points" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.remove_degenerated_faces">
+<span class="sig-name descname"><span class="pre">remove_degenerated_faces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.remove_degenerated_faces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.remove_degenerated_faces" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.remove_unused_vertices">
+<span class="sig-name descname"><span class="pre">remove_unused_vertices</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.remove_unused_vertices"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.remove_unused_vertices" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.rotate">
+<span class="sig-name descname"><span class="pre">rotate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.rotate" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.show">
+<span class="sig-name descname"><span class="pre">show</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.show"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.show" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.show_matplotlib">
+<span class="sig-name descname"><span class="pre">show_matplotlib</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normal_vectors</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale_normal_vector</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">saveas</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color_field</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cmap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cbar_label</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.show_matplotlib"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.show_matplotlib" title="Link to this definition">¶</a></dt>
+<dd><p>Poor man’s viewer with matplotlib.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ax</strong> (<em>matplotlib axis</em>) – The 3d axis in which to plot the mesh. If not provided, create a new one.</p></li>
+<li><p><strong>normal_vectors</strong> (<em>bool</em>) – If True, print normal vector.</p></li>
+<li><p><strong>scale_normal_vector</strong> (<em>array of shape (nb_faces, )</em>) – Scale separately each of the normal vectors.</p></li>
+<li><p><strong>saveas</strong> (<em>str</em>) – File path where to save the image.</p></li>
+<li><p><strong>color_field</strong> (<em>array of shape (nb_faces, )</em>) – Scalar field to be plot on the mesh (optional).</p></li>
+<li><p><strong>cmap</strong> (<em>matplotlib colormap</em>) – Colormap to use for field plotting.</p></li>
+<li><p><strong>cbar_label</strong> (<em>string</em>) – Label for colormap</p></li>
+<li><p><strong>Other parameters are passed to Poly3DCollection.</strong></p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.show_vtk">
+<span class="sig-name descname"><span class="pre">show_vtk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.show_vtk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.show_vtk" title="Link to this definition">¶</a></dt>
+<dd><p>Shows the mesh in the vtk viewer</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.sliced_by_plane">
+<span class="sig-name descname"><span class="pre">sliced_by_plane</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="capytaine.meshes.geometry.html#capytaine.meshes.geometry.Plane" title="capytaine.meshes.geometry.Plane"><span class="pre">Plane</span></a></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.sliced_by_plane"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.sliced_by_plane" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.squared_axis_aligned_bbox">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">squared_axis_aligned_bbox</span></span><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.squared_axis_aligned_bbox" title="Link to this definition">¶</a></dt>
+<dd><p>Get a squared axis aligned bounding box of the mesh.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(xmin, xmax, ymin, ymax, zmin, zmax)</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This method differs from <cite>axis_aligned_bbox()</cite> by the fact that
+the bounding box that is returned is squared but have the same center as the <cite>axis_aligned_bbox()</cite>.</p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.symmetrized">
+<span class="sig-name descname"><span class="pre">symmetrized</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">plane</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.symmetrized"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.symmetrized" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.to_meshmagick">
+<span class="sig-name descname"><span class="pre">to_meshmagick</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.to_meshmagick"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.to_meshmagick" title="Link to this definition">¶</a></dt>
+<dd><p>Convert the Mesh object as a Mesh object from meshmagick.
+Mostly for debugging.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.translate">
+<span class="sig-name descname"><span class="pre">translate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.translate" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.tree_view">
+<span class="sig-name descname"><span class="pre">tree_view</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/meshes/meshes.html#Mesh.tree_view"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.tree_view" title="Link to this definition">¶</a></dt>
+<dd><p>Dummy method to be generalized for collections of meshes.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.triangles_ids">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">triangles_ids</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.triangles_ids" title="Link to this definition">¶</a></dt>
+<dd><p>Get the array of ids of triangle shaped faces.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.triangulate_quadrangles">
+<span class="sig-name descname"><span class="pre">triangulate_quadrangles</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.triangulate_quadrangles" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.vertices">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">vertices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">ndarray</span></em><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.vertices" title="Link to this definition">¶</a></dt>
+<dd><p>Get the vertices array coordinate of the mesh.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.meshes.meshes.Mesh.with_normal_vector_going_down">
+<span class="sig-name descname"><span class="pre">with_normal_vector_going_down</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#capytaine.meshes.meshes.Mesh.with_normal_vector_going_down" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">capytaine</a></h1>
+
+
+
+<p class="blurb">a Python-based linear potential flow BEM solver</p>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Example scripts</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../installation.html">Installation for developers</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../overview.html">Overview of the modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testing.html">Testing Capytaine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../making_a_release.html">Making a release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">API documentation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Developer manual</a><ul>
+  <li><a href="../overview.html">Overview of the modules</a><ul>
+  <li><a href="capytaine.meshes.html">capytaine.meshes package</a><ul>
+      <li>Previous: <a href="capytaine.meshes.mesh_like_protocol.html" title="previous chapter">capytaine.meshes.mesh_like_protocol module</a></li>
+      <li>Next: <a href="capytaine.meshes.properties.html" title="next chapter">capytaine.meshes.properties module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/developer_manual/api/capytaine.meshes.meshes.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
