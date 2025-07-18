@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>capytaine.meshes.predefined.cylinders &#8212; capytaine 2.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/proof.css?v=e9a64e30" />
+    <script src="../../../../_static/documentation_options.js?v=57236720"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/proof.js?v=41e9dd12"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";
+window.addEventListener("load", () => mermaid.run());
+</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <script defer data-domain="capytaine.github.io" src="https://plausible.io/js/script.js"></script>
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+
+  </head><body>
+  
+
+    <div class="document">
+<div id="new-doc-warning-banner" style="width:100%; background-color:#ADD8E6; text-align: center;">This page is part of the documentation of the development version 2.3 of Capytaine.<br><a href="https://capytaine.github.io/stable/">Latest stable version is available here.</a></div>
+    
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.meshes.predefined.cylinders</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Generate meshes of cylinders and disks&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2017-2022 Matthieu Ancellin</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/capytaine/capytaine&gt;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">product</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">pi</span><span class="p">,</span> <span class="n">cos</span><span class="p">,</span> <span class="n">sin</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">xOz_Plane</span><span class="p">,</span> <span class="n">yOz_Plane</span><span class="p">,</span> <span class="n">Oz_axis</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mesh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">CollectionOfMeshes</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.symmetric</span><span class="w"> </span><span class="kn">import</span> <span class="n">TranslationalSymmetricMesh</span><span class="p">,</span> <span class="n">AxialSymmetricMesh</span><span class="p">,</span> <span class="n">ReflectionSymmetricMesh</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="mesh_disk">
+<a class="viewcode-back" href="../../../../developer_manual/api/capytaine.meshes.predefined.cylinders.html#capytaine.meshes.predefined.cylinders.mesh_disk">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mesh_disk</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+        <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">),</span> <span class="n">faces_max_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">reflection_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">axial_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_theta_max</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;(One-sided) disk.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    radius : float, optional</span>
+<span class="sd">        radius of the disk</span>
+<span class="sd">    center : 3-ple or array of shape (3,), optional</span>
+<span class="sd">        position of the geometric center of the disk</span>
+<span class="sd">    normal: 3-ple of floats, optional</span>
+<span class="sd">        normal vector, default: along x axis</span>
+<span class="sd">    resolution : 2-ple of int, optional</span>
+<span class="sd">        number of panels along a radius and around the disk</span>
+<span class="sd">    faces_max_radius : float, optional</span>
+<span class="sd">        maximal radius of a panel. (Default: no maximal radius.)</span>
+<span class="sd">        If the provided resolution is too coarse, the number of panels is</span>
+<span class="sd">        changed to fit the constraint on the maximal radius.</span>
+<span class="sd">    axial_symmetry : bool, optional</span>
+<span class="sd">        if True, returns an AxialSymmetricMesh</span>
+<span class="sd">    reflection_symmetry : bool, optional</span>
+<span class="sd">        if True, returns a ReflectionSymmetricMesh</span>
+<span class="sd">    name : str, optional</span>
+<span class="sd">        a string naming the mesh</span>
+<span class="sd">    _theta_max: float, optional</span>
+<span class="sd">        internal parameter, to return an arc circle instead of a full circle</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">radius</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Radius of the disk mesh should be given as a positive value.&quot;</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">resolution</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;Resolution of a disk should be given as a couple of values.&quot;</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">([</span><span class="n">h</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">resolution</span><span class="p">]),</span> <span class="s2">&quot;Resolution of the disk mesh should be given as positive values.&quot;</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">([</span><span class="n">i</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">resolution</span><span class="p">]),</span> <span class="s2">&quot;Resolution of a disk should be given as integer values.&quot;</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">center</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;Position of the center of a disk should be given a 3-ple of values.&quot;</span>
+
+    <span class="n">nr</span><span class="p">,</span> <span class="n">ntheta</span> <span class="o">=</span> <span class="n">resolution</span>
+    <span class="k">if</span> <span class="n">faces_max_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># The biggest cell is on the side of the disk.</span>
+        <span class="c1"># Assuming it is a rectangle of sides radius/nr and perimeter/ntheta</span>
+        <span class="n">estimated_max_radius</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">radius</span><span class="o">/</span><span class="n">nr</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">radius</span><span class="o">/</span><span class="n">ntheta</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+        <span class="k">if</span> <span class="n">estimated_max_radius</span> <span class="o">&gt;</span> <span class="n">faces_max_radius</span><span class="p">:</span>
+            <span class="n">nr</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">radius</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">faces_max_radius</span><span class="p">)))</span>
+            <span class="n">ntheta</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">radius</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">faces_max_radius</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;disk_</span><span class="si">{</span><span class="nb">next</span><span class="p">(</span><span class="n">Mesh</span><span class="o">.</span><span class="n">_ids</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="k">if</span> <span class="n">reflection_symmetry</span> <span class="ow">and</span> <span class="n">axial_symmetry</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Disks with both symmetries have not been implemented.&quot;</span><span class="p">)</span>
+
+    <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New disk of radius </span><span class="si">{</span><span class="n">radius</span><span class="si">}</span><span class="s2"> and resolution </span><span class="si">{</span><span class="n">resolution</span><span class="si">}</span><span class="s2">, named </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">reflection_symmetry</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ntheta</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;To use the reflection symmetry of the mesh, &quot;</span>
+                             <span class="s2">&quot;it should have an even number of panels in this direction.&quot;</span><span class="p">)</span>
+
+        <span class="n">half_mesh</span> <span class="o">=</span> <span class="n">mesh_disk</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">_theta_max</span><span class="o">=</span><span class="n">_theta_max</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="n">nr</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">//</span><span class="mi">2</span><span class="p">),</span>
+                <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">reflection_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">axial_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;half_of_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">(</span><span class="n">half_mesh</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="n">xOz_Plane</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">axial_symmetry</span><span class="p">:</span>
+        <span class="n">mesh_slice</span> <span class="o">=</span> <span class="n">mesh_disk</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">_theta_max</span><span class="o">=</span><span class="n">_theta_max</span><span class="o">/</span><span class="n">ntheta</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="n">nr</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">reflection_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">axial_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;slice_of_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">AxialSymmetricMesh</span><span class="p">(</span><span class="n">mesh_slice</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">Oz_axis</span><span class="p">,</span> <span class="n">nb_repetitions</span><span class="o">=</span><span class="n">ntheta</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">theta_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_theta_max</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">r_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">nr</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="n">r</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="o">-</span><span class="n">r</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">))</span> <span class="k">for</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="n">r_range</span><span class="p">,</span> <span class="n">theta_range</span><span class="p">)])</span>
+        <span class="n">panels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">j</span><span class="o">+</span><span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">j</span><span class="o">+</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+                                <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nr</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ntheta</span><span class="p">))])</span>
+
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">panels</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="n">mesh</span><span class="o">.</span><span class="n">heal_mesh</span><span class="p">()</span>
+    <span class="n">mesh</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">center</span><span class="p">)</span>
+    <span class="n">mesh</span><span class="o">.</span><span class="n">rotate_around_center_to_align_vectors</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">normal</span><span class="p">)</span>
+    <span class="n">mesh</span><span class="o">.</span><span class="n">geometric_center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mesh</span></div>
+
+
+
+<div class="viewcode-block" id="mesh_vertical_cylinder">
+<a class="viewcode-back" href="../../../../developer_manual/api/capytaine.meshes.predefined.cylinders.html#capytaine.meshes.predefined.cylinders.mesh_vertical_cylinder">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mesh_vertical_cylinder</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">faces_max_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">axial_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">reflection_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_theta_max</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Vertical cylinder.</span>
+
+<span class="sd">    Total number of panels = (2*resolution[0] + resolution[2])*resolution[1]</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    length : float, optional</span>
+<span class="sd">        length of the cylinder</span>
+<span class="sd">    radius : float, optional</span>
+<span class="sd">        radius of the cylinder</span>
+<span class="sd">    center : 3-ple or array of shape (3,), optional</span>
+<span class="sd">        position of the geometric center of the cylinder</span>
+<span class="sd">    resolution : 3-ple of int, optional</span>
+<span class="sd">        (number of panel along a radius at the end, number of panels around a slice, number of slices)</span>
+<span class="sd">        Mnemonic: same ordering as the cylindrical coordinates (nr, ntheta, nz)</span>
+<span class="sd">    faces_max_radius : float, optional</span>
+<span class="sd">        maximal radius of a panel. (Default: no maximal radius.)</span>
+<span class="sd">        If the provided resolution is too coarse, the number of panels is</span>
+<span class="sd">        changed to fit the constraint on the maximal radius.</span>
+<span class="sd">    axial_symmetry : bool, optional</span>
+<span class="sd">        if True, returns an AxialSymmetricMesh</span>
+<span class="sd">    reflection_symmetry : bool, optional</span>
+<span class="sd">        if True, returns a ReflectionSymmetricMesh</span>
+<span class="sd">    name : str, optional</span>
+<span class="sd">        a string naming the mesh</span>
+<span class="sd">    _theta_max: float, optional</span>
+<span class="sd">        internal parameter, to return an arc circle instead of a full circle</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">assert</span> <span class="n">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Length of a cylinder should be given as a positive value.&quot;</span>
+    <span class="k">assert</span> <span class="n">radius</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Radius of a cylinder should be given as a positive value.&quot;</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">resolution</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;Resolution of a cylinder should be given as a 3-ple of values.&quot;</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">([</span><span class="n">h</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">resolution</span><span class="p">]),</span> <span class="s2">&quot;Resolution of a cylinder should be given as positive values.&quot;</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">([</span><span class="n">i</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">resolution</span><span class="p">]),</span> <span class="s2">&quot;Resolution of a cylinder should be given as integer values.&quot;</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">center</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;Position of the center of a cylinder should be given a 3-ple of values.&quot;</span>
+
+    <span class="n">nr</span><span class="p">,</span> <span class="n">ntheta</span><span class="p">,</span> <span class="n">nz</span> <span class="o">=</span> <span class="n">resolution</span>
+    <span class="k">if</span> <span class="n">faces_max_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dr</span><span class="p">,</span> <span class="n">dtheta</span><span class="p">,</span> <span class="n">dz</span> <span class="o">=</span> <span class="n">radius</span><span class="o">/</span><span class="n">nr</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">radius</span><span class="o">/</span><span class="n">ntheta</span><span class="p">,</span> <span class="n">length</span><span class="o">/</span><span class="n">nz</span>
+        <span class="n">estimated_max_radius</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">dr</span><span class="p">,</span> <span class="n">dtheta</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>  <span class="c1"># Panel on disk side</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">dtheta</span><span class="p">,</span> <span class="n">dz</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>  <span class="c1"># Panel on cylinder itself</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="n">estimated_max_radius</span> <span class="o">&gt;</span> <span class="n">faces_max_radius</span><span class="p">:</span>
+            <span class="n">nr</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">radius</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">faces_max_radius</span><span class="p">)))</span>
+            <span class="n">ntheta</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">radius</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">faces_max_radius</span><span class="p">)))</span>
+            <span class="n">nz</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">length</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">faces_max_radius</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;cylinder_</span><span class="si">{</span><span class="nb">next</span><span class="p">(</span><span class="n">Mesh</span><span class="o">.</span><span class="n">_ids</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New vertical cylinder of length </span><span class="si">{</span><span class="n">length</span><span class="si">}</span><span class="s2">, radius </span><span class="si">{</span><span class="n">radius</span><span class="si">}</span><span class="s2"> and resolution </span><span class="si">{</span><span class="n">resolution</span><span class="si">}</span><span class="s2">, named </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">reflection_symmetry</span> <span class="ow">and</span> <span class="n">axial_symmetry</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Vertical cylinders with both symmetries have not been implemented.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">reflection_symmetry</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ntheta</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;To use the reflection symmetry of the mesh, &quot;</span>
+                             <span class="s2">&quot;it should have an even number of panels in this direction.&quot;</span><span class="p">)</span>
+
+        <span class="n">half_cylinder</span> <span class="o">=</span> <span class="n">mesh_vertical_cylinder</span><span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="n">length</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="n">nr</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">nz</span><span class="p">),</span> <span class="n">reflection_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">axial_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;half_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">_theta_max</span><span class="o">=</span><span class="n">_theta_max</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
+
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">(</span><span class="n">half_cylinder</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="n">yOz_Plane</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">elif</span> <span class="n">axial_symmetry</span><span class="p">:</span>
+
+        <span class="n">mesh_slice</span> <span class="o">=</span> <span class="n">mesh_vertical_cylinder</span><span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="n">length</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="n">nr</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nz</span><span class="p">),</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">reflection_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">axial_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;slice_of_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">_theta_max</span><span class="o">=</span><span class="n">_theta_max</span><span class="o">/</span><span class="n">ntheta</span><span class="p">)</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">AxialSymmetricMesh</span><span class="p">(</span><span class="n">mesh_slice</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="n">Oz_axis</span><span class="p">,</span> <span class="n">nb_repetitions</span><span class="o">=</span><span class="n">ntheta</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">theta_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_theta_max</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">z_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">nz</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">nr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">r_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">radius</span><span class="p">,</span> <span class="n">nr</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">r</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">r</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="o">-</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="n">r_range</span><span class="p">,</span> <span class="n">theta_range</span><span class="p">)]),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">radius</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">radius</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="n">z_range</span><span class="p">,</span> <span class="n">theta_range</span><span class="p">)]),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">r</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">r</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="n">r_range</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">theta_range</span><span class="p">)]),</span>
+                <span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">r_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+            <span class="n">nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">radius</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">radius</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="n">z_range</span><span class="p">,</span> <span class="n">theta_range</span><span class="p">)])</span>
+        <span class="n">panels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">j</span><span class="o">+</span><span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">j</span><span class="o">+</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">i</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="p">)</span>
+                                <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">nz</span><span class="o">+</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">r_range</span><span class="p">))),</span> <span class="nb">range</span><span class="p">(</span><span class="n">ntheta</span><span class="p">))])</span>
+
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">panels</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="n">mesh</span><span class="o">.</span><span class="n">heal_mesh</span><span class="p">()</span>
+    <span class="n">mesh</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">center</span><span class="p">)</span>
+    <span class="n">mesh</span><span class="o">.</span><span class="n">geometric_center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mesh</span></div>
+
+
+
+<div class="viewcode-block" id="mesh_horizontal_cylinder">
+<a class="viewcode-back" href="../../../../developer_manual/api/capytaine.meshes.predefined.cylinders.html#capytaine.meshes.predefined.cylinders.mesh_horizontal_cylinder">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mesh_horizontal_cylinder</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">length</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+        <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="n">faces_max_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">reflection_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">translation_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_theta_max</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cylinder aligned along Ox axis.</span>
+
+<span class="sd">    Total number of panels = (2*resolution[0] + resolution[2])*resolution[1]</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    length : float, optional</span>
+<span class="sd">        length of the cylinder</span>
+<span class="sd">    radius : float, optional</span>
+<span class="sd">        radius of the cylinder</span>
+<span class="sd">    center : 3-ple or array of shape (3,), optional</span>
+<span class="sd">        position of the geometric center of the cylinder</span>
+<span class="sd">    resolution : 3-ple of int, optional</span>
+<span class="sd">        (number of panel along a radius at the end, number of panels around a slice, number of slices)</span>
+<span class="sd">        Mnemonic: same ordering as the cylindrical coordinates (nr, ntheta, nz)</span>
+<span class="sd">    faces_max_radius : float, optional</span>
+<span class="sd">        maximal radius of a panel. (Default: no maximal radius.)</span>
+<span class="sd">        If the provided resolution is too coarse, the number of panels is</span>
+<span class="sd">        changed to fit the constraint on the maximal radius.</span>
+<span class="sd">    reflection_symmetry : bool, optional</span>
+<span class="sd">        if True, returns a ReflectionSymmetricMesh</span>
+<span class="sd">    translation_symmetry : bool, optional</span>
+<span class="sd">        if True, uses a TranslationalSymmetricMesh internally for the main part of the cylinder</span>
+<span class="sd">    name : str, optional</span>
+<span class="sd">        a string naming the mesh</span>
+<span class="sd">    _theta_max: float, optional</span>
+<span class="sd">        internal parameter, to return an arc circle instead of a full circle</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">assert</span> <span class="n">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Length of a cylinder should be given as a positive value.&quot;</span>
+    <span class="k">assert</span> <span class="n">radius</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;Radius of a cylinder should be given as a positive value.&quot;</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">resolution</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;Resolution of a cylinder should be given as a 3-ple of values.&quot;</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">([</span><span class="n">h</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">resolution</span><span class="p">]),</span> <span class="s2">&quot;Resolution of a cylinder should be given as positive values.&quot;</span>
+    <span class="k">assert</span> <span class="nb">all</span><span class="p">([</span><span class="n">i</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">resolution</span><span class="p">]),</span> <span class="s2">&quot;Resolution of a cylinder should be given as integer values.&quot;</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">center</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;Position of the center of a cylinder should be given a 3-ple of values.&quot;</span>
+
+    <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;cylinder_</span><span class="si">{</span><span class="nb">next</span><span class="p">(</span><span class="n">Mesh</span><span class="o">.</span><span class="n">_ids</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New horizontal cylinder of length </span><span class="si">{</span><span class="n">length</span><span class="si">}</span><span class="s2">, radius </span><span class="si">{</span><span class="n">radius</span><span class="si">}</span><span class="s2"> and resolution </span><span class="si">{</span><span class="n">resolution</span><span class="si">}</span><span class="s2">, named </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+
+    <span class="n">nr</span><span class="p">,</span> <span class="n">ntheta</span><span class="p">,</span> <span class="n">nx</span> <span class="o">=</span> <span class="n">resolution</span>
+    <span class="k">if</span> <span class="n">faces_max_radius</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dr</span><span class="p">,</span> <span class="n">dtheta</span><span class="p">,</span> <span class="n">dx</span> <span class="o">=</span> <span class="n">radius</span><span class="o">/</span><span class="n">nr</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">radius</span><span class="o">/</span><span class="n">ntheta</span><span class="p">,</span> <span class="n">length</span><span class="o">/</span><span class="n">nx</span>
+        <span class="n">estimated_max_radius</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">dr</span><span class="p">,</span> <span class="n">dtheta</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>  <span class="c1"># Panel on disk side</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="n">dtheta</span><span class="p">,</span> <span class="n">dx</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>  <span class="c1"># Panel on cylinder itself</span>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="n">estimated_max_radius</span> <span class="o">&gt;</span> <span class="n">faces_max_radius</span><span class="p">:</span>
+            <span class="n">nr</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">radius</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">faces_max_radius</span><span class="p">)))</span>
+            <span class="n">ntheta</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">pi</span><span class="o">*</span><span class="n">radius</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">faces_max_radius</span><span class="p">)))</span>
+            <span class="n">nx</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">length</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">faces_max_radius</span><span class="p">)))</span>
+
+    <span class="k">if</span> <span class="n">reflection_symmetry</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">ntheta</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;To use the reflection symmetry of the mesh, &quot;</span>
+                             <span class="s2">&quot;it should have an even number of panels in this direction.&quot;</span><span class="p">)</span>
+
+        <span class="n">half_cylinder</span> <span class="o">=</span> <span class="n">mesh_horizontal_cylinder</span><span class="p">(</span>
+                <span class="n">length</span><span class="o">=</span><span class="n">length</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="n">nr</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">//</span><span class="mi">2</span><span class="p">,</span> <span class="n">nx</span><span class="p">),</span>
+                <span class="n">reflection_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">translation_symmetry</span><span class="o">=</span><span class="n">translation_symmetry</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;half_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">_theta_max</span><span class="o">=</span><span class="n">_theta_max</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span>
+                <span class="p">)</span>
+
+        <span class="n">mesh</span> <span class="o">=</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">(</span><span class="n">half_cylinder</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="n">xOz_Plane</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">translation_symmetry</span><span class="p">:</span>
+            <span class="nb">slice</span> <span class="o">=</span> <span class="n">mesh_horizontal_cylinder</span><span class="p">(</span>
+                    <span class="n">length</span><span class="o">=</span><span class="n">length</span><span class="o">/</span><span class="n">nx</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">length</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">nx</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                    <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">ntheta</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                    <span class="n">reflection_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">translation_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;slice_of_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">_theta_max</span><span class="o">=</span><span class="n">_theta_max</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+            <span class="n">open_cylinder</span> <span class="o">=</span> <span class="n">TranslationalSymmetricMesh</span><span class="p">(</span>
+                    <span class="nb">slice</span><span class="p">,</span> <span class="n">translation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">length</span> <span class="o">/</span> <span class="n">nx</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]),</span>
+                    <span class="n">nb_repetitions</span><span class="o">=</span><span class="n">nx</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;open_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># General case</span>
+            <span class="n">theta_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">_theta_max</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">x_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">nx</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">x</span><span class="p">,</span> <span class="n">radius</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">t</span><span class="p">),</span> <span class="o">-</span><span class="n">radius</span><span class="o">*</span><span class="n">cos</span><span class="p">(</span><span class="n">t</span><span class="p">))</span> <span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">t</span><span class="p">)</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="n">x_range</span><span class="p">,</span> <span class="n">theta_range</span><span class="p">)])</span>
+
+            <span class="n">panels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="o">+</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span> <span class="n">i</span><span class="o">+</span><span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
+                                <span class="k">for</span> <span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">)</span> <span class="ow">in</span> <span class="n">product</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">ntheta</span><span class="p">),</span> <span class="nb">range</span><span class="p">(</span><span class="n">nx</span><span class="p">))])</span>
+
+            <span class="n">open_cylinder</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">nodes</span><span class="p">,</span> <span class="n">panels</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;open_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">nr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">side</span> <span class="o">=</span> <span class="n">mesh_disk</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="n">length</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
+                             <span class="n">reflection_symmetry</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="n">nr</span><span class="p">,</span> <span class="n">ntheta</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;side_of_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                             <span class="n">_theta_max</span><span class="o">=</span><span class="n">_theta_max</span><span class="p">)</span>
+            <span class="n">other_side</span> <span class="o">=</span> <span class="n">side</span><span class="o">.</span><span class="n">mirrored</span><span class="p">(</span><span class="n">yOz_Plane</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;other_side_of_</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">mesh</span> <span class="o">=</span> <span class="n">CollectionOfMeshes</span><span class="p">([</span><span class="n">open_cylinder</span><span class="p">,</span> <span class="n">side</span><span class="p">,</span> <span class="n">other_side</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">translation_symmetry</span><span class="p">:</span>
+                <span class="n">mesh</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mesh</span> <span class="o">=</span> <span class="n">open_cylinder</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="n">mesh</span><span class="o">.</span><span class="n">heal_mesh</span><span class="p">()</span>
+    <span class="n">mesh</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">center</span><span class="p">)</span>
+    <span class="n">mesh</span><span class="o">.</span><span class="n">geometric_center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">center</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mesh</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">capytaine</a></h1>
+
+
+
+<p class="blurb">a Python-based linear potential flow BEM solver</p>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Example scripts</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

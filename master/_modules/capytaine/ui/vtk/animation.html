@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>capytaine.ui.vtk.animation &#8212; capytaine 2.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/proof.css?v=e9a64e30" />
+    <script src="../../../../_static/documentation_options.js?v=57236720"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/proof.js?v=41e9dd12"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";
+window.addEventListener("load", () => mermaid.run());
+</script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <script defer data-domain="capytaine.github.io" src="https://plausible.io/js/script.js"></script>
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+   
+  <link rel="stylesheet" href="../../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+
+  </head><body>
+  
+
+    <div class="document">
+<div id="new-doc-warning-banner" style="width:100%; background-color:#ADD8E6; text-align: center;">This page is part of the documentation of the development version 2.3 of Capytaine.<br><a href="https://capytaine.github.io/stable/">Latest stable version is available here.</a></div>
+    
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.ui.vtk.animation</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;VTK animation for the free surface elevation.&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/mancellin/capytaine&gt;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">pi</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.ui.vtk.helpers</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_node_data</span><span class="p">,</span> <span class="n">compute_vtk_polydata</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.optional_imports</span><span class="w"> </span><span class="kn">import</span> <span class="n">import_optional_dependency</span>
+
+<span class="n">vtk</span> <span class="o">=</span> <span class="n">import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;vtk&quot;</span><span class="p">)</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Animation">
+<a class="viewcode-back" href="../../../../developer_manual/api/capytaine.ui.vtk.animation.html#capytaine.ui.vtk.animation.Animation">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Animation</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Class to generate an animation of a result of Capytaine,</span>
+<span class="sd">    including the elevation of the free surface.</span>
+
+<span class="sd">    The animation is made of a short loop of a single period of the solution in frequency domain.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    loop_duration: float</span>
+<span class="sd">        Duration in the loop. For real time animation, the period of the motion.</span>
+<span class="sd">    fps: int, optional</span>
+<span class="sd">        Number of frames per second in the animation (default: 24).</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    frames_per_loop: int</span>
+<span class="sd">        Number of frames in one loop</span>
+<span class="sd">    actors: list of vtk actor objects</span>
+<span class="sd">        The objects in the scene.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loop_duration</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="mi">24</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fps</span> <span class="o">=</span> <span class="n">fps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">frames_per_loop</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">fps</span> <span class="o">*</span> <span class="n">loop_duration</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">actors</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_precomputed_polydatas</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_frame</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># @classmethod</span>
+    <span class="c1"># def from_result(self, result):</span>
+    <span class="c1">#     from capytaine.bodies import TRANSLATION_DOFS_DIRECTIONS, ROTATION_DOFS_AXIS</span>
+    <span class="c1">#</span>
+    <span class="c1">#         if display_dof.lower() in TRANSLATION_DOFS_DIRECTIONS:</span>
+    <span class="c1">#             direction = np.asarray(TRANSLATION_DOFS_DIRECTIONS[display_dof.lower()])</span>
+    <span class="c1">#             def translation_motion(self, frame):</span>
+    <span class="c1">#                 nonlocal direction</span>
+    <span class="c1">#                 pos = np.asarray(self.body_actor.GetPosition())</span>
+    <span class="c1">#                 pos = (1 - direction) * pos + \</span>
+    <span class="c1">#                       direction * np.cos(2*np.pi*(frame % self.frames_per_loop)/self.frames_per_loop)</span>
+    <span class="c1">#                 self.body_actor.SetPosition(*pos)</span>
+    <span class="c1">#             self.update_body_position = translation_motion</span>
+    <span class="c1">#</span>
+    <span class="c1">#         elif display_dof.lower() in ROTATION_DOFS_AXIS:</span>
+    <span class="c1">#             direction = np.asarray(ROTATION_DOFS_AXIS[display_dof.lower()])</span>
+    <span class="c1">#             def rotation_motion(self, frame):</span>
+    <span class="c1">#                 nonlocal direction</span>
+    <span class="c1">#                 pos = np.asarray(self.body_actor.GetOrientation())</span>
+    <span class="c1">#                 pos = (1 - direction) * pos + \</span>
+    <span class="c1">#                       direction * np.cos(2*np.pi*(frame % self.frames_per_loop)/self.frames_per_loop)</span>
+    <span class="c1">#                 self.body_actor.SetOrientation(*pos)</span>
+    <span class="c1">#             self.update_body_position = rotation_motion</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_add_actor</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">faces_motion</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">faces_colors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an animated object to the scene.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">faces_motion</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">nodes_motion</span> <span class="o">=</span> <span class="n">compute_node_data</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">merged</span><span class="p">(),</span> <span class="n">faces_motion</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">nodes_motion</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">base_polydata</span> <span class="o">=</span> <span class="n">compute_vtk_polydata</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">merged</span><span class="p">())</span>
+        <span class="n">mapper</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkPolyDataMapper</span><span class="p">()</span>
+        <span class="n">mapper</span><span class="o">.</span><span class="n">SetInputData</span><span class="p">(</span><span class="n">base_polydata</span><span class="p">)</span>
+
+        <span class="n">actor</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkActor</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">edges</span><span class="p">:</span>
+            <span class="n">actor</span><span class="o">.</span><span class="n">GetProperty</span><span class="p">()</span><span class="o">.</span><span class="n">EdgeVisibilityOn</span><span class="p">()</span>
+        <span class="n">actor</span><span class="o">.</span><span class="n">GetProperty</span><span class="p">()</span><span class="o">.</span><span class="n">SetInterpolationToGouraud</span><span class="p">()</span>
+        <span class="n">actor</span><span class="o">.</span><span class="n">SetMapper</span><span class="p">(</span><span class="n">mapper</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">nodes_motion</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">faces_colors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Precompute motions of </span><span class="si">{</span><span class="n">mesh</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> before animation.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_precomputed_polydatas</span><span class="p">[</span><span class="n">actor</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+
+            <span class="k">for</span> <span class="n">i_frame</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">frames_per_loop</span><span class="p">):</span>
+                <span class="n">new_polydata</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkPolyData</span><span class="p">()</span>
+                <span class="n">new_polydata</span><span class="o">.</span><span class="n">DeepCopy</span><span class="p">(</span><span class="n">base_polydata</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">nodes_motion</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># Change points positions at frame i</span>
+                    <span class="n">current_deformation</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">nodes_motion</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">nodes_motion</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">i_frame</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">frames_per_loop</span><span class="p">)</span>
+                    <span class="p">)</span>
+
+                    <span class="n">points</span> <span class="o">=</span> <span class="n">new_polydata</span><span class="o">.</span><span class="n">GetPoints</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_vertices</span><span class="p">):</span>
+                        <span class="n">point</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">GetPoint</span><span class="p">(</span><span class="n">j</span><span class="p">)</span>
+                        <span class="n">point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">point</span><span class="p">)</span> <span class="o">+</span> <span class="n">current_deformation</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+                        <span class="n">points</span><span class="o">.</span><span class="n">SetPoint</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">point</span><span class="p">))</span>
+
+                <span class="k">if</span> <span class="n">faces_colors</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># Evaluate scalar field at frame i</span>
+                    <span class="n">current_colors</span> <span class="o">=</span> <span class="p">(</span>
+                        <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">faces_colors</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">faces_colors</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">*</span><span class="n">i_frame</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">frames_per_loop</span><span class="p">)</span>
+                    <span class="p">)</span>
+                    <span class="n">max_val</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">faces_colors</span><span class="p">))</span>
+                    <span class="n">vtk_faces_colors</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkFloatArray</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">color</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">current_colors</span><span class="p">):</span>
+                        <span class="n">vtk_faces_colors</span><span class="o">.</span><span class="n">InsertValue</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">color</span><span class="o">+</span><span class="n">max_val</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">max_val</span><span class="p">))</span>
+                    <span class="n">new_polydata</span><span class="o">.</span><span class="n">GetCellData</span><span class="p">()</span><span class="o">.</span><span class="n">SetScalars</span><span class="p">(</span><span class="n">vtk_faces_colors</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_precomputed_polydatas</span><span class="p">[</span><span class="n">actor</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_polydata</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_precomputed_polydatas</span><span class="p">[</span><span class="n">actor</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">actors</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">actor</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">actor</span>
+
+<div class="viewcode-block" id="Animation.add_body">
+<a class="viewcode-back" href="../../../../developer_manual/api/capytaine.ui.vtk.animation.html#capytaine.ui.vtk.animation.Animation.add_body">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_body</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">faces_motion</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">faces_colors</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add an floating body to the scene.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        body: FloatingBody</span>
+<span class="sd">            The object to include in the scene.</span>
+<span class="sd">        faces_motion: dof, optional</span>
+<span class="sd">            The motion of the body defined at the center of the faces.</span>
+<span class="sd">        faces_colors: iterable of complex numbers, optional</span>
+<span class="sd">            Scalar field over the surface of the body that should be displayed with colors.</span>
+<span class="sd">        edges: bool, optional</span>
+<span class="sd">            Draw the edges of the mesh in the scene.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vtk actor object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">actor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_actor</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">merged</span><span class="p">(),</span> <span class="n">faces_motion</span><span class="o">=</span><span class="n">faces_motion</span><span class="p">,</span>
+                                <span class="n">faces_colors</span><span class="o">=</span><span class="n">faces_colors</span><span class="p">,</span> <span class="n">edges</span><span class="o">=</span><span class="n">edges</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">faces_colors</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">actor</span><span class="o">.</span><span class="n">GetProperty</span><span class="p">()</span><span class="o">.</span><span class="n">SetColor</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lut</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkLookupTable</span><span class="p">()</span>
+            <span class="n">lut</span><span class="o">.</span><span class="n">SetNumberOfColors</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+            <span class="n">lut</span><span class="o">.</span><span class="n">SetHueRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)</span>
+            <span class="n">lut</span><span class="o">.</span><span class="n">SetSaturationRange</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+            <span class="n">lut</span><span class="o">.</span><span class="n">SetValueRange</span><span class="p">(</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">)</span>
+            <span class="n">lut</span><span class="o">.</span><span class="n">Build</span><span class="p">()</span>
+            <span class="n">actor</span><span class="o">.</span><span class="n">GetMapper</span><span class="p">()</span><span class="o">.</span><span class="n">SetLookupTable</span><span class="p">(</span><span class="n">lut</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">actor</span></div>
+
+
+<div class="viewcode-block" id="Animation.add_free_surface">
+<a class="viewcode-back" href="../../../../developer_manual/api/capytaine.ui.vtk.animation.html#capytaine.ui.vtk.animation.Animation.add_free_surface">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_free_surface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">faces_elevation</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add the free surface to the scene.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        free_surface: FreeSurface</span>
+<span class="sd">            The free surface object</span>
+<span class="sd">        faces_elevation: array of complex numbers</span>
+<span class="sd">            The elevation of each face of the meshed free surface given as a complex number.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        vtk actor object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">faces_motion</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">elevation</span><span class="p">)</span> <span class="k">for</span> <span class="n">elevation</span> <span class="ow">in</span> <span class="n">faces_elevation</span><span class="p">])</span>
+        <span class="n">actor</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_actor</span><span class="p">(</span><span class="n">free_surface</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">faces_motion</span><span class="o">=</span><span class="n">faces_motion</span><span class="p">,</span> <span class="n">faces_colors</span><span class="o">=</span><span class="n">faces_motion</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span>
+
+        <span class="n">lut</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkLookupTable</span><span class="p">()</span>
+        <span class="n">lut</span><span class="o">.</span><span class="n">SetNumberOfColors</span><span class="p">(</span><span class="mi">50</span><span class="p">)</span>
+        <span class="n">lut</span><span class="o">.</span><span class="n">SetHueRange</span><span class="p">(</span><span class="mf">0.58</span><span class="p">,</span> <span class="mf">0.58</span><span class="p">)</span>
+        <span class="n">lut</span><span class="o">.</span><span class="n">SetSaturationRange</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">lut</span><span class="o">.</span><span class="n">SetValueRange</span><span class="p">(</span><span class="mf">0.4</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">)</span>
+        <span class="n">lut</span><span class="o">.</span><span class="n">Build</span><span class="p">()</span>
+        <span class="n">actor</span><span class="o">.</span><span class="n">GetMapper</span><span class="p">()</span><span class="o">.</span><span class="n">SetLookupTable</span><span class="p">(</span><span class="n">lut</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">actor</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_callback</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">renderer</span><span class="p">,</span> <span class="n">event</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">actor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">actors</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_precomputed_polydatas</span><span class="p">[</span><span class="n">actor</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">actor</span><span class="o">.</span><span class="n">GetMapper</span><span class="p">()</span><span class="o">.</span><span class="n">SetInputData</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_precomputed_polydatas</span><span class="p">[</span><span class="n">actor</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">_current_frame</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">frames_per_loop</span><span class="p">])</span>
+        <span class="n">renderer</span><span class="o">.</span><span class="n">GetRenderWindow</span><span class="p">()</span><span class="o">.</span><span class="n">Render</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_frame</span> <span class="o">+=</span> <span class="mi">1</span>
+
+<div class="viewcode-block" id="Animation.run">
+<a class="viewcode-back" href="../../../../developer_manual/api/capytaine.ui.vtk.animation.html#capytaine.ui.vtk.animation.Animation.run">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">camera_position</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">10.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">),</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">1280</span><span class="p">,</span> <span class="mi">720</span><span class="p">),</span> <span class="n">top_light_intensity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Run the animation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        camera_position: 3-ple of floats, optional</span>
+<span class="sd">            The starting position of the camera in the scene.</span>
+<span class="sd">        resolution: 2-ple of ints, optional</span>
+<span class="sd">            Resolution of the video in pixels.</span>
+<span class="sd">        top_light_intensity: float between 0 and 1</span>
+<span class="sd">            Intensity of the light source at the top of the scene (default: 0.5)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Setup a renderer, render window, and interactor</span>
+        <span class="n">renderer</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkRenderer</span><span class="p">()</span>
+        <span class="n">renderer</span><span class="o">.</span><span class="n">SetBackground</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># Background color white</span>
+        <span class="k">for</span> <span class="n">actor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">actors</span><span class="p">:</span>
+            <span class="n">renderer</span><span class="o">.</span><span class="n">AddActor</span><span class="p">(</span><span class="n">actor</span><span class="p">)</span>
+        <span class="n">renderer</span><span class="o">.</span><span class="n">Modified</span><span class="p">()</span>
+
+        <span class="n">camera</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkCamera</span><span class="p">()</span>
+        <span class="n">camera</span><span class="o">.</span><span class="n">SetPosition</span><span class="p">(</span><span class="o">*</span><span class="n">camera_position</span><span class="p">)</span>
+        <span class="n">camera</span><span class="o">.</span><span class="n">SetFocalPoint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">camera</span><span class="o">.</span><span class="n">SetViewUp</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">renderer</span><span class="o">.</span><span class="n">SetActiveCamera</span><span class="p">(</span><span class="n">camera</span><span class="p">)</span>
+
+        <span class="n">light</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkLight</span><span class="p">()</span>
+        <span class="n">light</span><span class="o">.</span><span class="n">SetLightTypeToHeadlight</span><span class="p">()</span>
+        <span class="n">renderer</span><span class="o">.</span><span class="n">AddLight</span><span class="p">(</span><span class="n">light</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">top_light_intensity</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">light</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkLight</span><span class="p">()</span>
+            <span class="n">light</span><span class="o">.</span><span class="n">SetDirectionAngle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">light</span><span class="o">.</span><span class="n">SetLightTypeToSceneLight</span><span class="p">()</span>
+            <span class="n">light</span><span class="o">.</span><span class="n">SetIntensity</span><span class="p">(</span><span class="n">top_light_intensity</span><span class="p">)</span>
+            <span class="n">renderer</span><span class="o">.</span><span class="n">AddLight</span><span class="p">(</span><span class="n">light</span><span class="p">)</span>
+
+        <span class="n">render_window</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkRenderWindow</span><span class="p">()</span>
+        <span class="n">render_window</span><span class="o">.</span><span class="n">SetSize</span><span class="p">(</span><span class="o">*</span><span class="n">resolution</span><span class="p">)</span>
+        <span class="n">render_window</span><span class="o">.</span><span class="n">SetWindowName</span><span class="p">(</span><span class="s2">&quot;Capytaine animation&quot;</span><span class="p">)</span>
+        <span class="n">render_window</span><span class="o">.</span><span class="n">AddRenderer</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
+
+        <span class="n">render_window_interactor</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkRenderWindowInteractor</span><span class="p">()</span>
+        <span class="n">render_window_interactor</span><span class="o">.</span><span class="n">SetRenderWindow</span><span class="p">(</span><span class="n">render_window</span><span class="p">)</span>
+        <span class="n">render_window_interactor</span><span class="o">.</span><span class="n">GetInteractorStyle</span><span class="p">()</span><span class="o">.</span><span class="n">SetCurrentStyleToTrackballCamera</span><span class="p">()</span>
+
+        <span class="n">render_window</span><span class="o">.</span><span class="n">Render</span><span class="p">()</span>
+
+        <span class="n">render_window_interactor</span><span class="o">.</span><span class="n">Initialize</span><span class="p">()</span>  <span class="c1"># Initialize must be called prior to creating timer events.</span>
+
+        <span class="n">render_window_interactor</span><span class="o">.</span><span class="n">AddObserver</span><span class="p">(</span><span class="s1">&#39;TimerEvent&#39;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_callback</span><span class="p">)</span>
+        <span class="n">render_window_interactor</span><span class="o">.</span><span class="n">CreateRepeatingTimer</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="mi">1000</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">fps</span><span class="p">))</span>
+
+        <span class="n">render_window_interactor</span><span class="o">.</span><span class="n">Start</span><span class="p">()</span>
+
+        <span class="c1"># Run until stopped by user.</span>
+
+        <span class="k">del</span> <span class="n">render_window_interactor</span>
+        <span class="k">del</span> <span class="n">render_window</span></div>
+
+
+<div class="viewcode-block" id="Animation.save">
+<a class="viewcode-back" href="../../../../developer_manual/api/capytaine.ui.vtk.animation.html#capytaine.ui.vtk.animation.Animation.save">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">filepath</span><span class="p">,</span> <span class="n">nb_loops</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">camera_position</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mf">10.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">10.0</span><span class="p">),</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">1280</span><span class="p">,</span> <span class="mi">720</span><span class="p">),</span> <span class="n">top_light_intensity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save the animation in a video file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filepath: string</span>
+<span class="sd">            Path of the output file.</span>
+<span class="sd">        nb_loop: int, optional</span>
+<span class="sd">            Number of periods to save in the file.</span>
+<span class="sd">        camera_position: 3-ple of floats, optional</span>
+<span class="sd">            The starting position of the camera in the scene.</span>
+<span class="sd">        resolution: 2-ple of ints, optional</span>
+<span class="sd">            Resolution of the video in pixels.</span>
+<span class="sd">        top_light_intensity: float between 0 and 1</span>
+<span class="sd">            Intensity of the light source at the top of the scene (default: 0.5)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">renderer</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkRenderer</span><span class="p">()</span>
+        <span class="n">renderer</span><span class="o">.</span><span class="n">SetBackground</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># Background color white</span>
+        <span class="k">for</span> <span class="n">actor</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">actors</span><span class="p">:</span>
+            <span class="n">renderer</span><span class="o">.</span><span class="n">AddActor</span><span class="p">(</span><span class="n">actor</span><span class="p">)</span>
+        <span class="n">renderer</span><span class="o">.</span><span class="n">Modified</span><span class="p">()</span>
+
+        <span class="n">camera</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkCamera</span><span class="p">()</span>
+        <span class="n">camera</span><span class="o">.</span><span class="n">SetPosition</span><span class="p">(</span><span class="o">*</span><span class="n">camera_position</span><span class="p">)</span>
+        <span class="n">camera</span><span class="o">.</span><span class="n">SetFocalPoint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">camera</span><span class="o">.</span><span class="n">SetViewUp</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">renderer</span><span class="o">.</span><span class="n">SetActiveCamera</span><span class="p">(</span><span class="n">camera</span><span class="p">)</span>
+
+        <span class="n">light</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkLight</span><span class="p">()</span>
+        <span class="n">light</span><span class="o">.</span><span class="n">SetLightTypeToHeadlight</span><span class="p">()</span>
+        <span class="n">renderer</span><span class="o">.</span><span class="n">AddLight</span><span class="p">(</span><span class="n">light</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">top_light_intensity</span> <span class="o">&gt;</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">light</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkLight</span><span class="p">()</span>
+            <span class="n">light</span><span class="o">.</span><span class="n">SetDirectionAngle</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">light</span><span class="o">.</span><span class="n">SetLightTypeToSceneLight</span><span class="p">()</span>
+            <span class="n">light</span><span class="o">.</span><span class="n">SetIntensity</span><span class="p">(</span><span class="n">top_light_intensity</span><span class="p">)</span>
+            <span class="n">renderer</span><span class="o">.</span><span class="n">AddLight</span><span class="p">(</span><span class="n">light</span><span class="p">)</span>
+
+        <span class="n">render_window</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkRenderWindow</span><span class="p">()</span>
+        <span class="n">render_window</span><span class="o">.</span><span class="n">SetSize</span><span class="p">(</span><span class="o">*</span><span class="n">resolution</span><span class="p">)</span>
+        <span class="n">render_window</span><span class="o">.</span><span class="n">OffScreenRenderingOn</span><span class="p">()</span>
+        <span class="n">render_window</span><span class="o">.</span><span class="n">AddRenderer</span><span class="p">(</span><span class="n">renderer</span><span class="p">)</span>
+
+        <span class="n">image_filter</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkWindowToImageFilter</span><span class="p">()</span>
+        <span class="n">image_filter</span><span class="o">.</span><span class="n">SetInput</span><span class="p">(</span><span class="n">render_window</span><span class="p">)</span>
+        <span class="n">image_filter</span><span class="o">.</span><span class="n">SetInputBufferTypeToRGB</span><span class="p">()</span>
+        <span class="n">image_filter</span><span class="o">.</span><span class="n">ReadFrontBufferOff</span><span class="p">()</span>
+
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">vtk</span><span class="o">.</span><span class="n">vtkOggTheoraWriter</span><span class="p">()</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">SetInputConnection</span><span class="p">(</span><span class="n">image_filter</span><span class="o">.</span><span class="n">GetOutputPort</span><span class="p">())</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">SetFileName</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">SetRate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fps</span><span class="p">)</span>
+
+        <span class="n">writer</span><span class="o">.</span><span class="n">Start</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">i_frame</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_loops</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">frames_per_loop</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_callback</span><span class="p">(</span><span class="n">renderer</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">image_filter</span><span class="o">.</span><span class="n">Modified</span><span class="p">()</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">Write</span><span class="p">()</span>
+
+        <span class="n">writer</span><span class="o">.</span><span class="n">End</span><span class="p">()</span>
+        <span class="n">render_window</span><span class="o">.</span><span class="n">Finalize</span><span class="p">()</span>
+
+        <span class="k">del</span> <span class="n">image_filter</span>
+        <span class="k">del</span> <span class="n">writer</span>
+        <span class="k">del</span> <span class="n">render_window</span></div>
+
+
+<div class="viewcode-block" id="Animation.embed_in_notebook">
+<a class="viewcode-back" href="../../../../developer_manual/api/capytaine.ui.vtk.animation.html#capytaine.ui.vtk.animation.Animation.embed_in_notebook">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">embed_in_notebook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">640</span><span class="p">,</span> <span class="mi">360</span><span class="p">),</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">tempfile</span><span class="w"> </span><span class="kn">import</span> <span class="n">mkstemp</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">IPython.core.display</span><span class="w"> </span><span class="kn">import</span> <span class="n">Video</span>
+        <span class="c1"># Requires Ipython 7.14 or higher, for this patch: https://github.com/ipython/ipython/pull/12212/</span>
+
+        <span class="n">filepath</span> <span class="o">=</span> <span class="n">mkstemp</span><span class="p">(</span><span class="n">suffix</span><span class="o">=</span><span class="s2">&quot;.ogv&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">nb_loops</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="n">resolution</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Video</span><span class="p">(</span><span class="n">filepath</span><span class="p">,</span> <span class="n">embed</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="n">resolution</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">html_attributes</span><span class="o">=</span><span class="s2">&quot;controls loop autoplay&quot;</span><span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">capytaine</a></h1>
+
+
+
+<p class="blurb">a Python-based linear potential flow BEM solver</p>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../examples/index.html">Example scripts</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
