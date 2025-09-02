@@ -52,15 +52,20 @@ More examples files can be found in the <a class="reference internal" href="../e
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
 
+<span class="n">mesh_1</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s2">&quot;./boat_200.mar&quot;</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="s2">&quot;nemoh&quot;</span><span class="p">)</span>
 <span class="n">body_1</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
-            <span class="n">mesh</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s2">&quot;./boat_200.mar&quot;</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="s2">&quot;nemoh&quot;</span><span class="p">),</span>
+            <span class="n">mesh</span><span class="o">=</span><span class="n">mesh_1</span><span class="p">,</span>
+            <span class="n">lid_mesh</span><span class="o">=</span><span class="n">mesh_1</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">(</span><span class="n">faces_max_radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>  <span class="c1"># Adjust to the desired mesh resolution or remove lid entirely</span>
             <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+            <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># Optional, only for hydrostatics</span>
         <span class="p">)</span>
+<span class="n">body_1</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="n">body_1</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="mi">1025</span><span class="p">)</span>
+<span class="n">body_1</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">body_1</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="mi">1025</span><span class="p">)</span>
+
 <span class="c1"># If you have several rigid bodies, copy the code above to define &quot;body_2&quot;, &quot;body_3&quot;, etc.</span>
 
 <span class="n">all_bodies</span> <span class="o">=</span> <span class="n">body_1</span>  <span class="c1"># Replace &quot;body_1&quot; by &quot;body_1 + body_2 + body_3&quot; for multibody problem.</span>
-
-<span class="n">all_bodies</span> <span class="o">=</span> <span class="n">all_bodies</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>  <span class="c1"># if your mesh has panels above the free surface, remove them</span>
+<span class="n">all_bodies</span> <span class="o">=</span> <span class="n">all_bodies</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>  <span class="c1"># if the mesh has panels above the free surface, this command removes them</span>
 
 <span class="c1"># Set up parameters</span>
 <span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">({</span>

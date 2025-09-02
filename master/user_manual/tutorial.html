@@ -47,38 +47,53 @@
 <section id="main-concepts">
 <h2>Main concepts<a class="headerlink" href="#main-concepts" title="Link to this heading">¶</a></h2>
 <dl>
-<dt><a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh" title="capytaine.meshes.meshes.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mesh</span></code></a></dt><dd><p>The mesh of a floating body in its averaged position. It is stored as a
-instance of the <code class="code docutils literal notranslate"><span class="pre">Mesh</span></code> class.</p>
-<p>The mesh is defined as a list of vertices (a vertex is a triplet of real-valued coordinates)
-and a list of faces (a face is a quadruplet of indices of vertices). By default, faces are
-assumed to be quadrangular. Triangular faces are supported as quadrangles with two identical
-vertices.</p>
-<p>The <code class="code docutils literal notranslate"><span class="pre">Mesh</span></code> class also stores some data computed from the vertices and the faces such as
-the faces normals, the faces centers and the faces areas.</p>
+<dt><a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh" title="capytaine.meshes.meshes.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mesh</span></code></a></dt><dd><p>Capytaine is working with meshes of 2D surfaces in a 3D space, using
+quadrilaterals (or triangles, which are treated as degenerate
+quadrilaterals).</p>
+<p>The <a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh" title="capytaine.meshes.meshes.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mesh</span></code></a> class stores the mesh as a list
+of vertices (a vertex is a triplet of real-valued coordinates) and a list
+of faces (a face is a quadruplet of indices of vertices). The class also
+stores some data computed from the vertices and the faces such as the faces
+normals, the faces centers and the faces areas.</p>
 </dd>
-<dt><strong>Dof</strong></dt><dd><p>A degree of freedom (or dof) defines a small motion or deformation of the floating body
-around its average position. It is stored as a vector at the center of each faces of the mesh.</p>
-<p>Degrees of freedom appears in two forms in the code:
+<dt><a class="reference internal" href="../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody" title="capytaine.bodies.bodies.FloatingBody"><code class="xref py py-class docutils literal notranslate"><span class="pre">FloatingBody</span></code></a></dt><dd><p>A <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code> is mainly the reunion of the mesh of a floating
+body’s hull in its averaged position and some degrees of freedom.</p>
+<dl>
+<dt><strong>Degrees of freedom (dof)</strong></dt><dd><p>A degree of freedom (or dof) defines a small motion or deformation of a
+floating body around its average position. The motion or deformation is
+stored as a vector at the center of each faces of the mesh.</p>
+<p>The degrees of freedom of the body are referred by a name (e.g. <cite>Heave</cite>).
+They should stay in the order in which they have been defined, but
+accessing them by name rather than by index is usually preferred.</p>
+<p>The names of the degrees of freedom appear in two forms:
 <code class="code docutils literal notranslate"><span class="pre">radiating_dof</span></code> denotes an actual motion of the body, whereas
 <code class="code docutils literal notranslate"><span class="pre">influenced_dof</span></code> denotes a component of a (generalized) force.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>For mathematicians in the field of Galerkin Boundary Element Method, the concept
-of degree of freedom might have a different meaning (a basis function of the Galerkin
-decomposition). Here, the degrees of freedom are the physical degrees of freedom of the
-floating body, typically the rigid body translations and rotations.</p>
+<p>For mathematicians in the field of Boundary Element Method,
+the concept of degree of freedom might have a different meaning (a
+basis function of the Galerkin decomposition). Here, the degrees of
+freedom are the physical degrees of freedom of the floating body,
+typically the rigid body translations and rotations.</p>
 </div>
 </dd>
-<dt><a class="reference internal" href="../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody" title="capytaine.bodies.bodies.FloatingBody"><code class="xref py py-class docutils literal notranslate"><span class="pre">FloatingBody</span></code></a></dt><dd><p>A <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code> is mainly the reunion of a <code class="code docutils literal notranslate"><span class="pre">Mesh</span></code> and some degrees of freedom.</p>
-<p>The degree of freedom of the body are referred by a name (e.g. <cite>Heave</cite>).
-They should stay in the order in which they have been defined, but <a class="reference external" href="https://github.com/capytaine/capytaine/issues/4">the code
-does not strictly guarantee it</a>.
-Accessing them by name rather than by index should be preferred.</p>
-<p>Beside the mesh and the dofs, some other physical information can be
+<dt><strong>Lid</strong></dt><dd><p>Besides the mandatory <code class="docutils literal notranslate"><span class="pre">mesh</span></code> of the hull, the body can have a
+<code class="docutils literal notranslate"><span class="pre">lid_mesh</span></code> also given as an instance of the
+<a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh" title="capytaine.meshes.meshes.Mesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mesh</span></code></a> class.</p>
+<p>The lid mesh is a non-physical numerical tool used for the
+regularisation of the solutions given by the BEM solver to avoid the
+so-called irregular frequencies.
+Despite its name, the <code class="docutils literal notranslate"><span class="pre">lid_mesh</span></code> is not restricted to faces on the free
+surface (although it is usually more efficient there), nor is the hull
+<code class="docutils literal notranslate"><span class="pre">mesh</span></code> restricted to faces strictly below the free surface.</p>
+</dd>
+<dt><strong>Hydrostatics parameters</strong></dt><dd><p>Beside the mesh and the dofs, some other physical information can be
 stored in a <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code> instance, such as the mass and the
 position of the center of mass. This information is only required for
 some specific actions (see <a class="reference internal" href="hydrostatics.html"><span class="doc">Hydrostatics</span></a>) and can be left unspecified
 in many cases.</p>
+</dd>
+</dl>
 </dd>
 <dt><a class="reference internal" href="../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.LinearPotentialFlowProblem" title="capytaine.bem.problems_and_results.LinearPotentialFlowProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearPotentialFlowProblem</span></code></a></dt><dd><p>A problem is a collection of several parameters: a <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code>, the wave angular frequency
 <span class="math notranslate nohighlight">\(\omega\)</span>, the water depth <span class="math notranslate nohighlight">\(h\)</span>, the water density <span class="math notranslate nohighlight">\(\rho\)</span> and the gravity
@@ -88,7 +103,7 @@ acceleration <span class="math notranslate nohighlight">\(g\)</span>.</p>
 <a class="reference internal" href="../developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.DiffractionProblem" title="capytaine.bem.problems_and_results.DiffractionProblem"><code class="xref py py-class docutils literal notranslate"><span class="pre">DiffractionProblem</span></code></a> (that requires the angle of the incoming wave field <span class="math notranslate nohighlight">\(\beta\)</span>).</p>
 <p>Most of the parameters are optional. A default value is used when they are not provided (see the page <a class="reference internal" href="problem_setup.html"><span class="doc">Setting up a problem</span></a>).</p>
 </dd>
-<dt><a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver" title="capytaine.bem.solver.BEMSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">Solver</span></code></a></dt><dd><p>The core of the code. It has a <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a> method that takes a
+<dt><a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver" title="capytaine.bem.solver.BEMSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">BEMSolver</span></code></a></dt><dd><p>The core of the code. It has a <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a> method that takes a
 <code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowProblem</span></code> as input and returns a <code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowResult</span></code>.
 It calls a class computing the Green function and a class to build the matrices.
 See <a class="reference internal" href="resolution.html"><span class="doc">Resolution</span></a> for details.</p>
