@@ -72,46 +72,42 @@ the code.</p>
 </li>
 </ul>
 </section>
-<section id="testing-in-isolated-environments-with-nox">
-<h2>Testing in isolated environments with Nox<a class="headerlink" href="#testing-in-isolated-environments-with-nox" title="Link to this heading">¶</a></h2>
-<p><a class="reference external" href="https://nox.thea.codes">Nox</a> can be used to set up an isolated environment
-and build and run the unit test suite as well as some of the example code from
-the cookbook (<code class="docutils literal notranslate"><span class="pre">docs/user_manual/examples/</span></code> directory).
-The test protocols are defined in the <code class="docutils literal notranslate"><span class="pre">noxfile.py</span></code> file at the root of the
-repository.</p>
-<p>The <code class="docutils literal notranslate"><span class="pre">build_and_test_on_locked_env</span></code> Nox session is used to test the current
-source code in an environment with fixed versions of Capytaine’s dependencies.
+<section id="testing-in-isolated-environments">
+<h2>Testing in isolated environments<a class="headerlink" href="#testing-in-isolated-environments" title="Link to this heading">¶</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">Justfile</span></code> contains recipes to run the test suite as well as some of the example code from
+the cookbook (<code class="docutils literal notranslate"><span class="pre">docs/user_manual/examples/</span></code> directory) in isolated environements using <code class="docutils literal notranslate"><span class="pre">UV</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">test_in_*_reference_env</span></code> recipes is used to test the current source code
+in an environment with fixed versions of Capytaine’s dependencies.
 This is meant to test changes in Capytaine without interferences from possible
 changes in dependencies.
 Two environments are predefined for this test, one is older and meant to be
 used with the oldest version of Python supported by Capytaine (Python 3.8 at
 the time of writing), while the other is more recent and is meant to be used
 with a recent version of Python (Python 3.12 at the time of writing).
-Their lockfiles can be found in the <code class="docutils literal notranslate"><span class="pre">pytest/envs/</span></code> directory.
-Assuming you have <a class="reference external" href="https://docs.astral.sh/uv/">uv</a> installed, you can them with:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">uv</span> <span class="n">run</span> <span class="o">--</span><span class="k">with</span> <span class="n">nox</span> <span class="o">--</span><span class="n">python</span> <span class="mf">3.8</span> <span class="n">nox</span> <span class="o">-</span><span class="n">s</span> <span class="n">build_and_test_on_locked_env</span>
-<span class="n">uv</span> <span class="n">run</span> <span class="o">--</span><span class="k">with</span> <span class="n">nox</span> <span class="o">--</span><span class="n">python</span> <span class="mf">3.12</span> <span class="n">nox</span> <span class="o">-</span><span class="n">s</span> <span class="n">build_and_test_on_locked_env</span>
+Their lockfiles can be found in the <code class="docutils literal notranslate"><span class="pre">pytest/envs/</span></code> directory.</p>
+<p>You can run them locally with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">just</span> <span class="n">test_in_py38_reference_env</span>
+<span class="n">just</span> <span class="n">test_in_py312_reference_env</span>
 </pre></div>
 </div>
-<p>This Nox session is the main part of the
+<p>assuming you have UV installed.</p>
+<p>These recipes are the main part of the
 <code class="docutils literal notranslate"><span class="pre">.github/workflows/test_new_commits.yaml</span></code> Github Actions workflow that is run
 at each new commit and pull request.</p>
-<p>Alternatively, the Nox sessions <code class="docutils literal notranslate"><span class="pre">build_and_test_on_latest_env</span></code> and
-<code class="docutils literal notranslate"><span class="pre">editable_build_and_test_on_latest_env</span></code> uses the latest dependencies
+<p>Alternatively, the recipe <code class="docutils literal notranslate"><span class="pre">test_in_latest_env</span></code> and
+<code class="docutils literal notranslate"><span class="pre">editable_build_and_test_in_latest_env</span></code> uses the latest dependencies
 available on PyPI to test Capytaine, respectively by installing it as a normal
 package or by installing it in development mode as described above on this
-page.
-You can run it locally with, e.g.:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">nox</span> <span class="o">-</span><span class="n">s</span> <span class="n">build_and_test_on_latest_env</span>
+page.</p>
+<p>You can run them locally with:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">just</span> <span class="n">test_in_latest_env</span>
+<span class="n">just</span> <span class="n">editable_build_and_test_in_latest_env</span>
 </pre></div>
 </div>
-<p>assuming you have <code class="docutils literal notranslate"><span class="pre">nox</span></code> installed.
-If you have <code class="docutils literal notranslate"><span class="pre">uv</span></code> installed, you can prefix the above command with <code class="docutils literal notranslate"><span class="pre">uv</span> <span class="pre">run</span>
-<span class="pre">--with</span> <span class="pre">nox</span></code> to install <code class="docutils literal notranslate"><span class="pre">nox</span></code> on-the-fly and run the tests.</p>
-<p>It is the main part of the
+<p>They are the main part of the
 <code class="docutils literal notranslate"><span class="pre">.github/workflows/test_with_latest_dependencies.yaml</span></code> Github Actions workflow
 that is run twice a month on the main branch of the Github repository.</p>
-<p>Finally the session <code class="docutils literal notranslate"><span class="pre">build_and_test_on_nightly_builds</span></code> fetches yet-unreleased
+<p>Finally the session <code class="docutils literal notranslate"><span class="pre">test_in_nightly_env</span></code> fetches yet-unreleased
 versions of Capytaine dependencies and run the same tests. It is mostly meant
 to anticipate breaking changes in the dependencies, such as the Numpy 1 to
 Numpy 2 transition.</p>
@@ -127,8 +123,8 @@ It is done in CI for each new commit in <code class="docutils literal notranslat
 <p>While testing new developments in the Fortran core it is also useful to test
 the compilation of Capytaine’s Fortran core AND its Python binding, but without
 the full Capytaine test suite.
-This can be done with Capytaine’s main <code class="docutils literal notranslate"><span class="pre">Makefile</span></code> as:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">make</span> <span class="n">test_fortran_compilation</span>
+This can be done with Capytaine’s main <code class="docutils literal notranslate"><span class="pre">Justfile</span></code> as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">just</span> <span class="n">test_fortran_compilation</span>
 </pre></div>
 </div>
 </section>
@@ -145,10 +141,10 @@ developping Capytaine.</p>
 <p>The directory <code class="docutils literal notranslate"><span class="pre">.github/workflows/</span></code> contains the definition of the Github
 Actions that are run to test Capytaine in CI.
 The workflows <code class="docutils literal notranslate"><span class="pre">test_new_commits.yaml</span></code> and
-<code class="docutils literal notranslate"><span class="pre">test_with_latest_dependencies.yaml</span></code> are mostly thin wrapper around the Nox
-sessions described above.
+<code class="docutils literal notranslate"><span class="pre">test_with_latest_dependencies.yaml</span></code> are mostly thin wrapper around the Just
+recipes described above.
 The former is run on each new commit, while the latter is run periodically.
-Follow the instruction above in the section about Nox to run them locally.
+Follow the instructions in the section above to run them locally.
 Both only run on Linux, testing other platforms is only done with the
 <code class="docutils literal notranslate"><span class="pre">build_wheel.yaml</span></code> workflow described below.</p>
 <p>The workflow <code class="docutils literal notranslate"><span class="pre">build_docs.yaml</span></code> builds the documentation and push it to
