@@ -54,7 +54,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">.. code-block:: python</span>
 
 <span class="sd">    problem = RadiationProblem(...)</span>
-<span class="sd">    result = BEMSolver(green_functions=..., engine=...).solve(problem)</span>
+<span class="sd">    result = BEMSolver(engine=..., method=...).solve(problem)</span>
 
 <span class="sd">&quot;&quot;&quot;</span>
 
@@ -69,7 +69,6 @@ window.addEventListener("load", () => mermaid.run());
 <span class="kn">from</span><span class="w"> </span><span class="nn">rich.progress</span><span class="w"> </span><span class="kn">import</span> <span class="n">track</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.problems_and_results</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearPotentialFlowProblem</span><span class="p">,</span> <span class="n">DiffractionProblem</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.delhommeau</span><span class="w"> </span><span class="kn">import</span> <span class="n">Delhommeau</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.engines</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasicMatrixEngine</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">problems_from_dataset</span><span class="p">,</span> <span class="n">assemble_dataset</span><span class="p">,</span> <span class="n">kochin_data_array</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.optional_imports</span><span class="w"> </span><span class="kn">import</span> <span class="n">silently_import_optional_dependency</span>
@@ -87,9 +86,6 @@ window.addEventListener("load", () => mermaid.run());
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    green_function: AbstractGreenFunction, optional</span>
-<span class="sd">        Object handling the computation of the Green function.</span>
-<span class="sd">        (default: :class:`~capytaine.green_function.delhommeau.Delhommeau`)</span>
 <span class="sd">    engine: MatrixEngine, optional</span>
 <span class="sd">        Object handling the building of matrices and the resolution of linear systems with these matrices.</span>
 <span class="sd">        (default: :class:`~capytaine.bem.engines.BasicMatrixEngine`)</span>
@@ -97,6 +93,10 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">        select boundary integral equation used to solve the problems.</span>
 <span class="sd">        Accepted values: &quot;indirect&quot; (as in e.g. Nemoh), &quot;direct&quot; (as in e.g. WAMIT)</span>
 <span class="sd">        Default value: &quot;indirect&quot;</span>
+<span class="sd">    green_function: AbstractGreenFunction, optional</span>
+<span class="sd">        For convenience and backward compatibility, the Green function can be</span>
+<span class="sd">        set here if the engine is the default one.</span>
+<span class="sd">        This argument is just passed to the default engine at initialization.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -107,8 +107,15 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">green_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;indirect&quot;</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span> <span class="o">=</span> <span class="n">Delhommeau</span><span class="p">()</span> <span class="k">if</span> <span class="n">green_function</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">green_function</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">BasicMatrixEngine</span><span class="p">()</span> <span class="k">if</span> <span class="n">engine</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">engine</span>
+
+        <span class="k">if</span> <span class="n">engine</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">BasicMatrixEngine</span><span class="p">(</span><span class="n">green_function</span><span class="o">=</span><span class="n">green_function</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">green_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;If you are not using the default engine, set the Green function in the engine.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                                 <span class="s2">&quot;Setting the Green function in the solver is only a shortcut to set up &quot;</span>
+                                 <span class="s2">&quot;the Green function of the default engine since Capytaine version 3.0&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">engine</span>
 
         <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;direct&quot;</span><span class="p">,</span> <span class="s2">&quot;indirect&quot;</span><span class="p">}:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unrecognized method when initializing solver: </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="si">}</span><span class="s2">. Expected </span><span class="se">\&quot;</span><span class="s2">direct</span><span class="se">\&quot;</span><span class="s2"> or </span><span class="se">\&quot;</span><span class="s2">indirect</span><span class="se">\&quot;</span><span class="s2">.&quot;</span><span class="p">)</span>
@@ -118,17 +125,13 @@ window.addEventListener("load", () => mermaid.run());
 
         <span class="bp">self</span><span class="o">.</span><span class="n">solve</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">[</span><span class="s2">&quot;Solve total&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">wraps_function</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">solve</span><span class="p">)</span>
 
-        <span class="k">try</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{</span>
-                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">,</span>
-                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">,</span>
-                <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
-            <span class="p">}</span>
-        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">,</span>
+            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
+        <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;BEMSolver(engine=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="si">}</span><span class="s2">, green_function=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;BEMSolver(engine=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="si">}</span><span class="s2">, method=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2">)&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
@@ -211,7 +214,7 @@ window.addEventListener("load", () => mermaid.run());
                 <span class="n">S</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
                         <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span>
                         <span class="n">problem</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">False</span>
+                        <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">False</span>
                         <span class="p">)</span>
             <span class="n">rhs</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">problem</span><span class="o">.</span><span class="n">boundary_condition</span>
             <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">[</span><span class="s2">&quot;  Linear solver&quot;</span><span class="p">]:</span>
@@ -226,7 +229,7 @@ window.addEventListener("load", () => mermaid.run());
                 <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
                         <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span>
                         <span class="n">problem</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span>
+                        <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span>
                         <span class="p">)</span>
 
             <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">[</span><span class="s2">&quot;  Linear solver&quot;</span><span class="p">]:</span>
@@ -469,7 +472,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="s2">            Please re-run the resolution with the indirect method and keep_details=True.&quot;&quot;&quot;</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">[</span><span class="s2">&quot;  Green function&quot;</span><span class="p">]:</span>
-            <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">encounter_wavenumber</span><span class="p">)</span>
+            <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">encounter_wavenumber</span><span class="p">)</span>
         <span class="n">potential</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span>  <span class="c1"># Sum the contributions of all panels in the mesh</span>
         <span class="k">return</span> <span class="n">potential</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span></div>
 
@@ -483,7 +486,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="s2">            Please re-run the resolution with this option.&quot;&quot;&quot;</span><span class="p">)</span>
 
         <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">[</span><span class="s2">&quot;  Green function&quot;</span><span class="p">]:</span>
-            <span class="n">_</span><span class="p">,</span> <span class="n">gradG</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">encounter_wavenumber</span><span class="p">,</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">gradG</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">encounter_wavenumber</span><span class="p">,</span>
                                                 <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">velocities</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s1">&#39;ijk,j-&gt;ik&#39;</span><span class="p">,</span> <span class="n">gradG</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span><span class="p">)</span>  <span class="c1"># Sum the contributions of all panels in the mesh</span>
         <span class="k">return</span> <span class="n">velocities</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">*</span><span class="n">output_shape</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
@@ -622,7 +625,6 @@ window.addEventListener("load", () => mermaid.run());
                 <span class="n">mesh</span><span class="p">,</span>
                 <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span>
                 <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span>
             <span class="p">)</span>
             <span class="n">phi</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span>
 
@@ -634,7 +636,6 @@ window.addEventListener("load", () => mermaid.run());
                     <span class="n">mesh</span><span class="o">.</span><span class="n">extract_faces</span><span class="p">(</span><span class="n">faces_to_extract</span><span class="p">),</span>
                     <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span>
                     <span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">wavenumber</span><span class="p">,</span>
-                    <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span>
                 <span class="p">)</span>
                 <span class="n">phi</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="n">chunk_size</span><span class="p">]</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span>
 

@@ -46,12 +46,101 @@
 <h1>Resolution<a class="headerlink" href="#resolution" title="Link to this heading">¶</a></h1>
 <section id="settings-of-the-solver">
 <h2>Settings of the solver<a class="headerlink" href="#settings-of-the-solver" title="Link to this heading">¶</a></h2>
-<p>The <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver" title="capytaine.bem.solver.BEMSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">BEMSolver</span></code></a> class takes three (keyword-only) arguments at the time of its initialization:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="kn">import</span> <span class="n">BEMSolver</span>
-<span class="n">solver</span> <span class="o">=</span> <span class="n">BEMSolver</span><span class="p">(</span><span class="n">green_function</span><span class="o">=...</span><span class="p">,</span> <span class="n">engine</span><span class="o">=...</span><span class="p">,</span> <span class="n">method</span><span class="o">=...</span><span class="p">)</span>
+<p>The settings of the solver can be customized by passing parameters at the initialization of <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver" title="capytaine.bem.solver.BEMSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">BEMSolver</span></code></a>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">(</span><span class="n">engine</span><span class="o">=...</span><span class="p">,</span> <span class="n">method</span><span class="o">=...</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Let us discuss in more details these parameters.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>As a shortcut, assuming you want to use the default engine, the <code class="docutils literal notranslate"><span class="pre">green_function</span></code> argument
+can be used to directly change the implementation of the Green function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">(</span><span class="n">green_function</span><span class="o">=...</span><span class="p">,</span> <span class="n">method</span><span class="o">=...</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>which is equivalent to</p>
+<blockquote>
+<div><p>solver = cpt.BEMSolver(engine=BasicMatrixEngine(green_function=…), method=…)</p>
+</div></blockquote>
+</div>
+<section id="method">
+<h3>Method<a class="headerlink" href="#method" title="Link to this heading">¶</a></h3>
+<p>The argument <code class="code docutils literal notranslate"><span class="pre">method</span></code> (default value: <code class="code docutils literal notranslate"><span class="pre">&quot;indirect&quot;</span></code>) controls
+the approach employed to solve for the potential velocity solutions.
+Two methods are implemented:</p>
+<ol class="arabic simple">
+<li><p>direct method (also known as “potential formulation”, among other names)
+with <code class="code docutils literal notranslate"><span class="pre">method=&quot;direct&quot;</span></code>,</p></li>
+<li><p>indirect method (also known as “source formulation”), by default and with
+<code class="code docutils literal notranslate"><span class="pre">method=&quot;indirect&quot;</span></code>.</p></li>
+</ol>
+<p>The direct method appears to be slightly more accurate on some
+test cases (especially when thin plates are involved) but is only implemented
+for the computation of the forces on the floating body without forward speed.
+Any other post-processing (e.g. free surface elevation) and forward speed
+currently require the indirect method.</p>
+<p>Since v2.3, the method is a parameter of <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver" title="capytaine.bem.solver.BEMSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">BEMSolver</span></code></a>.
+For backward compatibility, it can also be passed to
+<a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a>,
+<a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve_all" title="capytaine.bem.solver.BEMSolver.solve_all"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve_all()</span></code></a> and
+<a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset" title="capytaine.bem.solver.BEMSolver.fill_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_dataset()</span></code></a>, then overriding the
+general setting of the solver.</p>
+</section>
+<section id="engine">
+<h3>Engine<a class="headerlink" href="#engine" title="Link to this heading">¶</a></h3>
+<p>A class to build a interaction matrix, deriving from <a class="reference internal" href="../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.MatrixEngine" title="capytaine.bem.engines.MatrixEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixEngine</span></code></a>.
+Two of them are available in the present version:</p>
+<dl>
+<dt><a class="reference internal" href="../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine" title="capytaine.bem.engines.BasicMatrixEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicMatrixEngine</span></code></a> (Default)</dt><dd><p>A simple engine fairly similar to the one in Nemoh.
+It builds the full matrices with few optimizations.
+Only a reflection symmetry can be used to make the resolution faster.</p>
+<p>The object can be initialized with the following options:</p>
+<dl>
+<dt><code class="code docutils literal notranslate"><span class="pre">green_function</span></code></dt><dd><p>See below for details.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">matrix_cache_size</span></code> (Default: <code class="code docutils literal notranslate"><span class="pre">1</span></code>)</dt><dd><p>The solver keeps in memory the last interaction matrices that has been computed.
+This setting controls the number of old matrices that are saved.
+Setting it to <code class="code docutils literal notranslate"><span class="pre">0</span></code> will reduce the RAM usage of the code but might
+increase the computation time.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">linear_solver</span></code> (Default: <code class="code docutils literal notranslate"><span class="pre">'lu_decomposition'</span></code>)</dt><dd><p>This option is used to set the solver for linear systems that is used in the resolution of the BEM problem.
+Passing a string will make the code use one of the predefined solver. Three of them are available:
+<code class="code docutils literal notranslate"><span class="pre">'direct'</span></code> for a simple direct solver,
+<code class="code docutils literal notranslate"><span class="pre">'lu_decomposition'</span></code> for a faster direct solver with caching of the LU decomposition,
+or <code class="code docutils literal notranslate"><span class="pre">'gmres'</span></code> for an iterative solver.</p>
+<p>A direct solver is used by default (since version 1.4) because it is more robust and the computation time is more predictable.
+Advanced users might want to change the solver to <code class="code docutils literal notranslate"><span class="pre">gmres</span></code>, which is faster in many situations (and completely fails in other).</p>
+<p>Alternatively, any function taking as arguments a matrix and a vector and returning a vector can be given to the solver:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">my_linear_solver</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;A dumb solver for testing.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">@</span> <span class="n">b</span>
+
+<span class="n">my_bem_solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">(</span>
+   <span class="n">engine</span><span class="o">=</span><span class="n">BasicMatrixEngine</span><span class="p">(</span><span class="n">linear_solver</span><span class="o">=</span><span class="n">my_linear_solver</span><span class="p">)</span>
+   <span class="p">)</span>
+</pre></div>
+</div>
+<p>This option can be used for instance to apply a custom preconditioning to
+the iterative solver.</p>
+</dd>
+</dl>
+</dd>
+<dt><a class="reference internal" href="../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.HierarchicalToeplitzMatrixEngine" title="capytaine.bem.engines.HierarchicalToeplitzMatrixEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">HierarchicalToeplitzMatrixEngine</span></code></a></dt><dd><p>Experimental engine using hierarchical structure in the mesh to build
+hierarchical influence matrices.</p>
+<p>The object can be initialized with the following options:</p>
+<dl class="simple">
+<dt><code class="code docutils literal notranslate"><span class="pre">green_function</span></code></dt><dd><p>See below for details.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">matrix_cache_size</span></code> (Default: <code class="code docutils literal notranslate"><span class="pre">1</span></code>)</dt><dd><p>Same as above.</p>
+</dd>
+<dt><code class="code docutils literal notranslate"><span class="pre">ACA_distance</span></code> and <code class="code docutils literal notranslate"><span class="pre">ACA_tol</span></code></dt><dd><p>Parameters of the Adaptive Cross Approximation (ACA) used to set the
+precision of the low-rank matrices.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
 <section id="green-function">
 <h3>Green function<a class="headerlink" href="#green-function" title="Link to this heading">¶</a></h3>
 <p>A class used to evaluate the Green function, deriving from <a class="reference internal" href="../developer_manual/api/capytaine.green_functions.abstract_green_function.html#capytaine.green_functions.abstract_green_function.AbstractGreenFunction" title="capytaine.green_functions.abstract_green_function.AbstractGreenFunction"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractGreenFunction</span></code></a>.
@@ -159,81 +248,6 @@ one or the other depending of the water depth.</p>
 </dl>
 <p>Advanced users can write their own class to evaluate the Green function.
 See the example in the <span class="xref std std-doc">cookbook</span>.</p>
-</section>
-<section id="engine">
-<h3>Engine<a class="headerlink" href="#engine" title="Link to this heading">¶</a></h3>
-<p>A class to build a interaction matrix, deriving from <a class="reference internal" href="../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.MatrixEngine" title="capytaine.bem.engines.MatrixEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixEngine</span></code></a>.
-Two of them are available in the present version:</p>
-<dl>
-<dt><a class="reference internal" href="../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine" title="capytaine.bem.engines.BasicMatrixEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicMatrixEngine</span></code></a> (Default)</dt><dd><p>A simple engine fairly similar to the one in Nemoh.
-It builds the full matrices with few optimizations.
-Only a reflection symmetry can be used to make the resolution faster.</p>
-<p>The object can be initialized with the following options:</p>
-<dl>
-<dt><code class="code docutils literal notranslate"><span class="pre">matrix_cache_size</span></code> (Default: <code class="code docutils literal notranslate"><span class="pre">1</span></code>)</dt><dd><p>The solver keeps in memory the last interaction matrices that has been computed.
-This setting controls the number of old matrices that are saved.
-Setting it to <code class="code docutils literal notranslate"><span class="pre">0</span></code> will reduce the RAM usage of the code but might
-increase the computation time.</p>
-</dd>
-<dt><code class="code docutils literal notranslate"><span class="pre">linear_solver</span></code> (Default: <code class="code docutils literal notranslate"><span class="pre">'lu_decomposition'</span></code>)</dt><dd><p>This option is used to set the solver for linear systems that is used in the resolution of the BEM problem.
-Passing a string will make the code use one of the predefined solver. Three of them are available:
-<code class="code docutils literal notranslate"><span class="pre">'direct'</span></code> for a simple direct solver,
-<code class="code docutils literal notranslate"><span class="pre">'lu_decomposition'</span></code> for a faster direct solver with caching of the LU decomposition,
-or <code class="code docutils literal notranslate"><span class="pre">'gmres'</span></code> for an iterative solver.</p>
-<p>A direct solver is used by default (since version 1.4) because it is more robust and the computation time is more predictable.
-Advanced users might want to change the solver to <code class="code docutils literal notranslate"><span class="pre">gmres</span></code>, which is faster in many situations (and completely fails in other).</p>
-<p>Alternatively, any function taking as arguments a matrix and a vector and returning a vector can be given to the solver:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-
-<span class="k">def</span><span class="w"> </span><span class="nf">my_linear_solver</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;A dumb solver for testing.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">A</span><span class="p">)</span> <span class="o">@</span> <span class="n">b</span>
-
-<span class="n">my_bem_solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">(</span>
-   <span class="n">engine</span><span class="o">=</span><span class="n">BasicMatrixEngine</span><span class="p">(</span><span class="n">linear_solver</span><span class="o">=</span><span class="n">my_linear_solver</span><span class="p">)</span>
-   <span class="p">)</span>
-</pre></div>
-</div>
-<p>This option can be used for instance to apply a custom preconditioning to
-the iterative solver.</p>
-</dd>
-</dl>
-</dd>
-<dt><a class="reference internal" href="../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.HierarchicalToeplitzMatrixEngine" title="capytaine.bem.engines.HierarchicalToeplitzMatrixEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">HierarchicalToeplitzMatrixEngine</span></code></a></dt><dd><p>Experimental engine using hierarchical structure in the mesh to build
-hierarchical influence matrices.</p>
-<p>The object can be initialized with the following options:</p>
-<dl class="simple">
-<dt><code class="code docutils literal notranslate"><span class="pre">matrix_cache_size</span></code> (Default: <code class="code docutils literal notranslate"><span class="pre">1</span></code>)</dt><dd><p>Same as above.</p>
-</dd>
-<dt><code class="code docutils literal notranslate"><span class="pre">ACA_distance</span></code> and <code class="code docutils literal notranslate"><span class="pre">ACA_tol</span></code></dt><dd><p>Parameters of the Adaptive Cross Approximation (ACA) used to set the
-precision of the low-rank matrices.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</section>
-<section id="method">
-<h3>Method<a class="headerlink" href="#method" title="Link to this heading">¶</a></h3>
-<p>The argument <code class="code docutils literal notranslate"><span class="pre">method</span></code> (default value: <code class="code docutils literal notranslate"><span class="pre">&quot;indirect&quot;</span></code>) controls
-the approach employed to solve for the potential velocity solutions.
-Two methods are implemented:</p>
-<ol class="arabic simple">
-<li><p>direct method (also known as “potential formulation”, among other names)
-with <code class="code docutils literal notranslate"><span class="pre">method=&quot;direct&quot;</span></code>,</p></li>
-<li><p>indirect method (also known as “source formulation”), by default and with
-<code class="code docutils literal notranslate"><span class="pre">method=&quot;indirect&quot;</span></code>.</p></li>
-</ol>
-<p>The direct method appears to be slightly more accurate on some
-test cases (especially when thin plates are involved) but is only implemented
-for the computation of the forces on the floating body without forward speed.
-Any other post-processing (e.g. free surface elevation) and forward speed
-currently require the indirect method.</p>
-<p>Since v2.3, the method is a parameter of <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver" title="capytaine.bem.solver.BEMSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">BEMSolver</span></code></a>.
-For backward compatibility, it can also be passed to
-<a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a>,
-<a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve_all" title="capytaine.bem.solver.BEMSolver.solve_all"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve_all()</span></code></a> and
-<a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset" title="capytaine.bem.solver.BEMSolver.fill_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_dataset()</span></code></a>, then overriding the
-general setting of the solver.</p>
 </section>
 </section>
 <section id="solving-the-problem">

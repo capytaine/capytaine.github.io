@@ -95,14 +95,13 @@ The scripts can be downloaded individually as Python files from the <a class="re
             <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
             <span class="p">))</span>
 
-<span class="n">engine</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BasicMatrixEngine</span><span class="p">()</span>
 <span class="n">green_function</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">Delhommeau</span><span class="p">()</span>
+<span class="n">engine</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BasicMatrixEngine</span><span class="p">(</span><span class="n">green_function</span><span class="o">=</span><span class="n">green_function</span><span class="p">)</span>
 
 <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="n">engine</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
     <span class="n">cylinder</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">cylinder</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
     <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
     <span class="n">wavenumber</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">green_function</span><span class="o">=</span><span class="n">green_function</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="c1"># Plot the absolute value of the matrix S</span>
@@ -318,6 +317,10 @@ The scripts can be downloaded individually as Python files from the <a class="re
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MyGreenFunction</span><span class="p">(</span><span class="n">AbstractGreenFunction</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;An example of a custom routine to evaluate the Green function.&quot;&quot;&quot;</span>
+
+    <span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;green_function&quot;</span><span class="p">:</span> <span class="s2">&quot;MyGreenFunction&quot;</span><span class="p">}</span>
+    <span class="c1"># `exportable_settings` is meant to contain metadata to be stored in output</span>
+    <span class="c1"># dataset for reproductibility.</span>
 
     <span class="n">floating_point_precision</span> <span class="o">=</span> <span class="s2">&quot;float64&quot;</span>  <span class="c1"># Optional, could allow for RAM usage optimisations</span>
 
