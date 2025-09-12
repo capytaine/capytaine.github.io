@@ -86,16 +86,22 @@ window.addEventListener("load", () => mermaid.run());
 <div class="viewcode-block" id="MatrixEngine.build_matrices">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.MatrixEngine.build_matrices">[docs]</a>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">build_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">green_function</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">):</span>
         <span class="k">pass</span></div>
 
 
 <div class="viewcode-block" id="MatrixEngine.build_S_matrix">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.MatrixEngine.build_S_matrix">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">build_S_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Similar to :code:`build_matrices`, but returning only :math:`S`&quot;&quot;&quot;</span>
-        <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>  <span class="c1"># Could be optimized...</span>
-        <span class="k">return</span> <span class="n">S</span></div>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_S_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="MatrixEngine.build_fullK_matrix">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.MatrixEngine.build_fullK_matrix">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_fullK_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">):</span>
+        <span class="k">pass</span></div>
 </div>
 
 
@@ -158,6 +164,33 @@ window.addEventListener("load", () => mermaid.run());
     <span class="k">def</span><span class="w"> </span><span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
         <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">())</span>
 
+<div class="viewcode-block" id="BasicMatrixEngine.build_S_matrix">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine.build_S_matrix">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_S_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Similar to :code:`build_matrices`, but returning only :math:`S`&quot;&quot;&quot;</span>
+        <span class="c1"># Calls directly evaluate instead of build_matrices because the caching</span>
+        <span class="c1"># mechanism of build_matrices is not compatible with giving mesh1 as a</span>
+        <span class="c1"># list of points, but we need that for post-processing</span>
+        <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+                <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">S</span></div>
+
+
+<div class="viewcode-block" id="BasicMatrixEngine.build_fullK_matrix">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine.build_fullK_matrix">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_fullK_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Similar to :code:`build_matrices`, but returning only full :math:`K`</span>
+<span class="sd">        (that is the three components of the gradient, not just the normal one)&quot;&quot;&quot;</span>
+        <span class="c1"># TODO: could use symmetries. In particular for forward, we compute the</span>
+        <span class="c1"># full velocity on the same mesh so symmetries could be used.</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">fullK</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+                <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span>
+                <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">fullK</span></div>
+
+
 <div class="viewcode-block" id="BasicMatrixEngine.build_matrices">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine.build_matrices">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
@@ -199,7 +232,8 @@ window.addEventListener("load", () => mermaid.run());
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
-                <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="n">adjoint_double_layer</span>
+                <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span>
+                <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="n">adjoint_double_layer</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span></div>
 </div>
 
@@ -253,6 +287,26 @@ window.addEventListener("load", () => mermaid.run());
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
         <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">())</span>
+
+<div class="viewcode-block" id="HierarchicalToeplitzMatrixEngine.build_S_matrix">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.HierarchicalToeplitzMatrixEngine.build_S_matrix">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_S_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Similar to :code:`build_matrices`, but returning only :math:`S`&quot;&quot;&quot;</span>
+        <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+                <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">S</span></div>
+
+
+<div class="viewcode-block" id="HierarchicalToeplitzMatrixEngine.build_fullK_matrix">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.HierarchicalToeplitzMatrixEngine.build_fullK_matrix">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_fullK_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Similar to :code:`build_matrices`, but returning only full :math:`K`</span>
+<span class="sd">        (that is the three components of the gradient, not just the normal one)&quot;&quot;&quot;</span>
+        <span class="n">_</span><span class="p">,</span> <span class="n">fullK</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
+                <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">fullK</span></div>
 
 
 <div class="viewcode-block" id="HierarchicalToeplitzMatrixEngine.build_matrices">
