@@ -53,8 +53,8 @@ window.addEventListener("load", () => mermaid.run());
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">ArrayLike</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">ArrayLike</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sl</span>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -230,9 +230,12 @@ window.addEventListener("load", () => mermaid.run());
 
 
 
+<span class="n">MatrixLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">BlockDiagonalMatrix</span><span class="p">,</span> <span class="n">BlockCirculantMatrix</span><span class="p">]</span>
+
+
 <div class="viewcode-block" id="lu_decompose">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.lu_decompose">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">lu_decompose</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">ArrayLike</span><span class="p">):</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">lu_decompose</span><span class="p">(</span><span class="n">A</span><span class="p">:</span> <span class="n">MatrixLike</span><span class="p">):</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">LUDecomposedMatrix</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">BlockDiagonalMatrix</span><span class="p">):</span>
@@ -240,14 +243,14 @@ window.addEventListener("load", () => mermaid.run());
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">BlockCirculantMatrix</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">LUDecomposedBlockCirculantMatrix</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
 
 
 
 <div class="viewcode-block" id="LUDecomposedMatrix">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.LUDecomposedMatrix">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">LUDecomposedMatrix</span><span class="p">:</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">):</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;LU decomp of </span><span class="si">%s</span><span class="s2"> of shape </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
                   <span class="n">A</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span> <span class="o">=</span> <span class="n">sl</span><span class="o">.</span><span class="n">lu_factor</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
@@ -308,6 +311,17 @@ window.addEventListener("load", () => mermaid.run());
         <span class="n">res</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">res_fft</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">//</span><span class="n">n</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">res</span></div>
 </div>
+
+
+
+<span class="n">LUDecomposedMatrixLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">LUDecomposedMatrix</span><span class="p">,</span> <span class="n">LUDecomposedBlockDiagonalMatrix</span><span class="p">,</span> <span class="n">LUDecomposedBlockCirculantMatrix</span><span class="p">]</span>
+
+
+<div class="viewcode-block" id="has_been_lu_decomposed">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.has_been_lu_decomposed">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">has_been_lu_decomposed</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+    <span class="c1"># Python 3.8 does not support isinstance(A, LUDecomposedMatrixLike)</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="p">(</span><span class="n">LUDecomposedMatrix</span><span class="p">,</span> <span class="n">LUDecomposedBlockDiagonalMatrix</span><span class="p">,</span> <span class="n">LUDecomposedBlockCirculantMatrix</span><span class="p">))</span></div>
 
 </pre></div>
 

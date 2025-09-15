@@ -47,35 +47,37 @@
 <p>Definition of the methods to build influence matrices, using possibly some sparse structures.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="capytaine.bem.engines.BasicMatrixEngine">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">capytaine.bem.engines.</span></span><span class="sig-name descname"><span class="pre">BasicMatrixEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">green_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linear_solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lu_decomposition'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">matrix_cache_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/engines.html#BasicMatrixEngine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.engines.BasicMatrixEngine" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">capytaine.bem.engines.</span></span><span class="sig-name descname"><span class="pre">BasicMatrixEngine</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">green_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linear_solver</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'lu_decomposition'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/engines.html#BasicMatrixEngine"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.engines.BasicMatrixEngine" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <a class="reference internal" href="#capytaine.bem.engines.MatrixEngine" title="capytaine.bem.engines.MatrixEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatrixEngine</span></code></a></p>
-<p>Simple engine that assemble a full matrix (except for one reflection symmetry).
-Basically only calls <code class="code docutils literal notranslate"><span class="pre">green_function.evaluate</span></code>.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>linear_solver</strong> (<em>str or function, optional</em>) – Setting of the numerical solver for linear problems Ax = b.
-It can be set with the name of a preexisting solver
-(available: “direct” and “gmres”, the former is the default choice)
-or by passing directly a solver function.</p></li>
-<li><p><strong>matrix_cache_size</strong> (<em>int, optional</em>) – number of matrices to keep in cache</p></li>
+<p>Default matrix engine.</p>
+<dl class="simple">
+<dt>Features:</dt><dd><ul class="simple">
+<li><p>Caching of the last computed matrices.</p></li>
+<li><p>Supports plane symmetries and nested plane symmetries.</p></li>
+<li><p>Linear solver can be customized. Default is <cite>lu_decomposition</cite> with caching of the LU decomposition.</p></li>
 </ul>
 </dd>
 </dl>
-<dl class="py attribute">
-<dt class="sig sig-object py" id="capytaine.bem.engines.BasicMatrixEngine.available_linear_solvers">
-<span class="sig-name descname"><span class="pre">available_linear_solvers</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">{'direct':</span> <span class="pre">&lt;function</span> <span class="pre">solve_directly&gt;,</span> <span class="pre">'gmres':</span> <span class="pre">&lt;function</span> <span class="pre">solve_gmres&gt;,</span> <span class="pre">'lu_decomposition':</span> <span class="pre">&lt;bound</span> <span class="pre">method</span> <span class="pre">LUSolverWithCache.solve</span> <span class="pre">of</span> <span class="pre">&lt;capytaine.matrices.linear_solvers.LUSolverWithCache</span> <span class="pre">object&gt;&gt;}</span></em><a class="headerlink" href="#capytaine.bem.engines.BasicMatrixEngine.available_linear_solvers" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>green_function</strong> (<em>AbstractGreenFunction</em>) – the low level implementation used to compute the coefficients of the matrices.</p></li>
+<li><p><strong>linear_solver</strong> (<em>str or function, optional</em>) – Setting of the numerical solver for linear problems Ax = b.
+It can be set with the name of a preexisting solver
+(available: “lu_decomposition” and “gmres”, the former is the default choice)
+or by passing directly a solver function.</p></li>
+</ul>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.bem.engines.BasicMatrixEngine.build_S_matrix">
-<span class="sig-name descname"><span class="pre">build_S_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_surface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavenumber</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/engines.html#BasicMatrixEngine.build_S_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.engines.BasicMatrixEngine.build_S_matrix" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">build_S_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_surface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavenumber</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../../_modules/capytaine/bem/engines.html#BasicMatrixEngine.build_S_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.engines.BasicMatrixEngine.build_S_matrix" title="Link to this definition">¶</a></dt>
 <dd><p>Similar to <code class="code docutils literal notranslate"><span class="pre">build_matrices</span></code>, but returning only <span class="math notranslate nohighlight">\(S\)</span></p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.bem.engines.BasicMatrixEngine.build_fullK_matrix">
-<span class="sig-name descname"><span class="pre">build_fullK_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_surface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavenumber</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/engines.html#BasicMatrixEngine.build_fullK_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.engines.BasicMatrixEngine.build_fullK_matrix" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">build_fullK_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_surface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavenumber</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../../_modules/capytaine/bem/engines.html#BasicMatrixEngine.build_fullK_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.engines.BasicMatrixEngine.build_fullK_matrix" title="Link to this definition">¶</a></dt>
 <dd><p>Similar to <code class="code docutils literal notranslate"><span class="pre">build_matrices</span></code>, but returning only full <span class="math notranslate nohighlight">\(K\)</span>
 (that is the three components of the gradient, not just the normal one)</p>
 </dd></dl>
@@ -104,11 +106,42 @@ or by passing directly a solver function.</p></li>
 </dl>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="capytaine.bem.engines.BasicMatrixEngine.linear_solver">
-<span class="sig-name descname"><span class="pre">linear_solver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/engines.html#BasicMatrixEngine.linear_solver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.engines.BasicMatrixEngine.linear_solver" title="Link to this definition">¶</a></dt>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="capytaine.bem.engines.BasicMatrixEngine.green_function">
+<span class="sig-name descname"><span class="pre">green_function</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><a class="reference internal" href="capytaine.green_functions.abstract_green_function.html#capytaine.green_functions.abstract_green_function.AbstractGreenFunction" title="capytaine.green_functions.abstract_green_function.AbstractGreenFunction"><span class="pre">AbstractGreenFunction</span></a></em><a class="headerlink" href="#capytaine.bem.engines.BasicMatrixEngine.green_function" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="capytaine.bem.engines.BasicMatrixEngine.last_computed_matrices">
+<span class="sig-name descname"><span class="pre">last_computed_matrices</span></span><em class="property"><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.BlockDiagonalMatrix" title="capytaine.tools.block_circulant_matrices.BlockDiagonalMatrix"><span class="pre">BlockDiagonalMatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.BlockCirculantMatrix" title="capytaine.tools.block_circulant_matrices.BlockCirculantMatrix"><span class="pre">BlockCirculantMatrix</span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.BlockDiagonalMatrix" title="capytaine.tools.block_circulant_matrices.BlockDiagonalMatrix"><span class="pre">BlockDiagonalMatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.BlockCirculantMatrix" title="capytaine.tools.block_circulant_matrices.BlockCirculantMatrix"><span class="pre">BlockCirculantMatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.LUDecomposedMatrix" title="capytaine.tools.block_circulant_matrices.LUDecomposedMatrix"><span class="pre">LUDecomposedMatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.LUDecomposedBlockDiagonalMatrix" title="capytaine.tools.block_circulant_matrices.LUDecomposedBlockDiagonalMatrix"><span class="pre">LUDecomposedBlockDiagonalMatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.LUDecomposedBlockCirculantMatrix" title="capytaine.tools.block_circulant_matrices.LUDecomposedBlockCirculantMatrix"><span class="pre">LUDecomposedBlockCirculantMatrix</span></a><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></em><a class="headerlink" href="#capytaine.bem.engines.BasicMatrixEngine.last_computed_matrices" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.bem.engines.BasicMatrixEngine.linear_solver">
+<span class="sig-name descname"><span class="pre">linear_solver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.BlockDiagonalMatrix" title="capytaine.tools.block_circulant_matrices.BlockDiagonalMatrix"><span class="pre">BlockDiagonalMatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.BlockCirculantMatrix" title="capytaine.tools.block_circulant_matrices.BlockCirculantMatrix"><span class="pre">BlockCirculantMatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.LUDecomposedMatrix" title="capytaine.tools.block_circulant_matrices.LUDecomposedMatrix"><span class="pre">LUDecomposedMatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.LUDecomposedBlockDiagonalMatrix" title="capytaine.tools.block_circulant_matrices.LUDecomposedBlockDiagonalMatrix"><span class="pre">LUDecomposedBlockDiagonalMatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.LUDecomposedBlockCirculantMatrix" title="capytaine.tools.block_circulant_matrices.LUDecomposedBlockCirculantMatrix"><span class="pre">LUDecomposedBlockCirculantMatrix</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../../_modules/capytaine/bem/engines.html#BasicMatrixEngine.linear_solver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.engines.BasicMatrixEngine.linear_solver" title="Link to this definition">¶</a></dt>
+<dd><p>Solve a linear system with left-hand side A and right-hand-side b</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>A</strong> (<em>matrix-like</em>) – Expected to be the second output of <cite>build_matrices</cite></p></li>
+<li><p><strong>b</strong> (<em>np.ndarray</em>) – Vector of the correct length</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>x</strong> – Vector such that A&#64;x = b</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="capytaine.bem.engines.Counter">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">capytaine.bem.engines.</span></span><span class="sig-name descname"><span class="pre">Counter</span></span><a class="reference internal" href="../../_modules/capytaine/bem/engines.html#Counter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.engines.Counter" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 </dd></dl>
 
 <dl class="py class">
@@ -196,6 +229,11 @@ and precomputes some of the quantities needed for the preconditioner.</p>
 <dd></dd></dl>
 
 </dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="capytaine.bem.engines.solve_gmres">
+<span class="sig-prename descclassname"><span class="pre">capytaine.bem.engines.</span></span><span class="sig-name descname"><span class="pre">solve_gmres</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/engines.html#solve_gmres"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.engines.solve_gmres" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </section>
 
