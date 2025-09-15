@@ -69,6 +69,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.delhommeau</span><span class="w"> </span><span class="kn">import</span> <span class="n">Delhommeau</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.block_circulant_matrices</span><span class="w"> </span><span class="kn">import</span> <span class="n">BlockCirculantMatrix</span> <span class="k">as</span> <span class="n">NewBlockCirculantMatrix</span><span class="p">,</span> <span class="n">lu_decompose</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.lru_cache</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache_with_strict_maxsize</span>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -138,9 +139,9 @@ window.addEventListener("load", () => mermaid.run());
         <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span> <span class="o">=</span> <span class="n">Delhommeau</span><span class="p">()</span> <span class="k">if</span> <span class="n">green_function</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">green_function</span>
 
         <span class="k">if</span> <span class="n">linear_solver</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">available_linear_solvers</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">linear_solver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">available_linear_solvers</span><span class="p">[</span><span class="n">linear_solver</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_linear_solver</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">available_linear_solvers</span><span class="p">[</span><span class="n">linear_solver</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">linear_solver</span> <span class="o">=</span> <span class="n">linear_solver</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_linear_solver</span> <span class="o">=</span> <span class="n">linear_solver</span>
 
         <span class="k">if</span> <span class="n">matrix_cache_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span> <span class="o">=</span> <span class="n">lru_cache_with_strict_maxsize</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="n">matrix_cache_size</span><span class="p">)(</span><span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">)</span>
@@ -163,6 +164,13 @@ window.addEventListener("load", () => mermaid.run());
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
         <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">())</span>
+
+<div class="viewcode-block" id="BasicMatrixEngine.linear_solver">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine.linear_solver">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">linear_solver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+        <span class="c1"># Symmetry optimizations are temporarily disabled!</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_solver</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">A</span><span class="p">),</span> <span class="n">b</span><span class="p">)</span></div>
+
 
 <div class="viewcode-block" id="BasicMatrixEngine.build_S_matrix">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine.build_S_matrix">[docs]</a>
@@ -198,9 +206,9 @@ window.addEventListener("load", () => mermaid.run());
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        mesh1: Mesh or CollectionOfMeshes</span>
+<span class="sd">        mesh1: MeshLike or list of points</span>
 <span class="sd">            mesh of the receiving body (where the potential is measured)</span>
-<span class="sd">        mesh2: Mesh or CollectionOfMeshes</span>
+<span class="sd">        mesh2: MeshLike</span>
 <span class="sd">            mesh of the source body (over which the source distribution is integrated)</span>
 <span class="sd">        free_surface: float</span>
 <span class="sd">            position of the free surface (default: :math:`z = 0`)</span>
@@ -213,7 +221,7 @@ window.addEventListener("load", () => mermaid.run());
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        tuple of matrix-like</span>
+<span class="sd">        tuple of matrix-like (Numpy arrays or BlockCirculantMatrix)</span>
 <span class="sd">            the matrices :math:`S` and :math:`K`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
@@ -221,14 +229,14 @@ window.addEventListener("load", () => mermaid.run());
                 <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh2</span><span class="p">,</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">)</span>
                 <span class="ow">and</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">plane</span> <span class="o">==</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">plane</span><span class="p">):</span>
 
-            <span class="n">S_a</span><span class="p">,</span> <span class="n">V_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
+            <span class="n">S_a</span><span class="p">,</span> <span class="n">K_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
                 <span class="n">mesh1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span>
                 <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="n">adjoint_double_layer</span><span class="p">)</span>
-            <span class="n">S_b</span><span class="p">,</span> <span class="n">V_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
+            <span class="n">S_b</span><span class="p">,</span> <span class="n">K_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
                 <span class="n">mesh1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span>
                 <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="n">adjoint_double_layer</span><span class="p">)</span>
 
-            <span class="k">return</span> <span class="n">BlockSymmetricToeplitzMatrix</span><span class="p">([[</span><span class="n">S_a</span><span class="p">,</span> <span class="n">S_b</span><span class="p">]]),</span> <span class="n">BlockSymmetricToeplitzMatrix</span><span class="p">([[</span><span class="n">V_a</span><span class="p">,</span> <span class="n">V_b</span><span class="p">]])</span>
+            <span class="k">return</span> <span class="n">NewBlockCirculantMatrix</span><span class="p">([</span><span class="n">S_a</span><span class="p">,</span> <span class="n">S_b</span><span class="p">]),</span> <span class="n">NewBlockCirculantMatrix</span><span class="p">([</span><span class="n">K_a</span><span class="p">,</span> <span class="n">K_b</span><span class="p">])</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>
