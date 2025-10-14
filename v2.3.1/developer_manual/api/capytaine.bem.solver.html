@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>capytaine.bem.solver module &#8212; capytaine 2.3.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/proof.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/copybutton.css?v=76b2166b" />
+    <script src="../../_static/documentation_options.js?v=67b02a41"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../_static/copybutton.js?v=f281be69"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="capytaine.io.xarray module" href="capytaine.io.xarray.html" />
+    <link rel="prev" title="capytaine.bem.problems_and_results module" href="capytaine.bem.problems_and_results.html" />
+    <script defer data-domain="capytaine.github.io" src="https://plausible.io/js/script.js"></script>
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+   
+  <link rel="stylesheet" href="../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+
+  </head><body>
+  
+
+    <div class="document">
+    
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-capytaine.bem.solver">
+<span id="capytaine-bem-solver-module"></span><h1>capytaine.bem.solver module<a class="headerlink" href="#module-capytaine.bem.solver" title="Link to this heading">¶</a></h1>
+<p>Solver for the BEM problem.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">problem</span> <span class="o">=</span> <span class="n">RadiationProblem</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+<span class="n">result</span> <span class="o">=</span> <span class="n">BEMSolver</span><span class="p">(</span><span class="n">green_functions</span><span class="o">=...</span><span class="p">,</span> <span class="n">engine</span><span class="o">=...</span><span class="p">)</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="capytaine.bem.solver.BEMSolver">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">capytaine.bem.solver.</span></span><span class="sig-name descname"><span class="pre">BEMSolver</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">green_function</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">engine</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'indirect'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/solver.html#BEMSolver"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.solver.BEMSolver" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Solver for linear potential flow problems.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>green_function</strong> (<em>AbstractGreenFunction, optional</em>) – Object handling the computation of the Green function.
+(default: <code class="xref py py-class docutils literal notranslate"><span class="pre">Delhommeau</span></code>)</p></li>
+<li><p><strong>engine</strong> (<em>MatrixEngine, optional</em>) – Object handling the building of matrices and the resolution of linear systems with these matrices.
+(default: <a class="reference internal" href="capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine" title="capytaine.bem.engines.BasicMatrixEngine"><code class="xref py py-class docutils literal notranslate"><span class="pre">BasicMatrixEngine</span></code></a>)</p></li>
+<li><p><strong>method</strong> (<em>string, optional</em>) – select boundary integral equation used to solve the problems.
+Accepted values: “indirect” (as in e.g. Nemoh), “direct” (as in e.g. WAMIT)
+Default value: “indirect”</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>timer</strong> (<em>dict</em><em>[</em><em>str</em><em>, </em><a class="reference internal" href="capytaine.tools.timer.html#capytaine.tools.timer.Timer" title="capytaine.tools.timer.Timer"><em>Timer</em></a><em>]</em>) – Storing the time spent on each subtasks of the resolution</p></li>
+<li><p><strong>exportable_settings</strong> (<em>dict</em>) – Settings of the solver that can be saved to reinit the same solver later.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.bem.solver.BEMSolver.compute_free_surface_elevation">
+<span class="sig-name descname"><span class="pre">compute_free_surface_elevation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/solver.html#BEMSolver.compute_free_surface_elevation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.solver.BEMSolver.compute_free_surface_elevation" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the value of the free surface elevation at given points for a previously solved potential flow problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> (<em>array of shape (2,) or (N, 2), or 2-ple of arrays returned by meshgrid, or MeshLike object</em>) – Coordinates of the point(s) at which the free surface elevation should be computed</p></li>
+<li><p><strong>result</strong> (<em>LinearPotentialFlowResult</em>) – The return of the BEM solver</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The value of the free surface elevation at the points</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>complex-valued array of shape (1,) or (N,) or (nx, ny, nz) or (mesh.nb_faces,) depending of the kind of input</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – if the <code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowResult</span></code> object given as input does not contain the source distribution.:</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.bem.solver.BEMSolver.compute_potential">
+<span class="sig-name descname"><span class="pre">compute_potential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/solver.html#BEMSolver.compute_potential"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.solver.BEMSolver.compute_potential" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the value of the potential at given points for a previously solved potential flow problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> (<em>array of shape (3,) or (N, 3), or 3-ple of arrays returned by meshgrid, or MeshLike object</em>) – Coordinates of the point(s) at which the potential should be computed</p></li>
+<li><p><strong>result</strong> (<em>LinearPotentialFlowResult</em>) – The return of the BEM solver</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The value of the potential at the points</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>complex-valued array of shape (1,) or (N,) or (nx, ny, nz) or (mesh.nb_faces,) depending of the kind of input</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – if the <code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowResult</span></code> object given as input does not contain the source distribution.:</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.bem.solver.BEMSolver.compute_pressure">
+<span class="sig-name descname"><span class="pre">compute_pressure</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/solver.html#BEMSolver.compute_pressure"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.solver.BEMSolver.compute_pressure" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the value of the pressure at given points for a previously solved potential flow problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> (<em>array of shape (3,) or (N, 3), or 3-ple of arrays returned by meshgrid, or MeshLike object</em>) – Coordinates of the point(s) at which the pressure should be computed</p></li>
+<li><p><strong>result</strong> (<em>LinearPotentialFlowResult</em>) – The return of the BEM solver</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The value of the pressure at the points</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>complex-valued array of shape (1,) or (N,) or (nx, ny, nz) or (mesh.nb_faces,) depending of the kind of input</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – if the <code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowResult</span></code> object given as input does not contain the source distribution.:</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.bem.solver.BEMSolver.compute_velocity">
+<span class="sig-name descname"><span class="pre">compute_velocity</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">result</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/solver.html#BEMSolver.compute_velocity"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.solver.BEMSolver.compute_velocity" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the value of the velocity vector at given points for a previously solved potential flow problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>points</strong> (<em>array of shape (3,) or (N, 3), or 3-ple of arrays returned by meshgrid, or MeshLike object</em>) – Coordinates of the point(s) at which the velocity should be computed</p></li>
+<li><p><strong>result</strong> (<em>LinearPotentialFlowResult</em>) – The return of the BEM solver</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The value of the velocity at the points</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>complex-valued array of shape (3,) or (N,, 3) or (nx, ny, nz, 3) or (mesh.nb_faces, 3) depending of the kind of input</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – if the <code class="code docutils literal notranslate"><span class="pre">LinearPotentialFlowResult</span></code> object given as input does not contain the source distribution.:</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.bem.solver.BEMSolver.fill_dataset">
+<span class="sig-name descname"><span class="pre">fill_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bodies</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_check_wavelength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_bar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/solver.html#BEMSolver.fill_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.solver.BEMSolver.fill_dataset" title="Link to this definition">¶</a></dt>
+<dd><p>Solve a set of problems defined by the coordinates of an xarray dataset.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>xarray Dataset</em>) – dataset containing the problems parameters: frequency, radiating_dof, water_depth, …</p></li>
+<li><p><strong>bodies</strong> (<em>FloatingBody or list of FloatingBody</em>) – The body or bodies involved in the problems
+They should all have different names.</p></li>
+<li><p><strong>method</strong> (<em>string, optional</em>) – select boundary integral equation used to solve the problems.
+It is recommended to set the method more globally when initializing the solver.
+If provided here, the value in argument of <cite>fill_dataset</cite> overrides the global one.</p></li>
+<li><p><strong>n_jobs</strong> (<em>int, optional (default: 1)</em>) – the number of jobs to run in parallel using the optional dependency <cite>joblib</cite>
+By defaults: do not use joblib and solve sequentially.</p></li>
+<li><p><strong>progress_bar</strong> (<em>bool, optional</em>) – Display a progress bar while solving.
+If no value is provided to this method directly,
+check whether the environment variable <cite>CAPYTAINE_PROGRESS_BAR</cite> is defined
+and otherwise default to True.</p></li>
+<li><p><strong>_check_wavelength</strong> (<em>bool, optional (default: True)</em>) – If True, the frequencies are compared to the mesh resolution and
+the estimated first irregular frequency to warn the user.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>xarray Dataset</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.bem.solver.BEMSolver.from_exported_settings">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_exported_settings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/solver.html#BEMSolver.from_exported_settings"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.solver.BEMSolver.from_exported_settings" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.bem.solver.BEMSolver.get_free_surface_elevation">
+<span class="sig-name descname"><span class="pre">get_free_surface_elevation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_surface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_details</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/solver.html#BEMSolver.get_free_surface_elevation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.solver.BEMSolver.get_free_surface_elevation" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the elevation of the free surface on a mesh for a previously solved problem.</p>
+<p>The newer method <code class="code docutils literal notranslate"><span class="pre">compute_free_surface_elevation</span></code> should be preferred in the future.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> (<em>LinearPotentialFlowResult</em>) – the return of the solver</p></li>
+<li><p><strong>free_surface</strong> (<em>FreeSurface</em>) – a meshed free surface</p></li>
+<li><p><strong>keep_details</strong> (<em>bool, optional</em>) – if True, keep the free surface elevation in the LinearPotentialFlowResult (default:False)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the free surface elevation on each faces of the meshed free surface</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array of shape (free_surface.nb_faces,)</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – if the <code class="code docutils literal notranslate"><span class="pre">Result</span></code> object given as input does not contain the source distribution.:</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.bem.solver.BEMSolver.get_potential_on_mesh">
+<span class="sig-name descname"><span class="pre">get_potential_on_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">result</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chunk_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/solver.html#BEMSolver.get_potential_on_mesh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.solver.BEMSolver.get_potential_on_mesh" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the potential on a mesh for the potential field of a previously solved problem.
+Since the interaction matrix does not need to be computed in full to compute the matrix-vector product,
+only a few lines are evaluated at a time to reduce the memory cost of the operation.</p>
+<p>The newer method <code class="code docutils literal notranslate"><span class="pre">compute_potential</span></code> should be preferred in the future.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>result</strong> (<em>LinearPotentialFlowResult</em>) – the return of the BEM solver</p></li>
+<li><p><strong>mesh</strong> (<em>MeshLike</em>) – a mesh</p></li>
+<li><p><strong>chunk_size</strong> (<em>int, optional</em>) – Number of lines to compute in the matrix.
+(legacy, should be passed as an engine setting instead).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>potential on the faces of the mesh</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array of shape (mesh.nb_faces,)</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Exception</strong> – if the <code class="code docutils literal notranslate"><span class="pre">Result</span></code> object given as input does not contain the source distribution.:</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.bem.solver.BEMSolver.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problem</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">keep_details</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_check_wavelength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/solver.html#BEMSolver.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.solver.BEMSolver.solve" title="Link to this definition">¶</a></dt>
+<dd><p>Solve the linear potential flow problem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problem</strong> (<em>LinearPotentialFlowProblem</em>) – the problem to be solved</p></li>
+<li><p><strong>method</strong> (<em>string, optional</em>) – select boundary integral equation used to solve the problem.
+It is recommended to set the method more globally when initializing the solver.
+If provided here, the value in argument of <cite>solve</cite> overrides the global one.</p></li>
+<li><p><strong>keep_details</strong> (<em>bool, optional</em>) – if True, store the sources and the potential on the floating body in the output object
+(default: True)</p></li>
+<li><p><strong>_check_wavelength</strong> (<em>bool, optional (default: True)</em>) – If True, the frequencies are compared to the mesh resolution and
+the estimated first irregular frequency to warn the user.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>an object storing the problem data and its results</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.LinearPotentialFlowResult" title="capytaine.bem.problems_and_results.LinearPotentialFlowResult">LinearPotentialFlowResult</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.bem.solver.BEMSolver.solve_all">
+<span class="sig-name descname"><span class="pre">solve_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">problems</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_jobs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress_bar</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">_check_wavelength</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/solver.html#BEMSolver.solve_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.solver.BEMSolver.solve_all" title="Link to this definition">¶</a></dt>
+<dd><p>Solve several problems.
+Optional keyword arguments are passed to <cite>BEMSolver.solve</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>problems</strong> (<em>list of LinearPotentialFlowProblem</em>) – several problems to be solved</p></li>
+<li><p><strong>method</strong> (<em>string, optional</em>) – select boundary integral equation used to solve the problems.
+It is recommended to set the method more globally when initializing the solver.
+If provided here, the value in argument of <cite>solve_all</cite> overrides the global one.</p></li>
+<li><p><strong>n_jobs</strong> (<em>int, optional (default: 1)</em>) – the number of jobs to run in parallel using the optional dependency <cite>joblib</cite>
+By defaults: do not use joblib and solve sequentially.</p></li>
+<li><p><strong>progress_bar</strong> (<em>bool, optional</em>) – Display a progress bar while solving.
+If no value is provided to this method directly,
+check whether the environment variable <cite>CAPYTAINE_PROGRESS_BAR</cite> is defined
+and otherwise default to True.</p></li>
+<li><p><strong>_check_wavelength</strong> (<em>bool, optional (default: True)</em>) – If True, the frequencies are compared to the mesh resolution and
+the estimated first irregular frequency to warn the user.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the solved problems</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list of <a class="reference internal" href="capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.LinearPotentialFlowResult" title="capytaine.bem.problems_and_results.LinearPotentialFlowResult">LinearPotentialFlowResult</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.bem.solver.BEMSolver.timer_summary">
+<span class="sig-name descname"><span class="pre">timer_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bem/solver.html#BEMSolver.timer_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bem.solver.BEMSolver.timer_summary" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">capytaine</a></h1>
+
+
+
+<p class="blurb">a Python-based linear potential flow BEM solver</p>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/index.html">Example scripts</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Developer manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../installation.html">Installation for developers</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../overview.html">Overview of the modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../contributing.html">Contributing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testing.html">Testing Capytaine</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../making_a_release.html">Making a release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modules.html">API documentation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Developer manual</a><ul>
+  <li><a href="../overview.html">Overview of the modules</a><ul>
+  <li><a href="capytaine.bem.html">capytaine.bem package</a><ul>
+      <li>Previous: <a href="capytaine.bem.problems_and_results.html" title="previous chapter">capytaine.bem.problems_and_results module</a></li>
+      <li>Next: <a href="capytaine.io.xarray.html" title="next chapter">capytaine.io.xarray module</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/developer_manual/api/capytaine.bem.solver.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>capytaine.green_functions.delhommeau &#8212; capytaine 2.3.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/proof.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css?v=76b2166b" />
+    <script src="../../../_static/documentation_options.js?v=67b02a41"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../../../_static/copybutton.js?v=f281be69"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs"></script>
+    <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";import elkLayouts from "https://cdn.jsdelivr.net/npm/@mermaid-js/layout-elk@0.1.4/dist/mermaid-layout-elk.esm.min.mjs";mermaid.registerLayoutLoaders(elkLayouts);mermaid.initialize({startOnLoad:false});</script>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script type="module">
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.2.0/dist/mermaid.esm.min.mjs";
+window.addEventListener("load", () => mermaid.run());
+</script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <script defer data-domain="capytaine.github.io" src="https://plausible.io/js/script.js"></script>
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+
+  </head><body>
+  
+
+    <div class="document">
+    
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for capytaine.green_functions.delhommeau</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Variants of Delhommeau&#39;s method for the computation of the Green function.&quot;&quot;&quot;</span>
+<span class="c1"># Copyright (C) 2017-2024 Matthieu Ancellin</span>
+<span class="c1"># See LICENSE file at &lt;https://github.com/capytaine/capytaine&gt;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">importlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">import_module</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.prony_decomposition</span><span class="w"> </span><span class="kn">import</span> <span class="n">find_best_exponential_decomposition</span><span class="p">,</span> <span class="n">PronyDecompositionFailure</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.cache_on_disk</span><span class="w"> </span><span class="kn">import</span> <span class="n">cache_directory</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.abstract_green_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGreenFunction</span><span class="p">,</span> <span class="n">GreenFunctionEvaluationError</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">_default_parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+    <span class="n">tabulation_nr</span><span class="o">=</span><span class="mi">676</span><span class="p">,</span>
+    <span class="n">tabulation_rmax</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span>
+    <span class="n">tabulation_nz</span><span class="o">=</span><span class="mi">372</span><span class="p">,</span>
+    <span class="n">tabulation_zmin</span><span class="o">=-</span><span class="mf">251.0</span><span class="p">,</span>
+    <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="mi">1001</span><span class="p">,</span>
+    <span class="n">tabulation_grid_shape</span><span class="o">=</span><span class="s2">&quot;scaled_nemoh3&quot;</span><span class="p">,</span>
+    <span class="n">finite_depth_method</span><span class="o">=</span><span class="s2">&quot;newer&quot;</span><span class="p">,</span>
+    <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="s2">&quot;python&quot;</span><span class="p">,</span>
+    <span class="n">floating_point_precision</span><span class="o">=</span><span class="s2">&quot;float64&quot;</span><span class="p">,</span>
+    <span class="n">gf_singularities</span><span class="o">=</span><span class="s2">&quot;low_freq&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<div class="viewcode-block" id="Delhommeau">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">Delhommeau</span><span class="p">(</span><span class="n">AbstractGreenFunction</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;The Green function as implemented in Aquadyn and Nemoh.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tabulation_nr: int, optional</span>
+<span class="sd">        Number of tabulation points for horizontal coordinate.</span>
+<span class="sd">        If 0 is given, no tabulation is used at all.</span>
+<span class="sd">        Default: 676</span>
+<span class="sd">    tabulation_rmax: float, optional</span>
+<span class="sd">        Maximum value of r range for the tabulation. (Minimum is zero.)</span>
+<span class="sd">        Only used with the :code:`&quot;scaled_nemoh3&quot;` method.</span>
+<span class="sd">        Default: 100.0</span>
+<span class="sd">    tabulation_nz: int, optional</span>
+<span class="sd">        Number of tabulation points for vertical coordinate.</span>
+<span class="sd">        If 0 is given, no tabulation is used at all.</span>
+<span class="sd">        Default: 372</span>
+<span class="sd">    tabulation_zmin: float, optional</span>
+<span class="sd">        Minimum value of z range for the tabulation. (Maximum is zero.)</span>
+<span class="sd">        Only used with the :code:`&quot;scaled_nemoh3&quot;` method.</span>
+<span class="sd">        Default: -251.0</span>
+<span class="sd">    tabulation_nb_integration_points: int, optional</span>
+<span class="sd">        Number of points for the numerical integration w.r.t. :math:`theta` of</span>
+<span class="sd">        Delhommeau&#39;s integrals</span>
+<span class="sd">        Default: 1000</span>
+<span class="sd">    tabulation_grid_shape: string, optional</span>
+<span class="sd">        Either :code:`&quot;legacy&quot;` or :code:`&quot;scaled_nemoh3&quot;`, which are the two</span>
+<span class="sd">        methods currently implemented.</span>
+<span class="sd">        Default: :code:`&quot;scaled_nemoh3&quot;`</span>
+<span class="sd">    tabulation_cache_dir: str or None, optional</span>
+<span class="sd">        Directory in which to save the tabulation file(s).</span>
+<span class="sd">        If None, the tabulation is not saved on disk.</span>
+<span class="sd">        Default: calls capytaine.tools.cache_on_disk.cache_directory(), which</span>
+<span class="sd">        returns the value of the environment variable CAPYTAINE_CACHE_DIR if</span>
+<span class="sd">        set, or else the default cache directory on your system.</span>
+<span class="sd">    finite_depth_method: string, optional</span>
+<span class="sd">        The method used to compute the finite depth Green function.</span>
+<span class="sd">    finite_depth_prony_decomposition_method: string, optional</span>
+<span class="sd">        The implementation of the Prony decomposition used to compute the</span>
+<span class="sd">        finite water_depth Green function. Accepted values: :code:`&#39;fortran&#39;`</span>
+<span class="sd">        for Nemoh&#39;s implementation (by default), :code:`&#39;python&#39;` for an</span>
+<span class="sd">        experimental Python implementation.</span>
+<span class="sd">        See :func:`find_best_exponential_decomposition`.</span>
+<span class="sd">    floating_point_precision: string, optional</span>
+<span class="sd">        Either :code:`&#39;float32&#39;` for single precision computations or</span>
+<span class="sd">        :code:`&#39;float64&#39;` for double precision computations.</span>
+<span class="sd">        Default: :code:`&#39;float64&#39;`.</span>
+<span class="sd">    gf_singularities: string, optional</span>
+<span class="sd">        Chose of the variant among the ways singularities can be extracted from</span>
+<span class="sd">        the Green function. Currently only affects the infinite depth Green</span>
+<span class="sd">        function.</span>
+<span class="sd">        Default: &quot;low_freq&quot;.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fortran_core:</span>
+<span class="sd">        Compiled Fortran module with functions used to compute the Green</span>
+<span class="sd">        function.</span>
+<span class="sd">    tabulation_grid_shape_index: int</span>
+<span class="sd">    gf_singularities_index: int</span>
+<span class="sd">    finite_depth_method_index: int</span>
+<span class="sd">        Integers passed to Fortran code to describe which method is used.</span>
+<span class="sd">    tabulated_r_range: numpy.array of shape (tabulation_nr,) and type floating_point_precision</span>
+<span class="sd">    tabulated_z_range: numpy.array of shape (tabulation_nz,) and type floating_point_precision</span>
+<span class="sd">        Coordinates of the tabulation points.</span>
+<span class="sd">    tabulated_integrals: numpy.array of shape (tabulation_nr, tabulation_nz, nb_tabulated_values) and type floating_point_precision</span>
+<span class="sd">        Tabulated Delhommeau integrals.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">dispersion_relation_roots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># dummy array</span>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+                 <span class="n">tabulation_nr</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_nr&quot;</span><span class="p">],</span>
+                 <span class="n">tabulation_rmax</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_rmax&quot;</span><span class="p">],</span>
+                 <span class="n">tabulation_nz</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_nz&quot;</span><span class="p">],</span>
+                 <span class="n">tabulation_zmin</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_zmin&quot;</span><span class="p">],</span>
+                 <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_nb_integration_points&quot;</span><span class="p">],</span>
+                 <span class="n">tabulation_grid_shape</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;tabulation_grid_shape&quot;</span><span class="p">],</span>
+                 <span class="n">tabulation_cache_dir</span><span class="o">=</span><span class="n">cache_directory</span><span class="p">(),</span>
+                 <span class="n">finite_depth_method</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;finite_depth_method&quot;</span><span class="p">],</span>
+                 <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;finite_depth_prony_decomposition_method&quot;</span><span class="p">],</span>
+                 <span class="n">floating_point_precision</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;floating_point_precision&quot;</span><span class="p">],</span>
+                 <span class="n">gf_singularities</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">&quot;gf_singularities&quot;</span><span class="p">],</span>
+                 <span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span> <span class="o">=</span> <span class="n">import_module</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;capytaine.green_functions.libs.Delhommeau_</span><span class="si">{</span><span class="n">floating_point_precision</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape</span> <span class="o">=</span> <span class="n">tabulation_grid_shape</span>
+        <span class="n">fortran_enum</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;legacy&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">legacy_grid</span><span class="p">,</span>
+                <span class="s1">&#39;scaled_nemoh3&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">scaled_nemoh3_grid</span><span class="p">,</span>
+                              <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape_index</span> <span class="o">=</span> <span class="n">fortran_enum</span><span class="p">[</span><span class="n">tabulation_grid_shape</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">=</span> <span class="n">gf_singularities</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities_fortran_enum</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;high_freq&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">high_freq</span><span class="p">,</span>
+                <span class="s1">&#39;low_freq&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">low_freq</span><span class="p">,</span>
+                <span class="s1">&#39;low_freq_with_rankine_part&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">low_freq_with_rankine_part</span><span class="p">,</span>
+                <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_method</span> <span class="o">=</span> <span class="n">finite_depth_method</span>
+        <span class="n">fortran_enum</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s1">&#39;legacy&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">legacy_finite_depth</span><span class="p">,</span>
+                <span class="s1">&#39;newer&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">constants</span><span class="o">.</span><span class="n">newer_finite_depth</span><span class="p">,</span>
+                              <span class="p">}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_method_index</span> <span class="o">=</span> <span class="n">fortran_enum</span><span class="p">[</span><span class="n">finite_depth_method</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">floating_point_precision</span> <span class="o">=</span> <span class="n">floating_point_precision</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_nb_integration_points</span> <span class="o">=</span> <span class="n">tabulation_nb_integration_points</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_cache_dir</span> <span class="o">=</span> <span class="n">tabulation_cache_dir</span>
+        <span class="k">if</span> <span class="n">tabulation_cache_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_tabulation</span><span class="p">(</span><span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span>
+                                    <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
+                                    <span class="n">tabulation_nb_integration_points</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_create_or_load_tabulation</span><span class="p">(</span><span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span>
+                                            <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
+                                            <span class="n">tabulation_nb_integration_points</span><span class="p">,</span>
+                                            <span class="n">tabulation_cache_dir</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_prony_decomposition_method</span> <span class="o">=</span> <span class="n">finite_depth_prony_decomposition_method</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;green_function&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="s1">&#39;tabulation_nr&#39;</span><span class="p">:</span> <span class="n">tabulation_nr</span><span class="p">,</span>
+            <span class="s1">&#39;tabulation_rmax&#39;</span><span class="p">:</span> <span class="n">tabulation_rmax</span><span class="p">,</span>
+            <span class="s1">&#39;tabulation_nz&#39;</span><span class="p">:</span> <span class="n">tabulation_nz</span><span class="p">,</span>
+            <span class="s1">&#39;tabulation_zmin&#39;</span><span class="p">:</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
+            <span class="s1">&#39;tabulation_nb_integration_points&#39;</span><span class="p">:</span> <span class="n">tabulation_nb_integration_points</span><span class="p">,</span>
+            <span class="s1">&#39;tabulation_grid_shape&#39;</span><span class="p">:</span> <span class="n">tabulation_grid_shape</span><span class="p">,</span>
+            <span class="s1">&#39;finite_depth_method&#39;</span><span class="p">:</span> <span class="n">finite_depth_method</span><span class="p">,</span>
+            <span class="s1">&#39;finite_depth_prony_decomposition_method&#39;</span><span class="p">:</span> <span class="n">finite_depth_prony_decomposition_method</span><span class="p">,</span>
+            <span class="s1">&#39;floating_point_precision&#39;</span><span class="p">:</span> <span class="n">floating_point_precision</span><span class="p">,</span>
+            <span class="s1">&#39;gf_singularities&#39;</span><span class="p">:</span> <span class="n">gf_singularities</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Print only the non-default values.</span>
+        <span class="n">to_be_printed</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_default_parameters</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">!=</span> <span class="n">_default_parameters</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
+                <span class="n">to_be_printed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">to_be_printed</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Same as __str__ except all values are printed even when they are the</span>
+        <span class="c1"># default value.</span>
+        <span class="n">to_be_printed</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_default_parameters</span><span class="p">:</span>
+                <span class="n">to_be_printed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">to_be_printed</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">())</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_or_load_tabulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span>
+                                   <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
+                                   <span class="n">tabulation_nb_integration_points</span><span class="p">,</span>
+                                   <span class="n">tabulation_cache_dir</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;This method either:</span>
+<span class="sd">            - loads an existing tabulation saved on disk</span>
+<span class="sd">            - generates a new tabulation with the data provided as argument and save it on disk.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Normalize inputs</span>
+        <span class="n">tabulation_rmax</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tabulation_rmax</span><span class="p">)</span>
+        <span class="n">tabulation_zmin</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">tabulation_zmin</span><span class="p">)</span>
+
+        <span class="n">filename</span> <span class="o">=</span> <span class="s2">&quot;tabulation_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">_</span><span class="si">{}</span><span class="s2">.npz&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">floating_point_precision</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape</span><span class="p">,</span>
+            <span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span> <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
+            <span class="n">tabulation_nb_integration_points</span>
+        <span class="p">)</span>
+        <span class="n">filepath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tabulation_cache_dir</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">filepath</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Loading tabulation from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+                <span class="n">loaded_arrays</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">filepath</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span> <span class="o">=</span> <span class="n">loaded_arrays</span><span class="p">[</span><span class="s2">&quot;r_range&quot;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span> <span class="o">=</span> <span class="n">loaded_arrays</span><span class="p">[</span><span class="s2">&quot;z_range&quot;</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span> <span class="o">=</span> <span class="n">loaded_arrays</span><span class="p">[</span><span class="s2">&quot;values&quot;</span><span class="p">]</span>
+                <span class="k">return</span> <span class="n">filename</span>
+            <span class="k">except</span> <span class="p">(</span><span class="ne">EOFError</span><span class="p">,</span> <span class="ne">FileNotFoundError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">,</span> <span class="ne">ValueError</span><span class="p">):</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Error loading tabulation from </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_create_tabulation</span><span class="p">(</span><span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span>
+                                <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
+                                <span class="n">tabulation_nb_integration_points</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Saving tabulation in </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">filepath</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">savez_compressed</span><span class="p">(</span>
+            <span class="n">filepath</span><span class="p">,</span> <span class="n">r_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span><span class="p">,</span> <span class="n">z_range</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span><span class="p">,</span>
+            <span class="n">values</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">filename</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_create_tabulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span>
+                                   <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
+                                   <span class="n">tabulation_nb_integration_points</span><span class="p">):</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Precomputing tabulation, it may take a few seconds.&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">default_r_spacing</span><span class="p">(</span>
+                <span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape_index</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">default_z_spacing</span><span class="p">(</span>
+                <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape_index</span>
+                <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">delhommeau_integrals</span><span class="o">.</span><span class="n">construct_tabulation</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span><span class="p">,</span> <span class="n">tabulation_nb_integration_points</span><span class="p">,</span>
+                <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">all_tabulation_parameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;An alias meant to pass to the Fortran functions all the parameters controlling the tabulation in a single item.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tabulation_nb_integration_points</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulation_grid_shape_index</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_r_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_z_range</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tabulated_integrals</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Delhommeau.find_best_exponential_decomposition">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau.find_best_exponential_decomposition">[docs]</a>
+    <span class="nd">@lru_cache</span><span class="p">(</span><span class="n">maxsize</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">find_best_exponential_decomposition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dimensionless_wavenumber</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the decomposition of a part of the finite water_depth Green function as a sum of exponential functions.</span>
+
+<span class="sd">        Two implementations are available: the legacy Fortran implementation from Nemoh and a newer one written in Python.</span>
+<span class="sd">        For some still unexplained reasons, the two implementations do not always give the exact same result.</span>
+<span class="sd">        Until the problem is better understood, the Fortran implementation is the default one, to ensure consistency with Nemoh.</span>
+<span class="sd">        The Fortran version is also significantly faster...</span>
+
+<span class="sd">        Results are cached.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dimensionless_wavenumber: float</span>
+<span class="sd">            dimensionless wavenumber: :math:`kh`</span>
+<span class="sd">        method: str, optional</span>
+<span class="sd">            &quot;python&quot; or &quot;fortran&quot;. If not provided, uses self.finite_depth_prony_decomposition_method.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Tuple[np.ndarray, np.ndarray]</span>
+<span class="sd">            the amplitude and growth rates of the exponentials</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kh</span> <span class="o">=</span> <span class="n">dimensionless_wavenumber</span>
+
+        <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">method</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_prony_decomposition_method</span>
+
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\t</span><span class="s2">Compute Prony decomposition in finite water_depth Green function &quot;</span>
+                  <span class="s2">&quot;for dimensionless_wavenumber=</span><span class="si">%.2e</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">dimensionless_wavenumber</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;python&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">kh</span> <span class="o">&lt;=</span> <span class="mf">0.1</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2"> cannot evaluate finite depth Green function &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;for kh&lt;0.1 (kh=</span><span class="si">{</span><span class="n">kh</span><span class="si">}</span><span class="s2">)&quot;</span>
+                    <span class="p">)</span>
+            <span class="k">elif</span> <span class="n">kh</span> <span class="o">&lt;</span> <span class="mf">1e5</span><span class="p">:</span>
+                <span class="c1"># The function that will be approximated.</span>
+                <span class="n">sing_coef</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">kh</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">kh</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">kh</span><span class="p">)</span><span class="o">/</span><span class="n">kh</span><span class="p">)</span>
+                <span class="k">def</span><span class="w"> </span><span class="nf">ref_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">                    </span><span class="sd">&quot;&quot;&quot;The function that should be approximated by a sum of exponentials.&quot;&quot;&quot;</span>
+                    <span class="k">return</span> <span class="p">((</span><span class="n">x</span> <span class="o">+</span> <span class="n">kh</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">kh</span><span class="p">))</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">x</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="n">x</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sinh</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="n">kh</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">kh</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">cosh</span><span class="p">(</span><span class="n">x</span><span class="p">))</span> <span class="o">-</span> <span class="n">sing_coef</span><span class="o">/</span><span class="p">(</span><span class="n">x</span> <span class="o">-</span> <span class="n">kh</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Asymptotic approximation of the function for large kh, including infinite frequency</span>
+                <span class="k">def</span><span class="w"> </span><span class="nf">ref_function</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+                    <span class="k">return</span> <span class="o">-</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">x</span><span class="p">))</span> <span class="o">+</span> <span class="mi">2</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">a</span><span class="p">,</span> <span class="n">lamda</span> <span class="o">=</span> <span class="n">find_best_exponential_decomposition</span><span class="p">(</span><span class="n">ref_function</span><span class="p">,</span> <span class="n">x_min</span><span class="o">=-</span><span class="mf">0.1</span><span class="p">,</span> <span class="n">x_max</span><span class="o">=</span><span class="mf">20.0</span><span class="p">,</span> <span class="n">n_exp_range</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">31</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">lamda</span><span class="p">,</span> <span class="n">a</span><span class="p">])</span>
+            <span class="k">except</span> <span class="n">PronyDecompositionFailure</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">GreenFunctionEvaluationError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2"> cannot evaluate finite depth Green function &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;for kh=</span><span class="si">{</span><span class="n">dimensionless_wavenumber</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span> <span class="kn">from</span><span class="w"> </span><span class="nn">e</span>
+
+        <span class="k">elif</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="o">==</span> <span class="s1">&#39;fortran&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">kh</span> <span class="o">&gt;</span> <span class="mf">1e5</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Fortran implementation of the Prony decomposition does not support infinite frequency&quot;</span><span class="p">)</span>
+            <span class="n">omega2_h_over_g</span> <span class="o">=</span> <span class="n">kh</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">kh</span><span class="p">)</span>
+            <span class="n">nexp</span><span class="p">,</span> <span class="n">pr_d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">old_prony_decomposition</span><span class="o">.</span><span class="n">lisc</span><span class="p">(</span><span class="n">omega2_h_over_g</span><span class="p">,</span> <span class="n">kh</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">pr_d</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">,</span> <span class="p">:</span><span class="n">nexp</span><span class="p">]</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unrecognized name for the Prony decomposition method: </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="si">}</span><span class="s2">. Expected &#39;python&#39; or &#39;fortran&#39;.&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Delhommeau.evaluate_rankine_only">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau.evaluate_rankine_only">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_rankine_only</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                              <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span>
+                              <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span>
+                              <span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Construct the matrices between mesh1 (that can also be a list of points)</span>
+<span class="sd">        and mesh2 for a Rankine kernel.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mesh1: Mesh or CollectionOfMeshes or list of points</span>
+<span class="sd">            mesh of the receiving body (where the potential is measured)</span>
+<span class="sd">            if only S is wanted or early_dot_product is False, then only a list</span>
+<span class="sd">            of points as an array of shape (n, 3) can be passed.</span>
+<span class="sd">        mesh2: Mesh or CollectionOfMeshes</span>
+<span class="sd">            mesh of the source body (over which the source distribution is integrated)</span>
+<span class="sd">        adjoint_double_layer: bool, optional</span>
+<span class="sd">            compute double layer for direct method (F) or adjoint double layer</span>
+<span class="sd">            for indirect method (T) matrices (default: True)</span>
+<span class="sd">        early_dot_product: boolean, optional</span>
+<span class="sd">            if False, return K as a (n, m, 3) array storing ∫∇G</span>
+<span class="sd">            if True, return K as a (n, m) array storing ∫∇G·n</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of real-valued numpy arrays</span>
+<span class="sd">            the matrices :math:`S` and :math:`K`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">collocation_points</span><span class="p">,</span> <span class="n">early_dot_product_normals</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_colocation_points_and_normals</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">)</span>
+
+        <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_matrices</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">),</span> <span class="n">early_dot_product</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">add_rankine_term_only</span><span class="p">(</span>
+                <span class="n">collocation_points</span><span class="p">,</span>  <span class="n">early_dot_product_normals</span><span class="p">,</span>
+                <span class="n">mesh2</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span>      <span class="n">mesh2</span><span class="o">.</span><span class="n">faces</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+                <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">,</span>
+                <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">,</span>   <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="p">,</span>
+                <span class="o">*</span><span class="n">mesh2</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">,</span>
+                <span class="n">adjoint_double_layer</span><span class="p">,</span>
+                <span class="n">S</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">add_diagonal_term</span><span class="p">(</span>
+                    <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">early_dot_product_normals</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+        <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">S</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">K</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">S</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">K</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">GreenFunctionEvaluationError</span><span class="p">(</span>
+                    <span class="s2">&quot;Green function returned a NaN in the interaction matrix.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="s2">&quot;It could be due to overlapping panels.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">early_dot_product</span><span class="p">:</span>
+            <span class="n">K</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">S</span><span class="p">,</span> <span class="n">K</span></div>
+
+
+
+<div class="viewcode-block" id="Delhommeau.evaluate">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau.evaluate">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
+                 <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span>
+                 <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+                 <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span>
+                 <span class="p">):</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;The main method of the class, called by the engine to assemble the influence matrices.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        mesh1: MeshLike or list of points</span>
+<span class="sd">            mesh of the receiving body (where the potential is measured)</span>
+<span class="sd">            if only S is wanted or early_dot_product is False, then only a list of points as an array of shape (n, 3) can be passed.</span>
+<span class="sd">        mesh2: MeshLike</span>
+<span class="sd">            mesh of the source body (over which the source distribution is integrated)</span>
+<span class="sd">        free_surface: float, optional</span>
+<span class="sd">            position of the free surface (default: :math:`z = 0`)</span>
+<span class="sd">        water_depth: float, optional</span>
+<span class="sd">            constant depth of water (default: :math:`+\infty`)</span>
+<span class="sd">        wavenumber: float, optional</span>
+<span class="sd">            wavenumber (default: 1.0)</span>
+<span class="sd">        adjoint_double_layer: bool, optional</span>
+<span class="sd">            compute double layer for direct method (F) or adjoint double layer for indirect method (T) matrices (default: True)</span>
+<span class="sd">        early_dot_product: boolean, optional</span>
+<span class="sd">            if False, return K as a (n, m, 3) array storing ∫∇G</span>
+<span class="sd">            if True, return K as a (n, m) array storing ∫∇G·n</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tuple of numpy arrays</span>
+<span class="sd">            the matrices :math:`S` and :math:`K`</span>
+<span class="sd">            the dtype of the matrix can be real or complex and depends on self.floating_point_precision</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>  <span class="c1"># No free surface, only a single Rankine source term</span>
+            <span class="k">if</span> <span class="n">water_depth</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;When setting free_surface=inf, &quot;</span>
+                                 <span class="s2">&quot;the water depth should also be infinite &quot;</span>
+                                 <span class="sa">f</span><span class="s2">&quot;(got water_depth=</span><span class="si">{</span><span class="n">water_depth</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_rankine_only</span><span class="p">(</span>
+                <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span>
+                <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="n">adjoint_double_layer</span><span class="p">,</span>
+                <span class="n">early_dot_product</span><span class="o">=</span><span class="n">early_dot_product</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Main case:</span>
+        <span class="n">collocation_points</span><span class="p">,</span> <span class="n">early_dot_product_normals</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">_get_colocation_points_and_normals</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">)</span>
+
+        <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_init_matrices</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">),</span> <span class="n">early_dot_product</span>
+        <span class="p">)</span>
+
+        <span class="n">wavenumber</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">wavenumber</span><span class="p">)</span>
+
+        <span class="c1"># Overrides gf_singularities setting in some specific cases, else use the class one.</span>
+        <span class="k">if</span> <span class="n">water_depth</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_method</span> <span class="o">==</span> <span class="s1">&#39;legacy&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">==</span> <span class="s1">&#39;low_freq&#39;</span><span class="p">:</span>
+            <span class="n">gf_singularities</span> <span class="o">=</span> <span class="s2">&quot;low_freq&quot;</span>  <span class="c1"># Reproduce legacy method behavior</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Overriding gf_singularities=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span><span class="si">}</span><span class="s2">&#39; because of finite_depth_method==&#39;legacy&#39;&quot;</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">==</span> <span class="s1">&#39;low_freq&#39;</span><span class="p">:</span>
+            <span class="n">gf_singularities</span> <span class="o">=</span> <span class="s2">&quot;low_freq&quot;</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Overriding gf_singularities=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span><span class="si">}</span><span class="s2">&#39; because of wavenumber==0.0&quot;</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">==</span> <span class="s1">&#39;high_freq&#39;</span><span class="p">:</span>
+            <span class="n">gf_singularities</span> <span class="o">=</span> <span class="s2">&quot;high_freq&quot;</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Overriding gf_singularities=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span><span class="si">}</span><span class="s2">&#39; because of wavenumber==np.inf&quot;</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">==</span> <span class="s1">&#39;low_freq&#39;</span><span class="p">:</span>
+            <span class="n">gf_singularities</span> <span class="o">=</span> <span class="s2">&quot;low_freq&quot;</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Overriding gf_singularities=&#39;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span><span class="si">}</span><span class="s2">&#39; because of free surface panels, &quot;</span>
+                <span class="s2">&quot;which are currently only supported by gf_singularities=&#39;low_freq&#39;&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">gf_singularities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span>
+        <span class="n">gf_singularities_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities_fortran_enum</span><span class="p">[</span><span class="n">gf_singularities</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">water_depth</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="n">prony_decomposition</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>  <span class="c1"># Dummy array that won&#39;t actually be used by the fortran code.</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">prony_decomposition</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">find_best_exponential_decomposition</span><span class="p">(</span><span class="n">wavenumber</span><span class="o">*</span><span class="n">water_depth</span><span class="p">)</span>
+
+        <span class="c1"># Main call to Fortran code</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
+            <span class="n">collocation_points</span><span class="p">,</span>  <span class="n">early_dot_product_normals</span><span class="p">,</span>
+            <span class="n">mesh2</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span>      <span class="n">mesh2</span><span class="o">.</span><span class="n">faces</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">,</span>
+            <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">,</span>   <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="p">,</span>
+            <span class="o">*</span><span class="n">mesh2</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">,</span>
+            <span class="n">wavenumber</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">all_tabulation_parameters</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_method_index</span><span class="p">,</span> <span class="n">prony_decomposition</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dispersion_relation_roots</span><span class="p">,</span>
+            <span class="n">gf_singularities_index</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">,</span>
+            <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">add_diagonal_term</span><span class="p">(</span>
+                    <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">early_dot_product_normals</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">S</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">K</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">GreenFunctionEvaluationError</span><span class="p">(</span>
+                    <span class="s2">&quot;Green function returned a NaN in the interaction matrix.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="s2">&quot;It could be due to overlapping panels.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">early_dot_product</span><span class="p">:</span>
+            <span class="n">K</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
+
+        <span class="k">return</span> <span class="n">S</span><span class="p">,</span> <span class="n">K</span></div>
+</div>
+
+
+<span class="c1">################################</span>
+
+<div class="viewcode-block" id="XieDelhommeau">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.XieDelhommeau">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">XieDelhommeau</span><span class="p">(</span><span class="n">Delhommeau</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Legacy way to call the gf_singularities=&quot;low_freq&quot; variant.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">gf_singularities</span><span class="o">=</span><span class="s2">&quot;low_freq&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">capytaine</a></h1>
+
+
+
+<p class="blurb">a Python-based linear potential flow BEM solver</p>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/index.html">Example scripts</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

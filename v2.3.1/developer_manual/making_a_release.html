@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Making a release &#8212; capytaine 2.3.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/proof.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <script src="../_static/documentation_options.js?v=67b02a41"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="API documentation" href="api/modules.html" />
+    <link rel="prev" title="Testing Capytaine" href="testing.html" />
+    <script defer data-domain="capytaine.github.io" src="https://plausible.io/js/script.js"></script>
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+
+  </head><body>
+  
+
+    <div class="document">
+    
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="making-a-release">
+<h1>Making a release<a class="headerlink" href="#making-a-release" title="Link to this heading">¶</a></h1>
+<p>This page is a memo for the Capytaine developer(s) detailing the process of doing a new release.</p>
+<section id="last-commit-of-released-version">
+<h2>Last commit of released version<a class="headerlink" href="#last-commit-of-released-version" title="Link to this heading">¶</a></h2>
+<p>Open a pull request similar to <a class="reference external" href="https://github.com/capytaine/capytaine/pull/613">https://github.com/capytaine/capytaine/pull/613</a> to update:</p>
+<ul class="simple">
+<li><p>the version number in <code class="docutils literal notranslate"><span class="pre">capytaine/__about__.py</span></code>,</p></li>
+<li><p>the changelog in <code class="docutils literal notranslate"><span class="pre">docs/changelog.rst</span></code>,</p></li>
+<li><p>the link to previous documentations in <code class="docutils literal notranslate"><span class="pre">docs/index.rst</span></code>.</p></li>
+</ul>
+</section>
+<section id="dry-run-packaging">
+<h2>Dry-run packaging<a class="headerlink" href="#dry-run-packaging" title="Link to this heading">¶</a></h2>
+<ul>
+<li><p>The <code class="docutils literal notranslate"><span class="pre">build_wheel.yaml</span></code> Github Action has a <code class="docutils literal notranslate"><span class="pre">workflow_dispatch</span></code> event trigger, which means it can be run manually from Github at <a class="reference external" href="https://github.com/capytaine/capytaine/actions/workflows/build_wheels.yaml">https://github.com/capytaine/capytaine/actions/workflows/build_wheels.yaml</a>. Run it on version to be released.</p></li>
+<li><p>To dry-run the conda packaging, open a pull-request named <code class="docutils literal notranslate"><span class="pre">release-vx.y</span></code> on <a class="reference external" href="https://github.com/conda-forge/capytaine-feedstock">https://github.com/conda-forge/capytaine-feedstock</a> and update the <code class="docutils literal notranslate"><span class="pre">recipe/meta.yaml</span></code> to use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span><span class="p">:</span>
+    <span class="n">git_url</span><span class="p">:</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">capytaine</span><span class="o">/</span><span class="n">capytaine</span>
+    <span class="n">git_rev</span><span class="p">:</span> <span class="n">master</span>
+    <span class="n">git_depth</span><span class="p">:</span> <span class="mi">1</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>to build the version of the master branch.
+The conda-forge CI will run the compilation.
+DO NOT merge the PR yet.</p>
+</section>
+<section id="github-release-and-actual-packaging">
+<h2>Github release and actual packaging<a class="headerlink" href="#github-release-and-actual-packaging" title="Link to this heading">¶</a></h2>
+<ul>
+<li><p>Make a new release on Github <a class="reference external" href="https://github.com/capytaine/capytaine/releases">https://github.com/capytaine/capytaine/releases</a> titled “Capytaine vX.Y”, creating a new tag <code class="docutils literal notranslate"><span class="pre">vX.Y</span></code>.</p></li>
+<li><p>Update the PR opened in <a class="reference external" href="https://github.com/conda-forge/capytaine-feedstock">https://github.com/conda-forge/capytaine-feedstock</a> to use the released tarball as source:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">source</span><span class="p">:</span>
+    <span class="n">url</span><span class="p">:</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">capytaine</span><span class="o">/</span><span class="n">capytaine</span><span class="o">/</span><span class="n">archive</span><span class="o">/</span><span class="n">refs</span><span class="o">/</span><span class="n">tags</span><span class="o">/</span><span class="n">v</span><span class="p">{{</span> <span class="n">version</span> <span class="p">}}</span><span class="o">.</span><span class="n">tar</span><span class="o">.</span><span class="n">gz</span>
+    <span class="n">sha256</span><span class="p">:</span> <span class="p">{{</span> <span class="nb">hash</span> <span class="p">}}</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>If the CI is all green, the PR can be merged and the package will be uploaded to the conda-forge repository in the following hours.</p>
+<ul>
+<li><p>Build the source distribution, using e.g. locally</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">uv</span> <span class="n">run</span> <span class="o">--</span><span class="k">with</span> <span class="n">build</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">build</span> <span class="o">--</span><span class="n">sdist</span>
+</pre></div>
+</div>
+</li>
+<li><p>The Github Action <a class="reference external" href="https://github.com/capytaine/capytaine/actions/workflows/build_wheels.yaml">https://github.com/capytaine/capytaine/actions/workflows/build_wheels.yaml</a> should run automatically on the tagged commit. Download the wheels on the page of the action.</p></li>
+<li><p>Upload the sdist and the wheels using <a class="reference external" href="https://twine.readthedocs.io">twine</a></p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">uv</span> <span class="n">run</span> <span class="o">--</span><span class="k">with</span> <span class="n">twine</span> <span class="n">twine</span> <span class="n">upload</span> <span class="n">dist</span><span class="o">/*</span>
+</pre></div>
+</div>
+</li>
+</ul>
+<p>You’ll need the access token to PyPI.</p>
+</section>
+<section id="update-documentation">
+<h2>Update documentation<a class="headerlink" href="#update-documentation" title="Link to this heading">¶</a></h2>
+<p>In the repository of the website <a class="reference external" href="https://github.com/capytaine/capytaine.github.io">https://github.com/capytaine/capytaine.github.io</a>, use the latest version of the documentation available in the directory <code class="docutils literal notranslate"><span class="pre">master</span></code> to make the new documentation and update the symlink <code class="docutils literal notranslate"><span class="pre">stable</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mv</span> <span class="n">master</span> <span class="n">v2</span><span class="mf">.1</span>
+<span class="n">rm</span> <span class="n">stable</span>
+<span class="n">ln</span> <span class="o">-</span><span class="n">s</span> <span class="n">v2</span><span class="mf">.1</span> <span class="n">stable</span>
+<span class="n">cp</span> <span class="n">v2</span><span class="mf">.0</span><span class="o">/</span><span class="n">_static</span><span class="o">/</span><span class="n">front_page_animation</span><span class="o">.</span><span class="n">webm</span> <span class="n">v2</span><span class="mf">.1</span><span class="o">/</span><span class="n">_static</span><span class="o">/</span>
+</pre></div>
+</div>
+<p>In the new version documentation (<cite>v2.1</cite> in this example), remove the banner on top of the pages</p>
+</pre></div>
+</div>
+<p>In the former stable documentation (<cite>v2.0</cite> in this example), add a banner on top of the pages just after the <code class="docutils literal notranslate"><span class="pre">&lt;body&gt;</span></code> tag:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>sed -i &#39;/&lt;body&gt;/a   &lt;div id=&quot;old-doc-warning-banner&quot; style=&quot;width:100%; background-color:#F0E68C; text-align: center;&quot;&gt;This page is part of the documentation of an old version of Capytaine. &lt;a href=&quot;https://capytaine.org/stable/&quot;&gt;Latest stable version is available here.&lt;/a&gt;&lt;/div&gt;&#39; $(rg -l &quot;&lt;body&gt;&quot;)
+</pre></div>
+</div>
+<p>Commit and push to <a class="reference external" href="https://github.com/capytaine/capytaine.github.io">https://github.com/capytaine/capytaine.github.io</a>.</p>
+</section>
+<section id="archival-on-zenodo">
+<h2>Archival on Zenodo<a class="headerlink" href="#archival-on-zenodo" title="Link to this heading">¶</a></h2>
+<p>Zenodo record at <a class="reference external" href="https://zenodo.org/records/14178807">https://zenodo.org/records/14178807</a> should be created automatically, but you might want to review it.</p>
+</section>
+<section id="other-distributions">
+<h2>Other distributions<a class="headerlink" href="#other-distributions" title="Link to this heading">¶</a></h2>
+<p>To release a new version of <a class="reference external" href="https://github.com/capytaine/capytaine-standalone">https://github.com/capytaine/capytaine-standalone</a>:
+- Update pyproject.toml to change the version of Capytaine (as well as other bundled packages if necessary)
+- Run <cite>pdm lock</cite> to update the lock file.
+- Test locally with <cite>pdm install &amp;&amp; pdm bundle</cite>
+- Test the CI by opening a pull request or by triggering manually on Github
+- Do the release. The packages are automatically linked to the release on Github.</p>
+<p>You also might want to update <a class="reference external" href="https://github.com/capytaine/capytaine-extra-build-recipes">https://github.com/capytaine/capytaine-extra-build-recipes</a></p>
+</section>
+<section id="first-commit-of-new-development-branch">
+<h2>First commit of new development branch<a class="headerlink" href="#first-commit-of-new-development-branch" title="Link to this heading">¶</a></h2>
+<p>Update version number on the development branch to <code class="docutils literal notranslate"><span class="pre">x.y.dev</span></code>, as in <a class="reference external" href="https://github.com/capytaine/capytaine/pull/616">https://github.com/capytaine/capytaine/pull/616</a>.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">capytaine</a></h1>
+
+
+
+<p class="blurb">a Python-based linear potential flow BEM solver</p>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Example scripts</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation for developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview.html">Overview of the modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing Capytaine</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Making a release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/modules.html">API documentation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Developer manual</a><ul>
+      <li>Previous: <a href="testing.html" title="previous chapter">Testing Capytaine</a></li>
+      <li>Next: <a href="api/modules.html" title="next chapter">API documentation</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/developer_manual/making_a_release.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
