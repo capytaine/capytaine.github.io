@@ -5,13 +5,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Resolution &#8212; capytaine 2.3.1 documentation</title>
+    <title>Resolution &#8212; capytaine 3.0.dev documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../_static/proof.css" />
     <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
-    <script src="../_static/documentation_options.js?v=67b02a41"></script>
+    <script src="../_static/documentation_options.js?v=b5a2bfa9"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
@@ -36,7 +36,7 @@
   
 
     <div class="document">
-<div id="new-doc-warning-banner" style="width:100%; background-color:#ADD8E6; text-align: center;">This page is part of the documentation of the development version 2.3.1 of Capytaine.<br><a href="https://capytaine.github.io/stable/">Latest stable version is available here.</a></div>
+<div id="new-doc-warning-banner" style="width:100%; background-color:#ADD8E6; text-align: center;">This page is part of the documentation of the development version 3.0 of Capytaine.<br><a href="https://capytaine.github.io/stable/">Latest stable version is available here.</a></div>
     
       <div class="documentwrapper">
         <div class="bodywrapper">
@@ -130,6 +130,9 @@ The following classes are available:</p>
 <dl>
 <dt><a class="reference internal" href="../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau" title="capytaine.green_functions.delhommeau.Delhommeau"><code class="xref py py-class docutils literal notranslate"><span class="pre">Delhommeau</span></code></a> (Default)</dt><dd><p>The method implemented in Nemoh (see <a class="reference internal" href="../theory_manual/bibliography.html#del87" id="id1"><span>[Del87]</span></a> and <a class="reference internal" href="../theory_manual/bibliography.html#del89" id="id2"><span>[Del89]</span></a>).
 See the documentation for details on the available options.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">floating_point_precision</span></code> argument accepts the <code class="docutils literal notranslate"><span class="pre">float64</span></code> (default)
+and <code class="docutils literal notranslate"><span class="pre">float32</span></code> values. The latter uses less RAM, so it might be preferable
+for very large meshes.</p>
 <p>In Capytaine (and Nemoh), the integral of the wave term
 <span class="math notranslate nohighlight">\(\mathcal{G}(r, z)\)</span> (and its derivative <span class="math notranslate nohighlight">\(\frac{\partial
 \mathcal{G}}{\partial r}\)</span>) are approximated using surrogate models, which
@@ -151,7 +154,8 @@ following options:</p>
                     <span class="n">tabulation_grid_shape</span><span class="o">=</span><span class="s2">&quot;legacy&quot;</span><span class="p">,</span>
                     <span class="n">finite_depth_method</span><span class="o">=</span><span class="s2">&quot;legacy&quot;</span><span class="p">,</span>
                     <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="s2">&quot;fortran&quot;</span><span class="p">,</span>
-                    <span class="n">gf_singularities</span><span class="o">=</span><span class="s2">&quot;high_freq&quot;</span><span class="p">)</span>
+                    <span class="n">gf_singularities</span><span class="o">=</span><span class="s2">&quot;high_freq&quot;</span><span class="p">,</span>
+                    <span class="n">floating_point_precision</span><span class="o">=</span><span class="s2">&quot;float64&quot;</span><span class="p">)</span>
 
 <span class="c1"># Default in Capytaine 2.1</span>
 <span class="n">gf</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">Delhommeau</span><span class="p">(</span><span class="n">tabulation_nr</span><span class="o">=</span><span class="mi">676</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
@@ -160,25 +164,28 @@ following options:</p>
                     <span class="n">tabulation_grid_shape</span><span class="o">=</span><span class="s2">&quot;scaled_nemoh3&quot;</span><span class="p">,</span>
                     <span class="n">finite_depth_method</span><span class="o">=</span><span class="s2">&quot;legacy&quot;</span><span class="p">,</span>
                     <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="s2">&quot;fortran&quot;</span><span class="p">,</span>
-                    <span class="n">gf_singularities</span><span class="o">=</span><span class="s2">&quot;high_freq&quot;</span><span class="p">)</span>
+                    <span class="n">gf_singularities</span><span class="o">=</span><span class="s2">&quot;high_freq&quot;</span><span class="p">,</span>
+                    <span class="n">floating_point_precision</span><span class="o">=</span><span class="s2">&quot;float64&quot;</span><span class="p">)</span>
 
-<span class="c1"># Default in Capytaine 2.2</span>
+<span class="c1"># Default in Capytaine 2.2 and 2.2.1</span>
 <span class="n">gf</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">Delhommeau</span><span class="p">(</span><span class="n">tabulation_nr</span><span class="o">=</span><span class="mi">676</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
                     <span class="n">tabulation_nz</span><span class="o">=</span><span class="mi">372</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="o">=-</span><span class="mi">251</span><span class="p">,</span>
                     <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="mi">1001</span><span class="p">,</span>
                     <span class="n">tabulation_grid_shape</span><span class="o">=</span><span class="s2">&quot;scaled_nemoh3&quot;</span><span class="p">,</span>
                     <span class="n">finite_depth_method</span><span class="o">=</span><span class="s2">&quot;legacy&quot;</span><span class="p">,</span>
                     <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="s2">&quot;fortran&quot;</span><span class="p">,</span>
-                    <span class="n">gf_singularities</span><span class="o">=</span><span class="s2">&quot;low_freq&quot;</span><span class="p">)</span>
+                    <span class="n">gf_singularities</span><span class="o">=</span><span class="s2">&quot;low_freq&quot;</span><span class="p">,</span>
+                    <span class="n">floating_point_precision</span><span class="o">=</span><span class="s2">&quot;float64&quot;</span><span class="p">)</span>
 
-<span class="c1"># Default in Capytaine 2.3</span>
+<span class="c1"># Default in Capytaine 2.3 and 2.3.1</span>
 <span class="n">gf</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">Delhommeau</span><span class="p">(</span><span class="n">tabulation_nr</span><span class="o">=</span><span class="mi">676</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
                     <span class="n">tabulation_nz</span><span class="o">=</span><span class="mi">372</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="o">=-</span><span class="mi">251</span><span class="p">,</span>
                     <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="mi">1001</span><span class="p">,</span>
                     <span class="n">tabulation_grid_shape</span><span class="o">=</span><span class="s2">&quot;scaled_nemoh3&quot;</span><span class="p">,</span>
                     <span class="n">finite_depth_method</span><span class="o">=</span><span class="s2">&quot;newer&quot;</span><span class="p">,</span>
                     <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="s2">&quot;python&quot;</span><span class="p">,</span>
-                    <span class="n">gf_singularities</span><span class="o">=</span><span class="s2">&quot;low_freq&quot;</span><span class="p">)</span>
+                    <span class="n">gf_singularities</span><span class="o">=</span><span class="s2">&quot;low_freq&quot;</span><span class="p">,</span>
+                    <span class="n">floating_point_precision</span><span class="o">=</span><span class="s2">&quot;float64&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>In version 2.1, the default numbers of <span class="math notranslate nohighlight">\(r\)</span> and <span class="math notranslate nohighlight">\(z\)</span> values have
