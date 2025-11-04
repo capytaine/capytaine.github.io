@@ -162,7 +162,7 @@ window.addEventListener("load", () => mermaid.run());
 <span class="sd">    linear_solver: str or function, optional</span>
 <span class="sd">        Setting of the numerical solver for linear problems Ax = b.</span>
 <span class="sd">        It can be set with the name of a preexisting solver</span>
-<span class="sd">        (available: &quot;lu_decomposition&quot; and &quot;gmres&quot;, the former is the default choice)</span>
+<span class="sd">        (available: &quot;lu_decomposition&quot;, &quot;lu_decompositon_with_overwrite&quot; and &quot;gmres&quot;, the former is the default choice)</span>
 <span class="sd">        or by passing directly a solver function.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -331,9 +331,10 @@ window.addEventListener("load", () => mermaid.run());
 
             <span class="k">return</span> <span class="n">x</span>
 
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_solver</span> <span class="o">==</span> <span class="s2">&quot;lu_decomposition&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_solver</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;lu_decomposition&quot;</span><span class="p">,</span> <span class="s2">&quot;lu_decomposition_with_overwrite&quot;</span><span class="p">)</span> <span class="p">:</span>
+            <span class="n">overwrite_a</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_linear_solver</span> <span class="o">==</span> <span class="s2">&quot;lu_decompositon_with_overwrite&quot;</span><span class="p">)</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">has_been_lu_decomposed</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
-                <span class="n">luA</span> <span class="o">=</span> <span class="n">lu_decompose</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+                <span class="n">luA</span> <span class="o">=</span> <span class="n">lu_decompose</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">overwrite_a</span><span class="o">=</span><span class="n">overwrite_a</span><span class="p">)</span>
                 <span class="k">if</span> <span class="n">A</span> <span class="ow">is</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_computed_matrices</span><span class="p">[</span><span class="mi">1</span><span class="p">]:</span>
                     <span class="c1"># In normal operation of Capytaine, `A` is always the $D$</span>
                     <span class="c1"># or $K$ matrix stored in the cache of the solver.</span>

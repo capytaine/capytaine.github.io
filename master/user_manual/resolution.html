@@ -99,11 +99,14 @@ A single one is built-in, but others with other features can be found in other p
 </dd>
 <dt><code class="code docutils literal notranslate"><span class="pre">linear_solver</span></code> (Default: <code class="code docutils literal notranslate"><span class="pre">'lu_decomposition'</span></code>)</dt><dd><p>This option is used to set the solver for linear systems that is used in the resolution of the BEM problem.
 Passing a string will make the code use one of the predefined solver.
-Two of them are available:
-<code class="code docutils literal notranslate"><span class="pre">'lu_decomposition'</span></code> for a direct linear solver with caching of the LU decomposition,
-or <code class="code docutils literal notranslate"><span class="pre">'gmres'</span></code> for an iterative solver.</p>
-<p>A direct solver is used by default (since version 1.4) because it is more robust and the computation time is more predictable.
-Advanced users might want to change the solver to <code class="code docutils literal notranslate"><span class="pre">gmres</span></code>, which is faster in many situations (and completely fails in other).</p>
+Three of them are available:</p>
+<ul class="simple">
+<li><p><code class="code docutils literal notranslate"><span class="pre">'lu_decomposition'</span></code> is a direct linear solver with caching of the LU decomposition.
+It is the default as it is the most robust method while providing predictable computation time.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">'lu_decompositon_with_overwrite'</span></code> is the same as <code class="code docutils literal notranslate"><span class="pre">'lu_decomposition'</span></code> but overwrite the matrix data when computing the LU decomposition, which reduces the RAM usage of the method, but might be less robust when doing non-standard workflows.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">'gmres'</span></code> is the GMRES iterative solver, which is faster in many situations but also completely fails in some other (for instance in presence of irregular frequencies).
+Its RAM usage is lower than <code class="code docutils literal notranslate"><span class="pre">'lu_decomposition'</span></code> and similar to <code class="code docutils literal notranslate"><span class="pre">'lu_decompositon_with_overwrite'</span></code>.</p></li>
+</ul>
 <p>Alternatively, any function taking as arguments a matrix and a vector and returning a vector can be given to the solver:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
