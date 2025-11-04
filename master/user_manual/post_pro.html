@@ -235,6 +235,19 @@ The solver does not need to be the one that computed the result object.</p>
 </div>
 <p>For potential, pressure and velocity, 3 coordinates <span class="math notranslate nohighlight">\((x, y, z)\)</span> are expected for each points.
 For the free surface elevation, 2 coordinates <span class="math notranslate nohighlight">\((x, y)\)</span> are sufficient.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>In the limit cases of zero and infinite frequencies, these magnitudes can also be computed.
+Strictly speaking, their value is 0 (resp. infinity) at these frequencies.
+Nonetheless, the following magnitudes <span class="math notranslate nohighlight">\(\phi/\omega\)</span>, <span class="math notranslate nohighlight">\(u/\omega\)</span>, <span class="math notranslate nohighlight">\(\eta/\omega^2\)</span> and <span class="math notranslate nohighlight">\(p/\omega^2\)</span> are well defined and have a finite value.
+They can be accessed in Capytaine as in the following example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="o">...</span><span class="p">]</span>
+<span class="n">pb</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
+<span class="n">res</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">pb</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">pressure_over_omega_2</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">compute_pressure</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">res</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">omega</span><span class="o">*</span><span class="n">pb</span><span class="o">.</span><span class="n">omega</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
 </section>
 <section id="impedance-and-rao">
 <h2>Impedance and RAO<a class="headerlink" href="#impedance-and-rao" title="Link to this heading">¶</a></h2>
