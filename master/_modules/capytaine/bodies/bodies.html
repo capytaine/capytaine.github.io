@@ -1166,17 +1166,19 @@ window.addEventListener("load", initFullscreen);
     <span class="k">def</span><span class="w"> </span><span class="nf">join_bodies</span><span class="p">(</span><span class="o">*</span><span class="n">bodies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;FloatingBody&#39;</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;+&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">)</span>
-        <span class="n">meshes</span> <span class="o">=</span> <span class="n">CollectionOfMeshes</span><span class="p">(</span>
-                <span class="p">[</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">],</span>
-                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_mesh&quot;</span>
-                <span class="p">)</span>
-        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">):</span>
-            <span class="n">lid_meshes</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">meshes</span> <span class="o">=</span> <span class="p">[</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span> <span class="k">if</span> <span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">meshes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">joined_mesh</span> <span class="o">=</span> <span class="n">meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span><span class="o">*</span><span class="n">meshes</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_mesh&quot;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">lid_meshes</span> <span class="o">=</span> <span class="n">CollectionOfMeshes</span><span class="p">(</span>
-                    <span class="p">[</span><span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span> <span class="k">if</span> <span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">],</span>
-                    <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_lid_mesh&quot;</span>
-                    <span class="p">)</span>
+            <span class="n">joined_mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">):</span>
+            <span class="n">joined_lid</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lid_meshes</span> <span class="o">=</span> <span class="p">[</span><span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span> <span class="k">if</span> <span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="n">joined_lid</span> <span class="o">=</span> <span class="n">lid_meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span><span class="o">*</span><span class="n">lid_meshes</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_lid_mesh&quot;</span><span class="p">)</span>
+
         <span class="n">dofs</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="o">.</span><span class="n">combine_dofs</span><span class="p">(</span><span class="n">bodies</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">):</span>
@@ -1191,7 +1193,7 @@ window.addEventListener("load", initFullscreen);
             <span class="n">new_cog</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="n">joined_bodies</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="p">(</span>
-            <span class="n">mesh</span><span class="o">=</span><span class="n">meshes</span><span class="p">,</span> <span class="n">lid_mesh</span><span class="o">=</span><span class="n">lid_meshes</span><span class="p">,</span> <span class="n">dofs</span><span class="o">=</span><span class="n">dofs</span><span class="p">,</span>
+            <span class="n">mesh</span><span class="o">=</span><span class="n">joined_mesh</span><span class="p">,</span> <span class="n">lid_mesh</span><span class="o">=</span><span class="n">joined_lid</span><span class="p">,</span> <span class="n">dofs</span><span class="o">=</span><span class="n">dofs</span><span class="p">,</span>
             <span class="n">mass</span><span class="o">=</span><span class="n">new_mass</span><span class="p">,</span> <span class="n">center_of_mass</span><span class="o">=</span><span class="n">new_cog</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span>
             <span class="p">)</span>
 
@@ -1322,76 +1324,6 @@ window.addEventListener("load", initFullscreen);
             <span class="k">return</span> <span class="n">new_body</span><span class="p">,</span> <span class="n">id_v</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">new_body</span></div>
-
-
-<div class="viewcode-block" id="FloatingBody.sliced_by_plane">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.sliced_by_plane">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">sliced_by_plane</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the same body, but replace the mesh by a set of two meshes</span>
-<span class="sd">        corresponding to each sides of the plane.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">sliced_by_plane</span><span class="p">(</span><span class="n">plane</span><span class="p">),</span>
-                            <span class="n">lid_mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span><span class="o">.</span><span class="n">sliced_by_plane</span><span class="p">(</span><span class="n">plane</span><span class="p">)</span>
-                                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
-                            <span class="n">dofs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="FloatingBody.minced">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.minced">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">minced</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nb_slices</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">)):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Experimental method decomposing the mesh as a hierarchical structure.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        nb_slices: Tuple[int, int, int]</span>
-<span class="sd">            The number of slices in each of the x, y and z directions.</span>
-<span class="sd">            Only powers of 2 are supported at the moment.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        FloatingBody</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">minced_body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-
-        <span class="c1"># Extreme points of the mesh in each directions.</span>
-        <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">,</span> <span class="n">z_min</span><span class="p">,</span> <span class="n">z_max</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">axis_aligned_bbox</span>
-        <span class="n">sizes</span> <span class="o">=</span> <span class="p">[(</span><span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">),</span> <span class="p">(</span><span class="n">y_min</span><span class="p">,</span> <span class="n">y_max</span><span class="p">),</span> <span class="p">(</span><span class="n">z_min</span><span class="p">,</span> <span class="n">z_max</span><span class="p">)]</span>
-
-        <span class="n">directions</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)]]</span>
-
-        <span class="k">def</span><span class="w"> </span><span class="nf">_slice_positions_at_depth</span><span class="p">(</span><span class="n">i</span><span class="p">):</span>
-<span class="w">            </span><span class="sd">&quot;&quot;&quot;Helper function.</span>
-
-<span class="sd">            Returns a list of floats as follows:</span>
-<span class="sd">            i=1 -&gt; [1/2]</span>
-<span class="sd">            i=2 -&gt; [1/4, 3/4]</span>
-<span class="sd">            i=3 -&gt; [1/8, 3/8, 5/8, 7/8]</span>
-<span class="sd">                   ...</span>
-<span class="sd">            &quot;&quot;&quot;</span>
-            <span class="n">denominator</span> <span class="o">=</span> <span class="mi">2</span><span class="o">**</span><span class="n">i</span>
-            <span class="k">return</span> <span class="p">[</span><span class="n">numerator</span><span class="o">/</span><span class="n">denominator</span> <span class="k">for</span> <span class="n">numerator</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">denominator</span><span class="p">,</span> <span class="mi">2</span><span class="p">)]</span>
-
-        <span class="c1"># GENERATE ALL THE PLANES THAT WILL BE USED TO MINCE THE MESH</span>
-        <span class="n">planes</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">direction</span><span class="p">,</span> <span class="n">nb_slices_in_dir</span><span class="p">,</span> <span class="p">(</span><span class="n">min_coord</span><span class="p">,</span> <span class="n">max_coord</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">directions</span><span class="p">,</span> <span class="n">nb_slices</span><span class="p">,</span> <span class="n">sizes</span><span class="p">):</span>
-            <span class="n">planes_in_dir</span> <span class="o">=</span> <span class="p">[]</span>
-
-            <span class="n">depth_of_treelike_structure</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log2</span><span class="p">(</span><span class="n">nb_slices_in_dir</span><span class="p">))</span>
-            <span class="k">for</span> <span class="n">i_depth</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">depth_of_treelike_structure</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
-                <span class="n">planes_in_dir_at_depth</span> <span class="o">=</span> <span class="p">[]</span>
-                <span class="k">for</span> <span class="n">relative_position</span> <span class="ow">in</span> <span class="n">_slice_positions_at_depth</span><span class="p">(</span><span class="n">i_depth</span><span class="p">):</span>
-                    <span class="n">slice_position</span> <span class="o">=</span> <span class="p">(</span><span class="n">min_coord</span> <span class="o">+</span> <span class="n">relative_position</span><span class="o">*</span><span class="p">(</span><span class="n">max_coord</span><span class="o">-</span><span class="n">min_coord</span><span class="p">))</span><span class="o">*</span><span class="n">direction</span>
-                    <span class="n">plane</span> <span class="o">=</span> <span class="n">Plane</span><span class="p">(</span><span class="n">normal</span><span class="o">=</span><span class="n">direction</span><span class="p">,</span> <span class="n">point</span><span class="o">=</span><span class="n">slice_position</span><span class="p">)</span>
-                    <span class="n">planes_in_dir_at_depth</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plane</span><span class="p">)</span>
-                <span class="n">planes_in_dir</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">planes_in_dir_at_depth</span><span class="p">)</span>
-            <span class="n">planes</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">planes_in_dir</span><span class="p">)</span>
-
-        <span class="c1"># SLICE THE MESH</span>
-        <span class="n">intermingled_x_y_z</span> <span class="o">=</span> <span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="n">zip_longest</span><span class="p">(</span><span class="o">*</span><span class="n">planes</span><span class="p">))</span>
-        <span class="k">for</span> <span class="n">planes</span> <span class="ow">in</span> <span class="n">intermingled_x_y_z</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">planes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">for</span> <span class="n">plane</span> <span class="ow">in</span> <span class="n">planes</span><span class="p">:</span>
-                    <span class="n">minced_body</span> <span class="o">=</span> <span class="n">minced_body</span><span class="o">.</span><span class="n">sliced_by_plane</span><span class="p">(</span><span class="n">plane</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">minced_body</span></div>
 
 
     <span class="nd">@inplace_transformation</span>
@@ -1598,56 +1530,6 @@ window.addEventListener("load", initFullscreen);
                 <span class="n">omega_comp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">g</span><span class="o">*</span><span class="n">p</span><span class="o">/</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">tanh</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">draft</span><span class="o">*</span><span class="n">p</span><span class="p">)))</span>
                 <span class="n">omega</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">omega</span><span class="p">,</span> <span class="n">omega_comp</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">omega</span></div>
-
-
-<div class="viewcode-block" id="FloatingBody.cluster_bodies">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.cluster_bodies">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">cluster_bodies</span><span class="p">(</span><span class="o">*</span><span class="n">bodies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Builds a hierarchical clustering from a group of bodies</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        bodies: list</span>
-<span class="sd">            a list of bodies</span>
-<span class="sd">        name: str, optional</span>
-<span class="sd">            a name for the new body</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        FloatingBody</span>
-<span class="sd">            Array built from the provided bodies</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.cluster.hierarchy</span><span class="w"> </span><span class="kn">import</span> <span class="n">linkage</span>
-        <span class="n">nb_buoys</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">bodies</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">center_of_buoyancy</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;The center of buoyancy of each body needs to be known for clustering&quot;</span><span class="p">)</span>
-        <span class="n">buoys_positions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="n">body</span><span class="o">.</span><span class="n">center_of_buoyancy</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">])[:,:</span><span class="mi">2</span><span class="p">]</span>
-
-        <span class="n">ln_matrix</span> <span class="o">=</span> <span class="n">linkage</span><span class="p">(</span><span class="n">buoys_positions</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s1">&#39;centroid&#39;</span><span class="p">,</span> <span class="n">metric</span><span class="o">=</span><span class="s1">&#39;euclidean&#39;</span><span class="p">)</span>
-
-        <span class="n">node_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">bodies</span><span class="p">)</span>  <span class="c1"># list of nodes of the tree: the first nodes are single bodies</span>
-
-        <span class="c1"># Join the bodies, with an ordering consistent with the dendrogram.</span>
-        <span class="c1"># Done by reading the linkage matrix: its i-th row contains the labels</span>
-        <span class="c1"># of the two nodes that are merged to form the (n + i)-th node</span>
-        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ln_matrix</span><span class="p">)):</span>
-            <span class="n">node_tag</span> <span class="o">=</span> <span class="n">ii</span> <span class="o">+</span> <span class="n">nb_buoys</span> <span class="c1"># the first nb_buoys tags are already taken</span>
-            <span class="n">merge_left</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ln_matrix</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span><span class="mi">0</span><span class="p">])</span>
-            <span class="n">merge_right</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ln_matrix</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span><span class="mi">1</span><span class="p">])</span>
-            <span class="c1"># The new node is the parent of merge_left and merge_right</span>
-            <span class="n">new_node_ls</span> <span class="o">=</span> <span class="p">[</span><span class="n">node_list</span><span class="p">[</span><span class="n">merge_left</span><span class="p">],</span> <span class="n">node_list</span><span class="p">[</span><span class="n">merge_right</span><span class="p">]]</span>
-            <span class="n">new_node</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="o">.</span><span class="n">join_bodies</span><span class="p">(</span><span class="o">*</span><span class="n">new_node_ls</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;node_</span><span class="si">{:d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">node_tag</span><span class="p">))</span>
-            <span class="n">node_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_node</span><span class="p">)</span>
-
-        <span class="c1"># The last node is the parent of all others</span>
-        <span class="n">all_buoys</span> <span class="o">=</span> <span class="n">new_node</span>
-
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">all_buoys</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-
-        <span class="k">return</span> <span class="n">all_buoys</span></div>
 </div>
 
 </pre></div>
