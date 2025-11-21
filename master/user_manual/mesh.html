@@ -46,12 +46,6 @@
             
   <section id="meshes">
 <h1>Meshes<a class="headerlink" href="#meshes" title="Link to this heading">¶</a></h1>
-<section id="naming">
-<h2>Naming<a class="headerlink" href="#naming" title="Link to this heading">¶</a></h2>
-<p>Meshes in Capytaine have a <code class="docutils literal notranslate"><span class="pre">name</span></code> attribute.
-It is optional and is mostly used for clearer logging and outputs.
-A <code class="docutils literal notranslate"><span class="pre">name</span></code> optional argument can be provided to all methods below to initialize
-a mesh or transform a mesh to set the name of the new mesh.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>A mesh in Capytaine is merely a set of independent faces (triangles or quadrangles).
@@ -59,9 +53,21 @@ Connectivities are not required for the resolution.
 Having a mesh that is not watertight, with small gaps between the faces or a
 few missing faces, does not lead to qualitatively different results.</p>
 </div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Besides loading existing mesh files, Capytaine includes some features to generate meshes for simple geometrical shapes, to clip a mesh at the free surface and generate a lid.
+The implementation of these features is only the minimum necessary to test the code and run simple cases.
+You might get slightly better results by using a more advanced meshing software to fine-tune the mesh, for instance by using cosine spacing near the edges or near the free surface, or by generating a full lid of the waterplane.</p>
+</div>
+<section id="naming">
+<h2>Naming<a class="headerlink" href="#naming" title="Link to this heading">¶</a></h2>
+<p>Meshes in Capytaine have a <code class="docutils literal notranslate"><span class="pre">name</span></code> attribute.
+It is optional and is mostly used for clearer logging and outputs.
+A <code class="docutils literal notranslate"><span class="pre">name</span></code> optional argument can be provided to all methods below to initialize
+a mesh or transform a mesh to set the name of the new mesh.</p>
 </section>
-<section id="initialization">
-<h2>Initialization<a class="headerlink" href="#initialization" title="Link to this heading">¶</a></h2>
+<section id="mesh-initialization">
+<span id="loading-a-mesh"></span><h2>Mesh initialization<a class="headerlink" href="#mesh-initialization" title="Link to this heading">¶</a></h2>
 <section id="importing-with-included-meshmagick-readers">
 <h3>Importing with included Meshmagick readers<a class="headerlink" href="#importing-with-included-meshmagick-readers" title="Link to this heading">¶</a></h3>
 <p>To load an existing mesh file, use the following syntax:</p>
@@ -436,7 +442,7 @@ complicated and their removal might be considered in the future.</p>
 </div>
 </section>
 <section id="extracting-or-generating-a-lid">
-<h2>Extracting or generating a lid<a class="headerlink" href="#extracting-or-generating-a-lid" title="Link to this heading">¶</a></h2>
+<span id="lid-generation"></span><h2>Extracting or generating a lid<a class="headerlink" href="#extracting-or-generating-a-lid" title="Link to this heading">¶</a></h2>
 <p>If you loaded a mesh file already containing a lid on the <span class="math notranslate nohighlight">\(z=0\)</span> plane,
 the hull and the lid can be split with the
 <a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.extract_lid" title="capytaine.meshes.meshes.Mesh.extract_lid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">extract_lid()</span></code></a> method:</p>
@@ -444,38 +450,17 @@ the hull and the lid can be split with the
 <span class="n">hull_mesh</span><span class="p">,</span> <span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">full_mesh</span><span class="o">.</span><span class="n">extract_lid</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>If your mesh does not have a lid, and you’d like to have irregular frequencies
-removal, you can generate a lid using
+<p>If your mesh does not have a lid, you can generate a lid using
 <a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.generate_lid" title="capytaine.meshes.meshes.Mesh.generate_lid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generate_lid()</span></code></a> as follows:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">hull_mesh</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>The mesh is generated on the free surface by default.
-Since support for panels on the free surface is still experimental, it might be
-more robust (but less efficient) to define a lid slightly below the free surface:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">hull_mesh</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">(</span><span class="n">z</span><span class="o">=-</span><span class="mf">0.1</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>The lower the lid, the more robust the computation, but also the less
-irregular frequencies are removed. The method
-<a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.lowest_lid_position" title="capytaine.meshes.meshes.Mesh.lowest_lid_position"><code class="xref py py-meth docutils literal notranslate"><span class="pre">lowest_lid_position()</span></code></a> estimates the lowest
-position such that all irregular frequencies below a given frequency are removed:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">hull_mesh</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">hull_mesh</span><span class="o">.</span><span class="n">lowest_lid_position</span><span class="p">(</span><span class="n">omega_max</span><span class="o">=</span><span class="mf">10.0</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>The method <a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.extract_lid" title="capytaine.meshes.meshes.Mesh.extract_lid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">extract_lid()</span></code></a> also accepts an
-optional argument <code class="docutils literal notranslate"><span class="pre">faces_max_radius</span></code> to set the resolution of the lid. By
-default, the mean resolution of the hull mesh is used.</p>
-<p>See <a class="reference internal" href="body.html"><span class="doc">Floating body</span></a> for detail on how to assign a lid mesh when defining a floating
-body.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The lid does not need neither to cover the whole interior free surface, nor
-to be connected with the hull mesh. The lid automatically generated by
-<a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.extract_lid" title="capytaine.meshes.meshes.Mesh.extract_lid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">extract_lid()</span></code></a> typically does not.
-Nonetheless, the more interior free surface is covered, the more efficiently
-the irregular frequencies will be removed.</p>
-</div>
+<p>The mesh is generated on the free surface by default, unless the <code class="docutils literal notranslate"><span class="pre">z</span></code> optional argument is passed to <a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.generate_lid" title="capytaine.meshes.meshes.Mesh.generate_lid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generate_lid()</span></code></a>.
+The method <a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.generate_lid" title="capytaine.meshes.meshes.Mesh.generate_lid"><code class="xref py py-meth docutils literal notranslate"><span class="pre">generate_lid()</span></code></a> also accepts
+an optional argument <code class="docutils literal notranslate"><span class="pre">faces_max_radius</span></code> to set the resolution of the lid.
+By default, the mean resolution of the hull mesh is used.</p>
+<p>See <a class="reference internal" href="body.html#set-lid-mesh-in-body"><span class="std std-ref">Lid mesh</span></a> for details on how to assign a lid mesh when
+defining a floating body.</p>
 </section>
 <section id="defining-an-integration-quadrature">
 <h2>Defining an integration quadrature<a class="headerlink" href="#defining-an-integration-quadrature" title="Link to this heading">¶</a></h2>
