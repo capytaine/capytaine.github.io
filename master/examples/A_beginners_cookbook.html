@@ -84,6 +84,9 @@ rigid-body degrees of freedom and then plots the added mass.</p>
     <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,)</span>
 <span class="p">)</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.new_meshes.meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_new_mesh</span>
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">to_new_mesh</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
+
 <span class="c1"># Define a rigid body using this mesh</span>
 <span class="n">cylinder</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
     <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span>
@@ -134,29 +137,29 @@ rigid-body degrees of freedom and then plots the added mass.</p>
 <h2><a class="toc-backref" href="#id3" role="doc-backlink">A2. Simulation with several bodies</a><a class="headerlink" href="#a2-simulation-with-several-bodies" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.new_meshes.meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_new_mesh</span>
+
 <span class="c1"># Define the first body</span>
-<span class="n">sphere</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
-        <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">),</span>
-                        <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">)),</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sphere_1&quot;</span><span class="p">)</span>
+<span class="n">mesh_1</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">2.0</span><span class="p">),</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
+<span class="n">mesh_1</span> <span class="o">=</span> <span class="n">to_new_mesh</span><span class="p">(</span><span class="n">mesh_1</span><span class="p">)</span>
+<span class="n">sphere</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">mesh_1</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sphere_1&quot;</span><span class="p">)</span>
 <span class="n">sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
 <span class="n">sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
 
 <span class="c1"># Define the second body</span>
-<span class="n">other_sphere</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
-        <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span>
-                        <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">)),</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sphere_2&quot;</span><span class="p">)</span>
+<span class="n">mesh_2</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">3</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
+<span class="n">mesh_2</span> <span class="o">=</span> <span class="n">to_new_mesh</span><span class="p">(</span><span class="n">mesh_2</span><span class="p">)</span>
+<span class="n">other_sphere</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">mesh_2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sphere_2&quot;</span><span class="p">)</span>
 <span class="n">other_sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
 <span class="n">other_sphere</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
 
 <span class="c1"># Define the third body</span>
-<span class="n">cylinder</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
-        <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_horizontal_cylinder</span><span class="p">(</span>
+<span class="n">mesh_3</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_horizontal_cylinder</span><span class="p">(</span>
             <span class="n">length</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
             <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mf">1.5</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">3.0</span><span class="p">),</span>
-            <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
-        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cylinder&quot;</span><span class="p">)</span>
+            <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+<span class="n">mesh_3</span> <span class="o">=</span> <span class="n">to_new_mesh</span><span class="p">(</span><span class="n">mesh_3</span><span class="p">)</span>
+<span class="n">cylinder</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">mesh_3</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cylinder&quot;</span><span class="p">)</span>
 <span class="n">cylinder</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
 <span class="n">cylinder</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
 
@@ -195,6 +198,11 @@ rigid-body degrees of freedom and then plots the added mass.</p>
     <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>         <span class="c1"># Position</span>
     <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">40</span><span class="p">)</span>    <span class="c1"># Fineness of the mesh</span>
     <span class="p">)</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+
+<span class="c1"># Temporary: test with the new mesh class</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.new_meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mesh</span>
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">faces</span><span class="p">)</span>
+
 <span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">())</span>
 
 <span class="c1"># Define the range of water depth</span>
@@ -345,6 +353,7 @@ The diffraction force on the “x-shear” dof is zero when the wave comes from 
 <h2><a class="toc-backref" href="#id8" role="doc-backlink">A6. Irregular frequencies removal</a><a class="headerlink" href="#a6-irregular-frequencies-removal" title="Link to this heading">¶</a></h2>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.new_meshes.meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">to_new_mesh</span>
 
 <span class="n">cpt</span><span class="o">.</span><span class="n">set_logging</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
 
@@ -375,17 +384,17 @@ The diffraction force on the “x-shear” dof is zero when the wave comes from 
     <span class="p">)</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
 
 <span class="c1">### Body Without Lid (Body A)</span>
-<span class="n">body_1</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">cylinder_mesh</span><span class="p">)</span>
+<span class="n">body_1</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">to_new_mesh</span><span class="p">(</span><span class="n">cylinder_mesh</span><span class="p">))</span>
 <span class="n">body_1</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
 
 <span class="c1">### Body With Lid at z = -3.699 (Body B)</span>
 <span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">cylinder_mesh</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">(</span><span class="n">z</span><span class="o">=-</span><span class="mf">3.699</span><span class="p">)</span>
-<span class="n">body_2</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">cylinder_mesh</span><span class="p">,</span> <span class="n">lid_mesh</span><span class="o">=</span><span class="n">lid_mesh</span><span class="p">)</span>
+<span class="n">body_2</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">to_new_mesh</span><span class="p">(</span><span class="n">cylinder_mesh</span><span class="p">),</span> <span class="n">lid_mesh</span><span class="o">=</span><span class="n">to_new_mesh</span><span class="p">(</span><span class="n">lid_mesh</span><span class="p">))</span>
 <span class="n">body_2</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
 
 <span class="c1">### Body With Lid at z = auto (Body C)</span>
 <span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">cylinder_mesh</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">cylinder_mesh</span><span class="o">.</span><span class="n">lowest_lid_position</span><span class="p">(</span><span class="n">omega_max</span><span class="o">=</span><span class="n">omega_range</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
-<span class="n">body_3</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">cylinder_mesh</span><span class="p">,</span> <span class="n">lid_mesh</span><span class="o">=</span><span class="n">lid_mesh</span><span class="p">)</span>
+<span class="n">body_3</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">to_new_mesh</span><span class="p">(</span><span class="n">cylinder_mesh</span><span class="p">),</span> <span class="n">lid_mesh</span><span class="o">=</span><span class="n">to_new_mesh</span><span class="p">(</span><span class="n">lid_mesh</span><span class="p">))</span>
 <span class="n">body_3</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
 
 <span class="n">force_1</span> <span class="o">=</span> <span class="n">compute_excitation_force</span><span class="p">(</span><span class="n">body_1</span><span class="p">,</span> <span class="n">omega_range</span><span class="p">)</span>

@@ -21,22 +21,47 @@
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script type="module">import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.esm.min.mjs";
 
-const style = document.createElement('style');
-style.textContent = `.mermaid-container {
-    position: relative !important;
-    display: inline-block;
+const defaultStyle = document.createElement('style');
+defaultStyle.textContent = `pre.mermaid {
+    /* Same as .mermaid-container > pre */
+    display: block;
     width: 100%;
 }
 
+pre.mermaid > svg {
+    /* Same as .mermaid-container > pre > svg */
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+`;
+document.head.appendChild(defaultStyle);
+
+const fullscreenStyle = document.createElement('style');
+fullscreenStyle.textContent = `.mermaid-container {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.mermaid-container > pre {
+    display: block;
+    width: 100%;
+}
+
+.mermaid-container > pre > svg {
+    height: 500px;
+    width: 100%;
+    max-width: 100% !important;
+}
+
 .mermaid-fullscreen-btn {
-    position: absolute !important;
     width: 28px;
     height: 28px;
     background: rgba(255, 255, 255, 0.95);
     border: 1px solid rgba(0, 0, 0, 0.3);
     border-radius: 4px;
     cursor: pointer;
-    z-index: 100;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -71,7 +96,7 @@ style.textContent = `.mermaid-container {
     position: fixed !important;
     top: 0 !important;
     left: 0 !important;
-    width: 100vw;
+    width: 95vw;
     height: 100vh;
     background: rgba(255, 255, 255, 0.98);
     z-index: 9999;
@@ -89,7 +114,7 @@ style.textContent = `.mermaid-container {
     justify-content: center;
 }
 
-.mermaid-fullscreen-content {
+.mermaid-container-fullscreen {
     position: relative;
     width: 95vw;
     height: 90vh;
@@ -105,12 +130,12 @@ style.textContent = `.mermaid-container {
     justify-content: center;
 }
 
-.mermaid-fullscreen-content.dark-theme {
+.mermaid-container-fullscreen.dark-theme {
     background: #1a1a1a;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
 }
 
-.mermaid-fullscreen-content .mermaid {
+.mermaid-container-fullscreen pre.mermaid {
     width: 100%;
     height: 100%;
     display: flex;
@@ -118,11 +143,9 @@ style.textContent = `.mermaid-container {
     justify-content: center;
 }
 
-.mermaid-fullscreen-content .mermaid svg {
-    width: 100%;
-    height: auto;
-    max-width: 100%;
-    max-height: 85vh;
+.mermaid-container-fullscreen .mermaid svg {
+    height: 100% !important;
+    width: 100% !important;
     cursor: grab;
 }
 
@@ -166,9 +189,8 @@ style.textContent = `.mermaid-container {
 
 .mermaid-fullscreen-modal .mermaid-fullscreen-btn {
     display: none !important;
-}
-`;
-document.head.appendChild(style);
+}`;
+document.head.appendChild(fullscreenStyle);
 
 // Detect if page has dark background
 const isDarkTheme = () => {
@@ -184,19 +206,44 @@ const isDarkTheme = () => {
     return false;
 };
 
-const initFullscreen = async () => {
+const load = async () => {
     await mermaid.run();
 
     const all_mermaids = document.querySelectorAll(".mermaid");
     const mermaids_processed = document.querySelectorAll(".mermaid[data-processed='true']");
 
-    if(all_mermaids.length !== mermaids_processed.length) {
+    if ("False" === "True") {
+        const mermaids_to_add_zoom = -1 === -1 ? all_mermaids.length : -1;
+        if(mermaids_to_add_zoom > 0) {
+            var svgs = d3.selectAll("");
+            if(all_mermaids.length !== mermaids_processed.length) {
+                setTimeout(load, 200);
+                return;
+            } else if(svgs.size() !== mermaids_to_add_zoom) {
+                setTimeout(load, 200);
+                return;
+            } else {
+                svgs.each(function() {
+                    var svg = d3.select(this);
+                    svg.html("<g class='wrapper'>" + svg.html() + "</g>");
+                    var inner = svg.select("g");
+                    var zoom = d3.zoom().on("zoom", function(event) {
+                        inner.attr("transform", event.transform);
+                    });
+                    svg.call(zoom);
+                });
+            }
+        }
+    } else if(all_mermaids.length !== mermaids_processed.length) {
         // Wait for mermaid to process all diagrams
-        setTimeout(initFullscreen, 200);
+        setTimeout(load, 200);
         return;
     }
 
     const darkTheme = isDarkTheme();
+
+    // Stop here if not adding fullscreen capability
+    if ("True" !== "True") return;
 
     const modal = document.createElement('div');
     modal.className = 'mermaid-fullscreen-modal' + (darkTheme ? ' dark-theme' : '');
@@ -205,17 +252,20 @@ const initFullscreen = async () => {
     modal.setAttribute('aria-label', 'Fullscreen diagram viewer');
     modal.innerHTML = `
         <button class="mermaid-fullscreen-close${darkTheme ? ' dark-theme' : ''}" aria-label="Close fullscreen">✕</button>
-        <div class="mermaid-fullscreen-content${darkTheme ? ' dark-theme' : ''}"></div>
+        <div class="mermaid-container-fullscreen${darkTheme ? ' dark-theme' : ''}"></div>
     `;
     document.body.appendChild(modal);
 
-    const modalContent = modal.querySelector('.mermaid-fullscreen-content');
+    const modalContent = modal.querySelector('.mermaid-container-fullscreen');
     const closeBtn = modal.querySelector('.mermaid-fullscreen-close');
+
+    let previousScrollOffset = [window.scrollX, window.scrollY];
 
     const closeModal = () => {
         modal.classList.remove('active');
         modalContent.innerHTML = '';
-        document.body.style.overflow = '';
+        document.body.style.overflow = ''
+        window.scrollTo({left: previousScrollOffset[0], top: previousScrollOffset[1], behavior: 'instant'});
     };
 
     closeBtn.addEventListener('click', closeModal);
@@ -245,6 +295,7 @@ const initFullscreen = async () => {
         fullscreenBtn.className = 'mermaid-fullscreen-btn' + (darkTheme ? ' dark-theme' : '');
         fullscreenBtn.setAttribute('aria-label', 'View diagram in fullscreen');
         fullscreenBtn.textContent = '⛶';
+        fullscreenBtn.style.opacity = '50%';
 
         // Calculate dynamic position based on diagram's margin and padding
         const diagramStyle = window.getComputedStyle(mermaidDiv);
@@ -256,6 +307,7 @@ const initFullscreen = async () => {
         fullscreenBtn.style.right = `${marginRight + paddingRight + 4}px`;
 
         fullscreenBtn.addEventListener('click', () => {
+            previousScrollOffset = [window.scroll, window.scrollY];
             const clone = mermaidDiv.cloneNode(true);
             modalContent.innerHTML = '';
             modalContent.appendChild(clone);
@@ -267,7 +319,22 @@ const initFullscreen = async () => {
                 svg.style.width = '100%';
                 svg.style.height = 'auto';
                 svg.style.maxWidth = '100%';
-                svg.style.display = 'block';
+                svg.style.sdisplay = 'block';
+
+                if ("False" === "True") {
+                    setTimeout(() => {
+                        const g = svg.querySelector('g');
+                        if (g) {
+                            var svgD3 = d3.select(svg);
+                            svgD3.html("<g class='wrapper'>" + svgD3.html() + "</g>");
+                            var inner = svgD3.select("g");
+                            var zoom = d3.zoom().on("zoom", function(event) {
+                                inner.attr("transform", event.transform);
+                            });
+                            svgD3.call(zoom);
+                        }
+                    }, 100);
+                }
             }
 
             modal.classList.add('active');
@@ -311,7 +378,7 @@ const initFullscreen = async () => {
     });
 };
 
-window.addEventListener("load", initFullscreen);
+window.addEventListener("load", load);
 </script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" />
@@ -410,10 +477,10 @@ window.addEventListener("load", initFullscreen);
 </li>
       <li><a href="developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.RadiationResult.added_masses">added_masses (capytaine.bem.problems_and_results.RadiationResult property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="developer_manual/api/capytaine.bem.airy_waves.html#capytaine.bem.airy_waves.airy_waves_free_surface_elevation">airy_waves_free_surface_elevation() (in module capytaine.bem.airy_waves)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="developer_manual/api/capytaine.bem.airy_waves.html#capytaine.bem.airy_waves.airy_waves_potential">airy_waves_potential() (in module capytaine.bem.airy_waves)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.bem.airy_waves.html#capytaine.bem.airy_waves.airy_waves_pressure">airy_waves_pressure() (in module capytaine.bem.airy_waves)</a>
@@ -429,6 +496,8 @@ window.addEventListener("load", initFullscreen);
       <li><a href="developer_manual/api/capytaine.ui.vtk.animation.html#capytaine.ui.vtk.animation.Animation">Animation (class in capytaine.ui.vtk.animation)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.post_pro.free_surfaces.html#capytaine.post_pro.free_surfaces.FreeSurface.area">area (capytaine.post_pro.free_surfaces.FreeSurface property)</a>
+</li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.as_list_of_faces">as_list_of_faces() (capytaine.new_meshes.meshes.Mesh method)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.as_set_of_faces">as_set_of_faces() (capytaine.meshes.meshes.Mesh method)</a>
 </li>
@@ -791,6 +860,48 @@ window.addEventListener("load", initFullscreen);
         <li><a href="developer_manual/api/capytaine.meshes.symmetric.html#module-capytaine.meshes.symmetric">module</a>
 </li>
       </ul></li>
+      <li>
+    capytaine.new_meshes
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.html#module-capytaine.new_meshes">module</a>
+</li>
+      </ul></li>
+      <li>
+    capytaine.new_meshes.clean
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.clean.html#module-capytaine.new_meshes.clean">module</a>
+</li>
+      </ul></li>
+      <li>
+    capytaine.new_meshes.export
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.export.html#module-capytaine.new_meshes.export">module</a>
+</li>
+      </ul></li>
+      <li>
+    capytaine.new_meshes.geometry
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.geometry.html#module-capytaine.new_meshes.geometry">module</a>
+</li>
+      </ul></li>
+      <li>
+    capytaine.new_meshes.meshes
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#module-capytaine.new_meshes.meshes">module</a>
+</li>
+      </ul></li>
+      <li>
+    capytaine.new_meshes.quality
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.quality.html#module-capytaine.new_meshes.quality">module</a>
+</li>
+      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li>
@@ -961,7 +1072,13 @@ window.addEventListener("load", initFullscreen);
       </ul></li>
       <li><a href="developer_manual/api/capytaine.io.wamit.html#capytaine.io.wamit.check_dataset_ready_for_export">check_dataset_ready_for_export() (in module capytaine.io.wamit)</a>
 </li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.quality.html#capytaine.new_meshes.quality.check_mesh_quality">check_mesh_quality() (in module capytaine.new_meshes.quality)</a>
+</li>
       <li><a href="developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.circular_permutation">circular_permutation() (in module capytaine.tools.block_circulant_matrices)</a>
+</li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.clean.html#capytaine.new_meshes.clean.clean_mesh">clean_mesh() (in module capytaine.new_meshes.clean)</a>
+</li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.clean.html#capytaine.new_meshes.clean.clean_mesh_once">clean_mesh_once() (in module capytaine.new_meshes.clean)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.clip">clip() (capytaine.bodies.bodies.FloatingBody method)</a>
 
@@ -989,7 +1106,17 @@ window.addEventListener("load", initFullscreen);
 </li>
       <li><a href="developer_manual/api/capytaine.green_functions.hams.html#capytaine.green_functions.hams.FinGreen3D.compute_dispersion_relation_roots">compute_dispersion_relation_roots() (capytaine.green_functions.hams.FinGreen3D method)</a>
 </li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.geometry.html#capytaine.new_meshes.geometry.compute_distance_between_points">compute_distance_between_points() (in module capytaine.new_meshes.geometry)</a>
+</li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.geometry.html#capytaine.new_meshes.geometry.compute_faces_areas">compute_faces_areas() (in module capytaine.new_meshes.geometry)</a>
+</li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.geometry.html#capytaine.new_meshes.geometry.compute_faces_centers">compute_faces_centers() (in module capytaine.new_meshes.geometry)</a>
+</li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.geometry.html#capytaine.new_meshes.geometry.compute_faces_normals">compute_faces_normals() (in module capytaine.new_meshes.geometry)</a>
+</li>
       <li><a href="developer_manual/api/capytaine.meshes.properties.html#capytaine.meshes.properties.compute_faces_properties">compute_faces_properties() (in module capytaine.meshes.properties)</a>
+</li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.geometry.html#capytaine.new_meshes.geometry.compute_faces_radii">compute_faces_radii() (in module capytaine.new_meshes.geometry)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.compute_free_surface_elevation">compute_free_surface_elevation() (capytaine.bem.solver.BEMSolver method)</a>
 </li>
@@ -1035,6 +1162,8 @@ window.addEventListener("load", initFullscreen);
         <li><a href="developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Plane.copy">(capytaine.meshes.geometry.Plane method)</a>
 </li>
         <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.copy">(capytaine.meshes.meshes.Mesh method)</a>
+</li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.copy">(capytaine.new_meshes.meshes.Mesh method)</a>
 </li>
       </ul></li>
       <li><a href="developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.Counter">Counter (class in capytaine.bem.engines)</a>
@@ -1125,10 +1254,10 @@ window.addEventListener("load", initFullscreen);
 </li>
       <li><a href="developer_manual/api/capytaine.io.wamit.html#capytaine.io.wamit.export_to_wamit">export_to_wamit() (in module capytaine.io.wamit)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="developer_manual/api/capytaine.io.wamit.html#capytaine.io.wamit.export_wamit_1">export_wamit_1() (in module capytaine.io.wamit)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="developer_manual/api/capytaine.io.wamit.html#capytaine.io.wamit.export_wamit_3">export_wamit_3() (in module capytaine.io.wamit)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.io.wamit.html#capytaine.io.wamit.export_wamit_3fk">export_wamit_3fk() (in module capytaine.io.wamit)</a>
@@ -1143,6 +1272,8 @@ window.addEventListener("load", initFullscreen);
         <li><a href="developer_manual/api/capytaine.green_functions.hams.html#capytaine.green_functions.hams.LiangWuNoblesseGF.exportable_settings">(capytaine.green_functions.hams.LiangWuNoblesseGF attribute)</a>
 </li>
       </ul></li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.quality.html#capytaine.new_meshes.quality.extract_face_vertices">extract_face_vertices() (in module capytaine.new_meshes.quality)</a>
+</li>
       <li><a href="developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.extract_faces">extract_faces() (capytaine.bodies.bodies.FloatingBody method)</a>
 
       <ul>
@@ -1151,6 +1282,8 @@ window.addEventListener("load", initFullscreen);
         <li><a href="developer_manual/api/capytaine.meshes.mesh_like_protocol.html#capytaine.meshes.mesh_like_protocol.MeshLike.extract_faces">(capytaine.meshes.mesh_like_protocol.MeshLike method)</a>
 </li>
         <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.extract_faces">(capytaine.meshes.meshes.Mesh method)</a>
+</li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.extract_faces">(capytaine.new_meshes.meshes.Mesh method)</a>
 </li>
       </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.extract_lid">extract_lid() (capytaine.meshes.meshes.Mesh method)</a>
@@ -1178,6 +1311,8 @@ window.addEventListener("load", initFullscreen);
 </li>
         <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.faces">(capytaine.meshes.meshes.Mesh property)</a>
 </li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.faces">(capytaine.new_meshes.meshes.Mesh property)</a>
+</li>
       </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.collections.html#capytaine.meshes.collections.CollectionOfMeshes.faces_areas">faces_areas (capytaine.meshes.collections.CollectionOfMeshes property)</a>
 
@@ -1186,6 +1321,8 @@ window.addEventListener("load", initFullscreen);
 </li>
         <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.faces_areas">(capytaine.meshes.meshes.Mesh property)</a>
 </li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.faces_areas">(capytaine.new_meshes.meshes.Mesh property)</a>
+</li>
       </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.collections.html#capytaine.meshes.collections.CollectionOfMeshes.faces_centers">faces_centers (capytaine.meshes.collections.CollectionOfMeshes property)</a>
 
@@ -1193,6 +1330,8 @@ window.addEventListener("load", initFullscreen);
         <li><a href="developer_manual/api/capytaine.meshes.mesh_like_protocol.html#capytaine.meshes.mesh_like_protocol.MeshLike.faces_centers">(capytaine.meshes.mesh_like_protocol.MeshLike attribute)</a>
 </li>
         <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.faces_centers">(capytaine.meshes.meshes.Mesh property)</a>
+</li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.faces_centers">(capytaine.new_meshes.meshes.Mesh property)</a>
 </li>
       </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.properties.html#capytaine.meshes.properties.faces_in_group">faces_in_group() (in module capytaine.meshes.properties)</a>
@@ -1204,6 +1343,8 @@ window.addEventListener("load", initFullscreen);
 </li>
         <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.faces_normals">(capytaine.meshes.meshes.Mesh property)</a>
 </li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.faces_normals">(capytaine.new_meshes.meshes.Mesh property)</a>
+</li>
       </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.collections.html#capytaine.meshes.collections.CollectionOfMeshes.faces_radiuses">faces_radiuses (capytaine.meshes.collections.CollectionOfMeshes property)</a>
 
@@ -1212,7 +1353,11 @@ window.addEventListener("load", initFullscreen);
 </li>
         <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.faces_radiuses">(capytaine.meshes.meshes.Mesh property)</a>
 </li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.faces_radiuses">(capytaine.new_meshes.meshes.Mesh property)</a>
+</li>
       </ul></li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.faces_vertices_centers">faces_vertices_centers (capytaine.new_meshes.meshes.Mesh property)</a>
+</li>
       <li><a href="developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.FailedDiffractionResult">FailedDiffractionResult (class in capytaine.bem.problems_and_results)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.FailedLinearPotentialFlowResult">FailedLinearPotentialFlowResult (class in capytaine.bem.problems_and_results)</a>
@@ -1221,6 +1366,8 @@ window.addEventListener("load", initFullscreen);
 </li>
       <li><a href="developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset">fill_dataset() (capytaine.bem.solver.BEMSolver method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="developer_manual/api/capytaine.ui.vtk.mesh_viewer.html#capytaine.ui.vtk.mesh_viewer.MeshViewer.finalize">finalize() (capytaine.ui.vtk.mesh_viewer.MeshViewer method)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau.find_best_exponential_decomposition">find_best_exponential_decomposition() (capytaine.green_functions.delhommeau.Delhommeau method)</a>
@@ -1229,8 +1376,6 @@ window.addEventListener("load", initFullscreen);
         <li><a href="developer_manual/api/capytaine.tools.prony_decomposition.html#capytaine.tools.prony_decomposition.find_best_exponential_decomposition">(in module capytaine.tools.prony_decomposition)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="developer_manual/api/capytaine.green_functions.hams.html#capytaine.green_functions.hams.FinGreen3D">FinGreen3D (class in capytaine.green_functions.hams)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.green_functions.hams.html#capytaine.green_functions.hams.FinGreen3D.finite_depth_method_index">finite_depth_method_index (capytaine.green_functions.hams.FinGreen3D attribute)</a>
@@ -1277,6 +1422,8 @@ window.addEventListener("load", initFullscreen);
 </li>
       <li><a href="developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.from_file">from_file() (capytaine.bodies.bodies.FloatingBody static method)</a>
 </li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.from_list_of_faces">from_list_of_faces() (capytaine.new_meshes.meshes.Mesh class method)</a>
+</li>
       <li><a href="developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.from_meshio">from_meshio() (capytaine.bodies.bodies.FloatingBody static method)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.AxialSymmetricMesh.from_profile">from_profile() (capytaine.meshes.symmetric.AxialSymmetricMesh static method)</a>
@@ -1303,13 +1450,15 @@ window.addEventListener("load", initFullscreen);
 </li>
       <li><a href="developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Plane.get_edge_intersection">get_edge_intersection() (capytaine.meshes.geometry.Plane method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.get_face">get_face() (capytaine.meshes.meshes.Mesh method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.get_free_surface_elevation">get_free_surface_elevation() (capytaine.bem.solver.BEMSolver method)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.get_potential_on_mesh">get_potential_on_mesh() (capytaine.bem.solver.BEMSolver method)</a>
+</li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.geometry.html#capytaine.new_meshes.geometry.get_vertices_face">get_vertices_face() (in module capytaine.new_meshes.geometry)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.green_functions.hams.html#capytaine.green_functions.hams.FinGreen3D.gf_singularities_index">gf_singularities_index (capytaine.green_functions.hams.FinGreen3D attribute)</a>
 </li>
@@ -1365,6 +1514,10 @@ window.addEventListener("load", initFullscreen);
 </li>
       <li><a href="developer_manual/api/capytaine.meshes.collections.html#capytaine.meshes.collections.CollectionOfMeshes.indices_of_mesh">indices_of_mesh() (capytaine.meshes.collections.CollectionOfMeshes method)</a>
 </li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.quality.html#capytaine.new_meshes.quality.indices_of_non_convex_faces">indices_of_non_convex_faces() (in module capytaine.new_meshes.quality)</a>
+</li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.quality.html#capytaine.new_meshes.quality.indices_of_non_coplanar_faces">indices_of_non_coplanar_faces() (in module capytaine.new_meshes.quality)</a>
+</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.LinearPotentialFlowProblem.influenced_dofs">influenced_dofs (capytaine.bem.problems_and_results.LinearPotentialFlowProblem property)</a>
@@ -1372,6 +1525,10 @@ window.addEventListener("load", initFullscreen);
       <li><a href="developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.inplace_transformation">inplace_transformation() (in module capytaine.meshes.geometry)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.integrate_pressure">integrate_pressure() (capytaine.bodies.bodies.FloatingBody method)</a>
+</li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.quality.html#capytaine.new_meshes.quality.is_face_convex">is_face_convex() (in module capytaine.new_meshes.quality)</a>
+</li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.quality.html#capytaine.new_meshes.quality.is_non_coplanar">is_non_coplanar() (in module capytaine.new_meshes.quality)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Axis.is_orthogonal_to">is_orthogonal_to() (capytaine.meshes.geometry.Axis method)</a>
 
@@ -1403,6 +1560,8 @@ window.addEventListener("load", initFullscreen);
         <li><a href="developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.ReflectionSymmetricMesh.join_meshes">(capytaine.meshes.symmetric.ReflectionSymmetricMesh method)</a>
 </li>
         <li><a href="developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.TranslationalSymmetricMesh.join_meshes">(capytaine.meshes.symmetric.TranslationalSymmetricMesh method)</a>
+</li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.join_meshes">(capytaine.new_meshes.meshes.Mesh method)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -1533,6 +1692,8 @@ window.addEventListener("load", initFullscreen);
         <li><a href="developer_manual/api/capytaine.meshes.quality.html#capytaine.meshes.quality.merge_duplicates">(in module capytaine.meshes.quality)</a>
 </li>
       </ul></li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.clean.html#capytaine.new_meshes.clean.merge_near_duplicate_vertices">merge_near_duplicate_vertices() (in module capytaine.new_meshes.clean)</a>
+</li>
       <li><a href="developer_manual/api/capytaine.meshes.collections.html#capytaine.meshes.collections.CollectionOfMeshes.merged">merged() (capytaine.meshes.collections.CollectionOfMeshes method)</a>
 
       <ul>
@@ -1540,7 +1701,11 @@ window.addEventListener("load", initFullscreen);
 </li>
       </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh">Mesh (class in capytaine.meshes.meshes)</a>
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh">(class in capytaine.new_meshes.meshes)</a>
 </li>
+      </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.predefined.cylinders.html#capytaine.meshes.predefined.cylinders.mesh_disk">mesh_disk() (in module capytaine.meshes.predefined.cylinders)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.meshes.predefined.cylinders.html#capytaine.meshes.predefined.cylinders.mesh_horizontal_cylinder">mesh_horizontal_cylinder() (in module capytaine.meshes.predefined.cylinders)</a>
@@ -1550,6 +1715,8 @@ window.addEventListener("load", initFullscreen);
       <li><a href="developer_manual/api/capytaine.meshes.predefined.rectangles.html#capytaine.meshes.predefined.rectangles.mesh_rectangle">mesh_rectangle() (in module capytaine.meshes.predefined.rectangles)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.meshes.predefined.spheres.html#capytaine.meshes.predefined.spheres.mesh_sphere">mesh_sphere() (in module capytaine.meshes.predefined.spheres)</a>
+</li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.export.html#capytaine.new_meshes.export.mesh_to_pyvista">mesh_to_pyvista() (in module capytaine.new_meshes.export)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.meshes.predefined.cylinders.html#capytaine.meshes.predefined.cylinders.mesh_vertical_cylinder">mesh_vertical_cylinder() (in module capytaine.meshes.predefined.cylinders)</a>
 </li>
@@ -1667,6 +1834,18 @@ window.addEventListener("load", initFullscreen);
 </li>
         <li><a href="developer_manual/api/capytaine.meshes.symmetric.html#module-capytaine.meshes.symmetric">capytaine.meshes.symmetric</a>
 </li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.html#module-capytaine.new_meshes">capytaine.new_meshes</a>
+</li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.clean.html#module-capytaine.new_meshes.clean">capytaine.new_meshes.clean</a>
+</li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.export.html#module-capytaine.new_meshes.export">capytaine.new_meshes.export</a>
+</li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.geometry.html#module-capytaine.new_meshes.geometry">capytaine.new_meshes.geometry</a>
+</li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#module-capytaine.new_meshes.meshes">capytaine.new_meshes.meshes</a>
+</li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.quality.html#module-capytaine.new_meshes.quality">capytaine.new_meshes.quality</a>
+</li>
         <li><a href="developer_manual/api/capytaine.post_pro.html#module-capytaine.post_pro">capytaine.post_pro</a>
 </li>
         <li><a href="developer_manual/api/capytaine.post_pro.free_surfaces.html#module-capytaine.post_pro.free_surfaces">capytaine.post_pro.free_surfaces</a>
@@ -1727,8 +1906,12 @@ window.addEventListener("load", initFullscreen);
 </li>
         <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.nb_faces">(capytaine.meshes.meshes.Mesh property)</a>
 </li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.nb_faces">(capytaine.new_meshes.meshes.Mesh property)</a>
+</li>
       </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.nb_quadrangles">nb_quadrangles (capytaine.meshes.meshes.Mesh property)</a>
+</li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.nb_quads">nb_quads (capytaine.new_meshes.meshes.Mesh property)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -1737,13 +1920,19 @@ window.addEventListener("load", initFullscreen);
       <li><a href="developer_manual/api/capytaine.tools.timer.html#capytaine.tools.timer.Timer.nb_timings">nb_timings (capytaine.tools.timer.Timer property)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.nb_triangles">nb_triangles (capytaine.meshes.meshes.Mesh property)</a>
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.nb_triangles">(capytaine.new_meshes.meshes.Mesh property)</a>
 </li>
+      </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.collections.html#capytaine.meshes.collections.CollectionOfMeshes.nb_vertices">nb_vertices (capytaine.meshes.collections.CollectionOfMeshes property)</a>
 
       <ul>
         <li><a href="developer_manual/api/capytaine.meshes.mesh_like_protocol.html#capytaine.meshes.mesh_like_protocol.MeshLike.nb_vertices">(capytaine.meshes.mesh_like_protocol.MeshLike attribute)</a>
 </li>
         <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.nb_vertices">(capytaine.meshes.meshes.Mesh property)</a>
+</li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.nb_vertices">(capytaine.new_meshes.meshes.Mesh property)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -1804,14 +1993,14 @@ window.addEventListener("load", initFullscreen);
 </li>
       <li><a href="developer_manual/api/capytaine.meshes.collections.html#capytaine.meshes.collections.CollectionOfMeshes.quadrature_method">quadrature_method (capytaine.meshes.collections.CollectionOfMeshes property)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="developer_manual/api/capytaine.meshes.collections.html#capytaine.meshes.collections.CollectionOfMeshes.quadrature_points">quadrature_points (capytaine.meshes.collections.CollectionOfMeshes property)</a>
 
       <ul>
         <li><a href="developer_manual/api/capytaine.meshes.mesh_like_protocol.html#capytaine.meshes.mesh_like_protocol.MeshLike.quadrature_points">(capytaine.meshes.mesh_like_protocol.MeshLike attribute)</a>
 </li>
         <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.quadrature_points">(capytaine.meshes.meshes.Mesh property)</a>
+</li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.quadrature_points">(capytaine.new_meshes.meshes.Mesh property)</a>
 </li>
       </ul></li>
   </ul></td>
@@ -1846,8 +2035,18 @@ window.addEventListener("load", initFullscreen);
 </li>
       <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.remove_degenerated_faces">remove_degenerated_faces() (capytaine.meshes.meshes.Mesh method)</a>
 </li>
-      <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.remove_unused_vertices">remove_unused_vertices() (capytaine.meshes.meshes.Mesh method)</a>
+      <li><a href="developer_manual/api/capytaine.new_meshes.clean.html#capytaine.new_meshes.clean.remove_duplicate_faces">remove_duplicate_faces() (in module capytaine.new_meshes.clean)</a>
 </li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.clean.html#capytaine.new_meshes.clean.remove_duplicate_vertices">remove_duplicate_vertices() (in module capytaine.new_meshes.clean)</a>
+</li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.clean.html#capytaine.new_meshes.clean.remove_small_faces">remove_small_faces() (in module capytaine.new_meshes.clean)</a>
+</li>
+      <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.remove_unused_vertices">remove_unused_vertices() (capytaine.meshes.meshes.Mesh method)</a>
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.clean.html#capytaine.new_meshes.clean.remove_unused_vertices">(in module capytaine.new_meshes.clean)</a>
+</li>
+      </ul></li>
       <li><a href="developer_manual/api/capytaine.tools.symbolic_multiplication.html#capytaine.tools.symbolic_multiplication.SymbolicMultiplication.reshape">reshape() (capytaine.tools.symbolic_multiplication.SymbolicMultiplication method)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.rigid_body_dofs">rigid_body_dofs() (in module capytaine.bodies.dofs)</a>
@@ -1892,12 +2091,26 @@ window.addEventListener("load", initFullscreen);
 </li>
       <li><a href="developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Abstract3DObject.rotated_around_center_to_align_vectors">rotated_around_center_to_align_vectors() (capytaine.meshes.geometry.Abstract3DObject method)</a>
 </li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.rotated_with_matrix">rotated_with_matrix() (capytaine.new_meshes.meshes.Mesh method)</a>
+</li>
       <li><a href="developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Abstract3DObject.rotated_x">rotated_x() (capytaine.meshes.geometry.Abstract3DObject method)</a>
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.rotated_x">(capytaine.new_meshes.meshes.Mesh method)</a>
 </li>
+      </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Abstract3DObject.rotated_y">rotated_y() (capytaine.meshes.geometry.Abstract3DObject method)</a>
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.rotated_y">(capytaine.new_meshes.meshes.Mesh method)</a>
 </li>
+      </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Abstract3DObject.rotated_z">rotated_z() (capytaine.meshes.geometry.Abstract3DObject method)</a>
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.rotated_z">(capytaine.new_meshes.meshes.Mesh method)</a>
 </li>
+      </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Axis.rotation_matrix">rotation_matrix() (capytaine.meshes.geometry.Axis method)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.ui.vtk.animation.html#capytaine.ui.vtk.animation.Animation.run">run() (capytaine.ui.vtk.animation.Animation method)</a>
@@ -1986,6 +2199,8 @@ window.addEventListener("load", initFullscreen);
 </li>
       <li><a href="developer_manual/api/capytaine.tools.symbolic_multiplication.html#capytaine.tools.symbolic_multiplication.SymbolicMultiplication.sum">sum() (capytaine.tools.symbolic_multiplication.SymbolicMultiplication method)</a>
 </li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.summary">summary() (capytaine.new_meshes.meshes.Mesh method)</a>
+</li>
       <li><a href="developer_manual/api/capytaine.tools.symbolic_multiplication.html#capytaine.tools.symbolic_multiplication.supporting_symbolic_multiplication">supporting_symbolic_multiplication() (in module capytaine.tools.symbolic_multiplication)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.surface_integral">surface_integral() (capytaine.bodies.bodies.FloatingBody method)</a>
@@ -2046,6 +2261,8 @@ window.addEventListener("load", initFullscreen);
 </li>
       <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.to_meshmagick">to_meshmagick() (capytaine.meshes.meshes.Mesh method)</a>
 </li>
+      <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.to_new_mesh">to_new_mesh() (in module capytaine.new_meshes.meshes)</a>
+</li>
       <li><a href="developer_manual/api/capytaine.tools.timer.html#capytaine.tools.timer.Timer.total">total (capytaine.tools.timer.Timer property)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.translate">translate() (capytaine.bodies.bodies.FloatingBody method)</a>
@@ -2079,15 +2296,31 @@ window.addEventListener("load", initFullscreen);
       <li><a href="developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Abstract3DObject.translate_z">translate_z() (capytaine.meshes.geometry.Abstract3DObject method)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Abstract3DObject.translated">translated() (capytaine.meshes.geometry.Abstract3DObject method)</a>
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.translated">(capytaine.new_meshes.meshes.Mesh method)</a>
 </li>
+      </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Abstract3DObject.translated_point_to_point">translated_point_to_point() (capytaine.meshes.geometry.Abstract3DObject method)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Abstract3DObject.translated_x">translated_x() (capytaine.meshes.geometry.Abstract3DObject method)</a>
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.translated_x">(capytaine.new_meshes.meshes.Mesh method)</a>
 </li>
+      </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Abstract3DObject.translated_y">translated_y() (capytaine.meshes.geometry.Abstract3DObject method)</a>
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.translated_y">(capytaine.new_meshes.meshes.Mesh method)</a>
 </li>
+      </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.geometry.html#capytaine.meshes.geometry.Abstract3DObject.translated_z">translated_z() (capytaine.meshes.geometry.Abstract3DObject method)</a>
+
+      <ul>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.translated_z">(capytaine.new_meshes.meshes.Mesh method)</a>
 </li>
+      </ul></li>
       <li><a href="developer_manual/api/capytaine.meshes.symmetric.html#capytaine.meshes.symmetric.TranslationalSymmetricMesh">TranslationalSymmetricMesh (class in capytaine.meshes.symmetric)</a>
 </li>
       <li><a href="developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.transversal_metacentric_height">transversal_metacentric_height (capytaine.bodies.bodies.FloatingBody property)</a>
@@ -2178,6 +2411,8 @@ window.addEventListener("load", initFullscreen);
         <li><a href="developer_manual/api/capytaine.meshes.mesh_like_protocol.html#capytaine.meshes.mesh_like_protocol.MeshLike.with_normal_vector_going_down">(capytaine.meshes.mesh_like_protocol.MeshLike method)</a>
 </li>
         <li><a href="developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.with_normal_vector_going_down">(capytaine.meshes.meshes.Mesh method)</a>
+</li>
+        <li><a href="developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.with_normal_vector_going_down">(capytaine.new_meshes.meshes.Mesh method)</a>
 </li>
       </ul></li>
       <li><a href="developer_manual/api/capytaine.tools.timer.html#capytaine.tools.timer.Timer.wraps_function">wraps_function() (capytaine.tools.timer.Timer method)</a>
