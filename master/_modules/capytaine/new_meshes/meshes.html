@@ -437,6 +437,7 @@ window.addEventListener("load", load);
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.clean</span><span class="w"> </span><span class="kn">import</span> <span class="n">clean_mesh</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.quality</span><span class="w"> </span><span class="kn">import</span> <span class="n">_is_valid</span><span class="p">,</span> <span class="n">check_mesh_quality</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">show_3d</span>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -577,6 +578,55 @@ window.addEventListener("load", load);
         <span class="k">yield</span> <span class="s2">&quot;vertices&quot;</span><span class="p">,</span> <span class="n">CustomRepr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_vertices</span><span class="p">,</span> <span class="s2">&quot;vertices&quot;</span><span class="p">)</span>
         <span class="k">yield</span> <span class="s2">&quot;faces&quot;</span><span class="p">,</span> <span class="n">CustomRepr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="s2">&quot;faces&quot;</span><span class="p">)</span>
         <span class="k">yield</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+<div class="viewcode-block" id="Mesh.show">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.show">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Visualize the mesh using the specified backend.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        backend : str, optional</span>
+<span class="sd">            Visualization backend to use. Options are &#39;pyvista&#39; or &#39;matplotlib&#39;.</span>
+<span class="sd">            By default, try several until an installed one is found.</span>
+<span class="sd">        normal_vectors: bool, optional</span>
+<span class="sd">            If True, display normal vectors on each face.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Additional keyword arguments passed to the visualization backend.</span>
+<span class="sd">            See :mod:`~capytaine.new_meshes.visualization`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        object</span>
+<span class="sd">            Visualization object returned by the backend (e.g., matplotlib figure).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            If the specified backend is not supported.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">show_3d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Mesh.show_pyvista">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.show_pyvista">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">show_pyvista</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Equivalent to show(backend=&quot;pyvista&quot;).</span>
+<span class="sd">        See also :func:`~capytaine.new_meshes.visualization.show_pyvista`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;pyvista&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Mesh.show_matplotlib">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.show_matplotlib">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">show_matplotlib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Equivalent to show(backend=&quot;matplotlib&quot;).</span>
+<span class="sd">        See also :func:`~capytaine.new_meshes.visualization.show_matplotlib`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
 
     <span class="c1">## INITIALISATION</span>
 
