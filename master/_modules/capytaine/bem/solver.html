@@ -431,6 +431,7 @@ window.addEventListener("load", load);
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.problems_and_results</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearPotentialFlowProblem</span><span class="p">,</span> <span class="n">DiffractionProblem</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.engines</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasicMatrixEngine</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">problems_from_dataset</span><span class="p">,</span> <span class="n">assemble_dataset</span><span class="p">,</span> <span class="n">kochin_data_array</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.memory_monitor</span><span class="w"> </span><span class="kn">import</span> <span class="n">MemoryMonitor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.optional_imports</span><span class="w"> </span><span class="kn">import</span> <span class="n">silently_import_optional_dependency</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.lists_of_points</span><span class="w"> </span><span class="kn">import</span> <span class="n">_normalize_points</span><span class="p">,</span> <span class="n">_normalize_free_surface_points</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.symbolic_multiplication</span><span class="w"> </span><span class="kn">import</span> <span class="n">supporting_symbolic_multiplication</span>
@@ -673,6 +674,8 @@ window.addEventListener("load", load);
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength_and_mesh_resolution</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength_and_irregular_frequencies</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">_check_ram</span><span class="p">(</span><span class="n">problems</span><span class="p">,</span> <span class="n">n_jobs</span><span class="p">)</span>
+
         <span class="k">if</span> <span class="n">progress_bar</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="s2">&quot;CAPYTAINE_PROGRESS_BAR&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
                 <span class="n">env_var</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;CAPYTAINE_PROGRESS_BAR&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
@@ -685,6 +688,7 @@ window.addEventListener("load", load);
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">progress_bar</span> <span class="o">=</span> <span class="kc">True</span>
 
+        <span class="n">monitor</span> <span class="o">=</span> <span class="n">MemoryMonitor</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">n_jobs</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>  <span class="c1"># force sequential resolution</span>
             <span class="n">problems</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">progress_bar</span><span class="p">:</span>
@@ -700,7 +704,7 @@ window.addEventListener("load", load);
             <span class="k">if</span> <span class="n">progress_bar</span><span class="p">:</span>
                 <span class="n">groups_of_results</span> <span class="o">=</span> <span class="n">track</span><span class="p">(</span><span class="n">groups_of_results</span><span class="p">,</span>
                                           <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">groups_of_problems</span><span class="p">),</span>
-                                          <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Solving BEM problems with </span><span class="si">{</span><span class="n">n_jobs</span><span class="si">}</span><span class="s2"> process:&quot;</span><span class="p">)</span>
+                                          <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Solving BEM problems with </span><span class="si">{</span><span class="n">n_jobs</span><span class="si">}</span><span class="s2"> processes:&quot;</span><span class="p">)</span>
             <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="n">process_id_mapping</span> <span class="o">=</span> <span class="p">{}</span>
             <span class="k">for</span> <span class="n">grp_results</span><span class="p">,</span> <span class="n">timer</span><span class="p">,</span> <span class="n">process_id</span> <span class="ow">in</span> <span class="n">groups_of_results</span><span class="p">:</span>
@@ -710,6 +714,11 @@ window.addEventListener("load", load);
                 <span class="k">for</span> <span class="n">timer_key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">:</span>
                     <span class="n">id_process_that_solved_that_group</span> <span class="o">=</span> <span class="n">process_id_mapping</span><span class="p">[</span><span class="n">process_id</span><span class="p">]</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">[</span><span class="n">timer_key</span><span class="p">][</span><span class="n">id_process_that_solved_that_group</span><span class="p">]</span><span class="o">.</span><span class="n">add_data_from_other_timer</span><span class="p">(</span><span class="n">timer</span><span class="p">[</span><span class="n">timer_key</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">memory_peak</span> <span class="o">=</span> <span class="n">monitor</span><span class="o">.</span><span class="n">get_memory_peak</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">memory_peak</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Actual peak RAM usage: Not measured since optional dependency `psutil` cannot be found.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Actual peak RAM usage: </span><span class="si">{</span><span class="n">memory_peak</span><span class="si">}</span><span class="s2"> GB.&quot;</span><span class="p">)</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Solver timer summary:</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer_summary</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">results</span></div>
 
@@ -775,6 +784,25 @@ window.addEventListener("load", load);
                             <span class="sa">f</span><span class="s2">&quot;for </span><span class="si">{</span><span class="n">freq_type</span><span class="si">}</span><span class="s2"> ranging from </span><span class="si">{</span><span class="n">freqs</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">freqs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
                             <span class="o">+</span> <span class="n">recommendation</span>
                             <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_check_ram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">problems</span><span class="p">,</span> <span class="n">n_jobs</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Display a warning if the RAM estimation is larger than a certain limit.&quot;&quot;&quot;</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Check RAM estimation.&quot;</span><span class="p">)</span>
+        <span class="n">ram_limit</span> <span class="o">=</span> <span class="mi">8</span>
+
+        <span class="k">if</span> <span class="n">n_jobs</span> <span class="o">==</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">n_jobs</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
+
+        <span class="n">estimated_peak_memory</span> <span class="o">=</span> <span class="n">n_jobs</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">compute_ram_estimation</span><span class="p">(</span><span class="n">pb</span><span class="p">)</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">problems</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">estimated_peak_memory</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Estimated peak RAM usage: &lt;1 GB.&quot;</span><span class="p">)</span>
+
+        <span class="k">elif</span> <span class="n">estimated_peak_memory</span> <span class="o">&lt;</span> <span class="n">ram_limit</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Estimated peak RAM usage: </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">estimated_peak_memory</span><span class="p">))</span><span class="si">}</span><span class="s2"> GB.&quot;</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Estimated peak RAM usage: </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">estimated_peak_memory</span><span class="p">))</span><span class="si">}</span><span class="s2"> GB.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BEMSolver.fill_dataset">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset">[docs]</a>

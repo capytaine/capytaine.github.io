@@ -709,6 +709,23 @@ window.addEventListener("load", load);
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Unknown `linear_solver` in BasicMatrixEngine: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_linear_solver</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span></div>
+
+        
+<div class="viewcode-block" id="BasicMatrixEngine.compute_ram_estimation">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine.compute_ram_estimation">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compute_ram_estimation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">):</span>
+        <span class="n">nb_faces</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span>
+        <span class="n">nb_matrices</span> <span class="o">=</span> <span class="mi">2</span>
+        <span class="n">nb_bytes</span> <span class="o">=</span> <span class="mi">16</span> 
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_solver</span> <span class="o">==</span> <span class="s2">&quot;lu_decomposition&quot;</span><span class="p">:</span>
+            <span class="n">nb_matrices</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">floating_point_precision</span> <span class="o">==</span> <span class="s2">&quot;float32&quot;</span><span class="p">:</span>
+            <span class="n">nb_bytes</span> <span class="o">=</span> <span class="mi">8</span>
+
+        <span class="n">peak_memory</span> <span class="o">=</span> <span class="n">nb_faces</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">nb_matrices</span><span class="o">*</span><span class="n">nb_bytes</span><span class="o">/</span><span class="mf">1e9</span>
+        <span class="k">return</span> <span class="n">peak_memory</span></div>
 </div>
 
 </pre></div>
