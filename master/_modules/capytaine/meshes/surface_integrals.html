@@ -426,17 +426,10 @@ window.addEventListener("load", load);
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">data</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="SurfaceIntegralsMixin.waterplane_integral">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.surface_integrals.html#capytaine.meshes.surface_integrals.SurfaceIntegralsMixin.waterplane_integral">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">waterplane_integral</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns integral of given data along water plane area.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_integral</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-
-
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">wet_surface_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns wet surface area.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_integral</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span><span class="o">.</span><span class="n">surface_integral</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">volumes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -449,23 +442,36 @@ window.addEventListener("load", load);
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns volume of the mesh.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">volumes</span><span class="p">)</span>
 
+<div class="viewcode-block" id="SurfaceIntegralsMixin.waterplane_integral">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.surface_integrals.html#capytaine.meshes.surface_integrals.SurfaceIntegralsMixin.waterplane_integral">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">waterplane_integral</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns integral of given data along water plane area.&quot;&quot;&quot;</span>
+        <span class="n">immersed_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">immersed_self</span><span class="o">.</span><span class="n">surface_integral</span><span class="p">(</span><span class="n">immersed_self</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">disp_volume</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span><span class="o">.</span><span class="n">volume</span>
+
 <div class="viewcode-block" id="SurfaceIntegralsMixin.disp_mass">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.surface_integrals.html#capytaine.meshes.surface_integrals.SurfaceIntegralsMixin.disp_mass">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">disp_mass</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mi">1000</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">rho</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">volume</span></div>
+        <span class="k">return</span> <span class="n">rho</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">disp_volume</span></div>
 
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">center_of_buoyancy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns center of buoyancy of the mesh.&quot;&quot;&quot;</span>
-        <span class="n">coords_sq_norm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_normals</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_centers</span><span class="o">**</span><span class="mi">2</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">surface_integral</span><span class="p">(</span><span class="n">coords_sq_norm</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span>
+        <span class="n">immersed_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+        <span class="n">coords_sq_norm</span> <span class="o">=</span> <span class="n">immersed_self</span><span class="o">.</span><span class="n">faces_normals</span> <span class="o">*</span> <span class="n">immersed_self</span><span class="o">.</span><span class="n">faces_centers</span><span class="o">**</span><span class="mi">2</span>
+        <span class="k">return</span> <span class="n">immersed_self</span><span class="o">.</span><span class="n">surface_integral</span><span class="p">(</span><span class="n">coords_sq_norm</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">immersed_self</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">waterplane_area</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns water plane area of the mesh.&quot;&quot;&quot;</span>
-        <span class="n">waterplane_area</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">waterplane_integral</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">waterplane_area</span>
+        <span class="n">immersed_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">immersed_self</span><span class="o">.</span><span class="n">waterplane_integral</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">waterplane_center</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -473,12 +479,13 @@ window.addEventListener("load", load);
 
 <span class="sd">        Note: Returns None if the mesh is full submerged.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">waterplane_area</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">waterplane_area</span>
+        <span class="n">immersed_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+        <span class="n">waterplane_area</span> <span class="o">=</span> <span class="n">immersed_self</span><span class="o">.</span><span class="n">waterplane_area</span>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">waterplane_area</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">waterplane_center</span> <span class="o">=</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">waterplane_integral</span><span class="p">(</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">faces_centers</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">waterplane_area</span>
+            <span class="n">waterplane_center</span> <span class="o">=</span> <span class="o">-</span><span class="n">immersed_self</span><span class="o">.</span><span class="n">waterplane_integral</span><span class="p">(</span>
+                <span class="n">immersed_self</span><span class="o">.</span><span class="n">faces_centers</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">waterplane_area</span>
             <span class="k">return</span> <span class="n">waterplane_center</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
 
 </pre></div>

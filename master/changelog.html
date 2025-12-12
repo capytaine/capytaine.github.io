@@ -86,6 +86,16 @@
 <li><p>Fix type of the right-hand-side of the linear solver when using option <code class="code docutils literal notranslate"><span class="pre">floating_point_precision</span> <span class="pre">=</span> <span class="pre">'float32'</span></code> in <a class="reference internal" href="developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau" title="capytaine.green_functions.delhommeau.Delhommeau"><code class="xref py py-class docutils literal notranslate"><span class="pre">Delhommeau</span></code></a>.
 As a consequence, the whole computation is done in single precision and the RAM usage is lower as expected. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/774">PR 774</a>)</p></li>
 <li><p>Fix the timer for parallel resolution, i.e. when <code class="code docutils literal notranslate"><span class="pre">n_jobs</span></code> is greater than 1. Now the durations for each process are displayed. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/782">PR 782</a>)</p></li>
+<li><p>Hydrostatics methods better take into account the free surface even when
+the mesh has not been clipped yet.
+Internally, the mesh is clipped before computing methods such as
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">disp_volume()</span></code> or
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">center_of_buoyancy()</span></code>, such that the
+computed displaced volume is always actually the volume below $z=0$ and the
+center of buoyancy is always below the free surface.
+The inertia matrix always uses the displaced water mass for the mass and
+compute the inertia moments on the full shape if the full mesh is provided.
+(<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/794">PR 794</a>)</p></li>
 </ul>
 </section>
 <section id="internals">
@@ -108,6 +118,7 @@ package. (<a class="extlink-pull reference external" href="https://github.com/ca
 <li><p>Instead of creating a <code class="docutils literal notranslate"><span class="pre">CollectionOfMeshes</span></code>, now <code class="docutils literal notranslate"><span class="pre">join_bodies</span></code> merges the
 meshes of the bodies together. The legacy behavior is still available from
 Fakeblocks <code class="docutils literal notranslate"><span class="pre">join_bodies</span></code>. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/779">PR 779</a>)</p></li>
+<li><p>Move hydrostatics routines in a dedicated module and rewrite corresponding tests (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/794">PR 794</a>)</p></li>
 </ul>
 </section>
 </section>
@@ -423,7 +434,7 @@ Changing the convention to compare the outputs of different codes is better done
 <h3>Bug fixes<a class="headerlink" href="#id15" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p>Fix <code class="xref py py-meth docutils literal notranslate"><span class="pre">immersed_part()</span></code> (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/307">PR 307</a>).</p></li>
-<li><p><a class="reference internal" href="developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.compute_hydrostatics" title="capytaine.bodies.bodies.FloatingBody.compute_hydrostatics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_hydrostatics()</span></code></a> used to fail for non-rigid bodies because it could not compute the rigid-body inertia.
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_hydrostatics()</span></code> used to fail for non-rigid bodies because it could not compute the rigid-body inertia.
 The rigid-body inertia is now just skipped for bodies with no rigid-body dofs (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/308">PR 308</a>).</p></li>
 <li><p>Reduce the default tolerance of the mesh clipper for points just above the free surface (<a class="extlink-issue reference external" href="https://github.com/capytaine/capytaine/issues/320">GH 320</a> and <a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/322">PR 322</a>).</p></li>
 <li><p>Convert <code class="docutils literal notranslate"><span class="pre">center_of_mass</span></code> and <code class="docutils literal notranslate"><span class="pre">rotation_center</span></code> to arrays in <a class="reference internal" href="developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody" title="capytaine.bodies.bodies.FloatingBody"><code class="xref py py-class docutils literal notranslate"><span class="pre">FloatingBody</span></code></a> constructor to avoid a few issues (<a class="extlink-issue reference external" href="https://github.com/capytaine/capytaine/issues/319">GH 319</a> and <a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/325">PR 325</a>).</p></li>
@@ -453,7 +464,7 @@ A missing key element has been added and the <a class="reference internal" href=
 (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/180">PR 180</a> and <a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/216">PR 216</a>)</p></li>
 <li><p>New default linear solver <code class="xref py py-class docutils literal notranslate"><span class="pre">LUSolverWithCache</span></code>: the LU decomposition of the matrix is now cached to be reused for other similar problems, diminishing the total computation time up to 40%. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/235">PR 235</a>)</p></li>
 <li><p>New functions to generate simple geometric meshes have been implemented in <code class="code docutils literal notranslate"><span class="pre">capytaine.meshes.predefined</span></code>. They are similar to the former geometric bodies (<code class="xref py py-class docutils literal notranslate"><span class="pre">Sphere</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">HorizontalCylinder</span></code>, etc.), except that they return a mesh and do not create a <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code>. The geometric body classes are considered deprecated, although they should still work as expected. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/233">PR 233</a>)</p></li>
-<li><p>Changed the behavior of <a class="reference internal" href="developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.compute_hydrostatics" title="capytaine.bodies.bodies.FloatingBody.compute_hydrostatics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_hydrostatics()</span></code></a>. The mesh is not silently modified anymore. The stiffness and inertia matrices are stored in the body for inclusion in the output dataset. The inertia matrix is now computed on the full mesh (<a class="extlink-issue reference external" href="https://github.com/capytaine/capytaine/issues/197">GH 197</a>, <a class="extlink-issue reference external" href="https://github.com/capytaine/capytaine/issues/249">GH 249</a>, <a class="extlink-issue reference external" href="https://github.com/capytaine/capytaine/issues/258">GH 258</a> and <a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/262">PR 262</a>).</p></li>
+<li><p>Changed the behavior of <code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_hydrostatics()</span></code>. The mesh is not silently modified anymore. The stiffness and inertia matrices are stored in the body for inclusion in the output dataset. The inertia matrix is now computed on the full mesh (<a class="extlink-issue reference external" href="https://github.com/capytaine/capytaine/issues/197">GH 197</a>, <a class="extlink-issue reference external" href="https://github.com/capytaine/capytaine/issues/249">GH 249</a>, <a class="extlink-issue reference external" href="https://github.com/capytaine/capytaine/issues/258">GH 258</a> and <a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/262">PR 262</a>).</p></li>
 </ul>
 </section>
 <section id="id18">
@@ -497,7 +508,7 @@ can be transformed into full Numpy arrays with <code class="code docutils litera
 <section id="id20">
 <h3>Bug fixes<a class="headerlink" href="#id20" title="Link to this heading">¶</a></h3>
 <ul class="simple">
-<li><p>Raise error message when calling <a class="reference internal" href="developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.compute_hydrostatics" title="capytaine.bodies.bodies.FloatingBody.compute_hydrostatics"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_hydrostatics()</span></code></a> without a center of mass defined (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/207">PR 207</a>).</p></li>
+<li><p>Raise error message when calling <code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_hydrostatics()</span></code> without a center of mass defined (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/207">PR 207</a>).</p></li>
 <li><p>Fix bug when cropping body with a dof defined manually as a list of tuples (<a class="extlink-issue reference external" href="https://github.com/capytaine/capytaine/issues/204">GH 204</a> and <a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/206">PR 206</a>).</p></li>
 </ul>
 </section>

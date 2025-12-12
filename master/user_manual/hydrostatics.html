@@ -47,22 +47,11 @@
   <section id="hydrostatics">
 <h1>Hydrostatics<a class="headerlink" href="#hydrostatics" title="Link to this heading">¶</a></h1>
 <p>Capytaine can compute some of the hydrostatic parameters of a given <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code>.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Here the integration of a function over the immersed hull is approximated as the summation of the data function at face centers multiplied by the respective face areas.</p>
-<div class="math notranslate nohighlight" id="equation-user-manual-hydrostatics-0">
-<span class="eqno">(1)<a class="headerlink" href="#equation-user-manual-hydrostatics-0" title="Link to this equation">¶</a></span>\[\iint_S f(x,y,z) dS \approx \sum_i^N f(x_i, y_i, z_i) \Delta S_i\]</div>
-<p>where <span class="math notranslate nohighlight">\(i\)</span> is the face index, <span class="math notranslate nohighlight">\((x_i, y_i, z_i)\)</span> is <span class="math notranslate nohighlight">\(i\)</span> th face center, and <span class="math notranslate nohighlight">\(S_i\)</span> is <span class="math notranslate nohighlight">\(i\)</span> th face area.</p>
-</div>
 <section id="hydrostatic-parameters">
 <h2>Hydrostatic parameters<a class="headerlink" href="#hydrostatic-parameters" title="Link to this heading">¶</a></h2>
 <p>For each hydrostatic parameter a separate method is available in Capytaine.
 Some of them may require the definition of the center of mass of the body.
 It can be done by setting the attribute <cite>center_of_mass</cite> as in the example below.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Before computing individual hydrostatic parameters, make sure to crop the body to only keep the immersed part.</p>
-</div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
@@ -70,7 +59,7 @@ It can be done by setting the attribute <cite>center_of_mass</cite> as in the ex
         <span class="n">mesh</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
         <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">)),</span>
         <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">)</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+        <span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Volume:&quot;</span><span class="p">,</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Center of buoyancy:&quot;</span><span class="p">,</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">center_of_buoyancy</span><span class="p">)</span>
@@ -88,30 +77,42 @@ It can be done by setting the attribute <cite>center_of_mass</cite> as in the ex
 </section>
 <section id="hydrostatic-stiffness">
 <h2>Hydrostatic stiffness<a class="headerlink" href="#hydrostatic-stiffness" title="Link to this heading">¶</a></h2>
-<p>The equation to compute the hydrostatic stiffness of a floating body is</p>
-<div class="math notranslate nohighlight" id="equation-user-manual-hydrostatics-1">
-<span class="eqno">(2)<a class="headerlink" href="#equation-user-manual-hydrostatics-1" title="Link to this equation">¶</a></span>\[C_{ij} = \iint_S (\hat{n} \cdot V_j) (w_i + z D_i)  dS\]</div>
-<p>where <span class="math notranslate nohighlight">\(\hat{n}\)</span> is the surface normal,</p>
-<p><span class="math notranslate nohighlight">\(V_i = u_i \hat{n}_x + v_i \hat{n}_y + w_i \hat{n}_z\)</span> is the dof vector and</p>
-<p><span class="math notranslate nohighlight">\(D_i = \nabla \cdot V_i\)</span> is the divergence of the DOF.</p>
 <p>The method <code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_hydrostatic_stiffness()</span></code>
 computes the hydrostatic stiffness and returns a (DOF count x DOF count) 2D
 matrix as an <code class="code docutils literal notranslate"><span class="pre">xarray.DataArray</span></code>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rigid_sphere</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hs</span> <span class="o">=</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
 </pre></div>
 </div>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>For rigid body dofs, the exact formula above can be evaluated.
-However, in general, the divergence <span class="math notranslate nohighlight">\(D_i\)</span> of an arbitrary dofs is not known.
-User can pass a value for <cite>D_i</cite> as an input to <code class="code docutils literal notranslate"><span class="pre">compute_hydrostatics</span></code>.
-Otherwise the code assumes zero divergence <span class="math notranslate nohighlight">\(D_{i} = 0\)</span>.</p>
+<p>Capytaine has two built-in methods to compute the hydrostatic stiffness:</p>
+<ul class="simple">
+<li><p>for rigid-body degrees of freedom, exact analytical expressions are available.</p></li>
+<li><p>for generalized degrees of freedom (e.g. elastic bodies), the following expression is used</p></li>
+</ul>
+<div class="math notranslate nohighlight" id="equation-user-manual-hydrostatics-0">
+<span class="eqno">(1)<a class="headerlink" href="#equation-user-manual-hydrostatics-0" title="Link to this equation">¶</a></span>\[C_{ij} = \iint_S (\hat{n} \cdot V_j) (w_i + z D_i)  dS\]</div>
+<p>where <span class="math notranslate nohighlight">\(\hat{n}\)</span> is the surface normal,
+<span class="math notranslate nohighlight">\(V_i = u_i \hat{n}_x + v_i \hat{n}_y + w_i \hat{n}_z\)</span> is the dof vector and
+<span class="math notranslate nohighlight">\(D_i = \nabla \cdot V_i\)</span> is the divergence of the DOF.</p>
+<p>Note that the latter method is an approximation and does not recover the former
+expression for rigid-body dofs, even when passing a dof vector and a divergence
+corresponding to the rigid-body dof.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Currently, the detection of a rigid-body degree of freedom to use the exact
+analytical expression is not very robust. Changing the name of the dof or
+combining several rigid bodies usually makes Capytaine use the approximate
+method for generalize dofs instead.
+This is planned to be fixed in a later release of Capytaine.</p>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">elastic_sphere</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
-        <span class="n">mesh</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
-        <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">)</span>
-        <span class="p">)</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
-<span class="n">elastic_sphere</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="s2">&quot;elongate_in_z&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="n">elastic_sphere</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">])</span>
+<p>If the divergence is not provided by the user, zero is used as an approximation.
+Here is an example of setting the divergence of the dof:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+<span class="n">dof</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span> <span class="ow">in</span> <span class="n">elastic_sphere</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">])</span>
+<span class="n">elastic_sphere</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
+        <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span>
+        <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">),</span>
+        <span class="n">dofs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;elongate_in_z&quot;</span><span class="p">:</span> <span class="n">dof</span><span class="p">},</span>
+        <span class="p">)</span>
 
 <span class="n">dofs_divergence</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;elongate_in_z&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">elastic_sphere</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">)}</span>
 
@@ -120,19 +121,33 @@ Otherwise the code assumes zero divergence <span class="math notranslate nohighl
 <span class="n">elongate_in_z_hs</span> <span class="o">=</span> <span class="n">elastic_sphere</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">(</span><span class="n">divergence</span><span class="o">=</span><span class="n">dofs_divergence</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="n">density</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="n">gravity</span><span class="p">)</span>
 
 <span class="n">analytical_hs</span> <span class="o">=</span> <span class="o">-</span> <span class="n">density</span> <span class="o">*</span> <span class="n">gravity</span> <span class="o">*</span> <span class="p">(</span><span class="mi">4</span> <span class="o">*</span> <span class="n">elastic_sphere</span><span class="o">.</span><span class="n">volume</span> <span class="o">*</span> <span class="n">elastic_sphere</span><span class="o">.</span><span class="n">center_of_buoyancy</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-
 <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">elongate_in_z_hs</span><span class="o">.</span><span class="n">values</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">analytical_hs</span><span class="p">))</span>
 <span class="c1"># True</span>
 </pre></div>
 </div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>In the example above, all computations are done on a mesh clipped with
+<code class="docutils literal notranslate"><span class="pre">immersed_part()</span></code>.
+Defining a divergence for generalized dofs is one of the only cases where
+the user should make sure that the body contains only immersed panels, and
+that the divergence field is defined only on these panels.
+It is planned to remove this requirement in a future release of Capytaine.</p>
+</div>
 <p>If the mass is not specified (as in the examples above), the body is assumed to
-be in buoyancy equilibrium. It’s mass is the mass of the displaced volume of
+be in buoyancy equilibrium. Its mass is the mass of the displaced volume of
 water.</p>
 <p>Non-neutrally buoyant bodies are partially implemented (only for a single rigid body).
 In this case, the mass of the body can be given by setting the <code class="code docutils literal notranslate"><span class="pre">mass</span></code>
 attribute of the <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rigid_sphere</span><span class="o">.</span><span class="n">mass</span> <span class="o">=</span> <span class="mf">0.8</span> <span class="o">*</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">disp_mass</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="mi">1000</span><span class="p">)</span>
-<span class="n">rigid_sphere</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="n">rigid_sphere</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
+        <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span>
+        <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">)),</span>
+        <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">),</span>
+        <span class="n">mass</span><span class="o">=</span><span class="mf">0.8</span><span class="o">*</span><span class="n">mesh</span><span class="o">.</span><span class="n">disp_mass</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="mi">1000</span><span class="p">),</span>
+        <span class="p">)</span>
+<span class="n">hs</span> <span class="o">=</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
@@ -141,7 +156,7 @@ attribute of the <code class="code docutils literal notranslate"><span class="pr
 <p>The method <code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_rigid_body_inertia()</span></code> is
 able to computes the 6 x 6 inertia matrix of a body with 6 rigid dofs.
 The inertia coefficient of other degrees of freedom are filled with <code class="code docutils literal notranslate"><span class="pre">NaN</span></code> by default.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">rigid_sphere</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="n">elastic_sphere</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M</span> <span class="o">=</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>As for the hydrostatic stiffness, the mass is assumed to be the displaced mass
@@ -156,10 +171,6 @@ names as labels:</p>
 <section id="compute-all-hydrostatics-parameters">
 <h2>Compute all hydrostatics parameters<a class="headerlink" href="#compute-all-hydrostatics-parameters" title="Link to this heading">¶</a></h2>
 <p>Instead of computing each hydrostatic parameters individually, <code class="code docutils literal notranslate"><span class="pre">compute_hydrostatics</span></code> returns a <code class="code docutils literal notranslate"><span class="pre">dict</span></code> containing all hydrostatic parameters.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>No need to apply <code class="code docutils literal notranslate"><span class="pre">immersed_part</span></code> to use <code class="code docutils literal notranslate"><span class="pre">compute_hydrostatics</span></code>.</p>
-</div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hydrostatics</span> <span class="o">=</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">compute_hydrostatics</span><span class="p">()</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">hydrostatics</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>

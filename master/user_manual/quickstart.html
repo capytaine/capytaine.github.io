@@ -62,12 +62,11 @@ More examples files can be found in the <a class="reference internal" href="../e
             <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># Optional, only for hydrostatics</span>
         <span class="p">)</span>
 <span class="n">body_1</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="n">body_1</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="mi">1025</span><span class="p">)</span>
-<span class="n">body_1</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">body_1</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="mi">1025</span><span class="p">)</span>
+<span class="n">body_1</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">body_1</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="mi">1025</span><span class="p">)</span>
 
 <span class="c1"># If you have several rigid bodies, copy the code above to define &quot;body_2&quot;, &quot;body_3&quot;, etc.</span>
 
 <span class="n">all_bodies</span> <span class="o">=</span> <span class="n">body_1</span>  <span class="c1"># Replace &quot;body_1&quot; by &quot;body_1 + body_2 + body_3&quot; for multibody problem.</span>
-<span class="n">all_bodies</span> <span class="o">=</span> <span class="n">all_bodies</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>  <span class="c1"># if the mesh has panels above the free surface, this command removes them</span>
 
 <span class="c1"># Set up parameters</span>
 <span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">({</span>
@@ -80,7 +79,7 @@ More examples files can be found in the <a class="reference internal" href="../e
 
 <span class="c1"># Do the resolution</span>
 <span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
-<span class="n">dataset</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">all_bodies</span><span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">all_bodies</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">())</span>
 
 <span class="c1"># Export to netcdf file</span>
 <span class="n">cpt</span><span class="o">.</span><span class="n">export_dataset</span><span class="p">(</span><span class="s2">&quot;capy_dataset.nc&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
