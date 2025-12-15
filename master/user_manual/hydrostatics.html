@@ -51,7 +51,7 @@
 <h2>Hydrostatic parameters<a class="headerlink" href="#hydrostatic-parameters" title="Link to this heading">¶</a></h2>
 <p>For each hydrostatic parameter a separate method is available in Capytaine.
 Some of them may require the definition of the center of mass of the body.
-It can be done by setting the attribute <cite>center_of_mass</cite> as in the example below.</p>
+It can be done by setting the <code class="docutils literal notranslate"><span class="pre">center_of_mass</span></code> at body initilization as in the example below:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
@@ -160,10 +160,17 @@ The inertia coefficient of other degrees of freedom are filled with <code class=
 </pre></div>
 </div>
 <p>As for the hydrostatic stiffness, the mass is assumed to be the displaced mass
-of water, unless a <code class="code docutils literal notranslate"><span class="pre">mass</span></code> attribute has been specified.</p>
-<p>A custom matrix can be provided. For consistency with the data computed with
-Capytaine, it is recommended to wrap it in a <code class="code docutils literal notranslate"><span class="pre">xarray.DataArray</span></code> with dof
-names as labels:</p>
+of water for a body at equilibrium, unless a <code class="code docutils literal notranslate"><span class="pre">mass</span></code> attribute has been specified when setting up the body.</p>
+<p>When computing the inertia moments, the density of the body mass is assumed to be uniform whithin the body (which may or may not be consistent with the center of mass defined when initializing the floating body).
+Note also that unlike most other hydrostatics properties, the rigid body inertia depends not only on the shape of immersed part of the body but also on the shape above the free surface.
+Computing the inertia on only the immersed part leads to a different result since it neglects this contribution to the moment of inertia:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M_</span> <span class="o">=</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>The latter might still be a relevant approximation since most floating bodies have most of their mass below the free surface for equilibrium.</p>
+<p>This feature of Capytaine is limited in scope, it is meant to provide examples of data for teaching and testing.
+The best practice is usually to use another dedicated method or tool that is aware of the true distribution of mass within the body.
+When providing a matrix computed externally, it is recommended to wrap it in a <code class="code docutils literal notranslate"><span class="pre">xarray.DataArray</span></code> with dof names as labels, for consistency with the data computed with Capytaine:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">elastic_sphere</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="n">elastic_sphere</span><span class="o">.</span><span class="n">add_dofs_labels_to_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1000.0</span><span class="p">]]))</span>
 </pre></div>
 </div>

@@ -54,13 +54,14 @@ This script compares them both with analytical expression for a simple geometric
 <span class="kn">import</span><span class="w"> </span><span class="nn">meshmagick.mesh</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">meshmagick.hydrostatics</span>
 
-<span class="n">radius</span> <span class="o">=</span> <span class="mi">10</span>
-<span class="n">cog</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="n">radius</span> <span class="o">=</span> <span class="mf">10.0</span>
+<span class="n">cog</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
 <span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="n">radius</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="n">cog</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">))</span>
-<span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span> <span class="n">center_of_mass</span><span class="o">=</span><span class="n">cog</span><span class="p">)</span>
-
-<span class="n">body</span><span class="o">.</span><span class="n">add_all_rigid_body_dofs</span><span class="p">()</span>
-<span class="n">body</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
+    <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span>
+    <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="n">cog</span><span class="p">),</span>
+    <span class="n">center_of_mass</span><span class="o">=</span><span class="n">cog</span>
+<span class="p">)</span>
 
 <span class="n">density</span> <span class="o">=</span> <span class="mi">1000</span>
 <span class="n">gravity</span> <span class="o">=</span> <span class="mf">9.81</span>
@@ -77,12 +78,12 @@ This script compares them both with analytical expression for a simple geometric
     <span class="n">influenced_dof</span><span class="o">=</span><span class="n">mass_compare_dofs</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="n">mass_compare_dofs</span>
     <span class="p">)</span><span class="o">.</span><span class="n">values</span>
 
-
 <span class="n">mm_mesh</span> <span class="o">=</span> <span class="n">meshmagick</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
 <span class="n">mm_hsdb</span> <span class="o">=</span> <span class="n">meshmagick</span><span class="o">.</span><span class="n">hydrostatics</span><span class="o">.</span><span class="n">compute_hydrostatics</span><span class="p">(</span><span class="n">mm_mesh</span><span class="p">,</span> <span class="n">cog</span><span class="o">=</span><span class="n">cog</span><span class="p">,</span> <span class="n">rho_water</span><span class="o">=</span><span class="n">density</span><span class="p">,</span> <span class="n">grav</span><span class="o">=</span><span class="n">gravity</span><span class="p">)</span>
 
-<span class="n">mm_hsdb</span><span class="p">[</span><span class="s2">&quot;inertia_matrix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mm_mesh</span><span class="o">.</span><span class="n">eval_plain_mesh_inertias</span><span class="p">(</span><span class="n">rho_medium</span><span class="o">=</span><span class="n">density</span><span class="p">)</span><span class="o">.</span><span class="n">inertia_matrix</span>
+<span class="n">rho_medium</span> <span class="o">=</span> <span class="mi">1000</span><span class="o">*</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">disp_volume</span><span class="o">/</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">volume</span>
+<span class="n">mm_hsdb</span><span class="p">[</span><span class="s2">&quot;inertia_matrix&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mm_mesh</span><span class="o">.</span><span class="n">eval_plain_mesh_inertias</span><span class="p">(</span><span class="n">rho_medium</span><span class="o">=</span><span class="n">rho_medium</span><span class="p">)</span><span class="o">.</span><span class="n">inertia_matrix</span>
 <span class="n">mm_hsdb</span><span class="p">[</span><span class="s2">&quot;center_of_buoyancy&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">mm_hsdb</span><span class="p">[</span><span class="s2">&quot;buoyancy_center&quot;</span><span class="p">]</span>
 
 
