@@ -428,6 +428,7 @@ window.addEventListener("load", load);
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.deprecation_handling</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_water_depth</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">compute_faces_areas</span><span class="p">,</span>
     <span class="n">compute_faces_centers</span><span class="p">,</span>
@@ -435,6 +436,7 @@ window.addEventListener("load", load);
     <span class="n">compute_faces_radii</span><span class="p">,</span>
     <span class="n">get_vertices_face</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.clip</span><span class="w"> </span><span class="kn">import</span> <span class="n">clip_faces</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.clean</span><span class="w"> </span><span class="kn">import</span> <span class="n">clean_mesh</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.quality</span><span class="w"> </span><span class="kn">import</span> <span class="n">_is_valid</span><span class="p">,</span> <span class="n">check_mesh_quality</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">show_3d</span>
@@ -544,6 +546,10 @@ window.addEventListener("load", load);
     <span class="k">def</span><span class="w"> </span><span class="nf">nb_quads</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of quadrilateral faces (4-vertex) in the mesh.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_faces</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">)</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">z_span</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
 
 <div class="viewcode-block" id="Mesh.summary">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.summary">[docs]</a>
@@ -1132,6 +1138,63 @@ window.addEventListener("load", load);
     <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="c1"># No-op for backward compatibility</span>
         <span class="k">return</span> <span class="bp">self</span></div>
+
+
+<div class="viewcode-block" id="Mesh.clipped">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.clipped">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clipped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">normal</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Mesh&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clip the mesh by a plane defined by `origin` and `normal`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        origin : np.ndarray</span>
+<span class="sd">            The point in space where the clipping plane intersects (3D point).</span>
+<span class="sd">        normal : np.ndarray</span>
+<span class="sd">            The normal vector defining the orientation of the clipping plane.</span>
+<span class="sd">        name: Optional[str]</span>
+<span class="sd">            A name for the newly created mesh</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Mesh</span>
+<span class="sd">            A new Mesh instance that has been clipped.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_vertices</span><span class="p">,</span> <span class="n">new_faces</span><span class="p">,</span> <span class="n">face_parent</span> <span class="o">=</span> \
+                <span class="n">clip_faces</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_faces</span><span class="p">,</span> <span class="n">normal</span><span class="p">,</span> <span class="n">origin</span><span class="p">)</span>
+        <span class="n">new_metadata</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">face_parent</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">}</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_clipped&quot;</span>
+        <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="n">new_vertices</span><span class="p">,</span> <span class="n">faces</span><span class="o">=</span><span class="n">new_faces</span><span class="p">,</span> <span class="n">faces_metadata</span><span class="o">=</span><span class="n">new_metadata</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Mesh.immersed_part">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.immersed_part">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">immersed_part</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Mesh&quot;</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clip the mesh to keep only the part below the free surface.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        free_surface: float</span>
+<span class="sd">            The :math:`z` coordinate of the free surface (default: 0.0)</span>
+<span class="sd">        water_depth: Optional[float]</span>
+<span class="sd">            The water depth, as a positive value (default: infinity)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Mesh</span>
+<span class="sd">            A new Mesh instance that has been clipped.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">water_depth</span> <span class="o">=</span> <span class="n">_get_water_depth</span><span class="p">(</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="p">,</span>
+                                       <span class="n">default_water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">free_surface</span> <span class="o">-</span> <span class="n">water_depth</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_span</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_span</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">free_surface</span><span class="p">):</span>  <span class="c1"># Already clipped</span>
+            <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># Shortcut for performance</span>
+        <span class="n">clipped</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">water_depth</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="n">clipped</span> <span class="o">=</span> <span class="n">clipped</span><span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">-</span><span class="n">water_depth</span><span class="p">),</span> <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">clipped</span></div>
 </div>
 
 
