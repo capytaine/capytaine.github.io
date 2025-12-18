@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Common issues &#8212; capytaine 3.0.dev documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/proof.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <script src="../_static/documentation_options.js?v=b5a2bfa9"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Example scripts" href="../examples/index.html" />
+    <link rel="prev" title="Conventions and differences to other codes" href="conventions.html" />
+    <script defer data-domain="capytaine.github.io" src="https://plausible.io/js/script.js"></script>
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+
+  </head><body>
+  
+
+    <div class="document">
+<div id="new-doc-warning-banner" style="width:100%; background-color:#ADD8E6; text-align: center;">This page is part of the documentation of the development version 3.0 of Capytaine.<br><a href="https://capytaine.github.io/stable/">Latest stable version is available here.</a></div>
+    
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="common-issues">
+<h1>Common issues<a class="headerlink" href="#common-issues" title="Link to this heading">¶</a></h1>
+<section id="there-are-nans-in-my-dataset-output">
+<h2>There are NaNs in my dataset output<a class="headerlink" href="#there-are-nans-in-my-dataset-output" title="Link to this heading">¶</a></h2>
+<p>Capytaine might leave a NaN value in the output dataset if the corresponding problem could not be solved or if it is ill-defined.</p>
+<p>Normally, a message explaining the reason should be printed in the log.
+You might need to turn on a more verbose logging to be sure to see it:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cpt</span><span class="o">.</span><span class="n">set_logging</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In normal usage, the following cases cause a NaN:</p>
+<ul class="simple">
+<li><p>In low frequency and low depth ( <span class="math notranslate nohighlight">\(k h &lt; 0.1\)</span> ), then added mass, radiation damping and diffraction force are NaN . This is a limitation of the current implementation of the Green function used by default in Capytaine, and it might be improved in the future.</p></li>
+<li><dl class="simple">
+<dt>In the limit cases <span class="math notranslate nohighlight">\(\omega = 0\)</span> or <span class="math notranslate nohighlight">\(\omega = \infty\)</span>:</dt><dd><ul>
+<li><p>the diffraction force and Froude-Krylov force are NaN, because they are ill-defined.</p></li>
+<li><p>the added mass and radiation damping are always defined (not NaN) for <span class="math notranslate nohighlight">\(\omega = \infty\)</span></p></li>
+<li><p>the added mass and radiation damping are defined for <span class="math notranslate nohighlight">\(\omega = 0\)</span> in infinite depth, but they are NaN in finite depth, due to the same limitation of the implementation mentioned above.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>With forward speed, if the encounter frequency is zero, all outputs are NaN.</p></li>
+</ul>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">capytaine</a></h1>
+
+
+
+<p class="blurb">a Python-based linear potential flow BEM solver</p>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">User manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation for users</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mesh.html">Meshes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="body.html">Floating body</a></li>
+<li class="toctree-l2"><a class="reference internal" href="hydrostatics.html">Hydrostatics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="problem_setup.html">Setting up a problem</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resolution.html">Resolution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="post_pro.html">Post-processing and collection in dataset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="export_output.html">Export outputs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="conventions.html">Conventions and differences to other codes</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Common issues</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Example scripts</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../developer_manual/index.html">Developer manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">User manual</a><ul>
+      <li>Previous: <a href="conventions.html" title="previous chapter">Conventions and differences to other codes</a></li>
+      <li>Next: <a href="../examples/index.html" title="next chapter">Example scripts</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2024, Matthieu Ancellin.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.0.4</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/user_manual/fixing_issues.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
