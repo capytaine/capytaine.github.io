@@ -45,34 +45,35 @@
             
   <section id="features">
 <h1>Features<a class="headerlink" href="#features" title="Link to this heading">¶</a></h1>
-<p>Capytaine is a Python library for the computation of wave loads on floating structures in frequency domain.
+<p>Capytaine is a Python library for the computation of linear wave loads on floating structures in frequency domain.
 It can be used as a standard sea-keeping code for the standalone computation of hydrodynamical coefficients.
-Its Python API also allows advanced users to integrate it in more complex workflows and to customize its behavior.</p>
-<p>Capytaine is based on</p>
-<ul class="simple">
-<li><p><a class="reference external" href="https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp">Nemoh</a>’s Fortran core routines for the computation of the Green function,</p></li>
-<li><p><a class="reference external" href="https://github.com/LHEEA/meshmagick">meshmagick</a> for the manipulation of meshes,</p></li>
-<li><p><a class="reference external" href="https://docs.xarray.dev">xarray</a> for the storage of hydrodynamical dataset,</p></li>
-<li><p>and various other tools from the <a class="reference external" href="https://scipy.org/">Python scientific ecosystem</a>.</p></li>
-</ul>
+Its Python user interface also allows advanced users to integrate it in more complex workflows and to customize its behavior.</p>
+<p>Capytaine started as a Python interface to <a class="reference external" href="https://lheea.ec-nantes.fr/logiciels-et-brevets/nemoh-presentation-192863.kjsp">Nemoh</a>’s  core Fortran routines, interfacing them with the <a class="reference external" href="https://scipy.org/">Python scientific ecosystem</a>.
+Since then, it has evolved independently of Nemoh, and offers several other backends and a few features that are not found in Nemoh (which also received new features in the mean time with version 3).</p>
 <p>Below some features of the latest version (version 3.0) of Capytaine are listed.</p>
 <section id="core-features">
 <h2>Core features<a class="headerlink" href="#core-features" title="Link to this heading">¶</a></h2>
 <ul class="simple">
 <li><p>Computation of the added masses, radiation dampings, diffraction forces, Froude-Krylov forces and RAO.</p></li>
-<li><p>Single rigid body, multiple rigid bodies or bodies with any arbitrary degrees of freedom.</p></li>
+<li><p>Single rigid body, multiple rigid bodies or bodies with any generalized degrees of freedom.</p></li>
 <li><p>Finite depth or deep water.</p></li>
-<li><p>Faster computation for plane-symmetric bodies.</p></li>
 <li><p>Approximate forward speed (for single rigid body only at the moment).</p></li>
 <li><p>Set up problems with either angular frequency, period, wavelength or angular wavenumber.</p></li>
 <li><p>Lid-based irregular frequencies removal.</p></li>
-<li><p>Computation of the pressure field, the velocity field, the free surface elevation and the Kochin function.</p></li>
+<li><p>Post-processing computation of the pressure field, the velocity field, the free surface elevation and the Kochin function.</p></li>
 <li><p>Computation of the hydrostatic stiffness and rigid body inertia. Non-neutrally buoyant bodies are partially supported.</p></li>
+<li><p>Faster computation for plane-symmetric bodies.</p></li>
+<li><p>OpenMP threads parallelization, as well as optional processes parallelisation with <a class="reference external" href="https://github.com/joblib/joblib">joblib</a>.</p></li>
+<li><p>Output in NetCDF format through <a class="reference external" href="https://docs.xarray.dev">xarray</a>.</p></li>
 <li><p>3D animations of the body motion and the free surface elevation.</p></li>
-<li><p>Various input mesh formats supported via <a class="reference external" href="https://github.com/LHEEA/meshmagick">meshmagick</a>.</p></li>
-<li><p>OpenMP parallelization.</p></li>
-<li><p>Output in NetCDF format (or legacy Nemoh Tecplot format).</p></li>
 </ul>
+</section>
+<section id="support-tools">
+<h2>Support tools<a class="headerlink" href="#support-tools" title="Link to this heading">¶</a></h2>
+<p>Besides its core features, Capytaine also offers support tools such as basic meshing tools to clip the mesh at the free surface or generate a lid.</p>
+<p>For this kind of annex tools, the philosophy of Capytaine is to:
+* Have built-in the bare minimal implementation to test the corresponding feature.
+* Make it easy to interface with external software or Python libraries offering more advanced implementation for fine tuning. In this case, make it easy to interact with a meshing software to clip the mesh and generate a lid mesh.</p>
 </section>
 <section id="advanced-features">
 <h2>Advanced features<a class="headerlink" href="#advanced-features" title="Link to this heading">¶</a></h2>
@@ -83,13 +84,8 @@ Its Python API also allows advanced users to integrate it in more complex workfl
 <li><p>Direct or iterative linear system solver.</p></li>
 <li><p>Single or double precision floating-point numbers.</p></li>
 <li><p>Several parameters to customize the evaluation of the Green function and its integration on the mesh.</p></li>
+<li><p>HAMS’ Green function is available as a backend that can be used instead of Nemoh’s one.</p></li>
 <li><p>Possibility to plug-in other implementations of the Green function.</p></li>
-</ul>
-</section>
-<section id="experimental-features">
-<h2>Experimental features<a class="headerlink" href="#experimental-features" title="Link to this heading">¶</a></h2>
-<ul class="simple">
-<li><p>Toeplitz matrices for faster simulations for floating bodies with local symmetries or for regular arrays of identical floating bodies.</p></li>
 </ul>
 </section>
 <section id="roadmap">
