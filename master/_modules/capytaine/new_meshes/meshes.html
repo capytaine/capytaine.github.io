@@ -424,11 +424,11 @@ window.addEventListener("load", load);
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.deprecation_handling</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_water_depth</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.abstract_meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractMesh</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">compute_faces_areas</span><span class="p">,</span>
     <span class="n">compute_faces_centers</span><span class="p">,</span>
@@ -446,7 +446,7 @@ window.addEventListener("load", load);
 
 <div class="viewcode-block" id="Mesh">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">Mesh</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Mesh</span><span class="p">(</span><span class="n">AbstractMesh</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Mesh class for representing and manipulating 3D surface meshes.</span>
 
 <span class="sd">    Parameters</span>
@@ -480,8 +480,8 @@ window.addEventListener("load", load);
         <span class="n">vertices</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">faces</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="n">List</span><span class="p">[</span><span class="nb">int</span><span class="p">]],</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">*</span><span class="p">,</span>
-        <span class="n">faces_metadata</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">faces_metadata</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="n">auto_clean</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
         <span class="n">auto_check</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
@@ -546,10 +546,6 @@ window.addEventListener("load", load);
     <span class="k">def</span><span class="w"> </span><span class="nf">nb_quads</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of quadrilateral faces (4-vertex) in the mesh.&quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="mi">1</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_faces</span> <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="o">==</span> <span class="mi">4</span><span class="p">)</span>
-
-    <span class="nd">@cached_property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">z_span</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
-        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
 
 <div class="viewcode-block" id="Mesh.summary">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.summary">[docs]</a>
@@ -626,25 +622,6 @@ window.addEventListener("load", load);
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">show_3d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
-
-<div class="viewcode-block" id="Mesh.show_pyvista">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.show_pyvista">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">show_pyvista</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Equivalent to show(backend=&quot;pyvista&quot;).</span>
-<span class="sd">        See also :func:`~capytaine.new_meshes.visualization.show_pyvista`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;pyvista&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Mesh.show_matplotlib">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.show_matplotlib">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">show_matplotlib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Equivalent to show(backend=&quot;matplotlib&quot;).</span>
-<span class="sd">        See also :func:`~capytaine.new_meshes.visualization.show_matplotlib`</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
     <span class="c1">## INITIALISATION</span>
@@ -782,40 +759,6 @@ window.addEventListener("load", load);
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dropping metadata of </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2"> to export as list of faces.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">list_faces</span></div>
-
-
-<div class="viewcode-block" id="Mesh.with_metadata">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.with_metadata">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">with_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">new_metadata</span><span class="p">):</span>
-        <span class="n">faces_metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">new_metadata</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="n">faces_metadata</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
-        <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_faces</span><span class="p">,</span>
-                    <span class="n">faces_metadata</span><span class="o">=</span><span class="n">faces_metadata</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                    <span class="n">auto_clean</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">auto_check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Mesh.without_metadata">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.without_metadata">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">without_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">metadata_names</span><span class="p">):</span>
-        <span class="n">faces_metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">metadata_names</span><span class="p">:</span>
-            <span class="k">del</span> <span class="n">faces_metadata</span><span class="p">[</span><span class="n">k</span><span class="p">]</span>
-        <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_faces</span><span class="p">,</span>
-                    <span class="n">faces_metadata</span><span class="o">=</span><span class="n">faces_metadata</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                    <span class="n">auto_clean</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">auto_check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Mesh.without_any_metadata">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.without_any_metadata">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">without_any_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_faces</span><span class="p">,</span>
-                    <span class="n">faces_metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-                    <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
-                    <span class="n">auto_clean</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">auto_check</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
-
 
 
     <span class="c1">## INTERFACE FOR BEM SOLVER</span>
@@ -961,27 +904,6 @@ window.addEventListener("load", load);
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Mesh.translated_x">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.translated_x">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">translated_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Mesh&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new Mesh translated in the x-direction along `dx`.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">translated</span><span class="p">([</span><span class="n">dx</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Mesh.translated_y">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.translated_y">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">translated_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dy</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Mesh&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new Mesh translated in the y-direction along `dy`.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">translated</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Mesh.translated_z">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.translated_z">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">translated_z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Mesh&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new Mesh translated in the z-direction along `dz`.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">translated</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">dz</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
-
-
 <div class="viewcode-block" id="Mesh.rotated_with_matrix">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.rotated_with_matrix">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">rotated_with_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Mesh&quot;</span><span class="p">:</span>
@@ -997,31 +919,27 @@ window.addEventListener("load", load);
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Mesh.rotated_x">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.rotated_x">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rotated_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Mesh&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new Mesh rotated around the x-axis using the provided rotation angle in radians&quot;&quot;&quot;</span>
-        <span class="n">c</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
-        <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">]])</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotated_with_matrix</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Mesh.rotated_y">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.rotated_y">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rotated_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Mesh&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new Mesh rotated around the y-axis using the provided rotation angle in radians&quot;&quot;&quot;</span>
-        <span class="n">c</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
-        <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">s</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">c</span><span class="p">]])</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotated_with_matrix</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Mesh.rotated_z">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.rotated_z">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rotated_z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Mesh&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a new Mesh rotated around the z-axis using the provided rotation angle in radians&quot;&quot;&quot;</span>
-        <span class="n">c</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
-        <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotated_with_matrix</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+<div class="viewcode-block" id="Mesh.mirrored">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.mirrored">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mirrored</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;xOz&#39;</span><span class="p">,</span> <span class="s1">&#39;yOz&#39;</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">new_vertices</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">plane</span> <span class="o">==</span> <span class="s2">&quot;xOz&quot;</span><span class="p">:</span>
+            <span class="n">new_vertices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">plane</span> <span class="o">==</span> <span class="s2">&quot;yOz&quot;</span><span class="p">:</span>
+            <span class="n">new_vertices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported value for plane: </span><span class="si">{</span><span class="n">plane</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">new_faces</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_faces</span><span class="p">]</span>  <span class="c1"># Invert normals</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;mirrored_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span>
+            <span class="n">new_vertices</span><span class="p">,</span>
+            <span class="n">new_faces</span><span class="p">,</span>
+            <span class="n">faces_metadata</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">auto_clean</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">auto_check</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Mesh.join_meshes">
@@ -1058,13 +976,8 @@ window.addEventListener("load", load);
 
         <span class="n">faces</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">m</span><span class="o">.</span><span class="n">as_list_of_faces</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">),</span> <span class="p">[])</span>
 
-        <span class="n">metadata_keys</span> <span class="o">=</span> <span class="p">[</span><span class="nb">set</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">faces_metadata</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">]</span>
-        <span class="n">common_metadata_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">intersection</span><span class="p">(</span><span class="o">*</span><span class="n">metadata_keys</span><span class="p">)</span>
-        <span class="n">lost_metadata_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="o">*</span><span class="n">metadata_keys</span><span class="p">)</span> <span class="o">-</span> <span class="n">common_metadata_keys</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lost_metadata_keys</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;The following metadata have been dropped when joining meshes: </span><span class="si">{</span><span class="n">lost_metadata_keys</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
         <span class="n">faces_metadata</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-                             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">common_metadata_keys</span><span class="p">}</span>
+                             <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">AbstractMesh</span><span class="o">.</span><span class="n">_common_metadata_keys</span><span class="p">(</span><span class="o">*</span><span class="n">meshes</span><span class="p">)}</span>
 
         <span class="n">joined_mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="o">.</span><span class="n">from_list_of_faces</span><span class="p">(</span><span class="n">faces</span><span class="p">,</span> <span class="n">faces_metadata</span><span class="o">=</span><span class="n">faces_metadata</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
         <span class="c1"># If list of faces is trimmed for some reason, metadata will be updated accordingly</span>
@@ -1075,35 +988,6 @@ window.addEventListener("load", load);
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">joined_mesh</span></div>
 
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="s2">&quot;Mesh&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Mesh&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Combine two meshes using the + operator.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        other : Mesh</span>
-<span class="sd">            Another mesh to combine with this one.</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        Mesh</span>
-<span class="sd">            New mesh containing vertices and faces from both meshes.</span>
-
-<span class="sd">        Raises</span>
-<span class="sd">        ------</span>
-<span class="sd">        TypeError</span>
-<span class="sd">            If other is not a Mesh instance.</span>
-
-<span class="sd">        Notes</span>
-<span class="sd">        -----</span>
-<span class="sd">        Vertex indices in the second mesh are automatically offset to account</span>
-<span class="sd">        for vertices from the first mesh.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">other</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">+</span><span class="si">{</span><span class="n">other</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Mesh.with_normal_vector_going_down">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.with_normal_vector_going_down">[docs]</a>
@@ -1128,16 +1012,39 @@ window.addEventListener("load", load);
             <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">&quot;Inverting the direction of the normal vectors of </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2"> to be downward.&quot;</span>
             <span class="p">)</span>
-            <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">[:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span>
+                <span class="n">vertices</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span>
+                <span class="n">faces</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">[:,</span> <span class="p">::</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">faces_metadata</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span></div>
 
 
 <div class="viewcode-block" id="Mesh.copy">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.copy">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">faces_metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mesh</span><span class="p">:</span>
         <span class="c1"># No-op for backward compatibility</span>
-        <span class="k">return</span> <span class="bp">self</span></div>
+        <span class="k">if</span> <span class="n">faces_metadata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">faces_metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span>
+            <span class="n">vertices</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span>
+            <span class="n">faces</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_faces</span><span class="p">,</span>
+            <span class="n">faces_metadata</span><span class="o">=</span><span class="n">faces_metadata</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">auto_clean</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">auto_check</span><span class="o">=</span><span class="kc">False</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Mesh.merged">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.merged">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">merged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mesh</span><span class="p">:</span>
+        <span class="c1"># No-op to be extended to symmetries</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Mesh.clipped">
@@ -1166,35 +1073,6 @@ window.addEventListener("load", load);
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_clipped&quot;</span>
         <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="n">new_vertices</span><span class="p">,</span> <span class="n">faces</span><span class="o">=</span><span class="n">new_faces</span><span class="p">,</span> <span class="n">faces_metadata</span><span class="o">=</span><span class="n">new_metadata</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Mesh.immersed_part">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.immersed_part">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">immersed_part</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Mesh&quot;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Clip the mesh to keep only the part below the free surface.</span>
-
-<span class="sd">        Parameters</span>
-<span class="sd">        ----------</span>
-<span class="sd">        free_surface: float</span>
-<span class="sd">            The :math:`z` coordinate of the free surface (default: 0.0)</span>
-<span class="sd">        water_depth: Optional[float]</span>
-<span class="sd">            The water depth, as a positive value (default: infinity)</span>
-
-<span class="sd">        Returns</span>
-<span class="sd">        -------</span>
-<span class="sd">        Mesh</span>
-<span class="sd">            A new Mesh instance that has been clipped.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">water_depth</span> <span class="o">=</span> <span class="n">_get_water_depth</span><span class="p">(</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="p">,</span>
-                                       <span class="n">default_water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">free_surface</span> <span class="o">-</span> <span class="n">water_depth</span> <span class="o">&lt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_span</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">z_span</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;=</span> <span class="n">free_surface</span><span class="p">):</span>  <span class="c1"># Already clipped</span>
-            <span class="k">return</span> <span class="bp">self</span>  <span class="c1"># Shortcut for performance</span>
-        <span class="n">clipped</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
-        <span class="k">if</span> <span class="n">water_depth</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
-            <span class="n">clipped</span> <span class="o">=</span> <span class="n">clipped</span><span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">-</span><span class="n">water_depth</span><span class="p">),</span> <span class="n">normal</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">clipped</span></div>
 </div>
 
 

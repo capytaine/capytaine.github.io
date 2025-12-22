@@ -417,7 +417,8 @@ window.addEventListener("load", load);
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse.linalg</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ssl</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.symmetric</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReflectionSymmetricMesh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.symmetric</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReflectionSymmetricMesh</span> <span class="k">as</span> <span class="n">OldReflectionSymmetricMesh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.new_meshes.symmetric_meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReflectionSymmetricMesh</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.abstract_green_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGreenFunction</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.delhommeau</span><span class="w"> </span><span class="kn">import</span> <span class="n">Delhommeau</span>
@@ -586,8 +587,8 @@ window.addEventListener("load", load);
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_matrices_with_symmetries</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span>
             <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">,</span> <span class="n">MatrixLike</span><span class="p">]:</span>
-        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">)</span>
-                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh2</span><span class="p">,</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">)</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">OldReflectionSymmetricMesh</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh2</span><span class="p">,</span> <span class="n">OldReflectionSymmetricMesh</span><span class="p">)</span>
                 <span class="ow">and</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">plane</span> <span class="o">==</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">plane</span><span class="p">):</span>
 
             <span class="n">S_a</span><span class="p">,</span> <span class="n">K_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_matrices_with_symmetries</span><span class="p">(</span>
@@ -597,6 +598,23 @@ window.addEventListener("load", load);
                 <span class="p">)</span>
             <span class="n">S_b</span><span class="p">,</span> <span class="n">K_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_matrices_with_symmetries</span><span class="p">(</span>
                 <span class="n">mesh1</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="n">free_surface</span><span class="o">=</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">water_depth</span><span class="p">,</span>
+                <span class="n">wavenumber</span><span class="o">=</span><span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="n">adjoint_double_layer</span>
+                <span class="p">)</span>
+
+            <span class="k">return</span> <span class="n">BlockCirculantMatrix</span><span class="p">([</span><span class="n">S_a</span><span class="p">,</span> <span class="n">S_b</span><span class="p">]),</span> <span class="n">BlockCirculantMatrix</span><span class="p">([</span><span class="n">K_a</span><span class="p">,</span> <span class="n">K_b</span><span class="p">])</span>
+
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh2</span><span class="p">,</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">plane</span> <span class="o">==</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">plane</span><span class="p">):</span>
+
+            <span class="n">S_a</span><span class="p">,</span> <span class="n">K_a</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_matrices_with_symmetries</span><span class="p">(</span>
+                <span class="n">mesh1</span><span class="o">.</span><span class="n">half</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">half</span><span class="p">,</span>
+                <span class="n">free_surface</span><span class="o">=</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">water_depth</span><span class="p">,</span>
+                <span class="n">wavenumber</span><span class="o">=</span><span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="n">adjoint_double_layer</span>
+                <span class="p">)</span>
+            <span class="n">S_b</span><span class="p">,</span> <span class="n">K_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_matrices_with_symmetries</span><span class="p">(</span>
+                <span class="n">mesh1</span><span class="o">.</span><span class="n">half</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">other_half</span><span class="p">,</span>
                 <span class="n">free_surface</span><span class="o">=</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">water_depth</span><span class="p">,</span>
                 <span class="n">wavenumber</span><span class="o">=</span><span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="n">adjoint_double_layer</span>
                 <span class="p">)</span>
@@ -710,13 +728,24 @@ window.addEventListener("load", load);
                 <span class="sa">f</span><span class="s2">&quot;Unknown `linear_solver` in BasicMatrixEngine: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_linear_solver</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span></div>
 
-        
+
 <div class="viewcode-block" id="BasicMatrixEngine.compute_ram_estimation">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine.compute_ram_estimation">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_ram_estimation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">half</span><span class="p">,</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">):</span>
+                <span class="c1"># Should not go deeper than that, there is currently only two</span>
+                <span class="c1"># symmetries available</span>
+                <span class="n">symmetry_factor</span> <span class="o">=</span> <span class="mf">0.25</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">symmetry_factor</span> <span class="o">=</span> <span class="mf">0.5</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">symmetry_factor</span> <span class="o">=</span> <span class="mf">1.0</span>
+
+
         <span class="n">nb_faces</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span>
         <span class="n">nb_matrices</span> <span class="o">=</span> <span class="mi">2</span>
-        <span class="n">nb_bytes</span> <span class="o">=</span> <span class="mi">16</span> 
+        <span class="n">nb_bytes</span> <span class="o">=</span> <span class="mi">16</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_solver</span> <span class="o">==</span> <span class="s2">&quot;lu_decomposition&quot;</span><span class="p">:</span>
             <span class="n">nb_matrices</span> <span class="o">+=</span> <span class="mi">1</span>
@@ -724,7 +753,7 @@ window.addEventListener("load", load);
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">floating_point_precision</span> <span class="o">==</span> <span class="s2">&quot;float32&quot;</span><span class="p">:</span>
             <span class="n">nb_bytes</span> <span class="o">=</span> <span class="mi">8</span>
 
-        <span class="n">peak_memory</span> <span class="o">=</span> <span class="n">nb_faces</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">nb_matrices</span><span class="o">*</span><span class="n">nb_bytes</span><span class="o">/</span><span class="mf">1e9</span>
+        <span class="n">peak_memory</span> <span class="o">=</span> <span class="n">symmetry_factor</span> <span class="o">*</span> <span class="n">nb_faces</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">nb_matrices</span> <span class="o">*</span> <span class="n">nb_bytes</span><span class="o">/</span><span class="mf">1e9</span>
         <span class="k">return</span> <span class="n">peak_memory</span></div>
 </div>
 
