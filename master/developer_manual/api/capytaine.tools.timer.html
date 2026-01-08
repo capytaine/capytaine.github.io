@@ -48,41 +48,57 @@
 <p>A simple timer class used to measure the time spent in various parts of the BEM solver.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="capytaine.tools.timer.Timer">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">capytaine.tools.timer.</span></span><span class="sig-name descname"><span class="pre">Timer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timings</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/timer.html#Timer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.timer.Timer" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">capytaine.tools.timer.</span></span><span class="sig-name descname"><span class="pre">Timer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_tags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/timer.html#Timer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.timer.Timer" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>A simple timer class that can be used as context manager or as decorator using <cite>wraps_function</cite> method</p>
+<p>A timer class that can be used as context manager or as decorator using <cite>wraps_function</cite> method.
+Several timing measurement can be nested.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Variables<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timings</strong> (<em>List</em><em>[</em><em>Dict</em><em>]</em><em>]</em>) – List of records of each timing measurement.
+The record is a dict with a ‘timing’ key and any number of other metadata keys.</p></li>
+<li><p><strong>default_tags</strong> (<em>Optional</em><em>[</em><em>Dict</em><em>]</em>) – Tags added to all the timing measurements.</p></li>
+<li><p><strong>_start_times</strong> (<em>List</em><em>[</em><em>float</em><em>]</em>) – Start times of the ongoing timing measurements.</p></li>
+</ul>
+</dd>
+</dl>
 <p class="rubric">Example</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">timer</span> <span class="o">=</span> <span class="n">Timer</span><span class="p">()</span>
-<span class="k">with</span> <span class="n">timer</span><span class="p">:</span>
-    <span class="n">sleep</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">timer</span><span class="o">.</span><span class="n">total</span><span class="p">)</span>  <span class="c1"># 1.0...</span>
-
-<span class="nd">@timer</span><span class="o">.</span><span class="n">wraps_function</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">my_function</span><span class="p">():</span>
-    <span class="n">sleep</span><span class="p">(</span><span class="mf">0.5</span><span class="p">)</span>
-
-<span class="n">my_function</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">timer</span><span class="o">.</span><span class="n">total</span><span class="p">)</span>  <span class="c1"># 1.5...</span>
-<span class="n">my_function</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">timer</span><span class="o">.</span><span class="n">total</span><span class="p">)</span>  <span class="c1"># 2.0...</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">timer</span><span class="o">.</span><span class="n">timings</span><span class="p">)</span>  <span class="c1"># [1.0, 0.5, 0.5]</span>
-</pre></div>
-</div>
+<dl>
+<dt>::</dt><dd><p>from time import sleep  # For testing</p>
+<p>timer = Timer()</p>
+<dl class="simple">
+<dt>with timer(tag=”run 1”):</dt><dd><p>sleep(1.0)</p>
+</dd>
+</dl>
+<p>print(timer.total)  # 1.0…</p>
+<p>&#64;timer.wraps_function(tag=”run function”)
+def my_function():</p>
+<blockquote>
+<div><p>sleep(0.5)</p>
+</div></blockquote>
+<p>my_function()
+print(timer.total)  # 1.5…
+my_function()
+print(timer.total)  # 2.0…</p>
+<dl>
+<dt>with timer(tag=”outer”):</dt><dd><p>sleep(0.3)
+with timer(tag=”inner”):</p>
+<blockquote>
+<div><p>sleep(0.3)</p>
+</div></blockquote>
+<p>sleep(0.3)</p>
+</dd>
+</dl>
+</dd>
+</dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.tools.timer.Timer.add_data_from_other_timer">
-<span class="sig-name descname"><span class="pre">add_data_from_other_timer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timer</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/timer.html#Timer.add_data_from_other_timer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.timer.Timer.add_data_from_other_timer" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_data_from_other_timer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">supplementary_tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/timer.html#Timer.add_data_from_other_timer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.timer.Timer.add_data_from_other_timer" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
-<dl class="py property">
-<dt class="sig sig-object py" id="capytaine.tools.timer.Timer.mean">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">mean</span></span><a class="headerlink" href="#capytaine.tools.timer.Timer.mean" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py property">
-<dt class="sig sig-object py" id="capytaine.tools.timer.Timer.nb_timings">
-<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nb_timings</span></span><a class="headerlink" href="#capytaine.tools.timer.Timer.nb_timings" title="Link to this definition">¶</a></dt>
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.tools.timer.Timer.as_dataframe">
+<span class="sig-name descname"><span class="pre">as_dataframe</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/timer.html#Timer.as_dataframe"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.timer.Timer.as_dataframe" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py property">
@@ -92,7 +108,7 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.tools.timer.Timer.wraps_function">
-<span class="sig-name descname"><span class="pre">wraps_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">f</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/timer.html#Timer.wraps_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.timer.Timer.wraps_function" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">wraps_function</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">tags</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/timer.html#Timer.wraps_function"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.timer.Timer.wraps_function" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </dd></dl>
@@ -189,7 +205,7 @@
       &#169;2024, Matthieu Ancellin.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.0.4</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |

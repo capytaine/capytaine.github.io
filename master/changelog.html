@@ -122,6 +122,7 @@ Fakeblocks <code class="docutils literal notranslate"><span class="pre">join_bod
 defined on each faces of the mesh. When faces are added or removed, the
 metadata are automatically updated accordingly. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/791">PR 791</a>)</p></li>
 <li><p>Move hydrostatics routines in a dedicated module and rewrite corresponding tests (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/794">PR 794</a>)</p></li>
+<li><p>Refactor the implementation of the timer to make it easier to include more steps (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/809">PR 809</a>)</p></li>
 </ul>
 </section>
 </section>
@@ -350,7 +351,7 @@ Add <a class="reference internal" href="developer_manual/api/capytaine.ui.rich.h
 <li><p>Reimplement computation of added mass and radiation damping in infinite depth with zero or infinite frequency. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/385">PR 385</a> and <a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/485">PR 485</a>)
 When using forward speed, the added mass and radiation damping are undefined, but the forces can still be computed. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/483">PR 483</a>)</p></li>
 <li><p>Implement direct method (source-and-dipole formulation) in obtaining velocity potential solutions.
-The direct method can be used instead of the default indirect method by setting the <code class="docutils literal notranslate"><span class="pre">method</span></code> argument of <a class="reference internal" href="developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve" title="capytaine.bem.solver.BEMSolver.solve"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code></a>, <a class="reference internal" href="developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve_all" title="capytaine.bem.solver.BEMSolver.solve_all"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve_all()</span></code></a> or <a class="reference internal" href="developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset" title="capytaine.bem.solver.BEMSolver.fill_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_dataset()</span></code></a> (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/420">PR 420</a>)</p></li>
+The direct method can be used instead of the default indirect method by setting the <code class="docutils literal notranslate"><span class="pre">method</span></code> argument of <code class="xref py py-meth docutils literal notranslate"><span class="pre">solve()</span></code>, <a class="reference internal" href="developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve_all" title="capytaine.bem.solver.BEMSolver.solve_all"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve_all()</span></code></a> or <a class="reference internal" href="developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset" title="capytaine.bem.solver.BEMSolver.fill_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_dataset()</span></code></a> (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/420">PR 420</a>)</p></li>
 <li><p>Add new shape for the grid used for the tabulation, based on the one used in Nemoh version 3.
 User can choose to use the Nemoh 3 grid shape (by default) or the former one by setting the <code class="docutils literal notranslate"><span class="pre">tabulation_method</span></code> parameter of <a class="reference internal" href="developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau" title="capytaine.green_functions.delhommeau.Delhommeau"><code class="xref py py-class docutils literal notranslate"><span class="pre">Delhommeau</span></code></a>.
 The new grid shape allows to set both the number of points (with <code class="docutils literal notranslate"><span class="pre">tabulation_nr</span></code> and <code class="docutils literal notranslate"><span class="pre">tabulation_nz</span></code>) and the extent of the tabulation (with <code class="docutils literal notranslate"><span class="pre">tabulation_rmax</span></code> and <code class="docutils literal notranslate"><span class="pre">tabulation_zmin</span></code>).
@@ -1037,7 +1038,7 @@ The method is experimental and can be improved.</p></li>
       &#169;2024, Matthieu Ancellin.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.0.4</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |

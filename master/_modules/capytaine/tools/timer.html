@@ -410,23 +410,39 @@ window.addEventListener("load", load);
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">contextlib</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
 
 <div class="viewcode-block" id="Timer">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.timer.html#capytaine.tools.timer.Timer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Timer</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A simple timer class that can be used as context manager or as decorator using `wraps_function` method</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A timer class that can be used as context manager or as decorator using `wraps_function` method.</span>
+<span class="sd">    Several timing measurement can be nested.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    timings: List[Dict]]</span>
+<span class="sd">        List of records of each timing measurement.</span>
+<span class="sd">        The record is a dict with a &#39;timing&#39; key and any number of other metadata keys.</span>
+<span class="sd">    default_tags: Optional[Dict]</span>
+<span class="sd">        Tags added to all the timing measurements.</span>
+<span class="sd">    _start_times: List[float]</span>
+<span class="sd">        Start times of the ongoing timing measurements.</span>
 
 <span class="sd">    Example</span>
 <span class="sd">    -------</span>
 <span class="sd">    ::</span>
+<span class="sd">        from time import sleep  # For testing</span>
 
 <span class="sd">        timer = Timer()</span>
-<span class="sd">        with timer:</span>
+
+<span class="sd">        with timer(tag=&quot;run 1&quot;):</span>
 <span class="sd">            sleep(1.0)</span>
 
 <span class="sd">        print(timer.total)  # 1.0...</span>
 
-<span class="sd">        @timer.wraps_function</span>
+<span class="sd">        @timer.wraps_function(tag=&quot;run function&quot;)</span>
 <span class="sd">        def my_function():</span>
 <span class="sd">            sleep(0.5)</span>
 
@@ -435,54 +451,62 @@ window.addEventListener("load", load);
 <span class="sd">        my_function()</span>
 <span class="sd">        print(timer.total)  # 2.0...</span>
 
-<span class="sd">        print(timer.timings)  # [1.0, 0.5, 0.5]</span>
+<span class="sd">        with timer(tag=&quot;outer&quot;):</span>
+<span class="sd">            sleep(0.3)</span>
+<span class="sd">            with timer(tag=&quot;inner&quot;):</span>
+<span class="sd">                sleep(0.3)</span>
+<span class="sd">            sleep(0.3)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timings</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">if</span> <span class="n">timings</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">timings</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">timings</span> <span class="o">=</span> <span class="n">timings</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">default_tags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timings</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">default_tags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">default_tags</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">default_tags</span> <span class="o">=</span> <span class="n">default_tags</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_times</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Starting time of ongoing sub-timers</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Timer(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="si">}</span><span class="s2">)&quot;</span>
 
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">nb_timings</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">total</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="p">)</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">mean</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_timings</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="s1">&#39;nan&#39;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">total</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_timings</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">exc</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
-
 <div class="viewcode-block" id="Timer.add_data_from_other_timer">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.timer.html#capytaine.tools.timer.Timer.add_data_from_other_timer">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_data_from_other_timer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timer</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">timer</span><span class="o">.</span><span class="n">timings</span><span class="p">)</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_data_from_other_timer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">,</span> <span class="o">**</span><span class="n">supplementary_tags</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="o">.</span><span class="n">extend</span><span class="p">([{</span><span class="o">**</span><span class="n">t</span><span class="p">,</span> <span class="o">**</span><span class="n">supplementary_tags</span><span class="p">}</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">other</span><span class="o">.</span><span class="n">timings</span><span class="p">])</span></div>
 
+
+    <span class="nd">@contextlib</span><span class="o">.</span><span class="n">contextmanager</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">tags</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start_times</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">())</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">yield</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="n">timing</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_times</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;timing&#39;</span><span class="p">:</span> <span class="n">timing</span><span class="p">,</span> <span class="o">**</span><span class="n">tags</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">default_tags</span><span class="p">})</span>
 
 <div class="viewcode-block" id="Timer.wraps_function">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.timer.html#capytaine.tools.timer.Timer.wraps_function">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">wraps_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
-        <span class="nd">@wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-        <span class="k">def</span><span class="w"> </span><span class="nf">wrapped_f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-            <span class="k">with</span> <span class="bp">self</span><span class="p">:</span>
-                <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">wrapped_f</span></div>
-</div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wraps_function</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">tags</span><span class="p">):</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">wrapper</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+            <span class="nd">@wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="k">def</span><span class="w"> </span><span class="nf">wrapped_f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+                <span class="k">with</span> <span class="bp">self</span><span class="p">(</span><span class="o">**</span><span class="n">tags</span><span class="p">):</span>
+                    <span class="n">out</span> <span class="o">=</span> <span class="n">f</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">out</span>
+            <span class="k">return</span> <span class="n">wrapped_f</span>
+        <span class="k">return</span> <span class="n">wrapper</span></div>
+
+
+<div class="viewcode-block" id="Timer.as_dataframe">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.timer.html#capytaine.tools.timer.Timer.as_dataframe">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([{</span><span class="s1">&#39;timing&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">}])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">total</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_dataframe</span><span class="p">()[</span><span class="s1">&#39;timing&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
 
 </pre></div>
 
@@ -561,7 +585,7 @@ window.addEventListener("load", load);
       &#169;2024, Matthieu Ancellin.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.0.4</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
     </div>
