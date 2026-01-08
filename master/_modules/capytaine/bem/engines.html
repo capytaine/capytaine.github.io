@@ -418,7 +418,7 @@ window.addEventListener("load", load);
 <span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse.linalg</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ssl</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.symmetric</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReflectionSymmetricMesh</span> <span class="k">as</span> <span class="n">OldReflectionSymmetricMesh</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.new_meshes.symmetric_meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReflectionSymmetricMesh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.new_meshes.symmetric_meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">,</span> <span class="n">RotationSymmetricMesh</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.abstract_green_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGreenFunction</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.delhommeau</span><span class="w"> </span><span class="kn">import</span> <span class="n">Delhommeau</span>
@@ -614,12 +614,27 @@ window.addEventListener("load", load);
                 <span class="n">wavenumber</span><span class="o">=</span><span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="n">adjoint_double_layer</span>
                 <span class="p">)</span>
             <span class="n">S_b</span><span class="p">,</span> <span class="n">K_b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_matrices_with_symmetries</span><span class="p">(</span>
-                <span class="n">mesh1</span><span class="o">.</span><span class="n">half</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">other_half</span><span class="p">,</span>
+                <span class="n">mesh1</span><span class="o">.</span><span class="n">other_half</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">half</span><span class="p">,</span>
                 <span class="n">free_surface</span><span class="o">=</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">water_depth</span><span class="p">,</span>
                 <span class="n">wavenumber</span><span class="o">=</span><span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="n">adjoint_double_layer</span>
                 <span class="p">)</span>
 
             <span class="k">return</span> <span class="n">BlockCirculantMatrix</span><span class="p">([</span><span class="n">S_a</span><span class="p">,</span> <span class="n">S_b</span><span class="p">]),</span> <span class="n">BlockCirculantMatrix</span><span class="p">([</span><span class="n">K_a</span><span class="p">,</span> <span class="n">K_b</span><span class="p">])</span>
+
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">RotationSymmetricMesh</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh2</span><span class="p">,</span> <span class="n">RotationSymmetricMesh</span><span class="p">)</span>
+                <span class="ow">and</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">n</span> <span class="o">==</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">n</span><span class="p">):</span>
+
+            <span class="n">S_and_K_blocks</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_build_matrices_with_symmetries</span><span class="p">(</span>
+                        <span class="n">w</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">wedge</span><span class="p">,</span>
+                        <span class="n">free_surface</span><span class="o">=</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">water_depth</span><span class="p">,</span>
+                        <span class="n">wavenumber</span><span class="o">=</span><span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="n">adjoint_double_layer</span>
+                        <span class="p">)</span>
+                    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">all_wedges</span><span class="p">]</span>
+            <span class="c1"># Building the first column of blocks, that is the interactions of all the rotated wedges of mesh1 with the reference wedge of mesh2.</span>
+
+            <span class="k">return</span> <span class="n">BlockCirculantMatrix</span><span class="p">([</span><span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">S_and_K_blocks</span><span class="p">]),</span> <span class="n">BlockCirculantMatrix</span><span class="p">([</span><span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">S_and_K_blocks</span><span class="p">])</span>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span>

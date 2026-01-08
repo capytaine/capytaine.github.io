@@ -422,7 +422,8 @@ window.addEventListener("load", load);
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Literal</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span>
 
@@ -430,6 +431,10 @@ window.addEventListener("load", load);
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.abstract_meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractMesh</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mesh</span>
+
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
 
 <div class="viewcode-block" id="ReflectionSymmetricMesh">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.ReflectionSymmetricMesh">[docs]</a>
@@ -449,7 +454,7 @@ window.addEventListener("load", load);
 <span class="sd">        The half mesh</span>
 <span class="sd">    plane: str</span>
 <span class="sd">        The symmetry plane, either &quot;xOz&quot; or &quot;yOz&quot;</span>
-<span class="sd">    faces_metadata: Dict[str, np.ndarray]</span>
+<span class="sd">    faces_metadata: Dict[str, np.ndarray], optional</span>
 <span class="sd">        Some arrays with the same first dimension (should be the number</span>
 <span class="sd">        of faces of the whole mesh) storing some fields defined on all the</span>
 <span class="sd">        faces of the mesh.</span>
@@ -685,8 +690,8 @@ window.addEventListener("load", load);
                     <span class="n">faces_metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
                     <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Dropping mesh reflection symmetry with respect to&quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">plane</span><span class="si">}</span><span class="s2"> when clipping with respect to plane&quot;</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Dropping mesh reflection symmetry with respect to &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">plane</span><span class="si">}</span><span class="s2"> when clipping with respect to plane &quot;</span>
                         <span class="sa">f</span><span class="s2">&quot;with origin </span><span class="si">{</span><span class="n">origin</span><span class="si">}</span><span class="s2"> and normal </span><span class="si">{</span><span class="n">normal</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span><span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">normal</span><span class="o">=</span><span class="n">normal</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
 
@@ -705,6 +710,354 @@ window.addEventListener("load", load);
 <span class="c1"># For some backward compatibility:</span>
 <span class="n">yOz_Plane</span> <span class="o">=</span> <span class="s2">&quot;yOz&quot;</span>
 <span class="n">xOz_Plane</span> <span class="o">=</span> <span class="s2">&quot;xOz&quot;</span>
+
+
+<div class="viewcode-block" id="RotationSymmetricMesh">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.RotationSymmetricMesh">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">RotationSymmetricMesh</span><span class="p">(</span><span class="n">AbstractMesh</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A mesh with rotation symmetry around the Oz axis.</span>
+
+<span class="sd">    This class represents a mesh that has n-fold rotational symmetry about</span>
+<span class="sd">    the z-axis. Only a wedge (1/n of the full mesh) is stored, and the full</span>
+<span class="sd">    mesh can be reconstructed by rotating the wedge n times.</span>
+
+<span class="sd">    Supports nested symmetries: the wedge mesh can be a ReflectionSymmetricMesh</span>
+<span class="sd">    for dihedral symmetry.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    wedge: AbstractMesh</span>
+<span class="sd">        The wedge mesh (1/n of the full mesh)</span>
+<span class="sd">    n: int</span>
+<span class="sd">        The rotation order (number of rotations to complete full circle)</span>
+<span class="sd">    axis: either &#39;z+&#39; or &#39;z-&#39;</span>
+<span class="sd">        Only the z-axis is supported, but two possible orientations can be used.</span>
+<span class="sd">        Both are equivalent, except for the ordering of the sub-meshes.</span>
+<span class="sd">    faces_metadata: Dict[str, np.ndarray], optional</span>
+<span class="sd">        Some arrays with the same first dimension (should be the number</span>
+<span class="sd">        of faces of the whole mesh) storing some fields defined on all the</span>
+<span class="sd">        faces of the mesh.</span>
+<span class="sd">    name: str, optional</span>
+<span class="sd">        Name for the mesh</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; # Create a mesh with 3-fold rotation symmetry about z-axis</span>
+<span class="sd">    &gt;&gt;&gt; wedge_mesh = Mesh(vertices=..., faces=...)</span>
+<span class="sd">    &gt;&gt;&gt; symmetric_mesh = RotationSymmetricMesh(wedge=wedge_mesh, n=3)</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; # Get the full merged mesh</span>
+<span class="sd">    &gt;&gt;&gt; full_mesh = symmetric_mesh.merged()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">wedge</span><span class="p">:</span> <span class="n">AbstractMesh</span><span class="p">,</span>
+            <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+            <span class="n">axis</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;z+&#39;</span><span class="p">,</span> <span class="s1">&#39;z-&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;z+&#39;</span><span class="p">,</span>
+            <span class="n">faces_metadata</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+            <span class="n">name</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="p">):</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wedge</span><span class="p">,</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">)</span> <span class="ow">and</span> <span class="n">n</span> <span class="o">&gt;</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;RotationSymmetricMesh with n&gt;4 and containing ReflectionSymmetricMesh are not fully supported at the moment. &quot;</span>
+                        <span class="s2">&quot;You might prefer to define instead a ReflectionSymmetricMesh of a RotationSymmetricMesh.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Rotation order must be &gt;= 2, got: </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">wedge</span> <span class="o">=</span> <span class="n">wedge</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">=</span> <span class="n">n</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">=</span> <span class="n">axis</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">==</span> <span class="s1">&#39;z+&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">all_wedges</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">rotated_z</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">==</span> <span class="s1">&#39;z-&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">all_wedges</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="p">]</span> <span class="o">+</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">rotated_z</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="o">*</span><span class="n">i</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">)]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported axis for RotationSymmetricMesh: </span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">v</span><span class="p">]</span><span class="o">*</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">wedge</span><span class="o">.</span><span class="n">faces_metadata</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
+        <span class="k">if</span> <span class="n">faces_metadata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="o">**</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">faces_metadata</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">faces_metadata</span><span class="p">})</span>
+
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">[</span><span class="n">m</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_faces</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="RotationSymmetricMesh.from_profile_points">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.RotationSymmetricMesh.from_profile_points">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_profile_points</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">faces_metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the mesh defined by the set of `points` repeted `n` times around the z-axis.</span>
+
+<span class="sd">        Points will be sorted by increasing z-coordinate before making a mesh,</span>
+<span class="sd">        in order to ensure that the normal vector are outwards.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ---------</span>
+<span class="sd">        points: array of shape (..., 3)</span>
+<span class="sd">            A list of points in 3D.</span>
+<span class="sd">        n: int</span>
+<span class="sd">            The rotation order (number of rotations to complete full circle)</span>
+<span class="sd">        faces_metadata: Dict[str, np.ndarray], optional</span>
+<span class="sd">            Some arrays with the same first dimension (should be the number</span>
+<span class="sd">            of faces of the whole mesh) storing some fields defined on all the</span>
+<span class="sd">            faces of the mesh.</span>
+<span class="sd">        name: str, optional</span>
+<span class="sd">            Name for the mesh</span>
+
+<span class="sd">        Example</span>
+<span class="sd">        -------</span>
+<span class="sd">        &gt;&gt;&gt; meridian_points = np.array([(np.sqrt(1-z**2), 0.0, z) for z in np.linspace(-1.0, 1.0, 10)])</span>
+<span class="sd">        &gt;&gt;&gt; sphere = RotationSymmetricMesh.from_profile_points(meridian_points, n=10)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">c</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">n</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">n</span><span class="p">)</span>
+        <span class="n">rotation_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
+
+        <span class="n">points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">points</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">p</span><span class="p">:</span> <span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>  <span class="c1"># Sort by increasing z</span>
+        <span class="n">vertices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">points</span><span class="p">,</span> <span class="n">points</span> <span class="o">@</span> <span class="n">rotation_matrix</span><span class="o">.</span><span class="n">T</span><span class="p">])</span>
+        <span class="n">faces</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([(</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span> <span class="n">i</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)])</span>
+        <span class="n">wedge</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="o">=</span><span class="n">faces</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">RotationSymmetricMesh</span><span class="p">(</span>
+            <span class="n">wedge</span><span class="o">=</span><span class="n">wedge</span><span class="p">,</span>
+            <span class="n">n</span><span class="o">=</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">faces_metadata</span><span class="o">=</span><span class="n">faces_metadata</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span>
+        <span class="p">)</span></div>
+
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nb_vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">nb_vertices</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">nb_faces</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">nb_faces</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">vertices</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">w</span><span class="o">.</span><span class="n">vertices</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_wedges</span><span class="p">])</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">faces</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">w</span><span class="o">.</span><span class="n">faces</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_wedges</span><span class="p">])</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">faces_normals</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">w</span><span class="o">.</span><span class="n">faces_normals</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_wedges</span><span class="p">])</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">faces_areas</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">w</span><span class="o">.</span><span class="n">faces_areas</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_wedges</span><span class="p">])</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">faces_centers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">w</span><span class="o">.</span><span class="n">faces_centers</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_wedges</span><span class="p">])</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">faces_radiuses</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">w</span><span class="o">.</span><span class="n">faces_radiuses</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_wedges</span><span class="p">])</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">quadrature_points</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">w</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_wedges</span><span class="p">]),</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">w</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_wedges</span><span class="p">]),</span>
+                <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;RotationSymmetricMesh(wedge=</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;, n=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="o">+</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;, name=</span><span class="se">\&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">)&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;)&quot;</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__short_str__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">())</span>
+
+<div class="viewcode-block" id="RotationSymmetricMesh.extract_faces">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.RotationSymmetricMesh.extract_faces">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_faces</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">faces_id</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mesh</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span><span class="o">.</span><span class="n">extract_faces</span><span class="p">(</span><span class="n">faces_id</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RotationSymmetricMesh.translated">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.RotationSymmetricMesh.translated">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">translated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">RotationSymmetricMesh</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">shift</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">1e-12</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">shift</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">1e-12</span><span class="p">)):</span>
+            <span class="c1"># Vertical translation</span>
+            <span class="k">return</span> <span class="n">RotationSymmetricMesh</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">translated_z</span><span class="p">(</span><span class="n">shift</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span>
+                    <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+                    <span class="n">faces_metadata</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span><span class="o">.</span><span class="n">translated</span><span class="p">(</span><span class="n">shift</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RotationSymmetricMesh.rotated_with_matrix">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.RotationSymmetricMesh.rotated_with_matrix">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rotated_with_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">RotationSymmetricMesh</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">R</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])</span>
+            <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">R</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="p">:],</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">])):</span>
+            <span class="c1"># Rotation around the z-axis: we keep the symmetry</span>
+            <span class="k">return</span> <span class="n">RotationSymmetricMesh</span><span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">rotated_with_matrix</span><span class="p">(</span><span class="n">R</span><span class="p">),</span>
+                    <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+                    <span class="n">faces_metadata</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                    <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span><span class="o">.</span><span class="n">rotated_with_matrix</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_opposite_axis</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">axis</span> <span class="o">==</span> <span class="s1">&#39;z+&#39;</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;z-&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s1">&#39;z+&#39;</span>
+
+
+<div class="viewcode-block" id="RotationSymmetricMesh.mirrored">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.RotationSymmetricMesh.mirrored">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mirrored</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;xOz&#39;</span><span class="p">,</span> <span class="s1">&#39;yOz&#39;</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RotationSymmetricMesh</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">RotationSymmetricMesh</span><span class="p">(</span>
+            <span class="n">wedge</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">mirrored</span><span class="p">(</span><span class="n">plane</span><span class="p">),</span>
+            <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span>
+            <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_opposite_axis</span><span class="p">,</span>
+            <span class="n">faces_metadata</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span>
+        <span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_metadata_of_wedge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">i</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">:(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">]</span>
+
+<div class="viewcode-block" id="RotationSymmetricMesh.join_meshes">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.RotationSymmetricMesh.join_meshes">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">join_meshes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">meshes</span><span class="p">,</span> <span class="n">return_masks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">RotationSymmetricMesh</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">RotationSymmetricMesh</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">)</span> <span class="ow">and</span>
+            <span class="nb">all</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">n</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">)):</span>
+                <span class="k">if</span> <span class="n">return_masks</span><span class="p">:</span>
+                    <span class="n">joined_wegdes</span><span class="p">,</span> <span class="n">wedges_masks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span>
+                        <span class="o">*</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">wedge</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">],</span>
+                        <span class="n">return_masks</span><span class="o">=</span><span class="kc">True</span>
+                    <span class="p">)</span>
+                    <span class="n">masks</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">w_mesh</span><span class="p">]</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">w_mesh</span> <span class="ow">in</span> <span class="n">wedges_masks</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">joined_wegdes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span>
+                        <span class="o">*</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">wedge</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">],</span>
+                        <span class="n">return_masks</span><span class="o">=</span><span class="kc">False</span>
+                    <span class="p">)</span>
+
+                <span class="n">faces_metadata</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">_metadata_of_wedge</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">([</span><span class="bp">self</span><span class="p">],</span> <span class="n">meshes</span><span class="p">)]</span> <span class="p">,</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+                    <span class="p">)</span>
+                                  <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">AbstractMesh</span><span class="o">.</span><span class="n">_common_metadata_keys</span><span class="p">(</span><span class="o">*</span><span class="n">meshes</span><span class="p">)}</span>
+
+                <span class="n">joined_mesh</span> <span class="o">=</span> <span class="n">RotationSymmetricMesh</span><span class="p">(</span>
+                        <span class="n">wedge</span><span class="o">=</span><span class="n">joined_wegdes</span><span class="p">,</span>
+                        <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span>
+                        <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+                        <span class="n">faces_metadata</span><span class="o">=</span><span class="n">faces_metadata</span><span class="p">,</span>
+                        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">return_masks</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">joined_mesh</span><span class="p">,</span> <span class="n">masks</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">joined_mesh</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">Mesh</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">merged</span><span class="p">(),</span>
+                <span class="o">*</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">],</span>
+                <span class="n">return_masks</span><span class="o">=</span><span class="n">return_masks</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">name</span>
+            <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RotationSymmetricMesh.with_normal_vector_going_down">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.RotationSymmetricMesh.with_normal_vector_going_down">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">with_normal_vector_going_down</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RotationSymmetricMesh</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">RotationSymmetricMesh</span><span class="p">(</span>
+                <span class="n">wedge</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">with_normal_vector_going_down</span><span class="p">(),</span>
+                <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span>
+                <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+                <span class="n">faces_metadata</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RotationSymmetricMesh.copy">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.RotationSymmetricMesh.copy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">faces_metadata</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">RotationSymmetricMesh</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">faces_metadata</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">faces_metadata</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">return</span> <span class="n">RotationSymmetricMesh</span><span class="p">(</span>
+                <span class="n">wedge</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span>
+                <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span>
+                <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+                <span class="n">faces_metadata</span><span class="o">=</span><span class="n">faces_metadata</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RotationSymmetricMesh.merged">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.RotationSymmetricMesh.merged">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">merged</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Mesh</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Mesh</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span>
+                <span class="o">*</span><span class="p">[</span><span class="n">w</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_wedges</span><span class="p">]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">with_metadata</span><span class="p">(</span>
+            <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RotationSymmetricMesh.clipped">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.RotationSymmetricMesh.clipped">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clipped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">normal</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">RotationSymmetricMesh</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">]:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">normal</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">1e-12</span> <span class="ow">and</span> <span class="nb">abs</span><span class="p">(</span><span class="n">normal</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">1e-12</span><span class="p">):</span>
+            <span class="c1"># Horizontal plane</span>
+            <span class="n">clipped_wedge</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">wedge</span>
+                    <span class="o">.</span><span class="n">with_metadata</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
+                    <span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">normal</span><span class="o">=</span><span class="n">normal</span><span class="p">)</span>
+                    <span class="o">.</span><span class="n">pop_metadata</span><span class="p">(</span><span class="s2">&quot;index&quot;</span><span class="p">)</span>
+                    <span class="p">)</span>
+            <span class="n">all_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">indices</span> <span class="o">+</span> <span class="n">i</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">nb_faces</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">)])</span>
+            <span class="n">metadata</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">all_indices</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="o">.</span><span class="n">keys</span><span class="p">()}</span>
+            <span class="k">return</span> <span class="n">RotationSymmetricMesh</span><span class="p">(</span>
+                    <span class="n">wedge</span><span class="o">=</span><span class="n">clipped_wedge</span><span class="p">,</span>
+                    <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span>
+                    <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+                    <span class="n">faces_metadata</span><span class="o">=</span><span class="n">metadata</span><span class="p">,</span>
+                    <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Dropping mesh rotation symmetry with respect to &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;z-axis when clipping with respect to plane &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;with origin </span><span class="si">{</span><span class="n">origin</span><span class="si">}</span><span class="s2"> and normal </span><span class="si">{</span><span class="n">normal</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span><span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">normal</span><span class="o">=</span><span class="n">normal</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RotationSymmetricMesh.show">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.RotationSymmetricMesh.show">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ghost_meshes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">ghost_meshes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ghost_meshes</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">ghost_meshes</span> <span class="o">=</span> <span class="n">ghost_meshes</span> <span class="o">+</span> <span class="p">[</span><span class="n">w</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span> <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">all_wedges</span><span class="p">[</span><span class="mi">1</span><span class="p">:]]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="n">ghost_meshes</span><span class="o">=</span><span class="n">ghost_meshes</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+</div>
+
 </pre></div>
 
           </div>

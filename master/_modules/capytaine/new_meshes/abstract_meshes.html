@@ -657,6 +657,61 @@ window.addEventListener("load", load);
         <span class="o">...</span></div>
 
 
+<div class="viewcode-block" id="AbstractMesh.extract_wedge">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.abstract_meshes.html#capytaine.new_meshes.abstract_meshes.AbstractMesh.extract_wedge">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_wedge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">axis</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;z&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbstractMesh</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Extract a wedge (angular sector) from the mesh for rotational symmetry.</span>
+
+<span class="sd">        Extracts a 1/n sector of the mesh by clipping at angular boundaries.</span>
+<span class="sd">        This creates proper faces at the wedge boundaries for clean reconstruction.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        n : int</span>
+<span class="sd">            The rotation order. The wedge will span 360/n degrees.</span>
+<span class="sd">        axis : str, optional</span>
+<span class="sd">            Only &quot;z&quot; is currently supported.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Mesh</span>
+<span class="sd">            A new mesh containing the wedge sector with proper boundary faces.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Extract 1/3 of a sphere (120-degree wedge):</span>
+
+<span class="sd">        &gt;&gt;&gt; sphere = mesh_sphere(radius=1.0, resolution=(12, 12))</span>
+<span class="sd">        &gt;&gt;&gt; wedge = sphere.extract_wedge(n=3)</span>
+<span class="sd">        &gt;&gt;&gt; wedge.nb_faces  # Approximately 1/3 of sphere.nb_faces</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">axis</span> <span class="o">!=</span> <span class="s2">&quot;z&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;Only &#39;z&#39; axis is currently supported, got &#39;</span><span class="si">{</span><span class="n">axis</span><span class="si">}</span><span class="s2">&#39;&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Rotation order must be &gt;= 2, got </span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Wedge angle in radians</span>
+        <span class="n">wedge_angle</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="n">n</span>
+
+        <span class="c1"># First clip: keep the half with y &gt;= 0 (theta in [0, pi])</span>
+        <span class="c1"># This corresponds to the plane y=0, keeping positive y side</span>
+        <span class="n">origin</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>
+        <span class="n">normal_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">])</span>  <span class="c1"># Keep y &gt;= 0</span>
+        <span class="n">wedge</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">normal</span><span class="o">=</span><span class="n">normal_1</span><span class="p">)</span>
+
+        <span class="c1"># Second clip: create the wedge boundary at angle = wedge_angle</span>
+        <span class="c1"># The plane passes through the z-axis and has a normal perpendicular to the boundary</span>
+        <span class="c1"># For a wedge from theta=0 to theta=wedge_angle, we need to keep theta &lt;= wedge_angle</span>
+        <span class="c1"># Normal vector points outward from the wedge (to reject the side we don&#39;t want)</span>
+        <span class="c1"># At angle theta, the outward normal is [-sin(theta), cos(theta), 0]</span>
+        <span class="n">normal_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">wedge_angle</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">wedge_angle</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">])</span>
+        <span class="n">wedge</span> <span class="o">=</span> <span class="n">wedge</span><span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">normal</span><span class="o">=</span><span class="n">normal_2</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_wedge_n</span><span class="si">{</span><span class="n">n</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">wedge</span></div>
+
+
 <div class="viewcode-block" id="AbstractMesh.immersed_part">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.abstract_meshes.html#capytaine.new_meshes.abstract_meshes.AbstractMesh.immersed_part">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">immersed_part</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbstractMesh</span><span class="p">:</span>
