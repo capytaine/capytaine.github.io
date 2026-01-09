@@ -426,6 +426,7 @@ window.addEventListener("load", load);
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Literal</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">.abstract_meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractMesh</span>
@@ -438,6 +439,7 @@ window.addEventListener("load", load);
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.clip</span><span class="w"> </span><span class="kn">import</span> <span class="n">clip_faces</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.clean</span><span class="w"> </span><span class="kn">import</span> <span class="n">clean_mesh</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_mesh</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.quality</span><span class="w"> </span><span class="kn">import</span> <span class="n">_is_valid</span><span class="p">,</span> <span class="n">check_mesh_quality</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">show_3d</span>
 
@@ -759,6 +761,24 @@ window.addEventListener("load", load);
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Dropping metadata of </span><span class="si">{</span><span class="bp">self</span><span class="si">}</span><span class="s2"> to export as list of faces.&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">list_faces</span></div>
+
+
+<div class="viewcode-block" id="Mesh.as_array_of_faces">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.as_array_of_faces">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_array_of_faces</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Similare to as_list_of_faces but returns an array of shape</span>
+<span class="sd">        (nb_faces, 3, 3) if only triangles, or (nb_faces, 4, 3) otherwise.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">[:,</span> <span class="p">:],</span> <span class="p">:]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_quads</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">array</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">3</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="k">return</span> <span class="n">array</span></div>
+
+
+<div class="viewcode-block" id="Mesh.export">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.meshes.html#capytaine.new_meshes.meshes.Mesh.export">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">format</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">export_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">format</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
     <span class="c1">## INTERFACE FOR BEM SOLVER</span>

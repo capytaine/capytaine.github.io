@@ -425,7 +425,7 @@ window.addEventListener("load", load);
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span><span class="p">,</span> <span class="n">Tuple</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
@@ -559,7 +559,7 @@ window.addEventListener("load", load);
 
 <div class="viewcode-block" id="AbstractMesh.mirrored">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.abstract_meshes.html#capytaine.new_meshes.abstract_meshes.AbstractMesh.mirrored">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">mirrored</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;xOz&#39;</span><span class="p">,</span> <span class="s1">&#39;yOz&#39;</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbstracMesh</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mirrored</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;xOz&#39;</span><span class="p">,</span> <span class="s1">&#39;yOz&#39;</span><span class="p">],</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbstractMesh</span><span class="p">:</span>
         <span class="o">...</span></div>
 
 
@@ -766,6 +766,37 @@ window.addEventListener("load", load);
 <span class="sd">        See also :func:`~capytaine.new_meshes.visualization.show_matplotlib`</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AbstractMesh.export">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.abstract_meshes.html#capytaine.new_meshes.abstract_meshes.AbstractMesh.export">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">format</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="AbstractMesh.export_to_pyvista">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.abstract_meshes.html#capytaine.new_meshes.abstract_meshes.AbstractMesh.export_to_pyvista">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_to_pyvista</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s2">&quot;pyvista&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AbstractMesh.export_to_xarray">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.abstract_meshes.html#capytaine.new_meshes.abstract_meshes.AbstractMesh.export_to_xarray">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_to_xarray</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s2">&quot;xarray&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AbstractMesh.export_to_meshio">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.abstract_meshes.html#capytaine.new_meshes.abstract_meshes.AbstractMesh.export_to_meshio">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_to_meshio</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s2">&quot;meshio&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AbstractMesh.export_to_trimesh">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.abstract_meshes.html#capytaine.new_meshes.abstract_meshes.AbstractMesh.export_to_trimesh">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">export_to_trimesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="nb">format</span><span class="o">=</span><span class="s2">&quot;trimesh&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 </div>
 
 </pre></div>

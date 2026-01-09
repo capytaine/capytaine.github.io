@@ -421,13 +421,12 @@ window.addEventListener("load", load);
 <span class="c1"># limitations under the License.</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">importlib</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">List</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.optional_imports</span><span class="w"> </span><span class="kn">import</span> <span class="n">import_optional_dependency</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.new_meshes.export</span><span class="w"> </span><span class="kn">import</span> <span class="n">mesh_to_pyvista</span>
 
 
 <div class="viewcode-block" id="show_3d">
@@ -501,7 +500,7 @@ window.addEventListener("load", load);
     <span class="n">pv</span> <span class="o">=</span> <span class="n">import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;pyvista&quot;</span><span class="p">)</span>
 
     <span class="n">all_meshes_in_scene</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mesh</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">mesh</span><span class="p">]</span> <span class="k">if</span> <span class="n">ghost_meshes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="n">mesh</span><span class="p">,</span> <span class="o">*</span><span class="n">ghost_meshes</span><span class="p">]</span>
-    <span class="n">pv_meshes</span> <span class="o">=</span> <span class="p">[</span><span class="n">mesh_to_pyvista</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="n">m</span><span class="o">.</span><span class="n">_faces</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">all_meshes_in_scene</span><span class="p">]</span>
+    <span class="n">pv_meshes</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">export_to_pyvista</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">all_meshes_in_scene</span><span class="p">]</span>
 
     <span class="k">if</span> <span class="n">color_field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">color_field</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
         <span class="n">acc_faces</span> <span class="o">=</span> <span class="mi">0</span>

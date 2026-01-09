@@ -68,184 +68,107 @@ a mesh or transform a mesh to set the name of the new mesh.</p>
 </section>
 <section id="mesh-initialization">
 <span id="loading-a-mesh"></span><h2>Mesh initialization<a class="headerlink" href="#mesh-initialization" title="Link to this heading">¶</a></h2>
-<section id="importing-with-included-meshmagick-readers">
-<h3>Importing with included Meshmagick readers<a class="headerlink" href="#importing-with-included-meshmagick-readers" title="Link to this heading">¶</a></h3>
+<section id="importing-from-file">
+<h3>Importing from file<a class="headerlink" href="#importing-from-file" title="Link to this heading">¶</a></h3>
 <p>To load an existing mesh file, use the following syntax:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
-
-<span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s1">&#39;path/to/mesh.dat&#39;</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="s1">&#39;nemoh&#39;</span><span class="p">)</span>
-<span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s1">&#39;path/to/mesh.dat&#39;</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="s1">&#39;nemoh&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>The above example uses Nemoh’s mesh format, as defined e.g. on page 19 of <a class="reference external" href="https://gitlab.com/api/v4/projects/41313230/packages/generic/nemoh/v3.0.1/Nemoh_Manual_v3.0.1.pdf">Nemoh v3.0.1 manual</a>.</p>
-<p>Thanks to inclusion of code from <a class="reference external" href="https://github.com/lheea/meshmagick/">Meshmagick</a>,
-numerous other mesh format can be imported.
-The file format can be given with the <code class="code docutils literal notranslate"><span class="pre">file_format</span></code> optional argument.
-If no format is given, the code will try to infer it from the file extension:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s1">&#39;path/to/mesh.msh&#39;</span><span class="p">)</span>  <span class="c1"># gmsh file</span>
-</pre></div>
-</div>
-<p>The formats currently supported in reading are listed in the following table (adapted from the documentation of Meshmagick).</p>
+<p>The above example uses Nemoh’s mesh format, which is one of the built-in hydrodynamic file formats that can be read by Capytaine.</p>
 <table class="docutils align-default">
 <thead>
-<tr class="row-odd"><th class="head"><p>File
-extension</p></th>
-<th class="head"><p>Software</p></th>
-<th class="head"><p>Keywords</p></th>
-<th class="head"><p>Extra features</p></th>
+<tr class="row-odd"><th class="head"><p>Mesh file format</p></th>
+<th class="head"><p>Keywords for <code class="docutils literal notranslate"><span class="pre">file_format</span></code></p></th>
+<th class="head"><p>Reference</p></th>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p>.mar</p></td>
-<td><p>NEMOH <a class="footnote-reference brackets" href="#f1" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p></td>
-<td><p>nemoh, mar</p></td>
-<td><p>Symmetries</p></td>
+<tr class="row-even"><td><p>Nemoh</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'nemoh'</span></code>, <code class="docutils literal notranslate"><span class="pre">'mar'</span></code></p></td>
+<td><p><a class="reference external" href="nemoh_ref">Page 19 of Nemoh 3 manual</a></p></td>
 </tr>
-<tr class="row-odd"><td><p>.nem</p></td>
-<td><p>NEMOH <a class="footnote-reference brackets" href="#f1" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a></p></td>
-<td><p>nemoh_mesh, nem</p></td>
-<td></td>
+<tr class="row-odd"><td><p>WAMIT</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'wamit'</span></code>, <code class="docutils literal notranslate"><span class="pre">'gdf'</span></code></p></td>
+<td><p><a class="reference external" href="wamit_ref">Chapter 6 of WAMIT manual</a></p></td>
 </tr>
-<tr class="row-even"><td><p>.gdf</p></td>
-<td><p>WAMIT <a class="footnote-reference brackets" href="#f2" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a></p></td>
-<td><p>wamit, gdf</p></td>
-<td><p>Symmetries</p></td>
+<tr class="row-even"><td><p>HAMS</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'hams'</span></code>, <code class="docutils literal notranslate"><span class="pre">'pnl'</span></code></p></td>
+<td><p><a class="reference external" href="hams_ref">Examples in HAMS repository</a></p></td>
 </tr>
-<tr class="row-odd"><td><p>.inp</p></td>
-<td><p>DIODORE <a class="footnote-reference brackets" href="#f3" id="id4" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a></p></td>
-<td><p>diodore-inp, inp</p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p>.DAT</p></td>
-<td><p>DIODORE <a class="footnote-reference brackets" href="#f3" id="id5" role="doc-noteref"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></a></p></td>
-<td><p>diodore-dat</p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p>.pnl</p></td>
-<td><p>HAMS</p></td>
-<td><p>pnl, hams</p></td>
-<td><p>Symmetries</p></td>
-</tr>
-<tr class="row-even"><td><p>.hst</p></td>
-<td><p>HYDROSTAR <a class="footnote-reference brackets" href="#f4" id="id6" role="doc-noteref"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></a></p></td>
-<td><p>hydrostar, hst</p></td>
-<td><p>Symmetries</p></td>
-</tr>
-<tr class="row-odd"><td><p>.nat</p></td>
-<td><ul class="simple">
-<li></li>
-</ul>
-</td>
-<td><p>natural, nat</p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p>.msh</p></td>
-<td><p>GMSH <a class="footnote-reference brackets" href="#f5" id="id7" role="doc-noteref"><span class="fn-bracket">[</span>5<span class="fn-bracket">]</span></a></p></td>
-<td><p>gmsh, msh</p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p>.rad</p></td>
-<td><p>RADIOSS</p></td>
-<td><p>rad, radioss</p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p>.stl</p></td>
-<td><ul class="simple">
-<li></li>
-</ul>
-</td>
-<td><p>stl</p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p>.vtu</p></td>
-<td><p>PARAVIEW <a class="footnote-reference brackets" href="#f6" id="id8" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a></p></td>
-<td><p>vtu</p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p>.vtp</p></td>
-<td><p>PARAVIEW <a class="footnote-reference brackets" href="#f6" id="id9" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a></p></td>
-<td><p>vtp</p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p>.vtk</p></td>
-<td><p>PARAVIEW <a class="footnote-reference brackets" href="#f6" id="id10" role="doc-noteref"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></a></p></td>
-<td><p>paraview-legacy, vtk</p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p>.tec</p></td>
-<td><p>TECPLOT <a class="footnote-reference brackets" href="#f7" id="id11" role="doc-noteref"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></a></p></td>
-<td><p>tecplot, tec</p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p>.med</p></td>
-<td><p>SALOME <a class="footnote-reference brackets" href="#f8" id="id12" role="doc-noteref"><span class="fn-bracket">[</span>8<span class="fn-bracket">]</span></a></p></td>
-<td><p>med, salome</p></td>
-<td></td>
+<tr class="row-odd"><td><p>Hydrostar</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">'hydrostar'</span></code>, <code class="docutils literal notranslate"><span class="pre">'hst'</span></code></p></td>
+<td><p>Hydrostar manual</p></td>
 </tr>
 </tbody>
 </table>
-<aside class="footnote-list brackets">
-<aside class="footnote brackets" id="f1" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id2">2</a>)</span>
-<p>NEMOH is an open source BEM Software for seakeeping developed at
-Ecole Centrale de Nantes (LHEEA)</p>
-</aside>
-<aside class="footnote brackets" id="f2" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">2</a><span class="fn-bracket">]</span></span>
-<p>WAMIT is a BEM Software for seakeeping developed by WAMIT, Inc.</p>
-</aside>
-<aside class="footnote brackets" id="f3" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id4">1</a>,<a role="doc-backlink" href="#id5">2</a>)</span>
-<p>DIODORE is a BEM Software for seakeeping developed by PRINCIPIA</p>
-</aside>
-<aside class="footnote brackets" id="f4" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id6">4</a><span class="fn-bracket">]</span></span>
-<p>HYDROSTAR is a BEM Software for seakeeping developed by
-BUREAU VERITAS</p>
-</aside>
-<aside class="footnote brackets" id="f5" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id7">5</a><span class="fn-bracket">]</span></span>
-<p>GMSH is an open source meshing software developed by C. Geuzaine
-and J.-F. Remacle. Version 4 of the file format requires meshio
-be installed independently.</p>
-</aside>
-<aside class="footnote brackets" id="f6" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span>6<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id8">1</a>,<a role="doc-backlink" href="#id9">2</a>,<a role="doc-backlink" href="#id10">3</a>)</span>
-<p>PARAVIEW is an open source visualization software developed by
-Kitware</p>
-</aside>
-<aside class="footnote brackets" id="f7" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id11">7</a><span class="fn-bracket">]</span></span>
-<p>TECPLOT is a visualization software developed by Tecplot</p>
-</aside>
-<aside class="footnote brackets" id="f8" role="doc-footnote">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id12">8</a><span class="fn-bracket">]</span></span>
-<p>SALOME-MECA is an open source software for computational mechanics
-developed by EDF-R&amp;D</p>
-</aside>
-</aside>
-<p>Not all metadata is taken into account when reading the mesh file.
-For instance, the body symmetry is taken into account only for the <code class="docutils literal notranslate"><span class="pre">.mar</span></code>, <code class="docutils literal notranslate"><span class="pre">.pnl</span></code>, <code class="docutils literal notranslate"><span class="pre">.gdf</span></code> and <code class="docutils literal notranslate"><span class="pre">.hst</span></code> file formats.
-Feel free to open an issue on Github to suggest improvements.</p>
+<p>For the four file format above, the reflection symmetries (see <a class="reference internal" href="symmetries.html"><span class="doc">Mesh symmetries</span></a>) are recognized and a symmetric mesh will automatically be generated by <code class="docutils literal notranslate"><span class="pre">load_mesh</span></code>.
+Except for symmetries, all other metadata are ignored (such as the gravity acceleration value that can be set in <code class="docutils literal notranslate"><span class="pre">gdf</span></code> files).</p>
+<p>If no <code class="docutils literal notranslate"><span class="pre">file_format</span></code> is given, the code will try to infer it from the file extension:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s1">&#39;path/to/mesh.gdf&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Besides accepting a path to a file, the function <code class="docutils literal notranslate"><span class="pre">load_mesh</span></code> accepts an opened file, as in the following example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s1">&#39;path/to/mesh.pnl&#39;</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="s1">&#39;hams&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this case, the <code class="docutils literal notranslate"><span class="pre">file_format</span></code> must be explicitly provided.</p>
+<p>This is especially useful when combined with Python built-in loaders for
+compressed files formats such as <a class="reference external" href="https://docs.python.org/3/library/gzip.html">gz</a>, <a class="reference external" href="https://docs.python.org/3/library/lzma.html">xz</a> or <cite>zstd
+&lt;https://docs.python.org/3/library/compression.zstd.html&gt;</cite> files:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>
+<span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;path/to/mesh.dat.gz&#39;</span><span class="p">,</span> <span class="s1">&#39;rt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="s1">&#39;nemoh&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </section>
-<section id="importing-with-meshio">
-<h3>Importing with Meshio<a class="headerlink" href="#importing-with-meshio" title="Link to this heading">¶</a></h3>
-<p>Mesh can also be imported using the <a class="reference external" href="https://pypi.org/project/meshio/">meshio</a>
-library. Unlike the Meshmagick mesh readers mentioned above, this library is
-not packaged with Capytaine and need to be installed independently:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">meshio</span>
+<section id="importing-through-external-library">
+<h3>Importing through external library<a class="headerlink" href="#importing-through-external-library" title="Link to this heading">¶</a></h3>
+<p>Capytaine relies on external libraries to load meshes for a lot more general purpose file formats.
+For instance, assuming the Python library <a class="reference external" href="https://github.com/nschloe/meshio">meshio</a> has been installed, the following command will transparently open a GMSH file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s1">&#39;path/to/mesh.msh&#39;</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="s1">&#39;gmsh&#39;</span><span class="p">)</span>
+<span class="c1"># No need to explicitly import meshio, as long as it has been installed.</span>
 </pre></div>
 </div>
-<p>The <cite>meshio</cite> mesh object can converted to Capytaine’s mesh
-format with the <a class="reference internal" href="../developer_manual/api/capytaine.io.meshio.html#capytaine.io.meshio.load_from_meshio" title="capytaine.io.meshio.load_from_meshio"><code class="xref py py-func docutils literal notranslate"><span class="pre">load_from_meshio()</span></code></a> function:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.meshio</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_from_meshio</span>
-<span class="n">cpt_mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_from_meshio</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;My mesh&quot;</span><span class="p">)</span>
+<p>The table below list a few selected file formats supported through external libraries.</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Mesh file format</p></th>
+<th class="head"><p>Keywords for <code class="docutils literal notranslate"><span class="pre">file_format</span></code></p></th>
+<th class="head"><p>Install one of these Python libraries</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>GMSH (v2 and v4)</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;gmsh&quot;</span></code></p></td>
+<td><p><a class="reference external" href="https://github.com/nschloe/meshio">meshio</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>STL</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;stl&quot;</span></code></p></td>
+<td><p><a class="reference external" href="https://github.com/nschloe/meshio">meshio</a>, <a class="reference external" href="https://trimesh.org/">trimesh</a></p></td>
+</tr>
+<tr class="row-even"><td><p>VTK</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">&quot;vtk&quot;</span></code></p></td>
+<td><p><a class="reference external" href="https://github.com/nschloe/meshio">meshio</a></p></td>
+</tr>
+</tbody>
+</table>
+<p>This works with opened file handles, including compressed files, as in the previous section:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">gzip</span>
+<span class="k">with</span> <span class="n">gzip</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s1">&#39;path/to/mesh.stl.gz&#39;</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="s1">&#39;stl&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>This features allows to use <a class="reference external" href="https://pypi.org/project/pygmsh/">pygmsh</a> to
+<p>You might need to be careful whether the file format is binary (use <code class="docutils literal notranslate"><span class="pre">'rb'</span></code>
+option to open) or textual (use <code class="docutils literal notranslate"><span class="pre">'rt'</span></code> option to open).</p>
+<p>Alternatively, <code class="docutils literal notranslate"><span class="pre">load_mesh</span></code> also accepts a Python object from these external
+libraries:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">meshio</span>
+<span class="n">meshio_mesh</span> <span class="o">=</span> <span class="n">meshio</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="s1">&#39;path/to/file.stl&#39;</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="s1">&#39;stl&#39;</span><span class="p">)</span>
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="n">meshio_mesh</span><span class="p">)</span>  <span class="c1"># Converts meshio mesh object to Capytaine mesh object</span>
+</pre></div>
+</div>
+<p>This feature allows to use <a class="reference external" href="https://pypi.org/project/pygmsh/">pygmsh</a> to
 generate the mesh, since this library returns mesh in the same format as meshio.
 Below is an example of a mesh generation with <cite>pygmsh</cite> (which also needs to be
 installed independently):</p>
@@ -262,7 +185,7 @@ installed independently):</p>
     <span class="n">geom</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="n">cone</span><span class="p">,</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">offset</span><span class="p">])</span>
     <span class="n">geom</span><span class="o">.</span><span class="n">boolean_union</span><span class="p">([</span><span class="n">cyl</span><span class="p">,</span> <span class="n">cone</span><span class="p">])</span>
     <span class="n">gmsh_mesh</span> <span class="o">=</span> <span class="n">geom</span><span class="o">.</span><span class="n">generate_mesh</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
-<span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="n">gmsh_mesh</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;my_pygmsh_mesh&quot;</span><span class="p">)</span>
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="n">gmsh_mesh</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -309,12 +232,12 @@ The faces are provided as a Numpy array of ints with shape <code class="docutils
 normal right rotation. In other words, the normal vector is towards you if you
 see the vertices as being in counterclockwise order. In the above code sample,
 the normal vector is going up.</p>
-<figure class="align-default" id="id13">
+<figure class="align-default" id="id1">
 <a class="reference internal image-reference" href="../_images/Panel_convention.svg"><img alt="Schematics of the ordering of the vertices around a panel" src="../_images/Panel_convention.svg" style="width: 291.6px; height: 146.0px;" />
 </a>
 <figcaption>
 <p><span class="caption-number">Fig. 1 </span><span class="caption-text">The ordering of the vertices in a panel defines the direction of the normal
-vector.</span><a class="headerlink" href="#id13" title="Link to this image">¶</a></p>
+vector.</span><a class="headerlink" href="#id1" title="Link to this image">¶</a></p>
 </figcaption>
 </figure>
 <p>Triangular faces are supported as quadrilateral faces with the same vertex
