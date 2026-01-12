@@ -737,10 +737,12 @@ window.addEventListener("load", load);
 
 <div class="viewcode-block" id="Delhommeau.evaluate_rankine_only">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau.evaluate_rankine_only">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_rankine_only</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                              <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
-                              <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span>
-                              <span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_rankine_only</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+            <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">diagonal_term_in_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Construct the matrices between mesh1 (that can also be a list of points)</span>
 <span class="sd">        and mesh2 for a Rankine kernel.</span>
 
@@ -758,6 +760,11 @@ window.addEventListener("load", load);
 <span class="sd">        early_dot_product: boolean, optional</span>
 <span class="sd">            if False, return K as a (n, m, 3) array storing ∫∇G</span>
 <span class="sd">            if True, return K as a (n, m) array storing ∫∇G·n</span>
+<span class="sd">        diagonal_term_in_double_layer: boolean, optional</span>
+<span class="sd">            if True, add the I/2 term in the double layer operator</span>
+<span class="sd">            It is assumed that mesh1 == mesh2, or at least that</span>
+<span class="sd">            the `n := min(mesh1.nb_faces, mesh2.nb_faces)` first faces</span>
+<span class="sd">            of each mesh are identical.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -780,9 +787,10 @@ window.addEventListener("load", load);
                 <span class="n">adjoint_double_layer</span><span class="p">,</span>
                 <span class="n">S</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">diagonal_term_in_double_layer</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">K</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">K</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">add_diagonal_term</span><span class="p">(</span>
-                    <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">early_dot_product_normals</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span>
+                    <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:</span><span class="n">n</span><span class="p">,</span> <span class="p">:],</span> <span class="n">early_dot_product_normals</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span>
                     <span class="p">)</span>
 
         <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">S</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">K</span><span class="p">)</span>
@@ -801,11 +809,12 @@ window.addEventListener("load", load);
 
 <div class="viewcode-block" id="Delhommeau.evaluate">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau.evaluate">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
-                 <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-                 <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span>
-                 <span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+            <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+            <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">diagonal_term_in_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;The main method of the class, called by the engine to assemble the influence matrices.</span>
 
 <span class="sd">        Parameters</span>
@@ -826,6 +835,11 @@ window.addEventListener("load", load);
 <span class="sd">        early_dot_product: boolean, optional</span>
 <span class="sd">            if False, return K as a (n, m, 3) array storing ∫∇G</span>
 <span class="sd">            if True, return K as a (n, m) array storing ∫∇G·n</span>
+<span class="sd">        diagonal_term_in_double_layer: boolean, optional</span>
+<span class="sd">            if True, add the I/2 term in the double layer operator.</span>
+<span class="sd">            It is assumed that mesh1 == mesh2, or at least that</span>
+<span class="sd">            the `n := min(mesh1.nb_faces, mesh2.nb_faces)` first faces</span>
+<span class="sd">            of each mesh are identical.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -901,9 +915,10 @@ window.addEventListener("load", load);
             <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">diagonal_term_in_double_layer</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">K</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">K</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">add_diagonal_term</span><span class="p">(</span>
-                    <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">early_dot_product_normals</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span>
+                    <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:</span><span class="n">n</span><span class="p">,</span> <span class="p">:],</span> <span class="n">early_dot_product_normals</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span>
                     <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">S</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">K</span><span class="p">)):</span>

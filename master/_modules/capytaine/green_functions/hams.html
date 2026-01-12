@@ -448,11 +448,12 @@ window.addEventListener("load", load);
 
 <div class="viewcode-block" id="LiangWuNoblesseGF.evaluate">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.hams.html#capytaine.green_functions.hams.LiangWuNoblesseGF.evaluate">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span>
-                 <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
-                 <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span>
-                 <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span>
-                 <span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+            <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span>
+            <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">diagonal_term_in_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">):</span>
 
         <span class="k">if</span> <span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">or</span> <span class="n">water_depth</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;LiangWuNoblesseGF() is only implemented for infinite depth with a free surface&quot;</span><span class="p">)</span>
@@ -483,7 +484,7 @@ window.addEventListener("load", load);
             <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">diagonal_term_in_double_layer</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">add_diagonal_term</span><span class="p">(</span>
                     <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">early_dot_product_normals</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span>
                     <span class="p">)</span>
@@ -550,7 +551,12 @@ window.addEventListener("load", load);
 
 <div class="viewcode-block" id="FinGreen3D.evaluate">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.hams.html#capytaine.green_functions.hams.FinGreen3D.evaluate">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
+            <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span>
+            <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">diagonal_term_in_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="p">):</span>
 
         <span class="k">if</span> <span class="n">free_surface</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">or</span> <span class="n">water_depth</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;FinGreen3D is only implemented for finite depth with a free surface.&quot;</span><span class="p">)</span>
@@ -584,7 +590,7 @@ window.addEventListener("load", load);
             <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
         <span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">mesh1</span> <span class="ow">is</span> <span class="n">mesh2</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">diagonal_term_in_double_layer</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">add_diagonal_term</span><span class="p">(</span>
                     <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">early_dot_product_normals</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span>
                     <span class="p">)</span>
