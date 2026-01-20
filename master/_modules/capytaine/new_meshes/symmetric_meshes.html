@@ -558,7 +558,10 @@ window.addEventListener("load", load);</script>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">half</span> <span class="o">=</span> <span class="n">half</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">plane</span> <span class="o">=</span> <span class="n">plane</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">other_half</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">half</span><span class="o">.</span><span class="n">mirrored</span><span class="p">(</span><span class="n">plane</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">half</span><span class="o">.</span><span class="n">nb_faces</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">other_half</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">half</span><span class="o">.</span><span class="n">mirrored</span><span class="p">(</span><span class="n">plane</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">other_half</span> <span class="o">=</span> <span class="n">half</span>  <span class="c1"># Degenerate case without any face...</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">v</span><span class="p">,</span> <span class="n">v</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">half</span><span class="o">.</span><span class="n">faces_metadata</span><span class="o">.</span><span class="n">items</span><span class="p">()}</span>
         <span class="k">if</span> <span class="n">faces_metadata</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
@@ -714,6 +717,26 @@ window.addEventListener("load", load);</script>
                 <span class="n">return_masks</span><span class="o">=</span><span class="n">return_masks</span><span class="p">,</span>
                 <span class="n">name</span><span class="o">=</span><span class="n">name</span>
             <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ReflectionSymmetricMesh.generate_lid">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.ReflectionSymmetricMesh.generate_lid">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_lid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">faces_max_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">half</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">z</span><span class="p">,</span> <span class="n">faces_max_radius</span><span class="o">=</span><span class="n">faces_max_radius</span><span class="p">),</span>
+                <span class="n">plane</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plane</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">name</span>
+                <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ReflectionSymmetricMesh.extract_lid">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.ReflectionSymmetricMesh.extract_lid">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_lid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="n">half_hull</span><span class="p">,</span> <span class="n">half_lid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">half</span><span class="o">.</span><span class="n">extract_lid</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">z</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+                <span class="n">ReflectionSymmetricMesh</span><span class="p">(</span><span class="n">half_hull</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plane</span><span class="p">),</span>
+                <span class="n">ReflectionSymmetricMesh</span><span class="p">(</span><span class="n">half_lid</span><span class="p">,</span> <span class="n">plane</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">plane</span><span class="p">),</span>
+                <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ReflectionSymmetricMesh.with_normal_vector_going_down">
@@ -1085,6 +1108,27 @@ window.addEventListener("load", load);</script>
                 <span class="n">return_masks</span><span class="o">=</span><span class="n">return_masks</span><span class="p">,</span>
                 <span class="n">name</span><span class="o">=</span><span class="n">name</span>
             <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RotationSymmetricMesh.generate_lid">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.RotationSymmetricMesh.generate_lid">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_lid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">faces_max_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">RotationSymmetricMesh</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">z</span><span class="p">,</span> <span class="n">faces_max_radius</span><span class="o">=</span><span class="n">faces_max_radius</span><span class="p">),</span>
+                <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span>
+                <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">name</span>
+                <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RotationSymmetricMesh.extract_lid">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.symmetric_meshes.html#capytaine.new_meshes.symmetric_meshes.RotationSymmetricMesh.extract_lid">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_lid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="n">wedge_hull</span><span class="p">,</span> <span class="n">wedge_lid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">extract_lid</span><span class="p">(</span><span class="n">z</span><span class="o">=</span><span class="n">z</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span>
+                <span class="n">RotationSymmetricMesh</span><span class="p">(</span><span class="n">wedge_hull</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">),</span>
+                <span class="n">RotationSymmetricMesh</span><span class="p">(</span><span class="n">wedge_lid</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">axis</span><span class="p">,</span> <span class="n">n</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">n</span><span class="p">),</span>
+                <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="RotationSymmetricMesh.with_normal_vector_going_down">

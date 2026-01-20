@@ -500,6 +500,7 @@ window.addEventListener("load", load);</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.deprecation_handling</span><span class="w"> </span><span class="kn">import</span> <span class="n">_get_water_depth</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.new_meshes.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">connected_components</span><span class="p">,</span> <span class="n">connected_components_of_waterline</span>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -722,6 +723,34 @@ window.addEventListener("load", load);</script>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AbstractMesh.lowest_lid_position">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.abstract_meshes.html#capytaine.new_meshes.abstract_meshes.AbstractMesh.lowest_lid_position">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">lowest_lid_position</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">omega_max</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mf">9.81</span><span class="p">):</span>
+        <span class="n">z_lid</span> <span class="o">=</span> <span class="mf">0.0</span>
+        <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="n">connected_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">ccomp</span> <span class="ow">in</span> <span class="n">connected_components_of_waterline</span><span class="p">(</span><span class="n">comp</span><span class="p">):</span>
+                <span class="n">x_span</span> <span class="o">=</span> <span class="n">ccomp</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">ccomp</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="n">y_span</span> <span class="o">=</span> <span class="n">ccomp</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="o">-</span> <span class="n">ccomp</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hypot</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">x_span</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">y_span</span><span class="p">)</span>
+                <span class="n">z_lid_comp</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">arctanh</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">g</span><span class="o">*</span><span class="n">p</span><span class="o">/</span><span class="n">omega_max</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">p</span><span class="p">)</span>
+                <span class="n">z_lid</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">z_lid</span><span class="p">,</span> <span class="n">z_lid_comp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mf">0.9</span><span class="o">*</span><span class="n">z_lid</span>  <span class="c1"># Add a small safety margin</span></div>
+
+
+<div class="viewcode-block" id="AbstractMesh.generate_lid">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.abstract_meshes.html#capytaine.new_meshes.abstract_meshes.AbstractMesh.generate_lid">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_lid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">faces_max_radius</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="o">...</span></div>
+
+
+<div class="viewcode-block" id="AbstractMesh.extract_lid">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.abstract_meshes.html#capytaine.new_meshes.abstract_meshes.AbstractMesh.extract_lid">[docs]</a>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">extract_lid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="mf">0.0</span><span class="p">):</span>
+        <span class="o">...</span></div>
+
 
 <div class="viewcode-block" id="AbstractMesh.with_normal_vector_going_down">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.new_meshes.abstract_meshes.html#capytaine.new_meshes.abstract_meshes.AbstractMesh.with_normal_vector_going_down">[docs]</a>
