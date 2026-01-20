@@ -372,11 +372,13 @@ integrated on each panel of the mesh. Parts of the Green function (such as the
 for the integral. Other parts of the Green function rely on numerical
 integration. By default, this numerical integration is done by taking the value
 at the center of the panel and multiplying by its area. For a more accurate
-intagration, an higher order quadrature can be defined.</p>
-<p>To define a quadrature scheme for a mesh, run the following command:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span><span class="o">.</span><span class="n">compute_quadrature</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;Gauss-Legendre 2&quot;</span><span class="p">)</span>
+integration, an higher order quadrature can be defined.</p>
+<p>Setting a quadrature for a mesh can be done with the <code class="docutils literal notranslate"><span class="pre">with_quadrature</span></code> method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">with_quadrature</span><span class="p">(</span><span class="s2">&quot;Gauss-Legendre 2&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>Currently, the only supported methods are <code class="docutils literal notranslate"><span class="pre">None</span></code>, that is the default 1-point
+quadrature, and <code class="docutils literal notranslate"><span class="pre">&quot;Gauss-Legendre</span> <span class="pre">2&quot;</span></code>.</p>
 <p>The quadrature data can then be accessed at:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span><span class="o">.</span><span class="n">quadrature_points</span>
 </pre></div>
@@ -384,19 +386,8 @@ intagration, an higher order quadrature can be defined.</p>
 <p>and will be used automatically when needed.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>Transformations of the mesh (merging, clipping, …) may reset the quadrature.
-Compute it only on your final mesh.</p>
-</div>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
 <p>Quadratures schemes have been designed with quadrilateral panels.
 They work on triangular panels, but might not be as optimal then.</p>
-</div>
-<p>Alternatively, the <a class="reference internal" href="../developer_manual/api/capytaine.meshes.meshes.html#capytaine.meshes.meshes.Mesh.compute_quadrature" title="capytaine.meshes.meshes.Mesh.compute_quadrature"><code class="xref py py-func docutils literal notranslate"><span class="pre">compute_quadrature()</span></code></a>
-also accepts methods from the <cite>Quadpy</cite> package:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">quadpy</span>
-<span class="n">mesh</span><span class="o">.</span><span class="n">compute_quadrature</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="n">quadpy</span><span class="o">.</span><span class="n">c2</span><span class="o">.</span><span class="n">get_good_scheme</span><span class="p">(</span><span class="mi">8</span><span class="p">))</span>
-</pre></div>
 </div>
 </section>
 </section>
