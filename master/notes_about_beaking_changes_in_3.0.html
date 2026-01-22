@@ -83,6 +83,28 @@ Given that most hydrodynamical meshes are usually below 100k faces, Capytaine’
 Computation intensive mesh transformations should be done with a dedicated meshing tool and not directly in Capytaine anyway.
 If you find yourself nonetheless struggling with performance issues of the new mesh module in Capytaine, please open an issue on Github.</p>
 </li>
+<li><p><strong>No in-place mutation of the body objects.</strong>
+For the same reasons as above, the in-place transformations of the <code class="docutils literal notranslate"><span class="pre">FloatingBody</span></code> object have been removed.</p>
+<p>Code such as the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">)</span>
+<span class="n">body</span><span class="o">.</span><span class="n">rotation_center</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+<span class="n">body</span><span class="o">.</span><span class="n">add_all_rigid_body_dofs</span><span class="p">()</span>
+<span class="n">body</span><span class="o">.</span><span class="n">keep_only_dofs</span><span class="p">([</span><span class="s1">&#39;Heave&#39;</span><span class="p">])</span>
+<span class="n">body</span><span class="o">.</span><span class="n">keep_immersed_part</span><span class="p">()</span>
+<span class="n">body</span><span class="o">.</span><span class="n">translate</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>can be rewritten as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
+  <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span>
+  <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+<span class="p">)</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">with_only_dofs</span><span class="p">([</span><span class="s1">&#39;Heave&#39;</span><span class="p">])</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">translated</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+</pre></div>
+</div>
+</li>
 <li><p><strong>Only a few built-in mesh loaders, but transparently use external libraries</strong>
 Only the domain mesh file formats (Nemoh’s, WAMIT’s, Hydrostar’s and HAMS’s) are built-in in Capytaine.
 Loading a mesh in a general purpose file format such as GMSH or STL is still easy, assuming a third party library supporting this file format is installed (see <span class="xref std std-doc">mesh</span>).
