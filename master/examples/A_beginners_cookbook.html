@@ -73,52 +73,48 @@ See also the template in <a class="reference internal" href="../user_manual/quic
 <p>This example generates the mesh of an horizontal cylinder, solves radiation problems for the six
 rigid-body degrees of freedom and then plots the added mass.</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
 
-<span class="n">cpt</span><span class="o">.</span><span class="n">set_logging</span><span class="p">()</span>
+<span class="n">cpt</span><span class="o">.</span><span class="n">set_logging</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">)</span>
 
 <span class="c1"># Generating a geometric mesh</span>
 <span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_horizontal_cylinder</span><span class="p">(</span>
     <span class="n">length</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
     <span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
-    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">,),</span>
-    <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,)</span>
+    <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,),</span>
+    <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">30</span><span class="p">,),</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;cylinder_mesh&quot;</span>
 <span class="p">)</span>
 
 <span class="c1"># Define a rigid body using this mesh</span>
-<span class="n">cylinder</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
     <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span>
-    <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(),</span>
+    <span class="n">lid_mesh</span><span class="o">=</span><span class="n">mesh</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">(),</span>
+    <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;floating cylinder&quot;</span>
 <span class="p">)</span>
-
-<span class="c1"># Define the range of frequencies as a Numpy array</span>
-<span class="n">omega_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
 
 <span class="c1"># Set up the problems: we will solve a radiation problem for each</span>
 <span class="c1"># degree of freedom of the body and for each frequency in the</span>
 <span class="c1"># frequency range.</span>
-<span class="n">problems</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">cylinder</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">)</span>
-    <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">cylinder</span><span class="o">.</span><span class="n">dofs</span>
-    <span class="k">for</span> <span class="n">omega</span> <span class="ow">in</span> <span class="n">omega_range</span>
-<span class="p">]</span>
+<span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">({</span>
+        <span class="s2">&quot;omega&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+        <span class="s2">&quot;radiating_dof&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">),</span>
+        <span class="p">})</span>
 <span class="c1"># Water density, gravity and water depth have not been specified.</span>
 <span class="c1"># Default values are used.</span>
 
 <span class="c1"># Solve all radiation problems</span>
 <span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
-<span class="n">results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
-
-<span class="c1"># Gather the computed added mass into a labelled array.</span>
-<span class="n">data</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">())</span>
 
 <span class="c1"># Plot the added mass of each dofs as a function of the frequency</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
-<span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">cylinder</span><span class="o">.</span><span class="n">dofs</span><span class="p">:</span>
+<span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">:</span>
     <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
-        <span class="n">omega_range</span><span class="p">,</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;omega&#39;</span><span class="p">],</span>
         <span class="n">data</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span> <span class="n">influenced_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">),</span>
         <span class="n">label</span><span class="o">=</span><span class="n">dof</span><span class="p">,</span>
         <span class="n">marker</span><span class="o">=</span><span class="s1">&#39;o&#39;</span><span class="p">,</span>
