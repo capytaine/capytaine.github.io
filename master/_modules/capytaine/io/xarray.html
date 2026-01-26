@@ -496,6 +496,7 @@ window.addEventListener("load", load);</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="kn">import</span> <span class="n">__version__</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.bodies</span><span class="w"> </span><span class="kn">import</span> <span class="n">FloatingBody</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.multibodies</span><span class="w"> </span><span class="kn">import</span> <span class="n">Multibody</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.problems_and_results</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">LinearPotentialFlowProblem</span><span class="p">,</span> <span class="n">DiffractionProblem</span><span class="p">,</span> <span class="n">RadiationProblem</span><span class="p">,</span>
     <span class="n">LinearPotentialFlowResult</span><span class="p">,</span> <span class="n">_default_parameters</span><span class="p">)</span>
@@ -523,7 +524,7 @@ window.addEventListener("load", load);</script>
 <div class="viewcode-block" id="problems_from_dataset">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.problems_from_dataset">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">problems_from_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span>
-                          <span class="n">bodies</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">FloatingBody</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">FloatingBody</span><span class="p">]],</span>
+                          <span class="n">bodies</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">FloatingBody</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">FloatingBody</span><span class="p">],</span> <span class="n">Multibody</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Multibody</span><span class="p">]],</span>
                           <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">[</span><span class="n">LinearPotentialFlowProblem</span><span class="p">]:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a list of problems from a test matrix.</span>
 
@@ -544,7 +545,7 @@ window.addEventListener("load", load);</script>
 <span class="sd">    ValueError</span>
 <span class="sd">        if required fields are missing in the dataset</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bodies</span><span class="p">,</span> <span class="n">FloatingBody</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">bodies</span><span class="p">,</span> <span class="p">(</span><span class="n">FloatingBody</span><span class="p">,</span> <span class="n">Multibody</span><span class="p">)):</span>
         <span class="n">bodies</span> <span class="o">=</span> <span class="p">[</span><span class="n">bodies</span><span class="p">]</span>
 
     <span class="c1"># Should be done before looking for `frequency_keys`, otherwise</span>
@@ -1029,7 +1030,7 @@ window.addEventListener("load", load);</script>
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.assemble_matrices">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">assemble_matrices</span><span class="p">(</span><span class="n">results</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Simplified version of assemble_dataset, returning only bare matrices.</span>
-<span class="sd">    Meant mainly for teaching without introducing Xarray to beginers.</span>
+<span class="sd">    Meant mainly for teaching without introducing Xarray to beginners.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>

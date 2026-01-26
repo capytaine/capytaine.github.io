@@ -19,7 +19,7 @@
     <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Hydrostatics" href="hydrostatics.html" />
+    <link rel="next" title="Multiple bodies" href="multibody.html" />
     <link rel="prev" title="Meshes" href="mesh.html" />
     <script defer data-domain="capytaine.github.io" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
@@ -142,50 +142,6 @@ also be used on <code class="docutils literal notranslate"><span class="pre">Flo
 applied to <code class="docutils literal notranslate"><span class="pre">FloatingBody</span></code>. Beside updating the mesh, they also update the
 definition of the degrees of freedom and the center of mass (if relevant).</p>
 </section>
-<section id="multiple-bodies">
-<h2>Multiple bodies<a class="headerlink" href="#multiple-bodies" title="Link to this heading">¶</a></h2>
-<p>Multiple bodies problems can be defined by combining several bodies with the <code class="docutils literal notranslate"><span class="pre">join_bodies</span></code> method:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">all_bodies</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="o">.</span><span class="n">join_bodies</span><span class="p">(</span><span class="n">body_1</span><span class="p">,</span> <span class="n">body_2</span><span class="p">,</span> <span class="n">body_3</span><span class="p">,</span> <span class="n">body_4</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>For two-body problems, the <code class="docutils literal notranslate"><span class="pre">+</span></code> operator can also be used:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">two_bodies</span> <span class="o">=</span> <span class="n">body_1</span> <span class="o">+</span> <span class="n">body_2</span>
-</pre></div>
-</div>
-<p>But it is not recommended to use it for large number of bodies as it is not
-strictly associative (that is <code class="docutils literal notranslate"><span class="pre">body_1</span> <span class="pre">+</span> <span class="pre">(body_2</span> <span class="pre">+</span> <span class="pre">body_3)</span></code> has some internal
-differences with <code class="docutils literal notranslate"><span class="pre">(body_1</span> <span class="pre">+</span> <span class="pre">body_2)</span> <span class="pre">+</span> <span class="pre">body_3</span></code>).</p>
-<p>When two floating bodies with dofs are merged, the resulting body inherits from
-the dofs of the individual bodies with the new name <code class="code docutils literal notranslate"><span class="pre">body_name__dof_name</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">two_bodies</span><span class="o">.</span><span class="n">nb_dofs</span><span class="p">)</span>
-<span class="c1"># 12</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">two_bodies</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-<span class="c1"># dict_keys([&#39;body_1__Surge&#39;, &#39;body_1__Sway&#39;, &#39;body_1__Heave&#39;, &#39;body_1__Roll&#39;, &#39;body_1__Pitch&#39;, &#39;body_1__Yaw&#39;, &#39;body_2__Surge&#39;, &#39;body_2__Sway&#39;, &#39;body_2__Heave&#39;, &#39;body_2__Roll&#39;, &#39;body_2__Pitch&#39;, &#39;body_2__Yaw&#39;])</span>
-</pre></div>
-</div>
-<p>Capytaine also include helper functions to create arrays of identical bodies:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">array</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">assemble_regular_array</span><span class="p">(</span><span class="n">distance</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">nb_bodies</span><span class="o">=</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>places copies of the <code class="docutils literal notranslate"><span class="pre">body</span></code> on a regular grid of <span class="math notranslate nohighlight">\(4 \times 5\)</span> with distance between bodies of 1 meter, and:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">locations</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.5</span><span class="p">],</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">]])</span>
-<span class="n">array</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">assemble_arbitrary_array</span><span class="p">(</span><span class="n">locations</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>places copies of the <code class="docutils literal notranslate"><span class="pre">body</span></code> at the list of locations specified.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>As currently implemented in Capytaine, the multiple bodies are stored as a
-single body with a non-convex mesh and generalized degrees of freedom.
-Hence some information about the individual bodies is lost.
-It includes the center of mass and the center of rotation of the individual
-bodies (although the latter could be recovered indirectly by studying the
-definition of the rotation dof).
-Although it does not affect first order wave-structure interaction, it
-hinders the computation of hydrostatics for multiple rigid bodies and will
-need to be fixed in the future.</p>
-</div>
-</section>
 </section>
 
 
@@ -229,6 +185,7 @@ need to be fixed in the future.</p>
 <li class="toctree-l2"><a class="reference internal" href="tutorial.html">Tutorial</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mesh.html">Meshes</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Floating body</a></li>
+<li class="toctree-l2"><a class="reference internal" href="multibody.html">Multiple bodies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="hydrostatics.html">Hydrostatics</a></li>
 <li class="toctree-l2"><a class="reference internal" href="symmetries.html">Mesh symmetries</a></li>
 <li class="toctree-l2"><a class="reference internal" href="problem_setup.html">Setting up a problem</a></li>
@@ -260,7 +217,7 @@ need to be fixed in the future.</p>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="index.html">User manual</a><ul>
       <li>Previous: <a href="mesh.html" title="previous chapter">Meshes</a></li>
-      <li>Next: <a href="hydrostatics.html" title="next chapter">Hydrostatics</a></li>
+      <li>Next: <a href="multibody.html" title="next chapter">Multiple bodies</a></li>
   </ul></li>
   </ul></li>
 </ul>

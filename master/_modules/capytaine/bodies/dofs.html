@@ -479,6 +479,14 @@ window.addEventListener("load", load);</script>
 <span></span><span class="c1"># Copyright (C) 2017-2022 Matthieu Ancellin</span>
 <span class="c1"># See LICENSE file at &lt;https://github.com/capytaine/capytaine&gt;</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
+<span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
 <span class="n">TRANSLATION_DOFS_DIRECTIONS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;surge&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s2">&quot;sway&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s2">&quot;heave&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)}</span>
 <span class="n">ROTATION_DOFS_AXIS</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;roll&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s2">&quot;pitch&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="s2">&quot;yaw&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)}</span>
 
@@ -503,6 +511,64 @@ window.addEventListener("load", load);</script>
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.rigid_body_dofs">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">RigidBodyDofsPlaceholder</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="n">rotation_center</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="evaluate_translation_dof">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.evaluate_translation_dof">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluate_translation_dof</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">amplitude</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">TRANSLATION_DOFS_DIRECTIONS</span><span class="p">:</span>
+            <span class="n">direction</span> <span class="o">=</span> <span class="n">TRANSLATION_DOFS_DIRECTIONS</span><span class="p">[</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;A direction needs to be specified for the translation dof.&quot;</span><span class="p">)</span>
+    <span class="n">direction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">direction</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)</span>
+    <span class="n">motion</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="n">motion</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">direction</span>
+    <span class="k">return</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">motion</span></div>
+
+
+
+<div class="viewcode-block" id="evaluate_rotation_dof">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.evaluate_rotation_dof">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">evaluate_rotation_dof</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">rotation_center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">amplitude</span><span class="o">=</span><span class="mf">1.0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">rotation_center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">rotation_center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The rotation dof </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> has been initialized &quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot;around the origin of the domain (0, 0, 0).&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">direction</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">ROTATION_DOFS_AXIS</span><span class="p">:</span>
+            <span class="n">direction</span> <span class="o">=</span> <span class="n">ROTATION_DOFS_AXIS</span><span class="p">[</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;A direction needs to be specified for the rotation dof.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">motion</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">rotation_center</span> <span class="o">-</span> <span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">direction</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">motion</span></div>
+
+
+
+
+<div class="viewcode-block" id="add_dofs_labels_to_vector">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.add_dofs_labels_to_vector">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_dofs_labels_to_vector</span><span class="p">(</span><span class="n">dof_names</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function turning a bare vector into a vector labelled by the name of the dofs,</span>
+<span class="sd">    to be used for instance for the computation of RAO.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vector</span><span class="p">),</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;influenced_dof&#39;</span><span class="p">],</span>
+                        <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;influenced_dof&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">dof_names</span><span class="p">)},</span>
+                        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="add_dofs_labels_to_matrix">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.add_dofs_labels_to_matrix">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_dofs_labels_to_matrix</span><span class="p">(</span><span class="n">dof_names</span><span class="p">,</span> <span class="n">matrix</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Helper function turning a bare matrix into a matrix labelled by the name of the dofs,</span>
+<span class="sd">    to be used for instance for the computation of RAO.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;influenced_dof&#39;</span><span class="p">,</span> <span class="s1">&#39;radiating_dof&#39;</span><span class="p">],</span>
+                        <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;influenced_dof&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">dof_names</span><span class="p">),</span> <span class="s1">&#39;radiating_dof&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">dof_names</span><span class="p">)},</span>
+                        <span class="p">)</span></div>
 
 </pre></div>
 

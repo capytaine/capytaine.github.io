@@ -482,7 +482,6 @@ window.addEventListener("load", load);</script>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">accumulate</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Literal</span>
 
@@ -492,11 +491,14 @@ window.addEventListener("load", load);</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.new_meshes.abstract_meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractMesh</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.new_meshes.meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mesh</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.new_meshes.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">connected_components</span><span class="p">,</span> <span class="n">connected_components_of_waterline</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.dofs</span><span class="w"> </span><span class="kn">import</span> <span class="n">RigidBodyDofsPlaceholder</span><span class="p">,</span> <span class="n">TRANSLATION_DOFS_DIRECTIONS</span><span class="p">,</span> <span class="n">ROTATION_DOFS_AXIS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.dofs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">RigidBodyDofsPlaceholder</span><span class="p">,</span>
+    <span class="n">evaluate_translation_dof</span><span class="p">,</span>
+    <span class="n">evaluate_rotation_dof</span><span class="p">,</span>
+    <span class="n">add_dofs_labels_to_vector</span><span class="p">,</span>
+    <span class="n">add_dofs_labels_to_matrix</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.hydrostatics</span><span class="w"> </span><span class="kn">import</span> <span class="n">_HydrostaticsMixin</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.optional_imports</span><span class="w"> </span><span class="kn">import</span> <span class="n">silently_import_optional_dependency</span>
-<span class="n">meshio</span> <span class="o">=</span> <span class="n">silently_import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;meshio&quot;</span><span class="p">)</span>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -653,21 +655,14 @@ window.addEventListener("load", load);</script>
 <span class="sd">        amplitude : float, optional</span>
 <span class="sd">            amplitude of the dof (default: 1.0 m/s)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">direction</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">TRANSLATION_DOFS_DIRECTIONS</span><span class="p">:</span>
-                <span class="n">direction</span> <span class="o">=</span> <span class="n">TRANSLATION_DOFS_DIRECTIONS</span><span class="p">[</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;A direction needs to be specified for the dof.&quot;</span><span class="p">)</span>
-
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;dof_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_dofs</span><span class="si">}</span><span class="s2">_translation&quot;</span>
-
-        <span class="n">direction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="n">direction</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,)</span>
-
-        <span class="n">motion</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-        <span class="n">motion</span><span class="p">[:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">direction</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">motion</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">evaluate_translation_dof</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+            <span class="n">direction</span><span class="o">=</span><span class="n">direction</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">amplitude</span><span class="o">=</span><span class="n">amplitude</span>
+        <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="FloatingBody.add_rotation_dof">
@@ -687,36 +682,23 @@ window.addEventListener("load", load);</script>
 <span class="sd">        amplitude : float, optional</span>
 <span class="sd">            amplitude of the dof (default: 1.0)</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;dof_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_dofs</span><span class="si">}</span><span class="s2">_rotation&quot;</span>
         <span class="k">if</span> <span class="n">rotation_center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">for</span> <span class="n">point_attr</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;rotation_center&#39;</span><span class="p">,</span> <span class="s1">&#39;center_of_mass&#39;</span><span class="p">):</span>
                 <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point_attr</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point_attr</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">axis_point</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point_attr</span><span class="p">)</span>
+                    <span class="n">rotation_center</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point_attr</span><span class="p">)</span>
                     <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The rotation dof </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> has been initialized around the point: &quot;</span>
                              <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">point_attr</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">point_attr</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                     <span class="k">break</span>
-            <span class="k">else</span><span class="p">:</span>  <span class="c1"># If no break</span>
-                <span class="n">axis_point</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The rotation dof </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> has been initialized &quot;</span>
-                            <span class="sa">f</span><span class="s2">&quot;around the origin of the domain (0, 0, 0).&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">axis_point</span> <span class="o">=</span> <span class="n">rotation_center</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">evaluate_rotation_dof</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
+            <span class="n">rotation_center</span><span class="o">=</span><span class="n">rotation_center</span><span class="p">,</span>
+            <span class="n">direction</span><span class="o">=</span><span class="n">direction</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">amplitude</span><span class="o">=</span><span class="n">amplitude</span>
+        <span class="p">)</span></div>
 
-        <span class="k">if</span> <span class="n">direction</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">ROTATION_DOFS_AXIS</span><span class="p">:</span>
-                <span class="n">axis_direction</span> <span class="o">=</span> <span class="n">ROTATION_DOFS_AXIS</span><span class="p">[</span><span class="n">name</span><span class="o">.</span><span class="n">lower</span><span class="p">()]</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;A direction needs to be specified for the rotation dof.&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">axis_direction</span> <span class="o">=</span> <span class="n">direction</span>
-
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;dof_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_dofs</span><span class="si">}</span><span class="s2">_rotation&quot;</span>
-
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">motion</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">axis_point</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="n">axis_direction</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">motion</span></div>
 
 
 <div class="viewcode-block" id="FloatingBody.add_all_rigid_body_dofs">
@@ -773,9 +755,7 @@ window.addEventListener("load", load);</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_dofs_labels_to_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function turning a bare vector into a vector labelled by the name of the dofs of the body,</span>
 <span class="sd">        to be used for instance for the computation of RAO.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">vector</span><span class="p">),</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;influenced_dof&#39;</span><span class="p">],</span>
-                            <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;influenced_dof&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">)},</span>
-                            <span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">add_dofs_labels_to_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">vector</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="FloatingBody.add_dofs_labels_to_matrix">
@@ -783,9 +763,7 @@ window.addEventListener("load", load);</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_dofs_labels_to_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function turning a bare matrix into a matrix labelled by the name of the dofs of the body,</span>
 <span class="sd">        to be used for instance for the computation of RAO.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">matrix</span><span class="p">),</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;influenced_dof&#39;</span><span class="p">,</span> <span class="s1">&#39;radiating_dof&#39;</span><span class="p">],</span>
-                            <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;influenced_dof&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">),</span> <span class="s1">&#39;radiating_dof&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">)},</span>
-                            <span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">add_dofs_labels_to_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">matrix</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_dofs_shape_consistency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -801,79 +779,14 @@ window.addEventListener("load", load);</script>
     <span class="c1"># Transformations #</span>
     <span class="c1">###################</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">body_to_add</span><span class="p">:</span> <span class="s1">&#39;FloatingBody&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;FloatingBody&#39;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">body_to_add</span><span class="p">:</span> <span class="s1">&#39;FloatingBody&#39;</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_bodies</span><span class="p">(</span><span class="n">body_to_add</span><span class="p">)</span>
 
 <div class="viewcode-block" id="FloatingBody.join_bodies">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.join_bodies">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">join_bodies</span><span class="p">(</span><span class="o">*</span><span class="n">bodies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;FloatingBody&#39;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;+&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">)</span>
-        <span class="n">meshes</span> <span class="o">=</span> <span class="p">[</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span> <span class="k">if</span> <span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
-        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">meshes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">joined_mesh</span> <span class="o">=</span> <span class="n">meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span><span class="o">*</span><span class="n">meshes</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_mesh&quot;</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">joined_mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">()</span>
-
-        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">):</span>
-            <span class="n">joined_lid</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">lid_meshes</span> <span class="o">=</span> <span class="p">[</span><span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span> <span class="k">if</span> <span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
-            <span class="n">joined_lid</span> <span class="o">=</span> <span class="n">lid_meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span><span class="o">*</span><span class="n">lid_meshes</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">_lid_mesh&quot;</span><span class="p">)</span>
-
-        <span class="n">dofs</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="o">.</span><span class="n">combine_dofs</span><span class="p">(</span><span class="n">bodies</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">):</span>
-            <span class="n">new_mass</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mass</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">new_mass</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="k">if</span> <span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">)</span>
-                <span class="ow">and</span> <span class="nb">all</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">center_of_mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">)):</span>
-            <span class="n">new_cog</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mass</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">center_of_mass</span><span class="p">)</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">)</span><span class="o">/</span><span class="n">new_mass</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">new_cog</span> <span class="o">=</span> <span class="kc">None</span>
-
-        <span class="n">joined_bodies</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="p">(</span>
-            <span class="n">mesh</span><span class="o">=</span><span class="n">joined_mesh</span><span class="p">,</span> <span class="n">lid_mesh</span><span class="o">=</span><span class="n">joined_lid</span><span class="p">,</span> <span class="n">dofs</span><span class="o">=</span><span class="n">dofs</span><span class="p">,</span>
-            <span class="n">mass</span><span class="o">=</span><span class="n">new_mass</span><span class="p">,</span> <span class="n">center_of_mass</span><span class="o">=</span><span class="n">new_cog</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span>
-            <span class="p">)</span>
-
-        <span class="k">for</span> <span class="n">matrix_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;inertia_matrix&quot;</span><span class="p">,</span> <span class="s2">&quot;hydrostatic_stiffness&quot;</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">matrix_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">):</span>
-                <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">block_diag</span>
-                <span class="nb">setattr</span><span class="p">(</span><span class="n">joined_bodies</span><span class="p">,</span> <span class="n">matrix_name</span><span class="p">,</span> <span class="n">joined_bodies</span><span class="o">.</span><span class="n">add_dofs_labels_to_matrix</span><span class="p">(</span>
-                        <span class="n">block_diag</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">matrix_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">])</span>
-                        <span class="p">))</span>
-
-        <span class="k">return</span> <span class="n">joined_bodies</span></div>
-
-
-<div class="viewcode-block" id="FloatingBody.combine_dofs">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.combine_dofs">[docs]</a>
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">combine_dofs</span><span class="p">(</span><span class="n">bodies</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Combine the degrees of freedom of several bodies.&quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">:</span>
-            <span class="n">body</span><span class="o">.</span><span class="n">_check_dofs_shape_consistency</span><span class="p">()</span>
-        <span class="n">dofs</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">cum_nb_faces</span> <span class="o">=</span> <span class="n">accumulate</span><span class="p">(</span><span class="n">chain</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">)))</span>
-        <span class="n">total_nb_faces</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">body</span><span class="p">,</span> <span class="n">nbf</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">bodies</span><span class="p">,</span> <span class="n">cum_nb_faces</span><span class="p">):</span>
-            <span class="c1"># nbf is the cumulative number of faces of the previous subbodies,</span>
-            <span class="c1"># that is the offset of the indices of the faces of the current body.</span>
-            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="n">new_dof</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">total_nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-                <span class="n">new_dof</span><span class="p">[</span><span class="n">nbf</span><span class="p">:</span><span class="n">nbf</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">dof</span><span class="p">),</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">dof</span>
-                <span class="k">if</span> <span class="s1">&#39;__&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
-                    <span class="n">new_dof_name</span> <span class="o">=</span> <span class="s1">&#39;__&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">body</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">])</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># The body is probably a combination of bodies already.</span>
-                    <span class="c1"># So for the associativity of the + operation,</span>
-                    <span class="c1"># it is better to keep the same name.</span>
-                    <span class="n">new_dof_name</span> <span class="o">=</span> <span class="n">name</span>
-                <span class="n">dofs</span><span class="p">[</span><span class="n">new_dof_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_dof</span>
-        <span class="k">return</span> <span class="n">dofs</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">join_bodies</span><span class="p">(</span><span class="o">*</span><span class="n">bodies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.multibodies</span><span class="w"> </span><span class="kn">import</span> <span class="n">Multibody</span>
+        <span class="k">return</span> <span class="n">Multibody</span><span class="p">(</span><span class="n">bodies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="FloatingBody.copy">
