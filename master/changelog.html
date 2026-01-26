@@ -88,6 +88,19 @@ or <code class="docutils literal notranslate"><span class="pre">+</span></code> 
 </pre></div>
 </div>
 </li>
+<li><p>New internal data model for rigid body dofs with the classes
+<a class="reference internal" href="developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.TranslationDof" title="capytaine.bodies.dofs.TranslationDof"><code class="xref py py-class docutils literal notranslate"><span class="pre">TranslationDof</span></code></a> and
+<a class="reference internal" href="developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.RotationDof" title="capytaine.bodies.dofs.RotationDof"><code class="xref py py-class docutils literal notranslate"><span class="pre">RotationDof</span></code></a>. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/838">PR 838</a>)
+This should ensure that rigid dofs are detected and treated as such, without
+relying only on their name.
+This is relevant for multiple bodies and articulated bodies when computing:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>hydrostatics, where the exact hydrostatic stiffness formula for rigid body dofs can be used instead of the approximation for generalized dofs.</p></li>
+<li><p>forward speed, where the m-term is currently only implemented for rigid dofs.</p></li>
+</ul>
+</div></blockquote>
+</li>
 </ul>
 </section>
 <section id="minor-changes">
@@ -108,6 +121,10 @@ deprecated since version 2.0. Consider using instead:</p>
 <p>or something equivalent, separating the geometric mesh generation from the
 floating body definition.</p>
 </li>
+<li><p><a class="reference internal" href="developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.rigid_body_dofs" title="capytaine.bodies.dofs.rigid_body_dofs"><code class="xref py py-func docutils literal notranslate"><span class="pre">rigid_body_dofs()</span></code></a> now instantiate the new dof class instead of a placeholder.
+It now has an additional input argument <code class="docutils literal notranslate"><span class="pre">only</span></code> to have only some of the six rigid body dofs.
+Also a rotation center should be passed, because the properties of the body
+(e.g. <cite>center_of_mass</cite>) cannot be accessed at that stage. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/838">PR 838</a>)</p></li>
 </ul>
 </section>
 <section id="bug-fixes">

@@ -49,7 +49,7 @@
 <p>Floating bodies to be used in radiation-diffraction problems.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="capytaine.bodies.bodies.FloatingBody">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">capytaine.bodies.bodies.</span></span><span class="sig-name descname"><span class="pre">FloatingBody</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dofs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center_of_mass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lid_mesh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">capytaine.bodies.bodies.</span></span><span class="sig-name descname"><span class="pre">FloatingBody</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dofs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">lid_mesh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">center_of_mass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">_HydrostaticsMixin</span></code></p>
 <p>A floating body described as a mesh and some degrees of freedom.</p>
 <p>The mesh structure is stored as a Mesh from capytaine.mesh.mesh or a
@@ -63,24 +63,30 @@ defines the displacement of the center of the face in frequency domain.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>mesh</strong> (<em>AbstractMesh, optional</em>) – the mesh describing the geometry of the hull of the floating body.
 If none is given, a empty one is created.</p></li>
+<li><p><strong>dofs</strong> (<em>dict, optional</em>) – the degrees of freedom of the body.
+If none is given, a empty dictionary is initialized.</p></li>
 <li><p><strong>lid_mesh</strong> (<em>AbstractMesh or None, optional</em>) – a mesh of an internal lid for irregular frequencies removal.
 Unlike the mesh of the hull, no dof is defined on the lid_mesh.
 If none is given, none is used when solving the Boundary Integral Equation.</p></li>
-<li><p><strong>dofs</strong> (<em>dict, optional</em>) – the degrees of freedom of the body.
-If none is given, a empty dictionary is initialized.</p></li>
+<li><p><strong>center_of_mass</strong> (<em>3-element array, optional</em>) – the position of the center of mass.
+Required only for some hydrostatics computation.</p></li>
 <li><p><strong>mass</strong> (<em>float or None, optional</em>) – the mass of the body in kilograms.
 Required only for some hydrostatics computation.
 If None, the mass is implicitly assumed to be the mass of displaced water.</p></li>
-<li><p><strong>center_of_mass</strong> (<em>3-element array, optional</em>) – the position of the center of mass.
-Required only for some hydrostatics computation.</p></li>
 <li><p><strong>name</strong> (<em>str, optional</em>) – a name for the body.
 If none is given, the one of the mesh is used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Variables<span class="colon">:</span></dt>
+<dd class="field-even"><ul class="simple">
+<li><p><strong>mesh_including_lid</strong> (<a class="reference internal" href="capytaine.new_meshes.abstract_meshes.html#capytaine.new_meshes.abstract_meshes.AbstractMesh" title="capytaine.new_meshes.abstract_meshes.AbstractMesh"><em>AbstractMesh</em></a>) – The hull mesh joined with the lid mesh</p></li>
+<li><p><strong>hull_mask</strong> (<em>np.array</em>) – The indices of the faces in mesh_including_lid that are part of the hull</p></li>
 </ul>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.bodies.bodies.FloatingBody.add_all_rigid_body_dofs">
-<span class="sig-name descname"><span class="pre">add_all_rigid_body_dofs</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.add_all_rigid_body_dofs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.add_all_rigid_body_dofs" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_all_rigid_body_dofs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rotation_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.add_all_rigid_body_dofs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.add_all_rigid_body_dofs" title="Link to this definition">¶</a></dt>
 <dd><p>Add the six degrees of freedom of rigid bodies (in place).</p>
 </dd></dl>
 
@@ -100,7 +106,7 @@ to be used for instance for the computation of RAO.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.bodies.bodies.FloatingBody.add_rotation_dof">
-<span class="sig-name descname"><span class="pre">add_rotation_dof</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rotation_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.add_rotation_dof"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.add_rotation_dof" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_rotation_dof</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rotation_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.add_rotation_dof"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.add_rotation_dof" title="Link to this definition">¶</a></dt>
 <dd><p>Add a new rotation dof (in place).
 If no axis is given, the code tries to infer it from the name.</p>
 <dl class="field-list simple">
@@ -109,7 +115,6 @@ If no axis is given, the code tries to infer it from the name.</p>
 <li><p><strong>rotation_center</strong> (<em>array of shape (3,), optional</em>) – One point on the rotation axis</p></li>
 <li><p><strong>direction</strong> (<em>array of shape (3,), optional</em>) – The direction of the rotation axis</p></li>
 <li><p><strong>name</strong> (<em>str, optional</em>) – a name for the degree of freedom</p></li>
-<li><p><strong>amplitude</strong> (<em>float, optional</em>) – amplitude of the dof (default: 1.0)</p></li>
 </ul>
 </dd>
 </dl>
@@ -117,7 +122,7 @@ If no axis is given, the code tries to infer it from the name.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.bodies.bodies.FloatingBody.add_translation_dof">
-<span class="sig-name descname"><span class="pre">add_translation_dof</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">amplitude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.add_translation_dof"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.add_translation_dof" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">add_translation_dof</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">direction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.add_translation_dof"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.add_translation_dof" title="Link to this definition">¶</a></dt>
 <dd><p>Add a new translation dof (in place).
 If no direction is given, the code tries to infer it from the name.</p>
 <dl class="field-list simple">
@@ -125,7 +130,6 @@ If no direction is given, the code tries to infer it from the name.</p>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>direction</strong> (<em>array of shape (3,), optional</em>) – the direction of the translation</p></li>
 <li><p><strong>name</strong> (<em>str, optional</em>) – a name for the degree of freedom</p></li>
-<li><p><strong>amplitude</strong> (<em>float, optional</em>) – amplitude of the dof (default: 1.0 m/s)</p></li>
 </ul>
 </dd>
 </dl>
