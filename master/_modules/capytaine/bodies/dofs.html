@@ -623,11 +623,16 @@ window.addEventListener("load", load);</script>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">rotation_center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">rotation_center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
-        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Rigid body rotation dofs have been initialized &quot;</span>
-                    <span class="s2">&quot;around the origin of the domain (0, 0, 0).&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">only</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+                <span class="ow">and</span> <span class="nb">set</span><span class="p">(</span><span class="n">only</span><span class="p">)</span><span class="o">.</span><span class="n">issubset</span><span class="p">({</span><span class="s2">&quot;Surge&quot;</span><span class="p">,</span> <span class="s2">&quot;Sway&quot;</span><span class="p">,</span> <span class="s2">&quot;Heave&quot;</span><span class="p">})</span>
+                <span class="p">):</span> <span class="c1"># Skip the warning if only translations are required.</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Rigid body rotation dofs have been initialized &quot;</span>
+                        <span class="s2">&quot;around the origin of the domain (0, 0, 0).&quot;</span><span class="p">)</span>
         <span class="c1"># This warning is redundant with the one in RotationDof.__init__,</span>
         <span class="c1"># but it is done here to have a single warning displayed on screen</span>
         <span class="c1"># when a rigid body is initialized.</span>
+
     <span class="n">dofs</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">&quot;Surge&quot;</span><span class="p">:</span> <span class="n">TranslationDof</span><span class="p">(</span><span class="n">direction</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
         <span class="s2">&quot;Sway&quot;</span><span class="p">:</span> <span class="n">TranslationDof</span><span class="p">(</span><span class="n">direction</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
