@@ -69,6 +69,41 @@ You might need to turn on a more verbose logging to be sure to see it:</p>
 <li><p>With forward speed, if the encounter frequency is zero, all outputs are NaN.</p></li>
 </ul>
 </section>
+<section id="my-results-does-not-match-the-ones-of-this-other-code">
+<h2>My results does not match the ones of this other code<a class="headerlink" href="#my-results-does-not-match-the-ones-of-this-other-code" title="Link to this heading">¶</a></h2>
+<p>Difference in conventions between Capytaine and other solvers are listed in <a class="reference internal" href="conventions.html"><span class="doc">Conventions and differences to other codes</span></a>.</p>
+<p>Besides, many other codes such as WAMIT and HAMS are using another formulation of the Boundary Integral Equations, which is implemented in Capytaine but not used by default.
+You can turn it on by using the following in your script:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">(</span><span class="n">method</span><span class="o">=</span><span class="s2">&quot;direct&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The default <code class="docutils literal notranslate"><span class="pre">&quot;indirect&quot;</span></code> solver allows more post-processing and features, but the <code class="docutils literal notranslate"><span class="pre">&quot;direct&quot;</span></code> solver is often more accurate.
+Computation time is the same for both solver.</p>
+<p>If you believe the approximation method used by Capytaine to compute the Green function to be the cause of a discrepancy, you can refine it using the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">::</span>
+
+  <span class="n">finer_gf</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">Delhommeau</span><span class="p">(</span>
+      <span class="n">tabulation_nr</span><span class="o">=</span><span class="mi">4000</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+      <span class="n">tabulation_nz</span><span class="o">=</span><span class="mi">2000</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="o">=-</span><span class="mi">251</span><span class="p">,</span>
+      <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="mi">5_000</span><span class="p">,</span>
+      <span class="n">tabulation_grid_shape</span><span class="o">=</span><span class="s2">&quot;scaled_nemoh3&quot;</span><span class="p">,</span>
+  <span class="p">)</span>
+  <span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">(</span><span class="n">green_function</span><span class="o">=</span><span class="n">finer_gf</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Increasing the tabulation is expensive the first time you call it as a new
+tabulation needs to be constructed, but subsequent resolutions should use the
+same tabulation and be as cheap as before.</p>
+</section>
+<section id="the-added-mass-and-radiation-damping-matrices-are-not-symmetric">
+<h2>The added mass and radiation damping matrices are not symmetric<a class="headerlink" href="#the-added-mass-and-radiation-damping-matrices-are-not-symmetric" title="Link to this heading">¶</a></h2>
+<p>Indeed, the added mass and radiation damping are theoretically expected to be symmetric.
+They are usually not in Capytaine results due to numerical accuracy: solving
+the same problem in two different ways leads to slightly different
+approximation errors.
+If the mismatch is big, this is the sign that the numerical error is high.
+The asymmetry should disappear asymptotically for fine meshes.</p>
+</section>
 </section>
 
 
