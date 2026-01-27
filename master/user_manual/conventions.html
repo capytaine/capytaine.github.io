@@ -101,7 +101,19 @@ In Capytaine, the normal vector on the hull is oriented towards the outside of t
 <section id="with-respect-to-nemoh-and-aquadyn">
 <h2>With respect to Nemoh and Aquadyn<a class="headerlink" href="#with-respect-to-nemoh-and-aquadyn" title="Link to this heading">¶</a></h2>
 <p>Capytaine mostly follows the same conventions as <a class="reference external" href="https://gitlab.com/lheea/Nemoh">Nemoh</a>, which are also the same as in Aquadyn.
-The main exception is the phase angle of the excitation force in Nemoh and Capytaine is the opposite of the one in Aquadyn.</p>
+One exception is the phase angle of the excitation force in Nemoh and Capytaine is the opposite of the one in Aquadyn.</p>
+<p>Radiation problems are scaled differently in Capytaine and in Nemoh.
+In Nemoh, the boundary condition is taken as the displacement of the panel, that is for instance for surge:</p>
+<div class="math notranslate nohighlight" id="equation-user-manual-conventions-7">
+<span class="eqno">(11)<a class="headerlink" href="#equation-user-manual-conventions-7" title="Link to this equation">¶</a></span>\[\frac{\partial \phi}{\partial n} = n_x\]</div>
+<p>In Capytaine (version 2 and above), the boundary condition is taken as the velocity of the panel, that is for the same example:</p>
+<div class="math notranslate nohighlight" id="equation-user-manual-conventions-8">
+<span class="eqno">(12)<a class="headerlink" href="#equation-user-manual-conventions-8" title="Link to this equation">¶</a></span>\[\frac{\partial \phi}{\partial n} = -i \omega n_x\]</div>
+<p>which is closer to the correct physical meaning.
+Nemoh’s choice is most likely to allow the resolution in the edge cases $omega = 0$ and $omega = infty$, while Capytaine uses another approach to handle these cases.
+The expression for the added mass and radiation damping are adjusted accordingly in Nemoh, so the results of Capytaine and Nemoh should match.
+However, so intermediate results (pressure on hull) and post-processing (free surface elevation, kochin functions) are missing a <span class="math notranslate nohighlight">\(-i\omega\)</span> factor in Nemoh, which they have in Capytaine.</p>
+<p>Scaling of diffraction problems is the same in both codes.</p>
 </section>
 <section id="with-respect-to-hams">
 <h2>With respect to HAMS<a class="headerlink" href="#with-respect-to-hams" title="Link to this heading">¶</a></h2>
