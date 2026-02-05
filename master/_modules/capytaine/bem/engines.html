@@ -489,7 +489,7 @@ window.addEventListener("load", load);</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.symmetric_meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">,</span> <span class="n">RotationSymmetricMesh</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.abstract_green_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGreenFunction</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.abstract_green_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGreenFunction</span><span class="p">,</span> <span class="n">GreenFunctionEvaluationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.delhommeau</span><span class="w"> </span><span class="kn">import</span> <span class="n">Delhommeau</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.block_circulant_matrices</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -630,6 +630,7 @@ window.addEventListener("load", load);</script>
         <span class="c1"># mechanism of build_matrices is not compatible with giving mesh1 as a</span>
         <span class="c1"># list of points, but we need that for post-processing</span>
         <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">)</span>
+        <span class="n">check_if_nan_in_matrix</span><span class="p">([</span><span class="n">S</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">S</span></div>
 
 
@@ -644,6 +645,7 @@ window.addEventListener("load", load);</script>
         <span class="n">gf_params</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;adjoint_double_layer&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
         <span class="n">gf_params</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;early_dot_product&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
         <span class="n">_</span><span class="p">,</span> <span class="n">fullK</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">)</span>
+        <span class="n">check_if_nan_in_matrix</span><span class="p">([</span><span class="n">fullK</span><span class="p">])</span>
         <span class="k">return</span> <span class="n">fullK</span></div>
 
 
@@ -669,6 +671,7 @@ window.addEventListener("load", load);</script>
                     <span class="o">**</span><span class="n">gf_params</span><span class="p">,</span>
                     <span class="p">)</span>
             <span class="c1"># Building the first column of blocks, that is the interactions of all of mesh1 with the reference wedge of mesh2.</span>
+            <span class="n">check_if_nan_in_matrix</span><span class="p">([</span><span class="n">S_cols</span><span class="p">,</span> <span class="n">K_cols</span><span class="p">])</span>
 
             <span class="n">n_blocks</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">n</span> <span class="c1"># == mesh2.n</span>
             <span class="n">block_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">mesh2</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">wedge</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">)</span>
@@ -680,8 +683,10 @@ window.addEventListener("load", load);</script>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="n">gf_params</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;early_dot_product&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">diagonal_term_in_double_layer</span><span class="o">=</span><span class="n">diagonal_term_in_double_layer</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">)</span>
-
+            <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">diagonal_term_in_double_layer</span><span class="o">=</span><span class="n">diagonal_term_in_double_layer</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">)</span>
+            <span class="n">check_if_nan_in_matrix</span><span class="p">([</span><span class="n">S</span><span class="p">,</span> <span class="n">K</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
+        
     <span class="k">def</span><span class="w"> </span><span class="nf">_build_and_cache_matrices_with_symmetries</span><span class="p">(</span>
             <span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span>
             <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">,</span> <span class="n">LUDecomposedMatrixOrNot</span><span class="p">]:</span>
@@ -832,6 +837,17 @@ window.addEventListener("load", load);</script>
         <span class="n">memory_peak</span> <span class="o">=</span> <span class="n">symmetry_factor</span> <span class="o">*</span> <span class="n">nb_faces</span><span class="o">**</span><span class="mi">2</span> <span class="o">*</span> <span class="n">nb_matrices</span> <span class="o">*</span> <span class="n">nb_bytes</span><span class="o">/</span><span class="mf">1e9</span>
         <span class="k">return</span> <span class="n">memory_peak</span></div>
 </div>
+
+    
+<div class="viewcode-block" id="check_if_nan_in_matrix">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.check_if_nan_in_matrix">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">check_if_nan_in_matrix</span><span class="p">(</span><span class="n">matrices</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">matrix</span> <span class="ow">in</span> <span class="n">matrices</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">matrix</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="n">GreenFunctionEvaluationError</span><span class="p">(</span>
+                    <span class="s2">&quot;Green function returned a NaN in the interaction matrix.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="s2">&quot;It could be due to overlapping panels.&quot;</span><span class="p">)</span></div>
+
 
 </pre></div>
 
