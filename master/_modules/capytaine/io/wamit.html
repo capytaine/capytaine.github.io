@@ -721,8 +721,8 @@ window.addEventListener("load", load);</script>
 
     <span class="c1"># Separate lines into blocks depending on period type</span>
     <span class="n">period_blocks</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s2">&quot;T_zero&quot;</span><span class="p">:</span> <span class="p">[],</span>  <span class="c1"># period == 0    → omega = inf  → PER = -1</span>
-        <span class="s2">&quot;T_inf&quot;</span><span class="p">:</span> <span class="p">[],</span>  <span class="c1"># period == inf  → omega = 0    → PER = 0</span>
+        <span class="s2">&quot;T_inf&quot;</span><span class="p">:</span> <span class="p">[],</span>  <span class="c1"># period == inf  → omega = 0    → PER = -1</span>
+        <span class="s2">&quot;T_zero&quot;</span><span class="p">:</span> <span class="p">[],</span>  <span class="c1"># period == 0    → omega = inf  → PER = 0</span>
         <span class="s2">&quot;T_regular&quot;</span><span class="p">:</span> <span class="p">[],</span>  <span class="c1"># finite, non-zero periods</span>
     <span class="p">}</span>
 
@@ -741,12 +741,12 @@ window.addEventListener("load", load);</script>
                 <span class="n">A_norm</span> <span class="o">=</span> <span class="n">A</span> <span class="o">/</span> <span class="n">norm</span>
 
                 <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">period</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">):</span>
-                    <span class="c1"># Case PER = -1 (omega = inf)</span>
-                    <span class="n">line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="o">-</span><span class="mf">1.0</span><span class="si">:</span><span class="s2">12.6e</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">i_dof</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">j_dof</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">A_norm</span><span class="si">:</span><span class="s2">12.6e</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="c1"># Case PER = 0 (omega = inf)</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="mf">0.0</span><span class="si">:</span><span class="s2">12.6e</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">i_dof</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">j_dof</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">A_norm</span><span class="si">:</span><span class="s2">12.6e</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
                     <span class="n">period_blocks</span><span class="p">[</span><span class="s2">&quot;T_zero&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
                 <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">period</span><span class="p">):</span>
-                    <span class="c1"># Case PER = 0 (omega = 0)</span>
-                    <span class="n">line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="mf">0.0</span><span class="si">:</span><span class="s2">12.6e</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">i_dof</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">j_dof</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">A_norm</span><span class="si">:</span><span class="s2">12.6e</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                    <span class="c1"># Case PER = -1 (omega = 0)</span>
+                    <span class="n">line</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="o">-</span><span class="mf">1.0</span><span class="si">:</span><span class="s2">12.6e</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">i_dof</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">j_dof</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="se">\t</span><span class="si">{</span><span class="n">A_norm</span><span class="si">:</span><span class="s2">12.6e</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span>
                     <span class="n">period_blocks</span><span class="p">[</span><span class="s2">&quot;T_inf&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
                 <span class="k">else</span><span class="p">:</span>
                     <span class="n">B</span> <span class="o">=</span> <span class="n">damping</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span>
@@ -766,8 +766,8 @@ window.addEventListener("load", load);</script>
 
     <span class="c1"># Write to file</span>
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-        <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">period_blocks</span><span class="p">[</span><span class="s2">&quot;T_zero&quot;</span><span class="p">])</span>
         <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">period_blocks</span><span class="p">[</span><span class="s2">&quot;T_inf&quot;</span><span class="p">])</span>
+        <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">period_blocks</span><span class="p">[</span><span class="s2">&quot;T_zero&quot;</span><span class="p">])</span>
         <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">sorted_lines</span><span class="p">)</span></div>
 
 
