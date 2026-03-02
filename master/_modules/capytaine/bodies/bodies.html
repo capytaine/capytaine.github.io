@@ -1040,14 +1040,19 @@ window.addEventListener("load", load);</script>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
-        <span class="k">return</span> <span class="n">FloatingBody</span><span class="p">(</span>
+        <span class="n">new_body</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="p">(</span>
             <span class="n">mesh</span><span class="o">=</span><span class="n">clipped_mesh</span><span class="p">,</span>
             <span class="n">lid_mesh</span><span class="o">=</span><span class="n">clipped_lid_mesh</span><span class="p">,</span>
             <span class="n">dofs</span><span class="o">=</span><span class="n">updated_dofs</span><span class="p">,</span>
             <span class="n">center_of_mass</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span><span class="p">,</span>
             <span class="n">mass</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">,</span>
             <span class="n">name</span><span class="o">=</span><span class="n">name</span>
-        <span class="p">)</span></div>
+        <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;inertia_matrix&#39;</span><span class="p">):</span>
+            <span class="n">new_body</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inertia_matrix</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;hydrostatic_stiffness&#39;</span><span class="p">):</span>
+            <span class="n">new_body</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span>
+        <span class="k">return</span> <span class="n">new_body</span></div>
 
 
     <span class="c1">#############</span>

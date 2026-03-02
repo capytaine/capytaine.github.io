@@ -658,10 +658,15 @@ window.addEventListener("load", load);</script>
 <div class="viewcode-block" id="Multibody.immersed_part">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.multibodies.html#capytaine.bodies.multibodies.Multibody.immersed_part">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">immersed_part</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">Multibody</span><span class="p">(</span>
+        <span class="n">new_multibody</span> <span class="o">=</span> <span class="n">Multibody</span><span class="p">(</span>
                 <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">],</span>
                 <span class="c1"># own_dofs=None,  # TODO</span>
-                <span class="p">)</span></div>
+                <span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;inertia_matrix&#39;</span><span class="p">):</span>
+            <span class="n">new_multibody</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inertia_matrix</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;hydrostatic_stiffness&#39;</span><span class="p">):</span>
+            <span class="n">new_multibody</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span>
+        <span class="k">return</span> <span class="n">new_multibody</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">body_to_add</span><span class="p">):</span>
