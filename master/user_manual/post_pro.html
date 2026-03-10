@@ -321,6 +321,34 @@ indirect method):</p>
 <code class="docutils literal notranslate"><span class="pre">theta</span></code>, it is used to compute the Kochin function of all solved problems
 (see cookbook example).</p>
 </section>
+<section id="mean-drift-forces">
+<h2>Mean drift forces<a class="headerlink" href="#mean-drift-forces" title="Link to this heading">¶</a></h2>
+<p>The horizontal mean drift forces can be computed using the function <a class="reference internal" href="../developer_manual/api/capytaine.post_pro.mean_drift_force.html#capytaine.post_pro.mean_drift_force.far_field_mean_drift_force" title="capytaine.post_pro.mean_drift_force.far_field_mean_drift_force"><code class="xref py py-func docutils literal notranslate"><span class="pre">far_field_mean_drift_force()</span></code></a>,
+here is an example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.post_pro.mean_drift_force</span><span class="w"> </span><span class="kn">import</span> <span class="n">far_field_mean_drift_force</span>
+
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">()</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span> <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(),</span> <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+<span class="n">body</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">()</span>
+<span class="n">body</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
+<span class="n">k</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.16</span><span class="p">,</span> <span class="mf">1.24</span><span class="p">,</span> <span class="mf">1.39</span><span class="p">]</span>
+<span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+<span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="p">{</span>
+            <span class="s1">&#39;wavenumber&#39;</span><span class="p">:</span> <span class="n">k</span> <span class="p">,</span>
+            <span class="s1">&#39;wave_direction&#39;</span> <span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+            <span class="s1">&#39;theta&#39;</span><span class="p">:</span> <span class="n">theta</span><span class="p">,</span>
+            <span class="s1">&#39;radiating_dof&#39;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="p">})</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">hydrostatics</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">post_pro</span><span class="o">.</span><span class="n">rao</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+<span class="n">mean_drift_forces</span> <span class="o">=</span> <span class="n">far_field_mean_drift_force</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
 </section>
 
 
