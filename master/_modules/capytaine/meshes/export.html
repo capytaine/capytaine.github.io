@@ -495,6 +495,8 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="n">export_to_meshio</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;trimesh&quot;</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">export_to_trimesh</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">format</span> <span class="o">==</span> <span class="s2">&quot;vedo&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">export_to_vedo</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unrecognized output format: </span><span class="si">{</span><span class="nb">format</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
@@ -527,6 +529,14 @@ window.runMermaid = runMermaid;</script>
     <span class="n">cell_types</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cell_types</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">pv</span><span class="o">.</span><span class="n">UnstructuredGrid</span><span class="p">(</span><span class="n">cells_array</span><span class="p">,</span> <span class="n">cell_types</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="export_to_vedo">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.export.html#capytaine.meshes.export.export_to_vedo">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">export_to_vedo</span><span class="p">(</span><span class="n">mesh</span><span class="p">):</span>
+    <span class="n">vedo</span> <span class="o">=</span> <span class="n">import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;vedo&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">vedo</span><span class="o">.</span><span class="n">Mesh</span><span class="p">([</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">faces</span><span class="p">])</span></div>
 
 
 
