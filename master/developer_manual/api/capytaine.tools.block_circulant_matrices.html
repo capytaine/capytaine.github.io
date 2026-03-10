@@ -140,6 +140,91 @@ stored as the LU decomposition of each block.</p>
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">capytaine.tools.block_circulant_matrices.</span></span><span class="sig-name descname"><span class="pre">NestedBlockCirculantMatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">blocks</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Sequence</span><span class="p"><span class="pre">[</span></span><span class="pre">ArrayLike</span><span class="p"><span class="pre">]</span></span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/block_circulant_matrices.html#NestedBlockCirculantMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Data-sparse representation of a block matrix of the following form</p>
+<blockquote>
+<div><p>( a  b | e  d | c  f )
+( b  a | f  c | d  e )
+( —————— )
+( c  f | a  b | e  d )
+( d  e | b  a | f  c )
+( —————— )
+( e  d | c  f | a  b )
+( f  c | d  e | b  a )</p>
+</div></blockquote>
+<p>where a, b, c, d, e and f are matrices of the same shape,
+that is a block circulant matrix (here of size 3x3, but arbitrary outer sizes are supported),
+where diagonal blocks are 2x2 block circulant matrices and off-diagonal blocks have subblocks in common.</p>
+<p>Reordering the lines and columns, this matrix is equivalent to the following shape</p>
+<blockquote>
+<div><p>( a  e  c | b  d  f )
+( c  a  e | f  b  d )
+( e  c  a | d  f  b )
+( —————– )
+( b  f  d | a  c  e )
+( d  b  f | e  a  c )
+( f  d  b | c  e  a )</p>
+</div></blockquote>
+<p>that is a 2x2 block matrix of block circulant matrices, the block circulant matrices of the bottom row being the transpose of the block circulant matrices of the top row.</p>
+<p>In the 2x2x2x2 limit case, the matrix is a nested block circulant matrix</p>
+<blockquote>
+<div><p>( a  b | c  d )
+( b  a | d  c )
+( ———– )
+( c  d | a  b )
+( d  c | b  a )</p>
+</div></blockquote>
+<p>The 4x4x2x2 pattern reads</p>
+<blockquote>
+<div><p>( a  b | g  d | e  f | c  h )
+( b  a | h  c | f  e | d  g )
+( —–<a href="#id3"><span class="problematic" id="id4">|------|</span></a>——<a href="#id5"><span class="problematic" id="id6">|----- )
+( c  h | a  b | g  d | e  f )
+( d  g | b  a | h  c | f  e )
+( -----|</span></a>——<a href="#id7"><span class="problematic" id="id8">|------|</span></a>—– )
+( e  f | c  h | a  b | g  d )
+( f  e | d  g | b  a | h  c )
+( —–<a href="#id9"><span class="problematic" id="id10">|------|</span></a>——<a href="#id1"><span class="problematic" id="id2">|</span></a>—– )
+( g  d | e  f | c  h | a  b )
+( h  c | f  e | d  g | b  a )</p>
+</div></blockquote>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>blocks</strong> (<em>Sequence of matrix-like, can be also a ndarray of shape (nb_blocks, n, n, …)</em>) – The <strong>first column</strong> of blocks [a, b, c, d, …]
+Each block should have the same shape, and the number of blocks should be even.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix.block_diagonalize">
+<span class="sig-name descname"><span class="pre">block_diagonalize</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#capytaine.tools.block_circulant_matrices.BlockDiagonalMatrix" title="capytaine.tools.block_circulant_matrices.BlockDiagonalMatrix"><span class="pre">BlockDiagonalMatrix</span></a></span></span><a class="reference internal" href="../../_modules/capytaine/tools/block_circulant_matrices.html#NestedBlockCirculantMatrix.block_diagonalize"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix.block_diagonalize" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix.matvec">
+<span class="sig-name descname"><span class="pre">matvec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">other</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/block_circulant_matrices.html#NestedBlockCirculantMatrix.matvec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix.matvec" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix.solve">
+<span class="sig-name descname"><span class="pre">solve</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../../_modules/capytaine/tools/block_circulant_matrices.html#NestedBlockCirculantMatrix.solve"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix.solve" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix.to_BlockCirculantMatrix">
+<span class="sig-name descname"><span class="pre">to_BlockCirculantMatrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/block_circulant_matrices.html#NestedBlockCirculantMatrix.to_BlockCirculantMatrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix.to_BlockCirculantMatrix" title="Link to this definition">¶</a></dt>
+<dd><p>Convert to a BlockCirculantMatrix with combined macro-blocks.</p>
+<p>The NestedBlockCirculantMatrix with blocks [a, b, c, d, e, f, …]
+(where nb_blocks = 2*n) is converted to a BlockCirculantMatrix with n macro-blocks.</p>
+<p>Each macro-block i (for i in 0..n-1) is a 2x2 arrangement of the original blocks:
+- For i=0: [[blocks[0], blocks[1]], [blocks[1], blocks[0]]]
+- For i&gt;0: [[blocks[2*i], blocks[2*n-2*i+1]], [blocks[2*i+1], blocks[2*n-2*i]]]</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="capytaine.tools.block_circulant_matrices.circular_permutation">
 <span class="sig-prename descclassname"><span class="pre">capytaine.tools.block_circulant_matrices.</span></span><span class="sig-name descname"><span class="pre">circular_permutation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">l</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">i</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">List</span></span></span><a class="reference internal" href="../../_modules/capytaine/tools/block_circulant_matrices.html#circular_permutation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.block_circulant_matrices.circular_permutation" title="Link to this definition">¶</a></dt>
@@ -166,7 +251,7 @@ Invert of <cite>leading_dimensions_at_the_end</cite></p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="capytaine.tools.block_circulant_matrices.lu_decompose">
-<span class="sig-prename descclassname"><span class="pre">capytaine.tools.block_circulant_matrices.</span></span><span class="sig-name descname"><span class="pre">lu_decompose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#capytaine.tools.block_circulant_matrices.BlockDiagonalMatrix" title="capytaine.tools.block_circulant_matrices.BlockDiagonalMatrix"><span class="pre">BlockDiagonalMatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#capytaine.tools.block_circulant_matrices.BlockCirculantMatrix" title="capytaine.tools.block_circulant_matrices.BlockCirculantMatrix"><span class="pre">BlockCirculantMatrix</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/block_circulant_matrices.html#lu_decompose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.block_circulant_matrices.lu_decompose" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">capytaine.tools.block_circulant_matrices.</span></span><span class="sig-name descname"><span class="pre">lu_decompose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#capytaine.tools.block_circulant_matrices.BlockDiagonalMatrix" title="capytaine.tools.block_circulant_matrices.BlockDiagonalMatrix"><span class="pre">BlockDiagonalMatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix" title="capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix"><span class="pre">NestedBlockCirculantMatrix</span></a><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><a class="reference internal" href="#capytaine.tools.block_circulant_matrices.BlockCirculantMatrix" title="capytaine.tools.block_circulant_matrices.BlockCirculantMatrix"><span class="pre">BlockCirculantMatrix</span></a></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite_a</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/block_circulant_matrices.html#lu_decompose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.block_circulant_matrices.lu_decompose" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>

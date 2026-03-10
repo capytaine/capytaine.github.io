@@ -449,7 +449,8 @@ mermaid.initialize(
     }
 );
 
-window.addEventListener("load", load);</script>
+window.addEventListener("load", load);
+window.runMermaid = runMermaid;</script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" />
     <script defer data-domain="capytaine.github.io" src="https://plausible.io/js/script.js"></script>
@@ -482,6 +483,7 @@ window.addEventListener("load", load);</script>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Sequence</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">ArrayLike</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sl</span>
@@ -647,6 +649,162 @@ window.addEventListener("load", load);</script>
 
 
 
+<div class="viewcode-block" id="NestedBlockCirculantMatrix">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">NestedBlockCirculantMatrix</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Data-sparse representation of a block matrix of the following form</span>
+
+<span class="sd">       ( a  b | e  d | c  f )</span>
+<span class="sd">       ( b  a | f  c | d  e )</span>
+<span class="sd">       ( ------------------ )</span>
+<span class="sd">       ( c  f | a  b | e  d )</span>
+<span class="sd">       ( d  e | b  a | f  c )</span>
+<span class="sd">       ( ------------------ )</span>
+<span class="sd">       ( e  d | c  f | a  b )</span>
+<span class="sd">       ( f  c | d  e | b  a )</span>
+
+<span class="sd">    where a, b, c, d, e and f are matrices of the same shape,</span>
+<span class="sd">    that is a block circulant matrix (here of size 3x3, but arbitrary outer sizes are supported),</span>
+<span class="sd">    where diagonal blocks are 2x2 block circulant matrices and off-diagonal blocks have subblocks in common.</span>
+
+<span class="sd">    Reordering the lines and columns, this matrix is equivalent to the following shape</span>
+
+<span class="sd">       ( a  e  c | b  d  f )</span>
+<span class="sd">       ( c  a  e | f  b  d )</span>
+<span class="sd">       ( e  c  a | d  f  b )</span>
+<span class="sd">       ( ----------------- )</span>
+<span class="sd">       ( b  f  d | a  c  e )</span>
+<span class="sd">       ( d  b  f | e  a  c )</span>
+<span class="sd">       ( f  d  b | c  e  a )</span>
+
+<span class="sd">    that is a 2x2 block matrix of block circulant matrices, the block circulant matrices of the bottom row being the transpose of the block circulant matrices of the top row.</span>
+
+<span class="sd">    In the 2x2x2x2 limit case, the matrix is a nested block circulant matrix</span>
+
+<span class="sd">       ( a  b | c  d )</span>
+<span class="sd">       ( b  a | d  c )</span>
+<span class="sd">       ( ----------- )</span>
+<span class="sd">       ( c  d | a  b )</span>
+<span class="sd">       ( d  c | b  a )</span>
+
+<span class="sd">    The 4x4x2x2 pattern reads</span>
+
+<span class="sd">       ( a  b | g  d | e  f | c  h )</span>
+<span class="sd">       ( b  a | h  c | f  e | d  g )</span>
+<span class="sd">       ( -----|------|------|----- )</span>
+<span class="sd">       ( c  h | a  b | g  d | e  f )</span>
+<span class="sd">       ( d  g | b  a | h  c | f  e )</span>
+<span class="sd">       ( -----|------|------|----- )</span>
+<span class="sd">       ( e  f | c  h | a  b | g  d )</span>
+<span class="sd">       ( f  e | d  g | b  a | h  c )</span>
+<span class="sd">       ( -----|------|------|----- )</span>
+<span class="sd">       ( g  d | e  f | c  h | a  b )</span>
+<span class="sd">       ( h  c | f  e | d  g | b  a )</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    blocks: Sequence of matrix-like, can be also a ndarray of shape (nb_blocks, n, n, ...)</span>
+<span class="sd">        The **first column** of blocks [a, b, c, d, ...]</span>
+<span class="sd">        Each block should have the same shape, and the number of blocks should be even.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">ArrayLike</span><span class="p">]):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span> <span class="o">=</span> <span class="n">blocks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">blocks</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="k">assert</span> <span class="nb">all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="n">b</span><span class="o">.</span><span class="n">dtype</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span>
+
+<div class="viewcode-block" id="NestedBlockCirculantMatrix.to_BlockCirculantMatrix">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix.to_BlockCirculantMatrix">[docs]</a>
+    <span class="nd">@lru_cache</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_BlockCirculantMatrix</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Convert to a BlockCirculantMatrix with combined macro-blocks.</span>
+
+<span class="sd">        The NestedBlockCirculantMatrix with blocks [a, b, c, d, e, f, ...]</span>
+<span class="sd">        (where nb_blocks = 2*n) is converted to a BlockCirculantMatrix with n macro-blocks.</span>
+
+<span class="sd">        Each macro-block i (for i in 0..n-1) is a 2x2 arrangement of the original blocks:</span>
+<span class="sd">        - For i=0: [[blocks[0], blocks[1]], [blocks[1], blocks[0]]]</span>
+<span class="sd">        - For i&gt;0: [[blocks[2*i], blocks[2*n-2*i+1]], [blocks[2*i+1], blocks[2*n-2*i]]]</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">//</span> <span class="mi">2</span>
+
+        <span class="c1"># Create the macro-blocks for the BlockCirculantMatrix</span>
+        <span class="n">macro_blocks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># First macro-block is a standard 2x2 circulant</span>
+                <span class="n">top_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span>
+                <span class="n">bottom_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Other macro-blocks follow the pattern</span>
+                <span class="n">idx_top_left</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">i</span>
+                <span class="n">idx_top_right</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">idx_bottom_left</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">i</span> <span class="o">+</span> <span class="mi">1</span>
+                <span class="n">idx_bottom_right</span> <span class="o">=</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">n</span> <span class="o">-</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">i</span>
+
+                <span class="n">top_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">idx_top_left</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">idx_top_right</span><span class="p">]])</span>
+                <span class="n">bottom_row</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">idx_bottom_left</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="n">idx_bottom_right</span><span class="p">]])</span>
+
+            <span class="n">macro_block</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">top_row</span><span class="p">,</span> <span class="n">bottom_row</span><span class="p">])</span>
+            <span class="n">macro_blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">macro_block</span><span class="p">)</span>
+
+        <span class="c1"># Create the outer BlockCirculantMatrix</span>
+        <span class="k">return</span> <span class="n">BlockCirculantMatrix</span><span class="p">(</span><span class="n">macro_blocks</span><span class="p">)</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__array__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_BlockCirculantMatrix</span><span class="p">()</span><span class="o">.</span><span class="n">__array__</span><span class="p">(</span><span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">copy</span><span class="o">=</span><span class="n">copy</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__matmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_BlockCirculantMatrix</span><span class="p">()</span> <span class="o">@</span> <span class="n">other</span>
+
+<div class="viewcode-block" id="NestedBlockCirculantMatrix.matvec">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix.matvec">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">matvec</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__matmul__</span><span class="p">(</span><span class="n">other</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="NestedBlockCirculantMatrix.block_diagonalize">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix.block_diagonalize">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">block_diagonalize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;BlockDiagonalMatrix&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="c1"># Special case for 2x2x2x2: fully block-diagonalize both outer and inner structures</span>
+            <span class="c1"># Given blocks [a, b, c, d], the matrix is:</span>
+            <span class="c1"># ( a  b | c  d )</span>
+            <span class="c1"># ( b  a | d  c )</span>
+            <span class="c1"># ( ----------- )</span>
+            <span class="c1"># ( c  d | a  b )</span>
+            <span class="c1"># ( d  c | b  a )</span>
+            <span class="c1"># First diagonalize outer 2x2: gives BlockCirculantMatrix([a+c, b+d]) and BlockCirculantMatrix([a-c, b-d])</span>
+            <span class="c1"># Then diagonalize each inner 2x2: (a+c)±(b+d) and (a-c)±(b-d)</span>
+            <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span>
+            <span class="k">return</span> <span class="n">BlockDiagonalMatrix</span><span class="p">([</span>
+                <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span> <span class="o">+</span> <span class="n">d</span><span class="p">,</span>
+                <span class="n">a</span> <span class="o">-</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span> <span class="o">-</span> <span class="n">d</span><span class="p">,</span>
+                <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">-</span> <span class="n">c</span> <span class="o">-</span> <span class="n">d</span><span class="p">,</span>
+                <span class="n">a</span> <span class="o">-</span> <span class="n">b</span> <span class="o">-</span> <span class="n">c</span> <span class="o">+</span> <span class="n">d</span>
+            <span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Drop the inner structure</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_BlockCirculantMatrix</span><span class="p">()</span><span class="o">.</span><span class="n">block_diagonalize</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="NestedBlockCirculantMatrix.solve">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix.solve">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">to_BlockCirculantMatrix</span><span class="p">()</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">b</span><span class="p">)</span></div>
+</div>
+
+
+
 <div class="viewcode-block" id="BlockDiagonalMatrix">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.BlockDiagonalMatrix">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BlockDiagonalMatrix</span><span class="p">:</span>
@@ -706,7 +864,7 @@ window.addEventListener("load", load);</script>
 
 
 
-<span class="n">MatrixLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">BlockDiagonalMatrix</span><span class="p">,</span> <span class="n">BlockCirculantMatrix</span><span class="p">]</span>
+<span class="n">MatrixLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">BlockDiagonalMatrix</span><span class="p">,</span> <span class="n">NestedBlockCirculantMatrix</span><span class="p">,</span> <span class="n">BlockCirculantMatrix</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="lu_decompose">
@@ -718,6 +876,8 @@ window.addEventListener("load", load);</script>
         <span class="k">return</span> <span class="n">LUDecomposedBlockDiagonalMatrix</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">overwrite_a</span><span class="o">=</span><span class="n">overwrite_a</span><span class="p">)</span>
     <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">BlockCirculantMatrix</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">LUDecomposedBlockCirculantMatrix</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">overwrite_a</span><span class="o">=</span><span class="n">overwrite_a</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">NestedBlockCirculantMatrix</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">LUDecomposedBlockCirculantMatrix</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">to_BlockCirculantMatrix</span><span class="p">(),</span> <span class="n">overwrite_a</span><span class="o">=</span><span class="n">overwrite_a</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
 
