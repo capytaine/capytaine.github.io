@@ -493,6 +493,8 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.abstract_green_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGreenFunction</span><span class="p">,</span> <span class="n">GreenFunctionEvaluationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.delhommeau</span><span class="w"> </span><span class="kn">import</span> <span class="n">Delhommeau</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.lazy_matrices</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyMatrix</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.lists_of_points</span><span class="w"> </span><span class="kn">import</span> <span class="n">_normalize_points</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.block_circulant_matrices</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BlockCirculantMatrix</span><span class="p">,</span>
     <span class="n">NestedBlockCirculantMatrix</span><span class="p">,</span>
@@ -629,14 +631,28 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="BasicMatrixEngine.build_S_matrix">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine.build_S_matrix">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">build_S_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Similar to :code:`build_matrices`, but returning only :math:`S`&quot;&quot;&quot;</span>
-        <span class="c1"># Calls directly evaluate instead of build_matrices because the caching</span>
-        <span class="c1"># mechanism of build_matrices is not compatible with giving mesh1 as a</span>
-        <span class="c1"># list of points, but we need that for post-processing</span>
-        <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">)</span>
-        <span class="n">check_if_nan_in_matrix</span><span class="p">([</span><span class="n">S</span><span class="p">])</span>
-        <span class="k">return</span> <span class="n">S</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_S_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Similar to :code:`build_matrices`, but returning only :math:`S`</span>
+
+<span class="sd">        points: np.ndarray of shape (nb_collocations_points, 3)</span>
+<span class="sd">            List of collocation points. Usually went through `_normalize_points`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span><span class="w"> </span><span class="nf">build_S_rows</span><span class="p">(</span><span class="n">slice_</span><span class="p">):</span>
+            <span class="n">S</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="n">slice_</span><span class="p">,</span> <span class="p">:],</span> <span class="n">mesh</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">)</span>
+            <span class="n">check_if_nan_in_matrix</span><span class="p">([</span><span class="n">S</span><span class="p">])</span>
+            <span class="k">return</span> <span class="n">S</span>
+
+        <span class="n">nb_points</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">nb_points</span> <span class="o">&lt;</span> <span class="mi">500</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">build_S_rows</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nb_points</span><span class="p">))</span>  <span class="c1"># Just the full matrix</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">LazyMatrix</span><span class="p">(</span>
+                <span class="n">build_S_rows</span><span class="p">,</span>
+                <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">),</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">,</span>
+                <span class="n">chunk_size</span><span class="o">=</span><span class="mi">100</span>
+            <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="BasicMatrixEngine.build_fullK_matrix">
