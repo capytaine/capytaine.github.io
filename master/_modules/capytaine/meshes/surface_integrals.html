@@ -505,8 +505,15 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="SurfaceIntegralsMixin.surface_integral">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.surface_integrals.html#capytaine.meshes.surface_integrals.SurfaceIntegralsMixin.surface_integral">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">surface_integral</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns integral of given data along wet surface area.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">data</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns integral of given data along wet surface area.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: np.ndarray</span>
+<span class="sd">            Array of values at the quadrature points</span>
+<span class="sd">            expected shape: (..., nb_faces, nb_quad_points)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">data</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
 
 
     <span class="nd">@property</span>
@@ -518,8 +525,12 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">volumes</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">float</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns volumes using x, y, z components of the mesh.</span>
 <span class="sd">        Should be the same for a regular mesh.&quot;&quot;&quot;</span>
-        <span class="n">norm_coord</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_normals</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_centers</span>
-        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surface_integral</span><span class="p">(</span><span class="n">norm_coord</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+        <span class="c1"># norm_coord[i_dir, i_face, i_quad_point] = \</span>
+        <span class="c1">#       faces_normals[i_face, i_dir] * quad_point[i_face, i_quad_point, i_dir]</span>
+        <span class="n">norm_coord</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">surface_integral</span><span class="p">(</span><span class="n">norm_coord</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)))</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">volume</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
@@ -529,9 +540,19 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="SurfaceIntegralsMixin.waterplane_integral">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.surface_integrals.html#capytaine.meshes.surface_integrals.SurfaceIntegralsMixin.waterplane_integral">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">waterplane_integral</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns integral of given data along water plane area.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns integral of given data along water plane area.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data: np.ndarray</span>
+<span class="sd">            Array of values at the quadrature points of the hull mesh.</span>
+<span class="sd">            Expected shape: (..., nb_faces, nb_quad_points)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">immersed_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
-        <span class="k">return</span> <span class="n">immersed_self</span><span class="o">.</span><span class="n">surface_integral</span><span class="p">(</span><span class="n">immersed_self</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[:,</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">data</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="o">-</span><span class="n">immersed_self</span><span class="o">.</span><span class="n">surface_integral</span><span class="p">(</span>
+            <span class="n">immersed_self</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">data</span><span class="p">,</span>
+            <span class="o">**</span><span class="n">kwargs</span>
+        <span class="p">)</span></div>
 
 
     <span class="nd">@property</span>
@@ -548,18 +569,23 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">center_of_buoyancy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns center of buoyancy of the mesh.&quot;&quot;&quot;</span>
         <span class="n">immersed_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
-        <span class="n">coords_sq_norm</span> <span class="o">=</span> <span class="n">immersed_self</span><span class="o">.</span><span class="n">faces_normals</span> <span class="o">*</span> <span class="n">immersed_self</span><span class="o">.</span><span class="n">faces_centers</span><span class="o">**</span><span class="mi">2</span>
-        <span class="k">return</span> <span class="n">immersed_self</span><span class="o">.</span><span class="n">surface_integral</span><span class="p">(</span><span class="n">coords_sq_norm</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">immersed_self</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span>
+        <span class="c1"># coords_sq_norm[i_dir, i_face, i_quad_point] = \</span>
+        <span class="c1">#       faces_normals[i_face, i_dir] * quad_point[i_face, i_quad_point, i_dir]**2</span>
+        <span class="n">coords_sq_norm</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">immersed_self</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">[:,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">:]</span> <span class="o">*</span> <span class="n">immersed_self</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">transpose</span><span class="p">((</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">immersed_self</span><span class="o">.</span><span class="n">surface_integral</span><span class="p">(</span><span class="n">coords_sq_norm</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">2</span><span class="p">))</span> <span class="o">/</span> <span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">immersed_self</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">waterplane_area</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns water plane area of the mesh.&quot;&quot;&quot;</span>
         <span class="n">immersed_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
-        <span class="k">return</span> <span class="o">-</span><span class="n">immersed_self</span><span class="o">.</span><span class="n">waterplane_integral</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">immersed_self</span><span class="o">.</span><span class="n">waterplane_integral</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">waterplane_center</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="kc">None</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns water plane center of the mesh.</span>
+<span class="sd">        Computed as (∫x/∫1, ∫y/∫1) on the water plane.</span>
 <span class="sd">        Returns None if the mesh is full submerged.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">immersed_self</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
@@ -567,9 +593,13 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="nb">abs</span><span class="p">(</span><span class="n">waterplane_area</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">waterplane_center</span> <span class="o">=</span> <span class="o">-</span><span class="n">immersed_self</span><span class="o">.</span><span class="n">waterplane_integral</span><span class="p">(</span>
-                <span class="n">immersed_self</span><span class="o">.</span><span class="n">faces_centers</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="n">waterplane_area</span>
-            <span class="k">return</span> <span class="n">waterplane_center</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span></div>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">immersed_self</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">immersed_self</span><span class="o">.</span><span class="n">quadrature_points</span><span class="p">[</span><span class="mi">0</span><span class="p">][:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="n">waterplane_center</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">immersed_self</span><span class="o">.</span><span class="n">waterplane_integral</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">/</span> <span class="n">waterplane_area</span><span class="p">,</span>
+                    <span class="n">immersed_self</span><span class="o">.</span><span class="n">waterplane_integral</span><span class="p">(</span><span class="n">y</span><span class="p">)</span> <span class="o">/</span> <span class="n">waterplane_area</span>
+                    <span class="p">)</span>
+            <span class="k">return</span> <span class="n">waterplane_center</span></div>
 
 </pre></div>
 
