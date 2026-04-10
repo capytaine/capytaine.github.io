@@ -479,9 +479,10 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for capytaine.bodies.multibodies</h1><div class="highlight"><pre>
 <span></span><span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
+<span class="kn">import</span><span class="w"> </span><span class="nn">copy</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">itertools</span><span class="w"> </span><span class="kn">import</span> <span class="n">chain</span><span class="p">,</span> <span class="n">accumulate</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Literal</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span><span class="p">,</span> <span class="n">lru_cache</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -490,16 +491,15 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.dofs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">AbstractDof</span><span class="p">,</span>
     <span class="n">DofOnSubmesh</span><span class="p">,</span>
-    <span class="n">add_dofs_labels_to_vector</span><span class="p">,</span>
-    <span class="n">add_dofs_labels_to_matrix</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.abstract_bodies</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractBody</span>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="Multibody">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.multibodies.html#capytaine.bodies.multibodies.Multibody">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">Multibody</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Multibody</span><span class="p">(</span><span class="n">AbstractBody</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
         <span class="n">bodies</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="n">FloatingBody</span><span class="p">,</span> <span class="n">Multibody</span><span class="p">]],</span>
@@ -563,13 +563,9 @@ window.runMermaid = runMermaid;</script>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">short_bodies</span> <span class="o">=</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">)</span>
-        <span class="c1"># short_dofs = &#39;{&#39; + &#39;, &#39;.join(&#39;&quot;{}&quot;: ...&#39;.format(d) for d in self.own_dofs) + &#39;}&#39;</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Multibody(</span><span class="si">{</span><span class="n">short_bodies</span><span class="si">}</span><span class="s2">)&quot;</span> <span class="c1">#, own_dofs={short_dofs})&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Multibody(</span><span class="si">{</span><span class="n">short_bodies</span><span class="si">}</span><span class="s2">)&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__short_str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_dofs_shape_consistency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -609,7 +605,7 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">nb_dofs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">nb_dofs</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">)</span> <span class="c1"># + len(self.own_dofs)</span>
+        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">nb_dofs</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">)</span>
 
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">dofs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -640,22 +636,6 @@ window.runMermaid = runMermaid;</script>
 
         <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">componenents_dofs</span><span class="p">}</span> <span class="c1">#, **self.own_dofs}</span>
 
-<div class="viewcode-block" id="Multibody.add_dofs_labels_to_vector">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.multibodies.html#capytaine.bodies.multibodies.Multibody.add_dofs_labels_to_vector">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_dofs_labels_to_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function turning a bare vector into a vector labelled by the name of the dofs of the body,</span>
-<span class="sd">        to be used for instance for the computation of RAO.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">add_dofs_labels_to_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">vector</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="Multibody.add_dofs_labels_to_matrix">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.multibodies.html#capytaine.bodies.multibodies.Multibody.add_dofs_labels_to_matrix">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_dofs_labels_to_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function turning a bare matrix into a matrix labelled by the name of the dofs of the body,</span>
-<span class="sd">        to be used for instance for the computation of RAO.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">add_dofs_labels_to_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">matrix</span><span class="p">)</span></div>
-
-
 <div class="viewcode-block" id="Multibody.immersed_part">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.multibodies.html#capytaine.bodies.multibodies.Multibody.immersed_part">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">immersed_part</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -668,16 +648,6 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;hydrostatic_stiffness&#39;</span><span class="p">):</span>
             <span class="n">new_multibody</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span>
         <span class="k">return</span> <span class="n">new_multibody</span></div>
-
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">body_to_add</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_bodies</span><span class="p">(</span><span class="n">body_to_add</span><span class="p">)</span>
-
-<div class="viewcode-block" id="Multibody.join_bodies">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.multibodies.html#capytaine.bodies.multibodies.Multibody.join_bodies">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">join_bodies</span><span class="p">(</span><span class="o">*</span><span class="n">bodies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.multibodies</span><span class="w"> </span><span class="kn">import</span> <span class="n">Multibody</span>
-        <span class="k">return</span> <span class="n">Multibody</span><span class="p">(</span><span class="n">bodies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="Multibody.integrate_pressure">
@@ -726,6 +696,57 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.multibodies.html#capytaine.bodies.multibodies.Multibody.compute_rigid_body_inertia">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_rigid_body_inertia</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mf">1000.0</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_component_matrices</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="n">rho</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">])</span></div>
+
+
+    <span class="c1"># --- Geometric transforms ---</span>
+
+<div class="viewcode-block" id="Multibody.copy">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.multibodies.html#capytaine.bodies.multibodies.Multibody.copy">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Multibody</span><span class="p">:</span>
+        <span class="n">new_multibody</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">new_multibody</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;copy_of_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_multibody</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="k">return</span> <span class="n">new_multibody</span></div>
+
+
+<div class="viewcode-block" id="Multibody.translated">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.multibodies.html#capytaine.bodies.multibodies.Multibody.translated">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">translated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Multibody</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Multibody</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">translated</span><span class="p">(</span><span class="n">shift</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">b</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">],</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multibody.rotated_with_matrix">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.multibodies.html#capytaine.bodies.multibodies.Multibody.rotated_with_matrix">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rotated_with_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Multibody</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Multibody</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">rotated_with_matrix</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">b</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">],</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multibody.mirrored">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.multibodies.html#capytaine.bodies.multibodies.Multibody.mirrored">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mirrored</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;xOz&#39;</span><span class="p">,</span> <span class="s1">&#39;yOz&#39;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">Multibody</span><span class="p">:</span>
+        <span class="n">mirrored_bodies</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">:</span>
+            <span class="n">mb</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">mirrored</span><span class="p">(</span><span class="n">plane</span><span class="p">)</span>
+            <span class="n">mb</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">name</span>
+            <span class="n">mirrored_bodies</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">mb</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Multibody</span><span class="p">(</span><span class="n">mirrored_bodies</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Multibody.clipped">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.multibodies.html#capytaine.bodies.multibodies.Multibody.clipped">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clipped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">normal</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Multibody</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">Multibody</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">clipped</span><span class="p">(</span><span class="n">origin</span><span class="o">=</span><span class="n">origin</span><span class="p">,</span> <span class="n">normal</span><span class="o">=</span><span class="n">normal</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">b</span><span class="o">.</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">],</span>
+            <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+        <span class="p">)</span></div>
 </div>
 
 </pre></div>

@@ -500,9 +500,8 @@ window.runMermaid = runMermaid;</script>
         <span class="n">DofOnSubmesh</span><span class="p">,</span>
         <span class="n">normalize_name</span><span class="p">,</span>
         <span class="n">rigid_body_dofs</span><span class="p">,</span>
-        <span class="n">add_dofs_labels_to_vector</span><span class="p">,</span>
-        <span class="n">add_dofs_labels_to_matrix</span>
         <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.abstract_bodies</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractBody</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.hydrostatics</span><span class="w"> </span><span class="kn">import</span> <span class="n">_HydrostaticsMixin</span>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -510,7 +509,7 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="FloatingBody">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">FloatingBody</span><span class="p">(</span><span class="n">_HydrostaticsMixin</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FloatingBody</span><span class="p">(</span><span class="n">_HydrostaticsMixin</span><span class="p">,</span> <span class="n">AbstractBody</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A floating body described as a mesh and some degrees of freedom.</span>
 
 <span class="sd">    The mesh structure is stored as a Mesh from capytaine.mesh.mesh or a</span>
@@ -755,22 +754,6 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="n">body</span></div>
 
 
-<div class="viewcode-block" id="FloatingBody.add_dofs_labels_to_vector">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.add_dofs_labels_to_vector">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_dofs_labels_to_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">vector</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function turning a bare vector into a vector labelled by the name of the dofs of the body,</span>
-<span class="sd">        to be used for instance for the computation of RAO.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">add_dofs_labels_to_vector</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">vector</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="FloatingBody.add_dofs_labels_to_matrix">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.add_dofs_labels_to_matrix">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_dofs_labels_to_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">matrix</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Helper function turning a bare matrix into a matrix labelled by the name of the dofs of the body,</span>
-<span class="sd">        to be used for instance for the computation of RAO.&quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">add_dofs_labels_to_matrix</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">matrix</span><span class="p">)</span></div>
-
-
     <span class="k">def</span><span class="w"> </span><span class="nf">_check_dofs_shape_consistency</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">for</span> <span class="n">dof_name</span><span class="p">,</span> <span class="n">dof</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">AbstractDof</span><span class="p">)</span> <span class="ow">and</span>
@@ -783,16 +766,6 @@ window.runMermaid = runMermaid;</script>
     <span class="c1">###################</span>
     <span class="c1"># Transformations #</span>
     <span class="c1">###################</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">body_to_add</span><span class="p">:</span> <span class="s1">&#39;FloatingBody&#39;</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">join_bodies</span><span class="p">(</span><span class="n">body_to_add</span><span class="p">)</span>
-
-<div class="viewcode-block" id="FloatingBody.join_bodies">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.join_bodies">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">join_bodies</span><span class="p">(</span><span class="o">*</span><span class="n">bodies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.multibodies</span><span class="w"> </span><span class="kn">import</span> <span class="n">Multibody</span>
-        <span class="k">return</span> <span class="n">Multibody</span><span class="p">(</span><span class="n">bodies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
-
 
 <div class="viewcode-block" id="FloatingBody.copy">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.copy">[docs]</a>
@@ -915,24 +888,6 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="n">translated_self</span></div>
 
 
-<div class="viewcode-block" id="FloatingBody.translated_x">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.translated_x">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">translated_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dx</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FloatingBody&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">translated</span><span class="p">([</span><span class="n">dx</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="FloatingBody.translated_y">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.translated_y">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">translated_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dy</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FloatingBody&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">translated</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="FloatingBody.translated_z">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.translated_z">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">translated_z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dz</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FloatingBody&quot;</span><span class="p">:</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">translated</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="n">dz</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
-
-
 <div class="viewcode-block" id="FloatingBody.rotated_with_matrix">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.rotated_with_matrix">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">rotated_with_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FloatingBody&quot;</span><span class="p">:</span>
@@ -959,30 +914,6 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rotation_center&#39;</span><span class="p">):</span>
             <span class="n">rotated_self</span><span class="o">.</span><span class="n">rotation_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_center</span> <span class="o">@</span> <span class="n">R</span><span class="o">.</span><span class="n">T</span>
         <span class="k">return</span> <span class="n">rotated_self</span></div>
-
-
-<div class="viewcode-block" id="FloatingBody.rotated_x">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.rotated_x">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rotated_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FloatingBody&quot;</span><span class="p">:</span>
-        <span class="n">c</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
-        <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">]])</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotated_with_matrix</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="FloatingBody.rotated_y">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.rotated_y">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rotated_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FloatingBody&quot;</span><span class="p">:</span>
-        <span class="n">c</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
-        <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">s</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">c</span><span class="p">]])</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotated_with_matrix</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
-
-
-<div class="viewcode-block" id="FloatingBody.rotated_z">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.rotated_z">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rotated_z</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">angle</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FloatingBody&quot;</span><span class="p">:</span>
-        <span class="n">c</span><span class="p">,</span> <span class="n">s</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">angle</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
-        <span class="n">R</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">c</span><span class="p">,</span> <span class="o">-</span><span class="n">s</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="n">s</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]])</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotated_with_matrix</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_apply_on_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
