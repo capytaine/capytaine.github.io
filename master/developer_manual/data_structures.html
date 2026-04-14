@@ -5,7 +5,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Contributing &#8212; capytaine 3.0.dev documentation</title>
+    <title>Data structures &#8212; capytaine 3.0.dev documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
     <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
@@ -18,8 +18,8 @@
     <script src="../_static/copybutton.js?v=f281be69"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Testing Capytaine" href="testing.html" />
-    <link rel="prev" title="capytaine.ui.vedo_animations module" href="api/capytaine.ui.vedo_animations.html" />
+    <link rel="next" title="Making a release" href="making_a_release.html" />
+    <link rel="prev" title="Testing Capytaine" href="testing.html" />
     <script defer data-domain="capytaine.github.io" src="https://plausible.io/js/script.js"></script>
     <link rel="stylesheet" href="_static/custom.css" type="text/css" />
     
@@ -43,37 +43,48 @@
 
           <div class="body" role="main">
             
-  <section id="contributing">
-<h1>Contributing<a class="headerlink" href="#contributing" title="Link to this heading">¶</a></h1>
-<p>Before submitting a pull request, please take a look at the following points:</p>
+  <section id="data-structures">
+<h1>Data structures<a class="headerlink" href="#data-structures" title="Link to this heading">¶</a></h1>
+<p>This page discuss some of the implementation details of how data are stored internally in Capytaine.</p>
+<section id="simple-mesh">
+<h2>Simple mesh<a class="headerlink" href="#simple-mesh" title="Link to this heading">¶</a></h2>
+<p>A mesh can be seen as a list of faces.
+Data on faces (such as the area of each face) are stored in array of length the number of faces.
+The ordering in the array should be consistent for all fields defined on this mesh.</p>
+</section>
+<section id="symmetric-mesh">
+<h2>Symmetric mesh<a class="headerlink" href="#symmetric-mesh" title="Link to this heading">¶</a></h2>
+<p>A reflection symmetric mesh is stored as two halves.
+An array storing a data field on the mesh is organised such that the first half of the array is the reference half of the mesh and the second half of the array is the reflected half of the mesh.
+Taking advantage of the symmetries in the resolution requires the matrices to have a block circulant structure that would be too inconvenient to implement if the reference faces and the symmetric faces were ordered in a different way.</p>
+</section>
+<section id="body-with-lid">
+<h2>Body with lid<a class="headerlink" href="#body-with-lid" title="Link to this heading">¶</a></h2>
+<p>Assume a FloatingBody defined with a hull mesh and a lid mesh:</p>
 <ul class="simple">
-<li><p>To submit a pull request (PR), you will need to fork the repository. Then, it is
-recommended to create a new branch in your fork dedicated to your bug fix or
-new feature. Once the PR has been accepted, the content of the branch will be
-squashed into a single commit on the master branch. Afterward, the branch can
-be deleted (or forgotten).</p></li>
-<li><p>For simple modifications (e.g. typos) the whole process above can be done
-automatically by Github by using its edition functionality (the pencil icon
-on the top left of Github’s file viewer).</p></li>
-<li><p>See the <a class="reference internal" href="testing.html"><span class="doc">Testing Capytaine</span></a> section of the documentation for details on how to
-test the code.
-Before submitting a change of the code, make sure that all tests are passing.
-If you’d like to add a feature, please add the relevant tests to the <cite>pytest</cite>
-directory.</p></li>
-<li><p>All modifications of the code are listed in the <code class="docutils literal notranslate"><span class="pre">docs/changelog.rst</span></code>.
-If you submit a bug fix or a new feature, please add a line in the changelog.</p></li>
-<li><p>New features should also be documented in the user manual (<code class="docutils literal notranslate"><span class="pre">docs/user_manual/</span></code>).
-Please add a short documentation of the feature in the relevant page.</p></li>
-<li><p>The code follows the <a class="reference external" href="https://pep8.org/">PEP8</a> guidelines for code style.
-Indentation is done with four spaces.
-Try to avoid trailing whitespaces whenever possible.</p></li>
+<li><p>the dofs of the body are defined only on the hull</p></li>
+<li><p>the input Neumann boundary condition of the LinearPotentialFlowProblem, as well as the source and potential outputs fields are defined on the hull and the lid</p></li>
 </ul>
-<p>The whole of Capytaine is currently licensed under the terms of the General
-Public License (GPL). In the future, some modules might be extracted and
-released with another free software license, such as the Apache License. If
-your contribution cannot be released under another license (because it includes
-code from another GPL package or just because you don’t want to), please tell
-us explicitly.</p>
+<p>In general, the lid are the last panels of the boundary condition, but this will not be the case in the following more complicated cases, so to access only the panels on the hull, the attribute <code class="docutils literal notranslate"><span class="pre">hull_masks</span></code>, stored as a boolean array, should be used.</p>
+</section>
+<section id="body-with-lid-and-symmetry">
+<h2>Body with lid and symmetry<a class="headerlink" href="#body-with-lid-and-symmetry" title="Link to this heading">¶</a></h2>
+<p>For a single body with a lid and symmetry, the last panels are always the symmetric part, so the data about the lid panels are distributed in the array:</p>
+</section>
+<section id="multibody">
+<h2>Multibody<a class="headerlink" href="#multibody" title="Link to this heading">¶</a></h2>
+<p>For multibodies, the dofs in <code class="docutils literal notranslate"><span class="pre">Multibody.dofs</span></code> are stored in arrays of the length of the total number of panels of the mesh of all bodies, possibly using the <code class="docutils literal notranslate"><span class="pre">DofOnSubmesh</span></code> class.</p>
+</section>
+<section id="multibody-with-symmetry">
+<h2>Multibody with symmetry<a class="headerlink" href="#multibody-with-symmetry" title="Link to this heading">¶</a></h2>
+<p>For multiple bodies composed of symmetric bodies</p>
+</section>
+<section id="multibody-with-lid">
+<h2>Multibody with lid<a class="headerlink" href="#multibody-with-lid" title="Link to this heading">¶</a></h2>
+</section>
+<section id="multibody-with-lid-and-symmetry">
+<h2>Multibody with lid and symmetry<a class="headerlink" href="#multibody-with-lid-and-symmetry" title="Link to this heading">¶</a></h2>
+</section>
 </section>
 
 
@@ -120,9 +131,9 @@ us explicitly.</p>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer manual</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="installation.html">Installation for developers</a></li>
 <li class="toctree-l2"><a class="reference internal" href="overview.html">Overview of the modules</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Contributing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="testing.html">Testing Capytaine</a></li>
-<li class="toctree-l2"><a class="reference internal" href="data_structures.html">Data structures</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Data structures</a></li>
 <li class="toctree-l2"><a class="reference internal" href="making_a_release.html">Making a release</a></li>
 <li class="toctree-l2"><a class="reference internal" href="api/modules.html">API documentation</a></li>
 </ul>
@@ -141,8 +152,8 @@ us explicitly.</p>
 <ul>
   <li><a href="../index.html">Documentation overview</a><ul>
   <li><a href="index.html">Developer manual</a><ul>
-      <li>Previous: <a href="api/capytaine.ui.vedo_animations.html" title="previous chapter">capytaine.ui.vedo_animations module</a></li>
-      <li>Next: <a href="testing.html" title="next chapter">Testing Capytaine</a></li>
+      <li>Previous: <a href="testing.html" title="previous chapter">Testing Capytaine</a></li>
+      <li>Next: <a href="making_a_release.html" title="next chapter">Making a release</a></li>
   </ul></li>
   </ul></li>
 </ul>
@@ -167,7 +178,7 @@ us explicitly.</p>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |
-      <a href="../_sources/developer_manual/contributing.rst.txt"
+      <a href="../_sources/developer_manual/data_structures.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 

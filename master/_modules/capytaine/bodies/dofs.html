@@ -487,6 +487,8 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.abstract_meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractMesh</span>
+
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
@@ -496,7 +498,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="AbstractDof.evaluate_motion">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.AbstractDof.evaluate_motion">[docs]</a>
     <span class="nd">@lru_cache</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_motion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_motion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="p">:</span> <span class="n">AbstractMesh</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
@@ -506,15 +508,29 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="AbstractDof.evaluate_motion_at_points">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.AbstractDof.evaluate_motion_at_points">[docs]</a>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="c1"># points is an array of shape (nb_points, 3)</span>
+        <span class="c1"># output is of shape (nb_points, 3)</span>
         <span class="o">...</span></div>
 
 
 <div class="viewcode-block" id="AbstractDof.evaluate_gradient_of_motion">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.AbstractDof.evaluate_gradient_of_motion">[docs]</a>
+    <span class="nd">@lru_cache</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_motion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="p">:</span> <span class="n">AbstractMesh</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="c1"># output is of shape (nb_points, 3, 3)</span>
+        <span class="k">if</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_gradient_of_motion_at_points</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AbstractDof.evaluate_gradient_of_motion_at_points">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.AbstractDof.evaluate_gradient_of_motion_at_points">[docs]</a>
     <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_motion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="c1"># points is an array of shape (nb_points, 3)</span>
+        <span class="c1"># output is of shape (nb_points, 3, 3)</span>
         <span class="o">...</span></div>
 </div>
 
@@ -532,15 +548,14 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="TranslationDof.evaluate_motion_at_points">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.TranslationDof.evaluate_motion_at_points">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span> <span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">))</span></div>
 
 
-<div class="viewcode-block" id="TranslationDof.evaluate_gradient_of_motion">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.TranslationDof.evaluate_gradient_of_motion">[docs]</a>
-    <span class="nd">@lru_cache</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_motion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span></div>
+<div class="viewcode-block" id="TranslationDof.evaluate_gradient_of_motion_at_points">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.TranslationDof.evaluate_gradient_of_motion_at_points">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span></div>
 </div>
 
 
@@ -564,16 +579,15 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="RotationDof.evaluate_motion_at_points">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.RotationDof.evaluate_motion_at_points">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span> <span class="n">points</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_center</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="RotationDof.evaluate_gradient_of_motion">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.RotationDof.evaluate_gradient_of_motion">[docs]</a>
-    <span class="nd">@lru_cache</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_motion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+<div class="viewcode-block" id="RotationDof.evaluate_gradient_of_motion_at_points">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.RotationDof.evaluate_gradient_of_motion_at_points">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span></div>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span></div>
 </div>
 
 
@@ -581,29 +595,38 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="DofOnSubmesh">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.DofOnSubmesh">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">DofOnSubmesh</span><span class="p">(</span><span class="n">AbstractDof</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Defines a dof that is zeros everywhere except on a given set of faces</span>
+<span class="sd">    on which another dof object is used for the definition.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    dof: AbstractDof</span>
+<span class="sd">        Some other dof</span>
+<span class="sd">    faces: boolean array (or slice or range)</span>
+<span class="sd">        The indices of the faces on which the `dof` should be evaluated.</span>
+<span class="sd">        Can be provided as a list of indices or a slice,</span>
+<span class="sd">        or as a boolean array of size `nb_faces` the total size of the mesh on which this dof is defined.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dof</span><span class="p">:</span> <span class="n">AbstractDof</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dof</span> <span class="o">=</span> <span class="n">dof</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">faces</span> <span class="o">=</span> <span class="n">faces</span>
 
-<div class="viewcode-block" id="DofOnSubmesh.evaluate_motion">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.DofOnSubmesh.evaluate_motion">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_motion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="p">):</span>
-        <span class="n">motion</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-        <span class="n">motion</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dof</span><span class="o">.</span><span class="n">evaluate_motion</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">extract_faces</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">))</span>
-        <span class="k">return</span> <span class="n">motion</span></div>
-
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;DofOnSubmesh(dof=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dof</span><span class="si">}</span><span class="s2">, faces=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="si">}</span><span class="s2">)&quot;</span>
 
 <div class="viewcode-block" id="DofOnSubmesh.evaluate_motion_at_points">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.DofOnSubmesh.evaluate_motion_at_points">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">motion</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">motion</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dof</span><span class="o">.</span><span class="n">evaluate_motion_at_points</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span> <span class="p">:])</span>
+        <span class="k">return</span> <span class="n">motion</span></div>
 
 
-<div class="viewcode-block" id="DofOnSubmesh.evaluate_gradient_of_motion">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.DofOnSubmesh.evaluate_gradient_of_motion">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_motion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
-        <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-        <span class="n">grad</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dof</span><span class="o">.</span><span class="n">evaluate_gradient_of_motion</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">extract_faces</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">))</span>
+<div class="viewcode-block" id="DofOnSubmesh.evaluate_gradient_of_motion_at_points">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.DofOnSubmesh.evaluate_gradient_of_motion_at_points">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">grad</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dof</span><span class="o">.</span><span class="n">evaluate_gradient_of_motion_at_points</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span> <span class="p">:])</span>
         <span class="k">return</span> <span class="n">grad</span></div>
 </div>
 

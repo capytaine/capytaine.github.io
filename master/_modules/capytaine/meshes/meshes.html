@@ -1102,13 +1102,18 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        -------</span>
 <span class="sd">        Mesh</span>
 <span class="sd">            New mesh containing vertices and faces from all meshes.</span>
+<span class="sd">        list of arrays</span>
+<span class="sd">            The boolean masks relating each faces to the component it came from</span>
+<span class="sd">            Only returned in return_masks==True</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
 <span class="sd">        __add__ : Implements the + operator for mesh joining.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Only Mesh instances can be added together.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">AbstractMesh</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Only AbstractMesh instances can be added together.&quot;</span><span class="p">)</span>
+
+        <span class="n">meshes</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">]</span>  <span class="c1"># Discard symmetries, no-op for non-symmetric Mesh</span>
 
         <span class="n">faces</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">((</span><span class="n">m</span><span class="o">.</span><span class="n">as_list_of_faces</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">),</span> <span class="p">[])</span>
 

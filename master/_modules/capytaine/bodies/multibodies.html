@@ -525,6 +525,50 @@ window.runMermaid = runMermaid;</script>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
 
+        <span class="c1"># MESH MERGING</span>
+        <span class="c1"># Need to merge the meshes of the component bodies while keeping track of the origin of each panel.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">body_masks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span>
+            <span class="o">*</span><span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">mesh</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">[</span><span class="mi">1</span><span class="p">:]],</span>
+            <span class="n">return_masks</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+        <span class="c1"># DOF MERGING</span>
+        <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">:</span>
+            <span class="n">body</span><span class="o">.</span><span class="n">_check_dofs_shape_consistency</span><span class="p">()</span>
+        <span class="n">componenents_dofs</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">total_nb_faces</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span>
+        <span class="k">for</span> <span class="n">body</span><span class="p">,</span> <span class="n">body_mask</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">body_masks</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">AbstractDof</span><span class="p">):</span>
+                    <span class="n">new_dof</span> <span class="o">=</span> <span class="n">DofOnSubmesh</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">body_mask</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">new_dof</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">total_nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+                    <span class="n">new_dof</span><span class="p">[</span><span class="n">body_mask</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">dof</span>
+
+                <span class="k">if</span> <span class="s1">&#39;__&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
+                    <span class="n">new_dof_name</span> <span class="o">=</span> <span class="s1">&#39;__&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">body</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># The body is probably a combination of bodies already.</span>
+                    <span class="c1"># So for the associativity of the + operation,</span>
+                    <span class="c1"># it is better to keep the same name.</span>
+                    <span class="n">new_dof_name</span> <span class="o">=</span> <span class="n">name</span>
+                <span class="n">componenents_dofs</span><span class="p">[</span><span class="n">new_dof_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_dof</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span> <span class="o">=</span> <span class="n">componenents_dofs</span>
+
+        <span class="c1"># LIDS MERGING</span>
+        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh_including_lid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hull_mask</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,),</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">lid_meshes</span> <span class="o">=</span> <span class="p">[</span><span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span> <span class="k">if</span> <span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="n">joined_lid</span> <span class="o">=</span> <span class="n">lid_meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span><span class="o">*</span><span class="n">lid_meshes</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_lid_mesh&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">joined_lid</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span> <span class="n">masks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span><span class="p">,</span> <span class="n">return_masks</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hull_mask</span> <span class="o">=</span> <span class="n">masks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="c1"># HYDROSTATICS MERGING</span>
         <span class="c1"># Keep legacy behavior of former mesh joining</span>
         <span class="k">for</span> <span class="n">matrix_name</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;inertia_matrix&quot;</span><span class="p">,</span> <span class="s2">&quot;hydrostatic_stiffness&quot;</span><span class="p">]:</span>
             <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">matrix_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="n">bodies</span><span class="p">):</span>
@@ -582,59 +626,9 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="nb">min</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">first_irregular_frequency_estimate</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">)</span></div>
 
 
-    <span class="nd">@cached_property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">mesh</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">[</span><span class="mi">1</span><span class="p">:]])</span>
-
-    <span class="nd">@cached_property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">lid_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">all</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">):</span>
-            <span class="k">return</span> <span class="kc">None</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">lid_meshes</span> <span class="o">=</span> <span class="p">[</span><span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span> <span class="k">if</span> <span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
-            <span class="n">joined_lid</span> <span class="o">=</span> <span class="n">lid_meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span><span class="o">*</span><span class="n">lid_meshes</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">_lid_mesh&quot;</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">joined_lid</span>
-
-    <span class="nd">@cached_property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">mesh_including_lid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="n">b</span><span class="o">.</span><span class="n">mesh_including_lid</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">[</span><span class="mi">1</span><span class="p">:]])</span>
-
-    <span class="nd">@cached_property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">hull_mask</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">hull_mask</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">])</span>
-
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">nb_dofs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">b</span><span class="o">.</span><span class="n">nb_dofs</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">)</span>
-
-    <span class="nd">@cached_property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">dofs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">:</span>
-            <span class="n">body</span><span class="o">.</span><span class="n">_check_dofs_shape_consistency</span><span class="p">()</span>
-
-        <span class="n">componenents_dofs</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="n">cum_nb_faces</span> <span class="o">=</span> <span class="n">accumulate</span><span class="p">(</span><span class="n">chain</span><span class="p">([</span><span class="mi">0</span><span class="p">],</span> <span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">)))</span>
-        <span class="n">total_nb_faces</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="k">for</span> <span class="n">body</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">)</span>
-        <span class="k">for</span> <span class="n">body</span><span class="p">,</span> <span class="n">nbf</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bodies</span><span class="p">,</span> <span class="n">cum_nb_faces</span><span class="p">):</span>
-            <span class="c1"># nbf is the cumulative number of faces of the previous subbodies,</span>
-            <span class="c1"># that is the offset of the indices of the faces of the current body.</span>
-            <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">AbstractDof</span><span class="p">):</span>
-                    <span class="n">new_dof</span> <span class="o">=</span> <span class="n">DofOnSubmesh</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="nb">range</span><span class="p">(</span><span class="n">nbf</span><span class="p">,</span> <span class="n">nbf</span><span class="o">+</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="n">new_dof</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">total_nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
-                    <span class="n">new_dof</span><span class="p">[</span><span class="n">nbf</span><span class="p">:</span><span class="n">nbf</span><span class="o">+</span><span class="nb">len</span><span class="p">(</span><span class="n">dof</span><span class="p">),</span> <span class="p">:]</span> <span class="o">=</span> <span class="n">dof</span>
-
-                <span class="k">if</span> <span class="s1">&#39;__&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">name</span><span class="p">:</span>
-                    <span class="n">new_dof_name</span> <span class="o">=</span> <span class="s1">&#39;__&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">body</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">name</span><span class="p">])</span>
-                <span class="k">else</span><span class="p">:</span>
-                    <span class="c1"># The body is probably a combination of bodies already.</span>
-                    <span class="c1"># So for the associativity of the + operation,</span>
-                    <span class="c1"># it is better to keep the same name.</span>
-                    <span class="n">new_dof_name</span> <span class="o">=</span> <span class="n">name</span>
-                <span class="n">componenents_dofs</span><span class="p">[</span><span class="n">new_dof_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_dof</span>
-
-        <span class="k">return</span> <span class="p">{</span><span class="o">**</span><span class="n">componenents_dofs</span><span class="p">}</span> <span class="c1">#, **self.own_dofs}</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">)</span>
 
 <div class="viewcode-block" id="Multibody.immersed_part">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.multibodies.html#capytaine.bodies.multibodies.Multibody.immersed_part">[docs]</a>
