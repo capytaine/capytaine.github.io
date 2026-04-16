@@ -531,6 +531,10 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="c1"># points is an array of shape (nb_points, 3)</span>
         <span class="c1"># output is of shape (nb_points, 3, 3)</span>
+        <span class="c1"># output is a Jacobian matrix, such that output[i_point, i_dir, i_deriv_dir]</span>
+        <span class="c1"># is the derivative with respect to `i_deriv_dir` of the `i_dir` component of the motion.</span>
+        <span class="c1"># In other words, output[:, 0, :] is the gradient of the x-component of the motion on each face and</span>
+        <span class="c1"># output[:, :, 0] is the derivative with respect to x of the motion vector on each face.</span>
         <span class="o">...</span></div>
 </div>
 
@@ -586,7 +590,9 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="RotationDof.evaluate_gradient_of_motion_at_points">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.RotationDof.evaluate_gradient_of_motion_at_points">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+        <span class="c1"># Transposing because np.cross compute the cross product row-wise,</span>
+        <span class="c1"># but we want it column-wise for the conventions of the Jacobian matrix.</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span></div>
 </div>
 
