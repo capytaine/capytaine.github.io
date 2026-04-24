@@ -477,7 +477,7 @@ window.runMermaid = runMermaid;</script>
           <div class="body" role="main">
             
   <h1>Source code for capytaine.bem.solver</h1><div class="highlight"><pre>
-<span></span><span class="c1"># Copyright (C) 2017-2024 Matthieu Ancellin</span>
+<span></span><span class="c1"># Copyright (C) 2017-2026 Matthieu Ancellin</span>
 <span class="c1"># See LICENSE file at &lt;https://github.com/capytaine/capytaine&gt;</span>
 <span class="sd">&quot;&quot;&quot;Solver for the BEM problem.</span>
 
@@ -502,6 +502,12 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.problems_and_results</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearPotentialFlowProblem</span><span class="p">,</span> <span class="n">DiffractionProblem</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.engines</span><span class="w"> </span><span class="kn">import</span> <span class="n">BasicMatrixEngine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.problems_checks</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">_check_wavelength_and_mesh_resolution</span><span class="p">,</span>
+    <span class="n">_check_wavelength_and_water_depth</span><span class="p">,</span>
+    <span class="n">_check_wavelength_and_irregular_frequencies</span><span class="p">,</span>
+    <span class="n">_check_ram</span>
+<span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">problems_from_dataset</span><span class="p">,</span> <span class="n">assemble_dataset</span><span class="p">,</span> <span class="n">kochin_data_array</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.memory_monitor</span><span class="w"> </span><span class="kn">import</span> <span class="n">MemoryMonitor</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.optional_imports</span><span class="w"> </span><span class="kn">import</span> <span class="n">silently_import_optional_dependency</span>
@@ -646,8 +652,9 @@ window.runMermaid = runMermaid;</script>
         <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Solve </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="n">problem</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">_check_wavelength</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength_and_mesh_resolution</span><span class="p">([</span><span class="n">problem</span><span class="p">])</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength_and_irregular_frequencies</span><span class="p">([</span><span class="n">problem</span><span class="p">])</span>
+            <span class="n">_check_wavelength_and_mesh_resolution</span><span class="p">([</span><span class="n">problem</span><span class="p">])</span>
+            <span class="n">_check_wavelength_and_water_depth</span><span class="p">([</span><span class="n">problem</span><span class="p">])</span>
+            <span class="n">_check_wavelength_and_irregular_frequencies</span><span class="p">([</span><span class="n">problem</span><span class="p">])</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">DiffractionProblem</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">float</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">encounter_omega</span><span class="p">)</span> <span class="ow">in</span> <span class="p">{</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">}:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Diffraction problems at zero or infinite frequency are not defined&quot;</span><span class="p">)</span>
@@ -783,10 +790,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            the solved problems</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">if</span> <span class="n">_check_wavelength</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength_and_mesh_resolution</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_check_wavelength_and_irregular_frequencies</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
+            <span class="n">_check_wavelength_and_mesh_resolution</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
+            <span class="n">_check_wavelength_and_water_depth</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
+            <span class="n">_check_wavelength_and_irregular_frequencies</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">_check_ram</span><span class="p">(</span><span class="n">problems</span><span class="p">,</span> <span class="n">n_jobs</span><span class="p">)</span>
+        <span class="n">_check_ram</span><span class="p">(</span><span class="n">problems</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="n">n_jobs</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">progress_bar</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="s2">&quot;CAPYTAINE_PROGRESS_BAR&quot;</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">:</span>
@@ -863,93 +871,6 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span>
         <span class="k">return</span> <span class="n">results</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()</span>
 
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_check_wavelength_and_mesh_resolution</span><span class="p">(</span><span class="n">problems</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Display a warning if some of the problems have a mesh resolution</span>
-<span class="sd">        that might not be sufficient for the given wavelength.&quot;&quot;&quot;</span>
-        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Check wavelength with mesh resolution.&quot;</span><span class="p">)</span>
-        <span class="n">risky_problems</span> <span class="o">=</span> <span class="p">[</span><span class="n">pb</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">problems</span>
-                          <span class="k">if</span> <span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">pb</span><span class="o">.</span><span class="n">wavelength</span> <span class="o">&lt;</span> <span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">minimal_computable_wavelength</span><span class="p">]</span>
-        <span class="n">nb_risky_problems</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">risky_problems</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">problems</span><span class="p">):</span>
-            <span class="n">mesh_str</span> <span class="o">=</span> <span class="s2">&quot;mesh or lid_mesh&quot;</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">mesh_str</span> <span class="o">=</span> <span class="s2">&quot;mesh&quot;</span>
-        <span class="k">if</span> <span class="n">nb_risky_problems</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">pb</span> <span class="o">=</span> <span class="n">risky_problems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-            <span class="n">freq_type</span> <span class="o">=</span> <span class="n">risky_problems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">provided_freq_type</span>
-            <span class="n">freq</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">freq_type</span><span class="p">)</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mesh resolution for </span><span class="si">{</span><span class="n">pb</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;The resolution of the </span><span class="si">{</span><span class="n">mesh_str</span><span class="si">}</span><span class="s2"> of body </span><span class="si">{</span><span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2"> might &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;be insufficient for </span><span class="si">{</span><span class="n">freq_type</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">freq</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;This warning appears because the largest panel of the </span><span class="si">{</span><span class="n">mesh_str</span><span class="si">}</span><span class="s2"> &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;has radius (</span><span class="si">{</span><span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> m) &gt; wavelength/8 (</span><span class="si">{</span><span class="n">pb</span><span class="o">.</span><span class="n">wavelength</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">8</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> m).&quot;</span>
-                        <span class="p">)</span>
-        <span class="k">elif</span> <span class="n">nb_risky_problems</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">freq_type</span> <span class="o">=</span> <span class="n">risky_problems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">provided_freq_type</span>
-            <span class="n">risky_freqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">freq_type</span><span class="p">))</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">risky_problems</span><span class="p">])</span>
-            <span class="n">risky_wavelengths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">pb</span><span class="o">.</span><span class="n">wavelength</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">risky_problems</span><span class="p">])</span>
-            <span class="n">max_radius</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="o">.</span><span class="n">max</span><span class="p">()</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">risky_problems</span><span class="p">)</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Mesh resolution for </span><span class="si">{</span><span class="n">nb_risky_problems</span><span class="si">}</span><span class="s2"> problems:</span><span class="se">\n</span><span class="s2">&quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;The resolution of the </span><span class="si">{</span><span class="n">mesh_str</span><span class="si">}</span><span class="s2"> might be insufficient &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;for </span><span class="si">{</span><span class="n">freq_type</span><span class="si">}</span><span class="s2"> ranging from </span><span class="si">{</span><span class="n">risky_freqs</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">risky_freqs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;This warning appears because the largest panel of the </span><span class="si">{</span><span class="n">mesh_str</span><span class="si">}</span><span class="s2"> &quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;has radius (</span><span class="si">{</span><span class="n">max_radius</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> m) &gt; wavelength/8 (</span><span class="si">{</span><span class="n">risky_wavelengths</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">8</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">risky_wavelengths</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="mi">8</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> m).&quot;</span>
-                        <span class="p">)</span>
-
-    <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_check_wavelength_and_irregular_frequencies</span><span class="p">(</span><span class="n">problems</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Display a warning if some of the problems might encounter irregular frequencies.&quot;&quot;&quot;</span>
-        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Check wavelength with estimated irregular frequency.&quot;</span><span class="p">)</span>
-        <span class="n">risky_problems</span> <span class="o">=</span> <span class="p">[</span><span class="n">pb</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">problems</span>
-                          <span class="k">if</span> <span class="n">pb</span><span class="o">.</span><span class="n">free_surface</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span>
-                          <span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">first_irregular_frequency_estimate</span><span class="p">(</span><span class="n">g</span><span class="o">=</span><span class="n">pb</span><span class="o">.</span><span class="n">g</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">pb</span><span class="o">.</span><span class="n">omega</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">]</span>
-        <span class="n">nb_risky_problems</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">risky_problems</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">nb_risky_problems</span> <span class="o">&gt;=</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">problems</span><span class="p">):</span>
-                <span class="n">recommendation</span> <span class="o">=</span> <span class="s2">&quot;Setting a lid for the floating body is recommended.&quot;</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">recommendation</span> <span class="o">=</span> <span class="s2">&quot;The lid might need to be closer to the free surface.&quot;</span>
-            <span class="k">if</span> <span class="n">nb_risky_problems</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">pb</span> <span class="o">=</span> <span class="n">risky_problems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-                <span class="n">freq_type</span> <span class="o">=</span> <span class="n">risky_problems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">provided_freq_type</span>
-                <span class="n">freq</span> <span class="o">=</span> <span class="n">pb</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">freq_type</span><span class="p">)</span>
-                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Irregular frequencies for </span><span class="si">{</span><span class="n">pb</span><span class="si">}</span><span class="s2">:</span><span class="se">\n</span><span class="s2">&quot;</span>
-                            <span class="sa">f</span><span class="s2">&quot;The body </span><span class="si">{</span><span class="n">pb</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2"> might display irregular frequencies &quot;</span>
-                            <span class="sa">f</span><span class="s2">&quot;for </span><span class="si">{</span><span class="n">freq_type</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">freq</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                            <span class="o">+</span> <span class="n">recommendation</span>
-                            <span class="p">)</span>
-            <span class="k">elif</span> <span class="n">nb_risky_problems</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">freq_type</span> <span class="o">=</span> <span class="n">risky_problems</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">provided_freq_type</span>
-                <span class="n">freqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">float</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="fm">__getattribute__</span><span class="p">(</span><span class="n">freq_type</span><span class="p">))</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">risky_problems</span><span class="p">])</span>
-                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Irregular frequencies for </span><span class="si">{</span><span class="n">nb_risky_problems</span><span class="si">}</span><span class="s2"> problems:</span><span class="se">\n</span><span class="s2">&quot;</span>
-                            <span class="s2">&quot;Irregular frequencies might be encountered &quot;</span>
-                            <span class="sa">f</span><span class="s2">&quot;for </span><span class="si">{</span><span class="n">freq_type</span><span class="si">}</span><span class="s2"> ranging from </span><span class="si">{</span><span class="n">freqs</span><span class="o">.</span><span class="n">min</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">freqs</span><span class="o">.</span><span class="n">max</span><span class="p">()</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                            <span class="o">+</span> <span class="n">recommendation</span>
-                            <span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_check_ram</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">problems</span><span class="p">,</span> <span class="n">n_jobs</span> <span class="o">=</span> <span class="mi">1</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Display a warning if the RAM estimation is larger than a certain limit.&quot;&quot;&quot;</span>
-        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Check RAM estimation.&quot;</span><span class="p">)</span>
-        <span class="n">psutil</span> <span class="o">=</span> <span class="n">silently_import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;psutil&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">psutil</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">ram_limit</span> <span class="o">=</span> <span class="mi">8</span>
-        <span class="k">else</span> <span class="p">:</span>
-            <span class="n">ram_limit</span> <span class="o">=</span> <span class="n">psutil</span><span class="o">.</span><span class="n">virtual_memory</span><span class="p">()</span><span class="o">.</span><span class="n">total</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1024</span><span class="o">**</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="mf">0.3</span>
-
-        <span class="k">if</span> <span class="n">n_jobs</span> <span class="o">==</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">n_jobs</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()</span>
-
-        <span class="n">estimated_peak_memory</span> <span class="o">=</span> <span class="n">n_jobs</span><span class="o">*</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">compute_ram_estimation</span><span class="p">(</span><span class="n">pb</span><span class="p">)</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">problems</span><span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">estimated_peak_memory</span> <span class="o">&lt;</span> <span class="mf">0.5</span><span class="p">:</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Estimated peak RAM usage: &lt;1 GB.&quot;</span><span class="p">)</span>
-
-        <span class="k">elif</span> <span class="n">estimated_peak_memory</span> <span class="o">&lt;</span> <span class="n">ram_limit</span><span class="p">:</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Estimated peak RAM usage: </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">estimated_peak_memory</span><span class="p">))</span><span class="si">}</span><span class="s2"> GB.&quot;</span><span class="p">)</span>
-
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Estimated peak RAM usage: </span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">estimated_peak_memory</span><span class="p">))</span><span class="si">}</span><span class="s2"> GB.&quot;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="BEMSolver.fill_dataset">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset">[docs]</a>
