@@ -497,7 +497,6 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">memory_buffer</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">psutil</span> <span class="o">=</span> <span class="n">silently_import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;psutil&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
 
 <div class="viewcode-block" id="MemoryMonitor.get_memory">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.memory_monitor.html#capytaine.tools.memory_monitor.MemoryMonitor.get_memory">[docs]</a>
@@ -526,13 +525,23 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="MemoryMonitor.get_memory_peak">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.memory_monitor.html#capytaine.tools.memory_monitor.MemoryMonitor.get_memory_peak">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_memory_peak</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="o">=</span> <span class="kc">True</span> 
+        <span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">join</span><span class="p">()</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">psutil</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">round</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">memory_buffer</span><span class="p">)</span> <span class="o">/</span> <span class="mf">1e9</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span></div>
-</div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
+        <span class="n">memory_peak</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_memory_peak</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">memory_peak</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Actual peak RAM usage: Not measured since optional dependency `psutil` cannot be found.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Actual peak RAM usage: </span><span class="si">{</span><span class="n">memory_peak</span><span class="si">}</span><span class="s2"> GB.&quot;</span><span class="p">)</span></div>
 
 </pre></div>
 
