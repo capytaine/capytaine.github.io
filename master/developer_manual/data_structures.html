@@ -57,6 +57,9 @@ The ordering in the array should be consistent for all fields defined on this me
 <p>A reflection symmetric mesh is stored as two halves.
 An array storing a data field on the mesh is organised such that the first half of the array is the reference half of the mesh and the second half of the array is the reflected half of the mesh.
 Taking advantage of the symmetries in the resolution requires the matrices to have a block circulant structure that would be too inconvenient to implement if the reference faces and the symmetric faces were ordered in a different way.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">|</span>  <span class="n">half</span> <span class="mi">1</span>    <span class="o">|</span>   <span class="n">half</span> <span class="mi">2</span>   <span class="o">|</span>
+</pre></div>
+</div>
 </section>
 <section id="body-with-lid">
 <h2>Body with lid<a class="headerlink" href="#body-with-lid" title="Link to this heading">¶</a></h2>
@@ -66,24 +69,83 @@ Taking advantage of the symmetries in the resolution requires the matrices to ha
 <li><p>the input Neumann boundary condition of the LinearPotentialFlowProblem, as well as the source and potential outputs fields are defined on the hull and the lid</p></li>
 </ul>
 <p>In general, the lid are the last panels of the boundary condition, but this will not be the case in the following more complicated cases, so to access only the panels on the hull, the attribute <code class="docutils literal notranslate"><span class="pre">hull_masks</span></code>, stored as a boolean array, should be used.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>           <span class="o">|</span>  <span class="n">hull</span>      <span class="o">|</span>  <span class="n">lid</span>  <span class="o">|</span>
+<span class="n">dof</span><span class="p">:</span>       <span class="o">|------------|</span>
+<span class="n">bc</span><span class="p">:</span>        <span class="o">|--------------------|</span>
+
+<span class="n">hull_mask</span><span class="p">:</span> <span class="o">|</span><span class="n">TTTTTTTTTTTTTFFFFFFF</span><span class="o">|</span>
+</pre></div>
+</div>
 </section>
 <section id="body-with-lid-and-symmetry">
 <h2>Body with lid and symmetry<a class="headerlink" href="#body-with-lid-and-symmetry" title="Link to this heading">¶</a></h2>
 <p>For a single body with a lid and symmetry, the last panels are always the symmetric part, so the data about the lid panels are distributed in the array:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>           <span class="o">|</span>  <span class="n">hull</span>      <span class="o">|</span>   <span class="n">lid</span>   <span class="o">|</span>  <span class="n">sym</span> <span class="n">hull</span>  <span class="o">|</span> <span class="n">sym</span> <span class="n">lid</span> <span class="o">|</span>
+<span class="n">dof</span><span class="p">:</span>       <span class="o">|------------|</span>         <span class="o">|------------|</span>
+<span class="n">bc</span><span class="p">:</span>        <span class="o">|---------------------------------------------|</span>
+
+<span class="n">hull_mask</span><span class="p">:</span> <span class="o">|</span><span class="n">TTTTTTTTTTTTTFFFFFFFFFTTTTTTTTTTTTTTFFFFFFFFF</span><span class="o">|</span>
+</pre></div>
+</div>
 </section>
 <section id="multibody">
 <h2>Multibody<a class="headerlink" href="#multibody" title="Link to this heading">¶</a></h2>
 <p>For multibodies, the dofs in <code class="docutils literal notranslate"><span class="pre">Multibody.dofs</span></code> are stored in arrays of the length of the total number of panels of the mesh of all bodies, possibly using the <code class="docutils literal notranslate"><span class="pre">DofOnSubmesh</span></code> class.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>           <span class="o">|</span>  <span class="n">hull</span> <span class="mi">1</span>    <span class="o">|</span>   <span class="n">hull2</span>    <span class="o">|</span>
+<span class="n">dof</span> <span class="n">body</span> <span class="mi">1</span><span class="p">:</span><span class="o">|------------|</span>            <span class="o">|</span>
+<span class="n">dof</span> <span class="n">body</span> <span class="mi">2</span><span class="p">:</span>             <span class="o">|------------|</span>
+<span class="n">dof</span><span class="p">:</span>       <span class="o">|-------------------------|</span>
+<span class="n">bodymask</span> <span class="mi">1</span><span class="p">:</span><span class="o">|</span><span class="n">TTTTTTTTTTTTTFFFFFFFFFFFF</span><span class="o">|</span>
+<span class="n">bodymask</span> <span class="mi">2</span><span class="p">:</span><span class="o">|</span><span class="n">FFFFFFFFFFFFFTTTTTTTTTTTT</span><span class="o">|</span>
+
+<span class="n">bc</span><span class="p">:</span>        <span class="o">|-------------------------|</span>
+</pre></div>
+</div>
 </section>
 <section id="multibody-with-symmetry">
 <h2>Multibody with symmetry<a class="headerlink" href="#multibody-with-symmetry" title="Link to this heading">¶</a></h2>
 <p>For multiple bodies composed of symmetric bodies</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>           <span class="o">|</span>  <span class="n">hull</span> <span class="mi">1</span>    <span class="o">|</span>   <span class="n">hull2</span>    <span class="o">|</span> <span class="n">sym</span> <span class="n">hull</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">sym</span> <span class="n">hull</span> <span class="mi">2</span> <span class="o">|</span>
+<span class="n">dof</span> <span class="n">body</span> <span class="mi">1</span><span class="p">:</span><span class="o">|------------|</span>            <span class="o">|------------|</span>
+<span class="n">dof</span> <span class="n">body</span> <span class="mi">2</span><span class="p">:</span>             <span class="o">|------------|</span>            <span class="o">|------------|</span>
+<span class="n">dof</span><span class="p">:</span>       <span class="o">|---------------------------------------------------|</span>
+<span class="n">bodymask</span> <span class="mi">1</span><span class="p">:</span><span class="o">|</span><span class="n">TTTTTTTTTTTTTFFFFFFFFFFFFFTTTTTTTTTTTTFFFFFFFFFFFFF</span><span class="o">|</span>
+<span class="n">bodymask</span> <span class="mi">2</span><span class="p">:</span><span class="o">|</span><span class="n">FFFFFFFFFFFFFTTTTTTTTTTTTFFFFFFFFFFFFFTTTTTTTTTTTTT</span><span class="o">|</span>
+
+<span class="n">bc</span><span class="p">:</span>        <span class="o">|---------------------------------------------------|</span>
+</pre></div>
+</div>
 </section>
 <section id="multibody-with-lid">
 <h2>Multibody with lid<a class="headerlink" href="#multibody-with-lid" title="Link to this heading">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>              <span class="o">|</span>  <span class="n">hull</span> <span class="mi">1</span>    <span class="o">|</span>  <span class="n">lid</span> <span class="mi">1</span> <span class="o">|</span>  <span class="n">hull2</span>    <span class="o">|</span> <span class="n">lid</span> <span class="mi">2</span> <span class="o">|</span>
+   <span class="n">dof</span> <span class="n">body</span> <span class="mi">1</span><span class="p">:</span><span class="o">|------------|</span>
+   <span class="n">dof</span> <span class="n">body</span> <span class="mi">2</span><span class="p">:</span>                      <span class="o">|-----------|</span>
+   <span class="n">dof</span><span class="p">:</span>       <span class="o">|------------|</span>        <span class="o">|-----------|</span>
+   <span class="n">bodymask</span> <span class="mi">1</span><span class="p">:</span><span class="o">|</span><span class="n">TTTTTTTTTTTT</span><span class="o">|</span>        <span class="o">|</span><span class="n">FFFFFFFFFFF</span><span class="o">|</span>
+   <span class="n">bodymask</span> <span class="mi">2</span><span class="p">:</span><span class="o">|</span><span class="n">FFFFFFFFFFFF</span><span class="o">|</span>        <span class="o">|</span><span class="n">TTTTTTTTTTT</span><span class="o">|</span>
+
+   <span class="n">bc</span><span class="p">:</span>        <span class="o">|-----------------------------------------|</span>
+   <span class="n">hull_mask</span><span class="p">:</span> <span class="o">|</span><span class="n">TTTTTTTTTTTTTFFFFFFFFTTTTTTTTTTTTTFFFFFFF</span><span class="o">|</span>
+
+
+<span class="n">The</span> <span class="n">body</span> <span class="kn">from</span><span class="w"> </span><span class="nn">which</span> <span class="n">each</span> <span class="n">lid</span> <span class="n">face</span> <span class="n">originates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">tracked</span><span class="p">,</span> <span class="k">as</span> <span class="n">there</span> <span class="ow">is</span> <span class="n">no</span> <span class="n">use</span> <span class="k">for</span> <span class="n">it</span><span class="o">.</span>
+</pre></div>
+</div>
 </section>
 <section id="multibody-with-lid-and-symmetry">
 <h2>Multibody with lid and symmetry<a class="headerlink" href="#multibody-with-lid-and-symmetry" title="Link to this heading">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>           <span class="o">|</span>  <span class="n">hull</span> <span class="mi">1</span>    <span class="o">|</span> <span class="n">hull</span> <span class="mi">2</span>     <span class="o">|</span> <span class="n">lid</span> <span class="mi">1</span>     <span class="o">|</span> <span class="n">lid</span> <span class="mi">2</span>     <span class="o">|</span> <span class="n">sym</span> <span class="n">hull</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">sym</span> <span class="n">hull</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">sym</span> <span class="n">lid</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">sym</span> <span class="n">lid</span> <span class="mi">2</span> <span class="o">|</span>
+<span class="n">dof</span> <span class="n">body</span> <span class="mi">1</span><span class="p">:</span><span class="o">|------------|</span>                                    <span class="o">|------------|</span>
+<span class="n">dof</span> <span class="n">body</span> <span class="mi">2</span><span class="p">:</span>             <span class="o">|------------|</span>                                    <span class="o">|------------|</span>
+<span class="n">dof</span><span class="p">:</span>       <span class="o">|-------------------------|</span>                       <span class="o">|-------------------------|</span>
+<span class="n">bodymask</span> <span class="mi">1</span><span class="p">:</span><span class="o">|</span><span class="n">TTTTTTTTTTTTFFFFFFFFFFFFF</span><span class="o">|</span>                       <span class="o">|</span><span class="n">TTTTTTTTTTTTFFFFFFFFFFFFF</span><span class="o">|</span>
+<span class="n">bodymask</span> <span class="mi">1</span><span class="p">:</span><span class="o">|</span><span class="n">FFFFFFFFFFFFTTTTTTTTTTTTT</span><span class="o">|</span>                       <span class="o">|</span><span class="n">FFFFFFFFFFFFTTTTTTTTTTTTT</span><span class="o">|</span>
+
+<span class="n">bc</span><span class="p">:</span>        <span class="o">|---------------------------------------------------------------------------------------------------|</span>
+<span class="n">hull_mask</span><span class="p">:</span> <span class="o">|</span><span class="n">TTTTTTTTTTTTTTTTTTTTTTTTTFFFFFFFFFFFFFFFFFFFFFFFFTTTTTTTTTTTTTTTTTTTTTTTTTTTFFFFFFFFFFFFFFFFFFFFFFF</span><span class="o">|</span>
+</pre></div>
+</div>
 </section>
 </section>
 
@@ -171,7 +233,7 @@ Taking advantage of the symmetries in the resolution requires the matrices to ha
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &#169;2024, Matthieu Ancellin.
+      &#169;2026, Capytaine developpers.
       
       |
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>

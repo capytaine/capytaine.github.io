@@ -519,214 +519,252 @@ window.runMermaid = runMermaid;</script>
                 <span class="k">return</span> <span class="n">backends_functions</span><span class="p">[</span><span class="n">backend</span><span class="p">](</span><span class="n">mesh</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">except</span> <span class="p">(</span><span class="ne">NotImplementedError</span><span class="p">,</span> <span class="ne">ImportError</span><span class="p">):</span>
                 <span class="k">pass</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No compatible backend found to show the mesh </span><span class="si">{</span><span class="n">mesh</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                                      <span class="s2">&quot;Consider installing `matplotlib` or `pyvista`.&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No compatible backend found to show the mesh </span><span class="si">{</span><span class="n">mesh</span><span class="si">}</span><span class="s2">.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                                  <span class="s2">&quot;Consider installing `matplotlib` or `pyvista`.&quot;</span><span class="p">)</span></div>
 
 
 
 <div class="viewcode-block" id="show_pyvista">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.visualization.html#capytaine.meshes.visualization.show_pyvista">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">show_pyvista</span><span class="p">(</span>
-    <span class="n">mesh</span><span class="p">,</span>
-    <span class="o">*</span><span class="p">,</span>
-    <span class="n">ghost_meshes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">plotter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">normal_vectors</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">display_free_surface</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
-    <span class="n">color_field</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-    <span class="n">cbar_label</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">kwargs</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;pv.Plotter&quot;</span><span class="p">]:</span>  <span class="c1"># noqa: F821</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Visualize the mesh using PyVista.</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">show_pyvista</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="s2">&quot;pv.Plotter&quot;</span><span class="p">]:</span>  <span class="c1"># noqa: F821</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Visualize the mesh using PyVista. See :class:`PyVistaViewer` for parameters.&quot;&quot;&quot;</span>
+    <span class="n">viewer</span> <span class="o">=</span> <span class="n">PyVistaViewer</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">viewer</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
 
-<span class="sd">    PyVista default keyboards controls: https://docs.pyvista.org/api/plotting/plotting</span>
+
+
+<div class="viewcode-block" id="PyVistaViewer">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.visualization.html#capytaine.meshes.visualization.PyVistaViewer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">PyVistaViewer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Interactive PyVista mesh viewer with toggleable features.</span>
+
+<span class="sd">    PyVista default keyboard controls: https://docs.pyvista.org/api/plotting/plotting</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    mesh : Mesh</span>
 <span class="sd">        The mesh object to visualize.</span>
 <span class="sd">    ghost_meshes: List[Mesh], optional</span>
-<span class="sd">        Additional meshes, shown in transparency</span>
+<span class="sd">        Additional meshes, shown in transparency, used for symmetric meshes</span>
 <span class="sd">    plotter: pv.Plotter, optional</span>
 <span class="sd">        If provided, use this PyVista plotter and return it at the end.</span>
 <span class="sd">        Otherwise a new one is created and the 3D view is displayed at the end.</span>
 <span class="sd">    normal_vectors: bool, optional</span>
-<span class="sd">        If True, display normal vector (default: True)</span>
+<span class="sd">        If True, display normal vector (default: False)</span>
 <span class="sd">    display_free_surface: bool, optional</span>
-<span class="sd">        If True, display free surface and if `water_depth` is finite display the sea bottom.</span>
+<span class="sd">        If True, display free surface and if ``water_depth`` is finite display the sea bottom.</span>
 <span class="sd">        (default: True)</span>
 <span class="sd">    water_depth: float, optional</span>
-<span class="sd">        Where to display the sea bottom if `display_free_surface` is True</span>
+<span class="sd">        Where to display the sea bottom if ``display_free_surface`` is True</span>
 <span class="sd">    color_field: array of shape (nb_faces, ), optional</span>
 <span class="sd">        Scalar field to be plot on the mesh.</span>
 <span class="sd">    cmap: matplotlib colormap, optional</span>
 <span class="sd">        Colormap to use for scalar field plotting.</span>
 <span class="sd">    cbar_label: string, optional</span>
-<span class="sd">        Label for colorbar show color field scale</span>
-<span class="sd">    kwargs : additional optional arguments</span>
+<span class="sd">        Label for colorbar showing color field scale</span>
+<span class="sd">    mesh_kwargs : additional optional arguments</span>
 <span class="sd">        Additional arguments passed to PyVista&#39;s add_mesh methods for customization (e.g. mesh color).</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="n">pv</span> <span class="o">=</span> <span class="n">import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;pyvista&quot;</span><span class="p">)</span>
 
-    <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mesh</span>  <span class="c1"># Just for the typehint below</span>
-    <span class="n">all_meshes_in_scene</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">Mesh</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">mesh</span><span class="p">]</span> <span class="k">if</span> <span class="n">ghost_meshes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="n">mesh</span><span class="p">,</span> <span class="o">*</span><span class="n">ghost_meshes</span><span class="p">]</span>
-    <span class="n">pv_meshes</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">export_to_pyvista</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">all_meshes_in_scene</span><span class="p">]</span>
+    <span class="n">help_text</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="sa">f</span><span class="s2">&quot;Capytaine version </span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Keyboard controls:&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;  b: toggle scale and bounding box&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;  h: toggle free surface (and sea bottom if water depth was given)&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;  n: toggle normal vectors&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;  T,B,P,S,F,R: view [T]op, [B]ottom, [P]ort, [S]tarboard, [F]ront, [R]ear&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;  X, Y: toggle displaying clipped mesh in x or y direction&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;  q: exit&quot;</span>
+    <span class="p">]</span>
 
-    <span class="k">if</span> <span class="n">color_field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">color_field</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-        <span class="n">acc_faces</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="c1"># Split the content of color_fields into the meshes in the scene</span>
-        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">pv_meshes</span><span class="p">:</span>
-            <span class="n">m</span><span class="o">.</span><span class="n">cell_data</span><span class="p">[</span><span class="s2">&quot;color_field&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">color_field</span><span class="p">[</span><span class="n">acc_faces</span><span class="p">:</span><span class="n">acc_faces</span><span class="o">+</span><span class="n">m</span><span class="o">.</span><span class="n">n_cells</span><span class="p">]</span>
-            <span class="n">acc_faces</span> <span class="o">=</span> <span class="n">acc_faces</span> <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">n_cells</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">mesh</span><span class="p">,</span>
+        <span class="o">*</span><span class="p">,</span>
+        <span class="n">ghost_meshes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">plotter</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">normal_vectors</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">display_free_surface</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span>
+        <span class="n">color_field</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">cbar_label</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">mesh_kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="n">pv</span> <span class="o">=</span> <span class="n">import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;pyvista&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="n">plotter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">default_plotter</span> <span class="o">=</span> <span class="kc">True</span>
-        <span class="n">plotter</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Plotter</span><span class="p">()</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="n">default_plotter</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">all_meshes</span> <span class="o">=</span> <span class="p">[</span><span class="n">mesh</span><span class="p">]</span> <span class="k">if</span> <span class="n">ghost_meshes</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="p">[</span><span class="n">mesh</span><span class="p">,</span> <span class="o">*</span><span class="n">ghost_meshes</span><span class="p">]</span>
 
-    <span class="k">if</span> <span class="n">color_field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;scalars&quot;</span><span class="p">,</span> <span class="s2">&quot;color_field&quot;</span><span class="p">)</span>
-    <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;scalar_bar_args&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">cbar_label</span><span class="p">})</span>
-    <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">pv_meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;hull&quot;</span><span class="p">,</span> <span class="n">show_edges</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">mesh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">water_depth</span> <span class="o">=</span> <span class="n">water_depth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mesh_kwargs</span> <span class="o">=</span> <span class="n">mesh_kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pv_meshes</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">export_to_pyvista</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">all_meshes</span><span class="p">]</span>
 
-    <span class="k">for</span> <span class="n">i_ghost</span><span class="p">,</span> <span class="n">g_mesh</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">pv_meshes</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
-        <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span>
-                <span class="n">g_mesh</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;symmetric_hull_</span><span class="si">{</span><span class="n">i_ghost</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-                <span class="n">opacity</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span>
-                <span class="n">show_edges</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                <span class="o">**</span><span class="n">kwargs</span>
-                <span class="p">)</span>
+        <span class="c1"># Distribute color field across sub-meshes</span>
+        <span class="k">if</span> <span class="n">color_field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">color_field</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">acc</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">pv_meshes</span><span class="p">:</span>
+                <span class="n">m</span><span class="o">.</span><span class="n">cell_data</span><span class="p">[</span><span class="s2">&quot;color_field&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">color_field</span><span class="p">[</span><span class="n">acc</span><span class="p">:</span><span class="n">acc</span> <span class="o">+</span> <span class="n">m</span><span class="o">.</span><span class="n">n_cells</span><span class="p">]</span>
+                <span class="n">acc</span> <span class="o">+=</span> <span class="n">m</span><span class="o">.</span><span class="n">n_cells</span>
 
-    <span class="c1"># NORMALS</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">show_normals</span><span class="p">():</span>
-        <span class="n">mini</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
-        <span class="n">maxi</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
-        <span class="n">plotter</span><span class="o">.</span><span class="n">add_arrows</span><span class="p">(</span>
-            <span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span>
-            <span class="n">mesh</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">,</span>
-            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;normals&quot;</span><span class="p">,</span>
-            <span class="n">mag</span><span class="o">=</span><span class="mf">0.04</span><span class="o">*</span><span class="p">(</span><span class="n">maxi</span><span class="o">-</span><span class="n">mini</span><span class="p">),</span>
-            <span class="n">show_scalar_bar</span><span class="o">=</span><span class="kc">False</span>
+        <span class="c1"># Plotter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_owns_plotter</span> <span class="o">=</span> <span class="n">plotter</span> <span class="ow">is</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Plotter</span><span class="p">()</span> <span class="k">if</span> <span class="n">plotter</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">plotter</span>
+
+        <span class="c1"># Scene extents</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scene_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">all_meshes</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_scene_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">all_meshes</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+        <span class="c1"># Build scene</span>
+        <span class="k">if</span> <span class="n">color_field</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh_kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;scalars&quot;</span><span class="p">,</span> <span class="s2">&quot;color_field&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cbar_label</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh_kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">&quot;scalar_bar_args&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">cbar_label</span><span class="p">})</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">pv_meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;hull&quot;</span><span class="p">,</span> <span class="n">show_edges</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh_kwargs</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">g_mesh</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pv_meshes</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span>
+                <span class="n">g_mesh</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;symmetric_hull_</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">opacity</span><span class="o">=</span><span class="mf">0.4</span><span class="p">,</span> <span class="n">show_edges</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh_kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Toggle states</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_normals_visible</span> <span class="o">=</span> <span class="n">normal_vectors</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normals_visible</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_show_normals</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_free_surface_visible</span> <span class="o">=</span> <span class="n">display_free_surface</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_free_surface_visible</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_show_free_surface</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bounds_visible</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounds_visible</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_show_bounds</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clipping</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;n&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_normals</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;h&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_free_surface</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_bounds</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">view_xy</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">view_xy</span><span class="p">(</span><span class="n">negative</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;S&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">view_xz</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;P&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">view_xz</span><span class="p">(</span><span class="n">negative</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">view_yz</span><span class="p">)</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">p</span><span class="o">.</span><span class="n">view_yz</span><span class="p">(</span><span class="n">negative</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_clipping</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">))</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">toggle_clipping</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">help_text</span><span class="p">),</span> <span class="n">position</span><span class="o">=</span><span class="s2">&quot;upper_left&quot;</span><span class="p">,</span> <span class="n">font_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">show_axes</span><span class="p">()</span>
+
+    <span class="c1"># -- Normal vectors --</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_show_normals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">mini</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">maxi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">add_arrows</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">,</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">&quot;normals&quot;</span><span class="p">,</span> <span class="n">mag</span><span class="o">=</span><span class="mf">0.04</span> <span class="o">*</span> <span class="p">(</span><span class="n">maxi</span> <span class="o">-</span> <span class="n">mini</span><span class="p">),</span> <span class="n">show_scalar_bar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
         <span class="p">)</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">toggle_normals</span><span class="p">():</span>
-        <span class="k">nonlocal</span> <span class="n">normal_vectors</span>
-        <span class="k">if</span> <span class="n">normal_vectors</span><span class="p">:</span>
-            <span class="n">normal_vectors</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="n">plotter</span><span class="o">.</span><span class="n">remove_actor</span><span class="p">(</span><span class="s1">&#39;normals&#39;</span><span class="p">)</span>
+<div class="viewcode-block" id="PyVistaViewer.toggle_normals">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.visualization.html#capytaine.meshes.visualization.PyVistaViewer.toggle_normals">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">toggle_normals</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_normals_visible</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">remove_actor</span><span class="p">(</span><span class="s2">&quot;normals&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_normals_visible</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">normal_vectors</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">show_normals</span><span class="p">()</span>
-
-    <span class="k">if</span> <span class="n">normal_vectors</span><span class="p">:</span>
-        <span class="n">show_normals</span><span class="p">()</span>
-    <span class="n">plotter</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;n&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="p">:</span> <span class="n">toggle_normals</span><span class="p">())</span>
-
-    <span class="n">scene_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">all_meshes_in_scene</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-    <span class="n">scene_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">([</span><span class="n">m</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="p">:]</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">all_meshes_in_scene</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
-
-    <span class="c1"># FREE SURFACE</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">show_free_surface</span><span class="p">():</span>
-        <span class="n">center</span> <span class="o">=</span> <span class="p">(</span><span class="n">scene_min</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="n">scene_max</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
-        <span class="n">diam</span> <span class="o">=</span> <span class="mf">1.1</span><span class="o">*</span><span class="p">(</span><span class="n">scene_max</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">scene_min</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
-        <span class="n">plane</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Plane</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="n">center</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">direction</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">i_size</span><span class="o">=</span><span class="n">diam</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j_size</span><span class="o">=</span><span class="n">diam</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-        <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">plane</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;display_free_surface&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">water_depth</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
-            <span class="n">plane</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Plane</span><span class="p">(</span><span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="n">center</span><span class="p">,</span> <span class="o">-</span><span class="n">water_depth</span><span class="p">),</span> <span class="n">direction</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">i_size</span><span class="o">=</span><span class="n">diam</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j_size</span><span class="o">=</span><span class="n">diam</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
-            <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">plane</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;brown&quot;</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;display_sea_bottom&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_show_normals</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_normals_visible</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 
-    <span class="k">def</span><span class="w"> </span><span class="nf">toggle_free_surface</span><span class="p">():</span>
-        <span class="k">nonlocal</span> <span class="n">display_free_surface</span>
-        <span class="k">if</span> <span class="n">display_free_surface</span><span class="p">:</span>
-            <span class="n">display_free_surface</span> <span class="o">=</span> <span class="kc">False</span>
-            <span class="n">plotter</span><span class="o">.</span><span class="n">remove_actor</span><span class="p">(</span><span class="s1">&#39;display_free_surface&#39;</span><span class="p">)</span>
-            <span class="k">if</span> <span class="n">water_depth</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
-                <span class="n">plotter</span><span class="o">.</span><span class="n">remove_actor</span><span class="p">(</span><span class="s1">&#39;display_sea_bottom&#39;</span><span class="p">)</span>
+    <span class="c1"># -- Free surface --</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_show_free_surface</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">pv</span> <span class="o">=</span> <span class="n">import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;pyvista&quot;</span><span class="p">)</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scene_min</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scene_max</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span>
+        <span class="n">diam</span> <span class="o">=</span> <span class="mf">1.1</span> <span class="o">*</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_scene_max</span><span class="p">[:</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scene_min</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">plane</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Plane</span><span class="p">(</span>
+            <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="n">center</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">direction</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+            <span class="n">i_size</span><span class="o">=</span><span class="n">diam</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j_size</span><span class="o">=</span><span class="n">diam</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">plane</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;display_free_surface&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_depth</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="n">plane</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Plane</span><span class="p">(</span>
+                <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="o">*</span><span class="n">center</span><span class="p">,</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">water_depth</span><span class="p">),</span> <span class="n">direction</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span>
+                <span class="n">i_size</span><span class="o">=</span><span class="n">diam</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j_size</span><span class="o">=</span><span class="n">diam</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">plane</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;brown&quot;</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;display_sea_bottom&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="PyVistaViewer.toggle_free_surface">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.visualization.html#capytaine.meshes.visualization.PyVistaViewer.toggle_free_surface">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">toggle_free_surface</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_free_surface_visible</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">remove_actor</span><span class="p">(</span><span class="s2">&quot;display_free_surface&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">water_depth</span> <span class="o">!=</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">remove_actor</span><span class="p">(</span><span class="s2">&quot;display_sea_bottom&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_free_surface_visible</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">display_free_surface</span> <span class="o">=</span> <span class="kc">True</span>
-            <span class="n">show_free_surface</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_show_free_surface</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_free_surface_visible</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-    <span class="k">if</span> <span class="n">display_free_surface</span><span class="p">:</span>
-        <span class="n">show_free_surface</span><span class="p">()</span>
 
-    <span class="n">plotter</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;h&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="p">:</span> <span class="n">toggle_free_surface</span><span class="p">())</span>
+    <span class="c1"># -- Bounds --</span>
 
-    <span class="c1"># BOUNDS</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">show_bounds</span><span class="p">():</span>
-        <span class="n">plotter</span><span class="o">.</span><span class="n">show_bounds</span><span class="p">(</span><span class="n">grid</span><span class="o">=</span><span class="s1">&#39;back&#39;</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="s1">&#39;outer&#39;</span><span class="p">,</span> <span class="n">n_xlabels</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_ylabels</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_zlabels</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_show_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">show_bounds</span><span class="p">(</span>
+            <span class="n">grid</span><span class="o">=</span><span class="s2">&quot;back&quot;</span><span class="p">,</span> <span class="n">location</span><span class="o">=</span><span class="s2">&quot;outer&quot;</span><span class="p">,</span> <span class="n">n_xlabels</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_ylabels</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">n_zlabels</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+        <span class="p">)</span>
 
-    <span class="n">bounds</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">show_bounds</span><span class="p">()</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">toggle_bounds</span><span class="p">():</span>
-        <span class="k">nonlocal</span> <span class="n">bounds</span>
-        <span class="k">if</span> <span class="n">bounds</span><span class="p">:</span>
-            <span class="n">plotter</span><span class="o">.</span><span class="n">remove_bounds_axes</span><span class="p">()</span>
-            <span class="n">bounds</span> <span class="o">=</span> <span class="kc">False</span>
+<div class="viewcode-block" id="PyVistaViewer.toggle_bounds">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.visualization.html#capytaine.meshes.visualization.PyVistaViewer.toggle_bounds">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">toggle_bounds</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bounds_visible</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">remove_bounds_axes</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bounds_visible</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">show_bounds</span><span class="p">()</span>
-            <span class="n">plotter</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
-            <span class="n">bounds</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_show_bounds</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">update</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_bounds_visible</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 
-    <span class="n">plotter</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;b&quot;</span><span class="p">,</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">toggle_bounds</span><span class="p">())</span>
+    <span class="c1"># -- Clipping --</span>
 
-    <span class="n">plotter</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="p">:</span> <span class="n">plotter</span><span class="o">.</span><span class="n">view_xy</span><span class="p">())</span>
-    <span class="n">plotter</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;B&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="p">:</span> <span class="n">plotter</span><span class="o">.</span><span class="n">view_xy</span><span class="p">(</span><span class="n">negative</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-    <span class="n">plotter</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;S&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="p">:</span> <span class="n">plotter</span><span class="o">.</span><span class="n">view_xz</span><span class="p">())</span>
-    <span class="n">plotter</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;P&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="p">:</span> <span class="n">plotter</span><span class="o">.</span><span class="n">view_xz</span><span class="p">(</span><span class="n">negative</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
-    <span class="n">plotter</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;F&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="p">:</span> <span class="n">plotter</span><span class="o">.</span><span class="n">view_yz</span><span class="p">())</span>
-    <span class="n">plotter</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;R&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="p">:</span> <span class="n">plotter</span><span class="o">.</span><span class="n">view_yz</span><span class="p">(</span><span class="n">negative</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_clipped_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">result</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pv_meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">axis</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;x&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clipping</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">axis</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clipping</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="n">axis</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">result</span>
 
-    <span class="n">view_clipping</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>  <span class="c1"># 0 = no clipping, +1 clipping one side, -1 clipping other side</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">clipped_mesh</span><span class="p">():</span>
-        <span class="k">nonlocal</span> <span class="n">view_clipping</span>
-        <span class="n">clipped_pv_mesh</span> <span class="o">=</span> <span class="n">pv_meshes</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="k">for</span> <span class="nb">dir</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">]:</span>
-            <span class="k">if</span> <span class="n">view_clipping</span><span class="p">[</span><span class="nb">dir</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">clipped_pv_mesh</span> <span class="o">=</span> <span class="n">clipped_pv_mesh</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="nb">dir</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="n">view_clipping</span><span class="p">[</span><span class="nb">dir</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
-                <span class="n">clipped_pv_mesh</span> <span class="o">=</span> <span class="n">clipped_pv_mesh</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="s2">&quot;-&quot;</span> <span class="o">+</span> <span class="nb">dir</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">clipped_pv_mesh</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">toggle_view_clipping</span><span class="p">(</span><span class="nb">dir</span><span class="p">):</span>
-        <span class="k">nonlocal</span> <span class="n">view_clipping</span>
-        <span class="k">if</span> <span class="n">view_clipping</span><span class="p">[</span><span class="nb">dir</span><span class="p">]</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="n">view_clipping</span><span class="p">[</span><span class="nb">dir</span><span class="p">]</span> <span class="o">=</span> <span class="o">+</span><span class="mi">1</span>
-        <span class="k">elif</span> <span class="n">view_clipping</span><span class="p">[</span><span class="nb">dir</span><span class="p">]</span> <span class="o">==</span> <span class="o">+</span><span class="mi">1</span><span class="p">:</span>
-            <span class="n">view_clipping</span><span class="p">[</span><span class="nb">dir</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">view_clipping</span><span class="p">[</span><span class="nb">dir</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
-        <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">clipped_mesh</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;hull&quot;</span><span class="p">,</span> <span class="n">show_edges</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-
-    <span class="n">plotter</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;X&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="p">:</span> <span class="n">toggle_view_clipping</span><span class="p">(</span><span class="s2">&quot;x&quot;</span><span class="p">))</span>
-    <span class="n">plotter</span><span class="o">.</span><span class="n">add_key_event</span><span class="p">(</span><span class="s2">&quot;Y&quot;</span><span class="p">,</span> <span class="k">lambda</span> <span class="p">:</span> <span class="n">toggle_view_clipping</span><span class="p">(</span><span class="s2">&quot;y&quot;</span><span class="p">))</span>
-
-    <span class="n">plotter</span><span class="o">.</span><span class="n">add_text</span><span class="p">(</span>
-        <span class="sa">f</span><span class="s2">&quot;Capytaine version </span><span class="si">{</span><span class="n">__version__</span><span class="si">}</span><span class="se">\n\n</span><span class="s2">&quot;</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Keyboard controls:</span>
-<span class="sd">        b: toggle scale and bounding box</span>
-<span class="sd">        h: toggle free surface (and sea bottom if water depth was given)</span>
-<span class="sd">        n: toggle normal vectors</span>
-<span class="sd">        T,B,P,S,F,R: view [T]op, [B]ottom, [P]ort, [S]tarboard, [F]ront, [R]ear</span>
-<span class="sd">        X, Y: toggle displaying clipped mesh in x or y direction</span>
-<span class="sd">        q: exit</span>
-<span class="sd">        &quot;&quot;&quot;</span><span class="p">,</span>
-        <span class="n">position</span><span class="o">=</span><span class="s2">&quot;upper_left&quot;</span><span class="p">,</span>
-        <span class="n">font_size</span><span class="o">=</span><span class="mi">10</span>
-    <span class="p">)</span>
-    <span class="n">plotter</span><span class="o">.</span><span class="n">show_axes</span><span class="p">()</span>  <span class="c1"># xyz in bottom left corner</span>
-
-    <span class="k">if</span> <span class="n">default_plotter</span><span class="p">:</span>
-        <span class="n">plotter</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-    <span class="k">else</span><span class="p">:</span>
-        <span class="k">return</span> <span class="n">plotter</span></div>
+<div class="viewcode-block" id="PyVistaViewer.toggle_clipping">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.visualization.html#capytaine.meshes.visualization.PyVistaViewer.toggle_clipping">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">toggle_clipping</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">direction</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Cycle clipping for *direction* (``&#39;x&#39;`` or ``&#39;y&#39;``): none → positive → negative → none.&quot;&quot;&quot;</span>
+        <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_clipping</span><span class="p">[</span><span class="n">direction</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clipping</span><span class="p">[</span><span class="n">direction</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span> <span class="mi">0</span><span class="p">}[</span><span class="n">c</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_clipped_mesh</span><span class="p">(),</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;hull&quot;</span><span class="p">,</span> <span class="n">show_edges</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh_kwargs</span><span class="p">,</span>
+        <span class="p">)</span></div>
 
 
+    <span class="c1"># ── Show ────────────────────────────────────────────────────</span>
+
+<div class="viewcode-block" id="PyVistaViewer.show">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.visualization.html#capytaine.meshes.visualization.PyVistaViewer.show">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Display the viewer window (if plotter was created internally) and return plotter.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_owns_plotter</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">plotter</span></div>
+</div>
+
+
+
+<span class="c1">###################################################################################################</span>
 
 <div class="viewcode-block" id="show_matplotlib">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.visualization.html#capytaine.meshes.visualization.show_matplotlib">[docs]</a>
@@ -839,7 +877,8 @@ window.runMermaid = runMermaid;</script>
         <span class="n">ax</span><span class="o">.</span><span class="n">set_zlim</span><span class="p">(</span><span class="n">zmin</span><span class="p">,</span> <span class="n">zmax</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">default_axis</span><span class="p">:</span>
-        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span></div>
+        <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">ax</span></div>
 
 </pre></div>
 
@@ -915,7 +954,7 @@ window.runMermaid = runMermaid;</script>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &#169;2024, Matthieu Ancellin.
+      &#169;2026, Capytaine developpers.
       
       |
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>

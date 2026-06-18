@@ -491,6 +491,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">add_dofs_labels_to_vector</span><span class="p">,</span>
     <span class="n">add_dofs_labels_to_matrix</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="n">show_3d</span>
 
 
 <div class="viewcode-block" id="AbstractBody">
@@ -503,14 +504,14 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">    Subclasses must provide the following attributes (either as instance</span>
 <span class="sd">    attributes set in __init__, or as properties/cached_properties):</span>
-<span class="sd">        name: str</span>
-<span class="sd">        mesh</span>
-<span class="sd">        lid_mesh</span>
-<span class="sd">        mesh_including_lid</span>
-<span class="sd">        hull_mask</span>
-<span class="sd">        dofs: dict</span>
-<span class="sd">        mass</span>
-<span class="sd">        center_of_mass</span>
+<span class="sd">    * name: str</span>
+<span class="sd">    * mesh</span>
+<span class="sd">    * lid_mesh</span>
+<span class="sd">    * mesh_including_lid</span>
+<span class="sd">    * hull_mask</span>
+<span class="sd">    * dofs: dict</span>
+<span class="sd">    * mass</span>
+<span class="sd">    * center_of_mass</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
@@ -679,7 +680,54 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">__short_str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span> <span class="o">...</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="AbstractBody.show">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.abstract_bodies.html#capytaine.bodies.abstract_bodies.AbstractBody.show">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">show</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Visualize the mesh using the specified backend.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        backend : str, optional</span>
+<span class="sd">            Visualization backend to use. Options are &#39;pyvista&#39; or &#39;matplotlib&#39;.</span>
+<span class="sd">            By default, try several until an installed one is found.</span>
+<span class="sd">        **kwargs</span>
+<span class="sd">            Additional keyword arguments passed to the visualization backend.</span>
+<span class="sd">            See :mod:`~capytaine.meshes.visualization`</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        object</span>
+<span class="sd">            Visualization object returned by the backend (e.g., matplotlib figure).</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        NotImplementedError</span>
+<span class="sd">            If the specified backend is not supported.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">show_3d</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">backend</span><span class="o">=</span><span class="n">backend</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AbstractBody.show_pyvista">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.abstract_bodies.html#capytaine.bodies.abstract_bodies.AbstractBody.show_pyvista">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">show_pyvista</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Equivalent to show(backend=&quot;pyvista&quot;).</span>
+<span class="sd">        See also :func:`~capytaine.bodies.visualization.show_pyvista`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;pyvista&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AbstractBody.show_matplotlib">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.abstract_bodies.html#capytaine.bodies.abstract_bodies.AbstractBody.show_matplotlib">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">show_matplotlib</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Equivalent to show(backend=&quot;matplotlib&quot;).</span>
+<span class="sd">        See also :func:`~capytaine.bodies.visualization.show_matplotlib`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">show</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s2">&quot;matplotlib&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+</div>
 
 </pre></div>
 
@@ -755,7 +803,7 @@ window.runMermaid = runMermaid;</script>
       <div class="clearer"></div>
     </div>
     <div class="footer">
-      &#169;2024, Matthieu Ancellin.
+      &#169;2026, Capytaine developpers.
       
       |
       Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
