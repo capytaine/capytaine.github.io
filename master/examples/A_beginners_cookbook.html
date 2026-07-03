@@ -110,7 +110,7 @@ See also the template in <a class="reference internal" href="../user_manual/quic
 
 <span class="c1"># Solve all radiation problems</span>
 <span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
-<span class="n">dataset</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">())</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">(),</span> <span class="n">hydrostatics</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 
 <span class="c1"># Export data in various formats</span>
@@ -193,23 +193,24 @@ See also the template in <a class="reference internal" href="../user_manual/quic
 <span class="n">all_bodies</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="n">M</span> <span class="o">=</span> <span class="n">all_bodies</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">()</span>
 <span class="n">all_bodies</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">K</span> <span class="o">=</span> <span class="n">all_bodies</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
 
-<span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">M</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">K</span><span class="p">)</span>
-
 <span class="c1"># Compute multibody hydrodynamics</span>
 <span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span>
     <span class="p">{</span>
-        <span class="s2">&quot;omega&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span>
+        <span class="s2">&quot;omega&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>
         <span class="s2">&quot;wave_direction&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">],</span>
         <span class="s2">&quot;radiating_dof&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_bodies</span><span class="o">.</span><span class="n">dofs</span><span class="p">),</span>
         <span class="s2">&quot;water_depth&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span>
     <span class="p">}</span>
 <span class="p">)</span>
 <span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
-<span class="n">dataset</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">all_bodies</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">())</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">all_bodies</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">(),</span> <span class="n">hydrostatics</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">influenced_dof</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;M = &quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">inertia_matrix</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;A = &quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">added_mass</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">omega</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;B = &quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">radiation_damping</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">omega</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;S = &quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>
@@ -262,11 +263,9 @@ an arbitrary axis (flap’s hinge) and fixed obstacle without degrees of freedom
     <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">10.90</span><span class="p">),</span>
     <span class="n">name</span><span class="o">=</span><span class="s2">&quot;base&quot;</span><span class="p">,</span>
 <span class="p">)</span>
+<span class="c1"># Hydrostatics are currently wrong for open bodies that not open at the free surface, like base_body which is open at the sea bottom.</span>
 
 <span class="n">full_flap</span> <span class="o">=</span> <span class="n">flap_body</span> <span class="o">+</span> <span class="n">base_body</span>
-
-<span class="n">M</span> <span class="o">=</span> <span class="n">full_flap</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">()</span>
-<span class="n">S</span> <span class="o">=</span> <span class="n">full_flap</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
 
 <span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span>
     <span class="n">coords</span><span class="o">=</span><span class="p">{</span>
@@ -352,14 +351,8 @@ an arbitrary axis (flap’s hinge) and fixed obstacle without degrees of freedom
     <span class="p">}</span>
 <span class="p">)</span>
 <span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
-<span class="n">dataset</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">cylinder</span><span class="p">)</span>
-<span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;excitation_force&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
-    <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;Froude_Krylov_force&quot;</span><span class="p">]</span> <span class="o">+</span> <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;diffraction_force&quot;</span><span class="p">]</span>
-<span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">cylinder</span><span class="p">,</span> <span class="n">hydrostatics</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-<span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;encounter_omega&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;omega&quot;</span><span class="p">]</span> <span class="o">-</span> <span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;wavenumber&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="n">dataset</span><span class="p">[</span>
-    <span class="s2">&quot;forward_speed&quot;</span>
-<span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s2">&quot;wave_direction&quot;</span><span class="p">])</span>
 <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;Froude_number&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;forward_speed&quot;</span><span class="p">]</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">g</span> <span class="o">*</span> <span class="n">radius</span><span class="p">)</span>
 
 <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
@@ -440,6 +433,7 @@ an arbitrary axis (flap’s hinge) and fixed obstacle without degrees of freedom
         <span class="n">test_matrix</span><span class="p">,</span>
         <span class="n">body</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">(),</span>
         <span class="n">n_threads</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># No parallel resolution for cleaner benchmark</span>
+        <span class="n">hydrostatics</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="nb">print</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;---&gt;&quot;</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
@@ -502,6 +496,7 @@ an arbitrary axis (flap’s hinge) and fixed obstacle without degrees of freedom
         <span class="n">body</span><span class="p">,</span>
         <span class="n">n_threads</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>  <span class="c1"># No parallel resolution for cleaner benchmark</span>
         <span class="n">progress_bar</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">hydrostatics</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">)</span>
 
     <span class="nb">print</span><span class="p">()</span>
@@ -585,6 +580,7 @@ The diffraction force on the “x-shear” dof is zero when the wave comes from 
 <span class="n">cpt</span><span class="o">.</span><span class="n">set_logging</span><span class="p">(</span><span class="s2">&quot;INFO&quot;</span><span class="p">)</span>
 
 <span class="n">resolutions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">8.0</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+
 <span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span>
     <span class="n">coords</span><span class="o">=</span><span class="p">{</span>
         <span class="s2">&quot;wavelength&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">],</span>
@@ -649,7 +645,7 @@ The diffraction force on the “x-shear” dof is zero when the wave comes from 
 <span class="k">def</span><span class="w"> </span><span class="nf">compute_excitation_force</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">omega_range</span><span class="p">):</span>
     <span class="n">problems</span> <span class="o">=</span> <span class="p">[</span><span class="n">cpt</span><span class="o">.</span><span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="n">omega</span><span class="p">)</span> <span class="k">for</span> <span class="n">omega</span> <span class="ow">in</span> <span class="n">omega_range</span><span class="p">]</span>
     <span class="n">results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">hydrostatics</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;excitation_force&quot;</span><span class="p">]</span>
 
 

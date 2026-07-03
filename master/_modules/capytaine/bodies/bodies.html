@@ -502,14 +502,14 @@ window.runMermaid = runMermaid;</script>
         <span class="n">rigid_body_dofs</span><span class="p">,</span>
         <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.abstract_bodies</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractBody</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.hydrostatics</span><span class="w"> </span><span class="kn">import</span> <span class="n">_HydrostaticsMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.hydrostatics</span><span class="w"> </span><span class="kn">import</span> <span class="n">_FloatingBodyHydrostaticsMixin</span>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
 <div class="viewcode-block" id="FloatingBody">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">FloatingBody</span><span class="p">(</span><span class="n">_HydrostaticsMixin</span><span class="p">,</span> <span class="n">AbstractBody</span><span class="p">):</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">FloatingBody</span><span class="p">(</span><span class="n">_FloatingBodyHydrostaticsMixin</span><span class="p">,</span> <span class="n">AbstractBody</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;A floating body described as a mesh and some degrees of freedom.</span>
 
 <span class="sd">    The mesh structure is stored as a Mesh from capytaine.mesh.mesh or a</span>
@@ -685,12 +685,15 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;dof_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_dofs</span><span class="si">}</span><span class="s2">_rotation&quot;</span>
         <span class="k">if</span> <span class="n">rotation_center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">point_attr</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;rotation_center&#39;</span><span class="p">,</span> <span class="s1">&#39;center_of_mass&#39;</span><span class="p">):</span>
-                <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point_attr</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point_attr</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                    <span class="n">rotation_center</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">point_attr</span><span class="p">)</span>
-                    <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The rotation dof </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> has been initialized around the point: &quot;</span>
-                             <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2">.</span><span class="si">{</span><span class="n">point_attr</span><span class="si">}</span><span class="s2"> = </span><span class="si">{</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="w"> </span><span class="n">point_attr</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                    <span class="k">break</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_center</span><span class="p">)):</span>
+                <span class="c1"># Already has a rotation center from another dof</span>
+                <span class="n">rotation_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_center</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The rotation dof </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> has been initialized around the point: &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2">.rotation_center = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_center</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">rotation_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The rotation dof </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> has been initialized around the point: &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2">.center_of_mass = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">direction</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">normalize_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;Roll&quot;</span><span class="p">,</span> <span class="s2">&quot;Pitch&quot;</span><span class="p">,</span> <span class="s2">&quot;Yaw&quot;</span><span class="p">}:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="n">rotation_center</span><span class="p">)[</span><span class="n">normalize_name</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
         <span class="k">else</span><span class="p">:</span>
@@ -761,6 +764,29 @@ window.runMermaid = runMermaid;</script>
                                  <span class="sa">f</span><span class="s2">&quot;Expected shape: (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="si">}</span><span class="s2">, 3)</span><span class="se">\n</span><span class="s2">&quot;</span>
                                  <span class="sa">f</span><span class="s2">&quot;  Actual shape: </span><span class="si">{</span><span class="n">dof</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rotation_center</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Try to infer a rotation center by looking at the dofs.</span>
+<span class="sd">        Most bodies are rigid bodies with one and only one rotation center, but not all.</span>
+<span class="sd">        Only used for exporting data, as it might not be defined.&quot;&quot;&quot;</span>
+        <span class="n">centers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">dof_name</span><span class="p">,</span> <span class="n">dof</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">DofOnSubmesh</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dof</span><span class="o">.</span><span class="n">dof</span><span class="p">,</span> <span class="s2">&quot;rotation_center&quot;</span><span class="p">):</span>
+                <span class="n">centers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">dof</span><span class="o">.</span><span class="n">dof</span><span class="o">.</span><span class="n">rotation_center</span><span class="p">))</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="s2">&quot;rotation_center&quot;</span><span class="p">):</span>
+                <span class="n">centers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">dof</span><span class="o">.</span><span class="n">rotation_center</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">centers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">centers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Body </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> has no uniquely defined rotation center. Returning an arbitrary one.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;Exporting an arbitrary one among the found ones: </span><span class="si">{</span><span class="n">centers</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">centers</span><span class="p">)))</span>
+
+    <span class="nd">@rotation_center</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rotation_center</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Deprecated: cannot set the rotation center of a body directly.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                             <span class="s2">&quot;Set it in the definition of the degrees of freedom instead, e.g. &quot;</span>
+                             <span class="s2">&quot;`body = cpt.FloatingBody(..., dofs=cpt.rigid_body_dofs(rotation_center=c))`.&quot;</span><span class="p">)</span>
 
     <span class="c1">###################</span>
     <span class="c1"># Transformations #</span>
@@ -861,8 +887,6 @@ window.runMermaid = runMermaid;</script>
             <span class="n">center_of_mass</span><span class="o">=</span><span class="n">mirror</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
             <span class="n">mass</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">,</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rotation_center&#39;</span><span class="p">):</span>
-            <span class="n">mirrored_self</span><span class="o">.</span><span class="n">rotation_center</span> <span class="o">=</span> <span class="n">mirror</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_center</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">mirrored_self</span></div>
 
 
@@ -887,8 +911,6 @@ window.runMermaid = runMermaid;</script>
             <span class="n">mass</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">,</span>
             <span class="n">name</span><span class="o">=</span><span class="n">name</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rotation_center&#39;</span><span class="p">):</span>
-            <span class="n">translated_self</span><span class="o">.</span><span class="n">rotation_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_center</span> <span class="o">+</span> <span class="n">shift</span>
         <span class="k">return</span> <span class="n">translated_self</span></div>
 
 
@@ -915,8 +937,6 @@ window.runMermaid = runMermaid;</script>
             <span class="n">mass</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">,</span>
             <span class="n">name</span><span class="o">=</span><span class="n">name</span>
             <span class="p">)</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;rotation_center&#39;</span><span class="p">):</span>
-            <span class="n">rotated_self</span><span class="o">.</span><span class="n">rotation_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_center</span> <span class="o">@</span> <span class="n">R</span><span class="o">.</span><span class="n">T</span>
         <span class="k">return</span> <span class="n">rotated_self</span></div>
 
 

@@ -46,22 +46,48 @@
             
   <section id="hydrostatics">
 <h1>Hydrostatics<a class="headerlink" href="#hydrostatics" title="Link to this heading">¶</a></h1>
-<p>Capytaine can compute some of the hydrostatic parameters of a given <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code>.</p>
-<section id="hydrostatic-parameters">
-<h2>Hydrostatic parameters<a class="headerlink" href="#hydrostatic-parameters" title="Link to this heading">¶</a></h2>
-<p>For each hydrostatic parameter a separate method is available in Capytaine.
-Some of them may require the definition of the center of mass of the body.
-It can be done by setting the <code class="docutils literal notranslate"><span class="pre">center_of_mass</span></code> at body initilization as in the example below:</p>
+<p>Capytaine can compute hydrostatic parameters of a given <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code> or <code class="code docutils literal notranslate"><span class="pre">Multibody</span></code>.</p>
+<p>Some of them may require the definition of the center of mass of the body.
+It can be done by setting the <code class="docutils literal notranslate"><span class="pre">center_of_mass</span></code> at body initialization as in the example below:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 
 <span class="n">rigid_sphere</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
         <span class="n">mesh</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">mesh_sphere</span><span class="p">(</span><span class="n">radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
-        <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">)),</span>
-        <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.3</span><span class="p">)</span>
+        <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.2</span><span class="p">)),</span>
+        <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.4</span><span class="p">),</span>
+        <span class="n">name</span><span class="o">=</span><span class="s2">&quot;sphere&quot;</span>  <span class="c1"># optional</span>
         <span class="p">)</span>
+</pre></div>
+</div>
+<p>The hydrostatic parameters can be computed and stored in an <code class="docutils literal notranslate"><span class="pre">xarray.Dataset</span></code>
+with the <code class="xref py py-func docutils literal notranslate"><span class="pre">compute_hydrostatics_dataset()</span></code> function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hs_dataset</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">compute_hydrostatics_dataset</span><span class="p">(</span><span class="n">rigid_sphere</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="mi">1025</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Volume:&quot;</span><span class="p">,</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span>
+<span class="c1"># &lt;xarray.Dataset&gt; Size: 956B</span>
+<span class="c1"># Dimensions:                (space_coordinate: 3, influenced_dof: 6,</span>
+<span class="c1">#                             radiating_dof: 6)</span>
+<span class="c1"># Coordinates:</span>
+<span class="c1">#   * space_coordinate       (space_coordinate) &lt;U1 12B &#39;x&#39; &#39;y&#39; &#39;z&#39;</span>
+<span class="c1">#     center_of_mass         (space_coordinate) float64 24B 0.0 0.0 -0.4</span>
+<span class="c1">#     rotation_center        (space_coordinate) float64 24B 0.0 0.0 -0.2</span>
+<span class="c1">#   * influenced_dof         (influenced_dof) &lt;U5 120B &#39;Surge&#39; &#39;Sway&#39; ... &#39;Yaw&#39;</span>
+<span class="c1">#   * radiating_dof          (radiating_dof) &lt;U5 120B &#39;Surge&#39; &#39;Sway&#39; ... &#39;Yaw&#39;</span>
+<span class="c1">#     g                      float64 8B 9.81</span>
+<span class="c1">#     rho                    int64 8B 1025</span>
+<span class="c1">#     body                   &lt;U6 24B &#39;sphere&#39;</span>
+<span class="c1"># Data variables:</span>
+<span class="c1">#     hydrostatic_stiffness  (influenced_dof, radiating_dof) float64 288B 0.0 ....</span>
+<span class="c1">#     inertia_matrix         (influenced_dof, radiating_dof) float64 288B 1.959...</span>
+<span class="c1">#     center_of_buoyancy     (space_coordinate) float64 24B -2.178e-17 ... -0.3688</span>
+<span class="c1">#     draught                float64 8B 1.0</span>
+<span class="c1">#     disp_mass              float64 8B 1.959e+03</span>
+</pre></div>
+</div>
+<p>This dataset is also by default computed and included in the hydrodynamical
+dataset created by <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset" title="capytaine.bem.solver.BEMSolver.fill_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_dataset()</span></code></a>.</p>
+<p>These hydrostatic parameters and others can each be accessed by a separate method:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Volume:&quot;</span><span class="p">,</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">volume</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Center of buoyancy:&quot;</span><span class="p">,</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">center_of_buoyancy</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Wet surface area:&quot;</span><span class="p">,</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">wet_surface_area</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Displaced mass:&quot;</span><span class="p">,</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">disp_mass</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="mi">1025</span><span class="p">))</span>
@@ -74,15 +100,15 @@ It can be done by setting the <code class="docutils literal notranslate"><span c
     <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">longitudinal_metacentric_height</span><span class="p">)</span>
 </pre></div>
 </div>
-</section>
 <section id="hydrostatic-stiffness">
 <h2>Hydrostatic stiffness<a class="headerlink" href="#hydrostatic-stiffness" title="Link to this heading">¶</a></h2>
 <p>The method <code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_hydrostatic_stiffness()</span></code>
 computes the hydrostatic stiffness and returns a (DOF count x DOF count) 2D
 matrix as an <code class="code docutils literal notranslate"><span class="pre">xarray.DataArray</span></code>.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hs</span> <span class="o">=</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hs</span> <span class="o">=</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="mi">1025</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>(It is also called in the backend of <code class="xref py py-func docutils literal notranslate"><span class="pre">compute_hydrostatics_dataset()</span></code>.)</p>
 <p>Capytaine has two built-in methods to compute the hydrostatic stiffness:</p>
 <ul class="simple">
 <li><p>for rigid-body degrees of freedom, exact analytical expressions are available.</p></li>
@@ -161,7 +187,7 @@ The inertia coefficient of other degrees of freedom are filled with <code class=
 </div>
 <p>As for the hydrostatic stiffness, the mass is assumed to be the displaced mass
 of water for a body at equilibrium, unless a <code class="code docutils literal notranslate"><span class="pre">mass</span></code> attribute has been specified when setting up the body.</p>
-<p>When computing the inertia moments, the density of the body mass is assumed to be uniform whithin the body (which may or may not be consistent with the center of mass defined when initializing the floating body).
+<p>When computing the inertia moments, the density of the body mass is assumed to be uniform within the body (which may or may not be consistent with the center of mass defined when initializing the floating body).
 Note also that unlike most other hydrostatics properties, the rigid body inertia depends not only on the shape of immersed part of the body but also on the shape above the free surface.
 Computing the inertia on only the immersed part leads to a different result since it neglects this contribution to the moment of inertia:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">M_</span> <span class="o">=</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">()</span>
@@ -172,23 +198,6 @@ Computing the inertia on only the immersed part leads to a different result sinc
 The best practice is usually to use another dedicated method or tool that is aware of the true distribution of mass within the body.
 When providing a matrix computed externally, it is recommended to wrap it in a <code class="code docutils literal notranslate"><span class="pre">xarray.DataArray</span></code> with dof names as labels, for consistency with the data computed with Capytaine:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">elastic_sphere</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="n">elastic_sphere</span><span class="o">.</span><span class="n">add_dofs_labels_to_matrix</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1000.0</span><span class="p">]]))</span>
-</pre></div>
-</div>
-</section>
-<section id="compute-all-hydrostatics-parameters">
-<h2>Compute all hydrostatics parameters<a class="headerlink" href="#compute-all-hydrostatics-parameters" title="Link to this heading">¶</a></h2>
-<p>Instead of computing each hydrostatic parameters individually, <code class="code docutils literal notranslate"><span class="pre">compute_hydrostatics</span></code> returns a <code class="code docutils literal notranslate"><span class="pre">dict</span></code> containing all hydrostatic parameters.</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">hydrostatics</span> <span class="o">=</span> <span class="n">rigid_sphere</span><span class="o">.</span><span class="n">compute_hydrostatics</span><span class="p">()</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">hydrostatics</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-<span class="c1"># dict_keys([&#39;g&#39;, &#39;rho&#39;, &#39;center_of_mass&#39;, &#39;wet_surface_area&#39;, &#39;disp_volumes&#39;,</span>
-<span class="c1"># &#39;disp_volume&#39;, &#39;disp_mass&#39;, &#39;center_of_buoyancy&#39;, &#39;waterplane_center&#39;,</span>
-<span class="c1"># &#39;waterplane_area&#39;, &#39;transversal_metacentric_radius&#39;,</span>
-<span class="c1"># &#39;longitudinal_metacentric_radius&#39; , &#39;transversal_metacentric_height&#39;,</span>
-<span class="c1"># &#39;longitudinal_metacentric_height&#39;, &#39;hydrostatic_stiffness&#39;,</span>
-<span class="c1"># &#39;length_overall&#39;, &#39;breadt h_overall&#39;, &#39;depth&#39;, &#39;draught&#39;,</span>
-<span class="c1"># &#39;length_at_waterline&#39;, &#39;breadth_at_waterline&#39;,</span>
-<span class="c1"># &#39;length_overall_submerged&#39;, &#39;breadth_overall_submerged&#39;, &#39;inertia_matrix&#39;])</span>
 </pre></div>
 </div>
 </section>
