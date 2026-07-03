@@ -53,23 +53,16 @@ On top of that, Capytaine provides some wrappers functions to simplify the expor
 <ul class="simple">
 <li><p><a class="reference internal" href="#export-outputs" id="id1">Export outputs</a></p>
 <ul>
-<li><p><a class="reference internal" href="#exporting-hydrodynamic-dataset" id="id2">Exporting hydrodynamic dataset</a></p>
-<ul>
-<li><p><a class="reference internal" href="#netcdf-format" id="id3">NetCDF format</a></p></li>
-<li><p><a class="reference internal" href="#wamit-format" id="id4">Wamit format</a></p></li>
-<li><p><a class="reference internal" href="#nemoh-format" id="id5">Nemoh format</a></p></li>
-<li><p><a class="reference internal" href="#excel-format" id="id6">Excel format</a></p></li>
-</ul>
-</li>
-<li><p><a class="reference internal" href="#saving-the-hydrostatics-data-of-rigid-body-ies-in-nemoh-s-format" id="id7">Saving the hydrostatics data of rigid body(ies) in Nemoh’s format</a></p></li>
+<li><p><a class="reference internal" href="#netcdf-format" id="id2">NetCDF format</a></p></li>
+<li><p><a class="reference internal" href="#wamit-format" id="id3">Wamit format</a></p></li>
+<li><p><a class="reference internal" href="#nemoh-format" id="id4">Nemoh format</a></p></li>
+<li><p><a class="reference internal" href="#excel-format" id="id5">Excel format</a></p></li>
 </ul>
 </li>
 </ul>
 </nav>
-<section id="exporting-hydrodynamic-dataset">
-<h2><a class="toc-backref" href="#id2" role="doc-backlink">Exporting hydrodynamic dataset</a><a class="headerlink" href="#exporting-hydrodynamic-dataset" title="Link to this heading">¶</a></h2>
 <section id="netcdf-format">
-<h3><a class="toc-backref" href="#id3" role="doc-backlink">NetCDF format</a><a class="headerlink" href="#netcdf-format" title="Link to this heading">¶</a></h3>
+<h2><a class="toc-backref" href="#id2" role="doc-backlink">NetCDF format</a><a class="headerlink" href="#netcdf-format" title="Link to this heading">¶</a></h2>
 <p>The xarray dataset produced by <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.assemble_dataset" title="capytaine.io.xarray.assemble_dataset"><code class="xref py py-func docutils literal notranslate"><span class="pre">assemble_dataset</span></code></a> (or <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset" title="capytaine.bem.solver.BEMSolver.fill_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_dataset</span></code></a>) has a structure close to the NetCDF file format and can easily be saved to this format by <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.export_dataset" title="capytaine.io.xarray.export_dataset"><code class="xref py py-func docutils literal notranslate"><span class="pre">export_dataset()</span></code></a>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cpt</span><span class="o">.</span><span class="n">export_dataset</span><span class="p">(</span><span class="s2">&quot;path/to/dataset.nc&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;netcdf&quot;</span><span class="p">)</span>
 </pre></div>
@@ -93,7 +86,7 @@ See <a class="reference external" href="https://github.com/capytaine/capytaine/i
 </div>
 </section>
 <section id="wamit-format">
-<h3><a class="toc-backref" href="#id4" role="doc-backlink">Wamit format</a><a class="headerlink" href="#wamit-format" title="Link to this heading">¶</a></h3>
+<h2><a class="toc-backref" href="#id3" role="doc-backlink">Wamit format</a><a class="headerlink" href="#wamit-format" title="Link to this heading">¶</a></h2>
 <p>The hydrodynamic results from a Capytaine <code class="docutils literal notranslate"><span class="pre">xarray.Dataset</span></code> can be exported into WAMIT-compatible text files (<code class="docutils literal notranslate"><span class="pre">.1</span></code>, <code class="docutils literal notranslate"><span class="pre">.3</span></code>, <code class="docutils literal notranslate"><span class="pre">.3fk</span></code>, <code class="docutils literal notranslate"><span class="pre">.3sc</span></code>, <code class="docutils literal notranslate"><span class="pre">.hst</span></code>) using:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cpt</span><span class="o">.</span><span class="n">export_dataset</span><span class="p">(</span><span class="s2">&quot;problem_name&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;wamit&quot;</span><span class="p">,</span> <span class="n">exports</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="s2">&quot;3fk&quot;</span><span class="p">,</span> <span class="s2">&quot;3sc&quot;</span><span class="p">,</span> <span class="s2">&quot;hst&quot;</span><span class="p">))</span>
 </pre></div>
@@ -115,15 +108,30 @@ If not, a <code class="docutils literal notranslate"><span class="pre">ValueErro
 </div>
 </section>
 <section id="nemoh-format">
-<h3><a class="toc-backref" href="#id5" role="doc-backlink">Nemoh format</a><a class="headerlink" href="#nemoh-format" title="Link to this heading">¶</a></h3>
-<p>The following code will write files named <code class="code docutils literal notranslate"><span class="pre">RadiationCoefficients.tec</span></code> and <code class="code docutils literal notranslate"><span class="pre">ExcitationForce.tec</span></code> in a format roughly matching the one of Nemoh 2:</p>
+<h2><a class="toc-backref" href="#id4" role="doc-backlink">Nemoh format</a><a class="headerlink" href="#nemoh-format" title="Link to this heading">¶</a></h2>
+<p>The results from a Capytaine <code class="docutils literal notranslate"><span class="pre">xarray.Dataset</span></code> can be exported into Nemoh-computible text files (<code class="code docutils literal notranslate"><span class="pre">Hydrostatics.dat</span></code>, <code class="code docutils literal notranslate"><span class="pre">KH.dat</span></code>, <code class="code docutils literal notranslate"><span class="pre">RadiationCoefficients.tec</span></code> and <code class="code docutils literal notranslate"><span class="pre">ExcitationForce.tec</span></code>) using:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cpt</span><span class="o">.</span><span class="n">export_dataset</span><span class="p">(</span><span class="s2">&quot;path/to/result_dir/&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;nemoh&quot;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This feature is still experimental. Please report issues encountered with this.</p>
+<p>Alternatively, <code class="code docutils literal notranslate"><span class="pre">Hydrostatics.dat</span></code> and <code class="code docutils literal notranslate"><span class="pre">KH.dat</span></code> can be exported with the following syntax:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.legacy</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_hydrostatics</span>
+<span class="n">body</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
+<span class="n">export_hydrostatics</span><span class="p">(</span><span class="s2">&quot;directory_to_save_hydrostatics_data&quot;</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>for a single rigid body or, e.g.,:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.legacy</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_hydrostatics</span>
+<span class="n">body_1</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">body_1</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
+<span class="n">body_2</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">body_2</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
+<span class="n">body_3</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">body_3</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
+<span class="n">export_hydrostatics</span><span class="p">(</span><span class="s2">&quot;directory_to_save_hydrostatics_data&quot;</span><span class="p">,</span> <span class="n">body_1</span> <span class="o">+</span> <span class="n">body_2</span> <span class="o">+</span> <span class="n">body_3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>for several rigid bodies.</p>
 </section>
 <section id="excel-format">
-<h3><a class="toc-backref" href="#id6" role="doc-backlink">Excel format</a><a class="headerlink" href="#excel-format" title="Link to this heading">¶</a></h3>
+<h2><a class="toc-backref" href="#id5" role="doc-backlink">Excel format</a><a class="headerlink" href="#excel-format" title="Link to this heading">¶</a></h2>
 <p>Export to Excel format is not currently built in <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.export_dataset" title="capytaine.io.xarray.export_dataset"><code class="xref py py-func docutils literal notranslate"><span class="pre">export_dataset()</span></code></a>.
 This section is meant to show an example of exporting to a format that is not explicitly implemented in Capytaine.
 We use here the <code class="docutils literal notranslate"><span class="pre">openpyxl</span></code> library (that can be installed with <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">openpyxl</span></code>) to export a dataset to Excel format:</p>
@@ -135,34 +143,6 @@ We use here the <code class="docutils literal notranslate"><span class="pre">ope
 </div>
 <p>For convenience, the radiation and diffraction data have been stored in separate files.
 Since this export method poorly supports complex number, the <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.separate_complex_values" title="capytaine.io.xarray.separate_complex_values"><code class="xref py py-func docutils literal notranslate"><span class="pre">separate_complex_values</span></code></a> has been used to transform them to a pair of real numbers, as discussed for NetCDF export above.</p>
-</section>
-</section>
-<section id="saving-the-hydrostatics-data-of-rigid-body-ies-in-nemoh-s-format">
-<h2><a class="toc-backref" href="#id7" role="doc-backlink">Saving the hydrostatics data of rigid body(ies) in Nemoh’s format</a><a class="headerlink" href="#saving-the-hydrostatics-data-of-rigid-body-ies-in-nemoh-s-format" title="Link to this heading">¶</a></h2>
-<p>For a rigid body, or a set of several rigid bodies, the following information can be saved as written by Nemoh’s and read by BEMIO to produce <code class="code docutils literal notranslate"><span class="pre">.h5</span></code> files for WEC-Sim:</p>
-<ul class="simple">
-<li><p>Hydrostatic stiffness matrix,</p></li>
-<li><p>Centre of gravity,</p></li>
-<li><p>Centre of buoyancy,</p></li>
-<li><p>Displacement volume</p></li>
-</ul>
-<p>They are stored in two files (<code class="code docutils literal notranslate"><span class="pre">Hydrostatics.dat</span></code> and <code class="code docutils literal notranslate"><span class="pre">KH.dat</span></code>) for each body, using the following syntax:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.legacy</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_hydrostatics</span>
-<span class="n">export_hydrostatics</span><span class="p">(</span><span class="s2">&quot;directory_to_save_hydrostatics_data&quot;</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>for a single rigid body or, e.g.,:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.legacy</span><span class="w"> </span><span class="kn">import</span> <span class="n">export_hydrostatics</span>
-<span class="n">export_hydrostatics</span><span class="p">(</span><span class="s2">&quot;directory_to_save_hydrostatics_data&quot;</span><span class="p">,</span> <span class="p">[</span><span class="n">body_1</span><span class="p">,</span> <span class="n">body_2</span><span class="p">,</span> <span class="n">body_3</span><span class="p">])</span>
-</pre></div>
-</div>
-<p>for several rigid bodies.</p>
-<p>In order to use this function, please ensure that the body’s centre of gravity has been defined correctly and the following methods have been called on the <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code> object before passing it to <a class="reference internal" href="../developer_manual/api/capytaine.io.legacy.html#capytaine.io.legacy.export_hydrostatics" title="capytaine.io.legacy.export_hydrostatics"><code class="xref py py-func docutils literal notranslate"><span class="pre">export_hydrostatics</span></code></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">body</span><span class="o">.</span><span class="n">add_all_rigid_body_dofs</span><span class="p">()</span>
-<span class="n">body</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">()</span>
-<span class="n">body</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">()</span>
-</pre></div>
-</div>
 </section>
 </section>
 
