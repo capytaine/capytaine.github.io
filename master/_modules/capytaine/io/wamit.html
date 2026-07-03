@@ -482,6 +482,8 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Iterable</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">TextIO</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.post_pro.mean_drift_force</span><span class="w"> </span><span class="kn">import</span> <span class="n">_merge_far_field_mean_drift_variables</span>
+
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 <span class="n">DOF_INDEX</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;Surge&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;Sway&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;Heave&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;Roll&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;Pitch&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;Yaw&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">}</span>
@@ -625,6 +627,10 @@ window.runMermaid = runMermaid;</script>
 
 
 
+<span class="c1">###############################################################################</span>
+<span class="c1"># Hydrostatics</span>
+<span class="c1">###############################################################################</span>
+
 <div class="viewcode-block" id="export_wamit_hst">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.wamit.html#capytaine.io.wamit.export_wamit_hst">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">export_wamit_hst</span><span class="p">(</span>
@@ -671,6 +677,10 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">j</span><span class="si">:</span><span class="s2">5d</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">cij_nd</span><span class="si">:</span><span class="s2">12.6e</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># Added mass and radiation damping</span>
+<span class="c1">###############################################################################</span>
 
 <div class="viewcode-block" id="export_wamit_1">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.wamit.html#capytaine.io.wamit.export_wamit_1">[docs]</a>
@@ -772,6 +782,10 @@ window.runMermaid = runMermaid;</script>
         <span class="n">f</span><span class="o">.</span><span class="n">writelines</span><span class="p">(</span><span class="n">sorted_lines</span><span class="p">)</span></div>
 
 
+
+<span class="c1">###############################################################################</span>
+<span class="c1"># Diffraction and excitation force</span>
+<span class="c1">###############################################################################</span>
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_format_excitation_line</span><span class="p">(</span>
     <span class="n">period</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">beta_deg</span><span class="p">:</span> <span class="nb">float</span><span class="p">,</span> <span class="n">i_dof</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">force</span><span class="p">:</span> <span class="nb">complex</span>
@@ -939,12 +953,115 @@ window.runMermaid = runMermaid;</script>
 
 
 
+<span class="c1">###############################################################################</span>
+<span class="c1"># Mean drift force</span>
+<span class="c1">###############################################################################</span>
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_export_wamit_mean_drift</span><span class="p">(</span>
+    <span class="n">drift_force</span><span class="p">:</span> <span class="n">xarray</span><span class="o">.</span><span class="n">DataArray</span><span class="p">,</span>
+    <span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">length_scale</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+    <span class="n">wave_amplitude</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Export far-field mean drift forces to a WAMIT .8 file.</span>
+
+<span class="sd">    Format:</span>
+<span class="sd">        PER     BETA1     BETA2     I     Mod(Fi)     Pha(Fi)     Re(Fi)     Im(Fi)</span>
+
+<span class="sd">    Nondimensionalization (WAMIT manual Section 3.8):</span>
+<span class="sd">        F̄i = Fi / (ρ g A² Lᵏ)</span>
+<span class="sd">    where k=1 for forces (I=1,2,3), k=2 for moments (I=4,5,6).</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    drift_force : xarray.DataArray</span>
+<span class="sd">        The drift force DataArray with &#39;influenced_dof&#39;, &#39;wave_direction_k&#39;, and &#39;wave_direction_l&#39; dimensions.</span>
+<span class="sd">    filename : str</span>
+<span class="sd">        Output path for the .8 file.</span>
+<span class="sd">    length_scale : float</span>
+<span class="sd">        Reference length scale L for nondimensionalization.</span>
+<span class="sd">    wave_amplitude : float</span>
+<span class="sd">        Wave amplitude A used in nondimensionalization.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s2">&quot;influenced_dof&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">drift_force</span><span class="o">.</span><span class="n">dims</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;&#39;drift_force&#39; must have an &#39;influenced_dof&#39; dimension.&quot;</span><span class="p">)</span>
+
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">drift_force</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;rho&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">drift_force</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;g&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+    <span class="n">betas_k</span> <span class="o">=</span> <span class="n">drift_force</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;wave_direction_k&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">betas_l</span> <span class="o">=</span> <span class="n">drift_force</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">&quot;wave_direction_l&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">betas_k</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">betas_k</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">betas_k</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">betas_l</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">betas_l</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">betas_l</span><span class="p">)</span>
+
+    <span class="n">freq_key</span><span class="p">,</span> <span class="n">freq_vals</span><span class="p">,</span> <span class="n">period_vals</span> <span class="o">=</span> <span class="n">identify_frequency_axis</span><span class="p">(</span><span class="n">dataset</span><span class="o">=</span><span class="n">drift_force</span><span class="p">)</span>
+
+    <span class="c1"># Sort by increasing period</span>
+    <span class="n">sorted_indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">period_vals</span><span class="p">)</span>
+    <span class="n">sorted_periods</span> <span class="o">=</span> <span class="n">period_vals</span><span class="p">[</span><span class="n">sorted_indices</span><span class="p">]</span>
+    <span class="n">sorted_freqs</span> <span class="o">=</span> <span class="n">freq_vals</span><span class="p">[</span><span class="n">sorted_indices</span><span class="p">]</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">freq_val</span><span class="p">,</span> <span class="n">period</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sorted_freqs</span><span class="p">,</span> <span class="n">sorted_periods</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">freq_val</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">freq_val</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="k">for</span> <span class="n">beta_k</span> <span class="ow">in</span> <span class="n">betas_k</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">beta_l</span> <span class="ow">in</span> <span class="n">betas_l</span><span class="p">:</span>
+                    <span class="n">beta_k_deg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">beta_k</span><span class="p">)</span>
+                    <span class="n">beta_l_deg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">beta_l</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">dof_name</span> <span class="ow">in</span> <span class="n">drift_force</span><span class="o">.</span><span class="n">influenced_dof</span><span class="o">.</span><span class="n">values</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">dof_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">DOF_INDEX</span><span class="p">:</span>
+                            <span class="k">continue</span>
+
+                        <span class="n">mode_idx</span> <span class="o">=</span> <span class="n">DOF_INDEX</span><span class="p">[</span><span class="n">dof_name</span><span class="p">]</span>
+                        <span class="n">dof_type</span> <span class="o">=</span> <span class="n">DOF_TYPE</span><span class="p">[</span><span class="n">dof_name</span><span class="p">]</span>
+                        <span class="c1"># k exponent: 1 for translational forces, 2 for rotational moments</span>
+                        <span class="n">k_exp</span> <span class="o">=</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">dof_type</span> <span class="o">==</span> <span class="s2">&quot;trans&quot;</span> <span class="k">else</span> <span class="mi">2</span>
+
+                        <span class="n">value</span> <span class="o">=</span> <span class="n">drift_force</span><span class="o">.</span><span class="n">sel</span><span class="p">({</span><span class="n">freq_key</span><span class="p">:</span> <span class="n">freq_val</span><span class="p">,</span> <span class="s2">&quot;wave_direction_k&quot;</span><span class="p">:</span> <span class="n">beta_k</span><span class="p">,</span> <span class="s2">&quot;wave_direction_l&quot;</span><span class="p">:</span> <span class="n">beta_l</span><span class="p">,</span> <span class="s2">&quot;influenced_dof&quot;</span><span class="p">:</span> <span class="n">dof_name</span><span class="p">})</span><span class="o">.</span><span class="n">item</span><span class="p">()</span>
+
+                        <span class="c1"># Skip NaN values</span>
+                        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+                            <span class="k">continue</span>
+
+                        <span class="n">norm</span> <span class="o">=</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">g</span> <span class="o">*</span> <span class="p">(</span><span class="n">wave_amplitude</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">length_scale</span> <span class="o">**</span> <span class="n">k_exp</span><span class="p">)</span>
+                        <span class="n">value_nd</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="n">norm</span>
+
+                        <span class="c1"># Drift forces can be complex</span>
+                        <span class="n">force</span> <span class="o">=</span> <span class="nb">complex</span><span class="p">(</span><span class="n">value_nd</span><span class="p">)</span>
+                        <span class="n">mod_f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">force</span><span class="p">)</span>
+                        <span class="n">pha_f</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">force</span><span class="p">))</span>
+                        <span class="n">re_f</span> <span class="o">=</span> <span class="n">force</span><span class="o">.</span><span class="n">real</span>
+                        <span class="n">im_f</span> <span class="o">=</span> <span class="n">force</span><span class="o">.</span><span class="n">imag</span>
+
+                        <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span>
+                            <span class="s2">&quot;</span><span class="si">{:12.6e}</span><span class="se">\t</span><span class="si">{:12.6f}</span><span class="se">\t</span><span class="si">{:12.6f}</span><span class="se">\t</span><span class="si">{:5d}</span><span class="se">\t</span><span class="si">{:12.6e}</span><span class="se">\t</span><span class="si">{:12.3f}</span><span class="se">\t</span><span class="si">{:12.6e}</span><span class="se">\t</span><span class="si">{:12.6e}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                <span class="n">period</span><span class="p">,</span> <span class="n">beta_k_deg</span><span class="p">,</span> <span class="n">beta_l_deg</span><span class="p">,</span> <span class="n">mode_idx</span><span class="p">,</span> <span class="n">mod_f</span><span class="p">,</span> <span class="n">pha_f</span><span class="p">,</span> <span class="n">re_f</span><span class="p">,</span> <span class="n">im_f</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+
+<div class="viewcode-block" id="export_wamit_8">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.wamit.html#capytaine.io.wamit.export_wamit_8">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">export_wamit_8</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">_export_wamit_mean_drift</span><span class="p">(</span>
+        <span class="n">_merge_far_field_mean_drift_variables</span><span class="p">(</span><span class="n">dataset</span><span class="p">)[</span><span class="s2">&quot;drift_force&quot;</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span>
+    <span class="p">)</span></div>
+
+
+<span class="c1"># def export_wamit_9(dataset, *args, **kwargs):</span>
+<span class="c1">#     return _export_wamit_mean_drift(dataset[&quot;near_field_mean_drift_force&quot;], *args, **kwargs)</span>
+
+<span class="c1">###############################################################################</span>
+
 <div class="viewcode-block" id="export_to_wamit">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.wamit.html#capytaine.io.wamit.export_to_wamit">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">export_to_wamit</span><span class="p">(</span>
     <span class="n">dataset</span><span class="p">:</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span>
     <span class="n">problem_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">exports</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="s2">&quot;3fk&quot;</span><span class="p">,</span> <span class="s2">&quot;3sc&quot;</span><span class="p">,</span> <span class="s2">&quot;hst&quot;</span><span class="p">),</span>
+    <span class="n">exports</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="s2">&quot;3fk&quot;</span><span class="p">,</span> <span class="s2">&quot;3sc&quot;</span><span class="p">,</span> <span class="s2">&quot;8&quot;</span><span class="p">,</span> <span class="s2">&quot;hst&quot;</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Master function to export a Capytaine dataset to WAMIT-format files.</span>
@@ -963,6 +1080,7 @@ window.runMermaid = runMermaid;</script>
         <span class="s2">&quot;3&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;total excitation force&quot;</span><span class="p">,</span> <span class="n">export_wamit_3</span><span class="p">,</span> <span class="s2">&quot;.3&quot;</span><span class="p">),</span>
         <span class="s2">&quot;3fk&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;Froude-Krylov force&quot;</span><span class="p">,</span> <span class="n">export_wamit_3fk</span><span class="p">,</span> <span class="s2">&quot;.3fk&quot;</span><span class="p">),</span>
         <span class="s2">&quot;3sc&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;diffraction force&quot;</span><span class="p">,</span> <span class="n">export_wamit_3sc</span><span class="p">,</span> <span class="s2">&quot;.3sc&quot;</span><span class="p">),</span>
+        <span class="s2">&quot;8&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;mean drift force (far field)&quot;</span><span class="p">,</span> <span class="n">export_wamit_8</span><span class="p">,</span> <span class="s2">&quot;.8&quot;</span><span class="p">),</span>
         <span class="s2">&quot;hst&quot;</span><span class="p">:</span> <span class="p">(</span><span class="s2">&quot;hydrostatics&quot;</span><span class="p">,</span> <span class="n">export_wamit_hst</span><span class="p">,</span> <span class="s2">&quot;.hst&quot;</span><span class="p">),</span>
     <span class="p">}</span>
     <span class="n">check_dataset_ready_for_export</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>

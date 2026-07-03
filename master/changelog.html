@@ -82,7 +82,7 @@ Code such as the following:</p>
 <span class="n">mesh</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
-<p>In the latter version, each line returns a new Python object of class <code class="docutils literal notranslate"><span class="pre">Mesh</span></code> which is the object now referred to by the variable name <code class="docutils literal notranslate"><span class="pre">mesh</span></code>.
+<p>In the latter version, each method call returns a new Python object of class <code class="docutils literal notranslate"><span class="pre">Mesh</span></code> which is the object now referred to by the variable name <code class="docutils literal notranslate"><span class="pre">mesh</span></code>.
 The new version makes it less error prone to have complex workflows such as:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">full_mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
 <span class="n">full_mesh_draft</span> <span class="o">=</span> <span class="n">full_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
@@ -92,7 +92,6 @@ The new version makes it less error prone to have complex workflows such as:</p>
 </pre></div>
 </div>
 <p>without any risk to overwriting the original <code class="docutils literal notranslate"><span class="pre">full_mesh</span></code>.</p>
-<p>Subsequently, the <code class="docutils literal notranslate"><span class="pre">copy()</span></code> method has been removed.</p>
 <p>The only usage of in-place transformations is for performance critical part of the code.
 Given that most hydrodynamical meshes are usually below 100k faces, Capytaine’s mesh class is usually not the performance bottleneck.
 Computation intensive mesh transformations should be done with a dedicated meshing tool and not directly in Capytaine anyway.
@@ -112,9 +111,8 @@ For the same reasons as above, the in-place transformations of the <code class="
 <p>can be rewritten as:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
   <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span>
-  <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+  <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">only</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Heave&quot;</span><span class="p">])</span>
 <span class="p">)</span>
-<span class="n">body</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">with_only_dofs</span><span class="p">([</span><span class="s1">&#39;Heave&#39;</span><span class="p">])</span>
 <span class="n">body</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
 <span class="n">body</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">translated</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
 </pre></div>
@@ -124,8 +122,8 @@ For the same reasons as above, the in-place transformations of the <code class="
 Only the domain mesh file formats (Nemoh’s, WAMIT’s, Hydrostar’s and HAMS’s) are built-in in Capytaine.
 Loading a mesh in a general purpose file format such as GMSH or STL is still easy, assuming a third party library supporting this file format is installed (see <a class="reference internal" href="user_manual/mesh.html"><span class="doc">Meshes</span></a>).</p></li>
 <li><p><strong>No more mesh writers</strong>
-To reduce the burden of maintenance, mesh writers have been removed, but the
-mesh objects can be exported to external libraries that can write mesh files.
+To reduce the burden of maintenance, mesh writers have been removed.
+The mesh objects can be exported to external libraries that can write mesh files.
 As a consequence <code class="docutils literal notranslate"><span class="pre">export_as_Nemoh_directory</span></code> has been moved out of Capytaine.</p></li>
 <li><p><strong>Symmetries are only available around the main axis.</strong>
 The <code class="docutils literal notranslate"><span class="pre">Plane</span></code> and <code class="docutils literal notranslate"><span class="pre">Axis</span></code> objects have been removed.
@@ -134,32 +132,34 @@ Other planes and local symmetries used to be supported in the previous version o
 Similarly, transformations with the <code class="docutils literal notranslate"><span class="pre">mirrored</span></code> and <code class="docutils literal notranslate"><span class="pre">rotated</span></code> methods don’t work with arbitrary plane or axis anymore.
 Most transformation can still be performed by combining translation, rotation and mirroring.
 More complex transformations should be done in a dedicated meshing software.</p></li>
+<li><p>Consequently to the removal of <code class="docutils literal notranslate"><span class="pre">Plane</span></code> and <code class="docutils literal notranslate"><span class="pre">Axis</span></code>, the methods
+<code class="docutils literal notranslate"><span class="pre">Mesh.clipped</span></code> and <code class="docutils literal notranslate"><span class="pre">FloatingBody.clipped</span></code> don’t take as argument a
+<code class="docutils literal notranslate"><span class="pre">Plane</span></code> object, but directly a point and a normal (as two 3-ple of floats).</p></li>
 <li><p><strong>Rotation symmetric meshes have been completely reworked.</strong>
-They are now well integrated with the other features such as irregular frequencies removal.
+They are now well integrated with other features such as irregular frequencies removal.
 The user interface has been changed since the experimental methods from previous versions.
 See <a class="reference internal" href="developer_manual/api/capytaine.meshes.symmetric_meshes.html#capytaine.meshes.symmetric_meshes.RotationSymmetricMesh" title="capytaine.meshes.symmetric_meshes.RotationSymmetricMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">RotationSymmetricMesh</span></code></a>.
 The method to create a symmetric mesh from a profile of points has also changed, see <a class="reference internal" href="developer_manual/api/capytaine.meshes.symmetric_meshes.html#capytaine.meshes.symmetric_meshes.RotationSymmetricMesh.from_profile_points" title="capytaine.meshes.symmetric_meshes.RotationSymmetricMesh.from_profile_points"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_profile_points()</span></code></a>.
 Also the dihedral symmetry (nested reflection symmetry within a rotation symmetry) is now supported.</p></li>
 <li><p><strong>Prototype translation symmetry has been removed.</strong>
 As a consequence, the <code class="docutils literal notranslate"><span class="pre">translation_symmetry</span></code> arguments of the mesh generations functions has been removed.</p></li>
-<li><p>Different quality checks suite for given meshes.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Mesh.clipped</span></code> and <code class="docutils literal notranslate"><span class="pre">FloatingBody.clipped</span></code> don’t take as argument a
-<code class="docutils literal notranslate"><span class="pre">Plane</span></code> object, but directly a point and a normal (as two 3-ple of floats).</p></li>
+<li><p>Mesh quality checks have been reworked.</p></li>
 <li><p>If no name is provided, no generic name is given to the mesh, no name is used.
 Meshes’ names are only useful to keep track of Python objects, since printing the full list of points and faces is not very convenient.</p></li>
 <li><p>Default 3D display now uses <a class="reference external" href="https://docs.pyvista.org/">pyvista</a> as a backend instead of raw <code class="docutils literal notranslate"><span class="pre">vtk</span></code>. Please consider installing <code class="docutils literal notranslate"><span class="pre">pyvista</span></code>.
 The <code class="docutils literal notranslate"><span class="pre">matplotlib</span></code> backend is also still available for static mesh viewing.
 Some keyword argument might have been changed to uniformize usage of the two 3D backends.
-Former animation tooling has been replaced with new tools using the <a class="reference external" href="https://vedo.embl.es/">vedo</a> library as a backend. They can be found in <a class="reference internal" href="developer_manual/api/capytaine.ui.vedo_animations.html#module-capytaine.ui.vedo_animations" title="capytaine.ui.vedo_animations"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vedo_animations</span></code></a> with examples of usage in the cookbook.</p></li>
+Former animation tooling has been replaced with new tools using the <a class="reference external" href="https://vedo.embl.es/">vedo</a> library as a backend.
+They can be found in <a class="reference internal" href="developer_manual/api/capytaine.ui.vedo_animations.html#module-capytaine.ui.vedo_animations" title="capytaine.ui.vedo_animations"><code class="xref py py-mod docutils literal notranslate"><span class="pre">vedo_animations</span></code></a> with examples of usage in the cookbook.</p></li>
 <li><p>The barely-used and barely-documented <code class="docutils literal notranslate"><span class="pre">geometric_center</span></code> attribute of the mesh and the bodies have been removed.</p></li>
 <li><p>Support for optionally using quadratures from Quadpy has been removed.</p></li>
 </ul>
 </section>
-<section id="major-changes">
-<h3>Major changes<a class="headerlink" href="#major-changes" title="Link to this heading">¶</a></h3>
+<section id="other-major-changes">
+<h3>Other major changes<a class="headerlink" href="#other-major-changes" title="Link to this heading">¶</a></h3>
 <ul>
 <li><p>Add <a class="reference internal" href="developer_manual/api/capytaine.bodies.multibodies.html#capytaine.bodies.multibodies.Multibody" title="capytaine.bodies.multibodies.Multibody"><code class="xref py py-class docutils literal notranslate"><span class="pre">Multibody</span></code></a> meant to represent a
-multibody system. For hydrodynamics, this is equivalent to the previous
+<strong>multibody system</strong>. For hydrodynamics, this is equivalent to the previous
 behavior of coalescing bodies together. For hydrostatics, the new class
 is slightly more powerful, for instance by being able to keep track of
 several center of buoyancy and center of mass. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/822">PR 822</a>)</p>
@@ -175,14 +175,41 @@ or <code class="docutils literal notranslate"><span class="pre">+</span></code> 
 abstract class <a class="reference internal" href="developer_manual/api/capytaine.bodies.abstract_bodies.html#capytaine.bodies.abstract_bodies.AbstractBody" title="capytaine.bodies.abstract_bodies.AbstractBody"><code class="xref py py-class docutils literal notranslate"><span class="pre">AbstractBody</span></code></a>
 (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/873">PR 873</a>)</p>
 </li>
-<li><p>New internal data model for rigid body dofs with the classes
+<li><dl class="simple">
+<dt><strong>Hydrostatics (including multibody hydrostatics) are now stored in an xarray Dataset</strong>.</dt><dd><p>The main way to get hydrostatics properties about a <code class="docutils literal notranslate"><span class="pre">FloatingBody</span></code> or a
+new <code class="docutils literal notranslate"><span class="pre">Multibody</span></code> is through <code class="xref py py-func docutils literal notranslate"><span class="pre">compute_hydrostatics_dataset()</span></code>.
+This function is called automatically by default when using
+<a class="reference internal" href="developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset" title="capytaine.bem.solver.BEMSolver.fill_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_dataset()</span></code></a>, such that hydrostatics
+data should always be found near hydrodynamics data in datasets outputted by
+Capytaine.
+The new data stored by default in the output dataset include notably the definition
+of the <code class="docutils literal notranslate"><span class="pre">rotation_center</span></code> of the bodies.
+For multibody cases, the dataset contains a new <cite>body</cite> dimension to store
+the rotation center, the center of mass and the center of buoyancy of each
+body individually (other magnitudes such as hydrostatic stiffness, inertia
+matrix, added mass, radiation damping and excitation forces are still stored
+using the <code class="docutils literal notranslate"><span class="pre">radiating_dof</span></code> and <code class="docutils literal notranslate"><span class="pre">influenced_dof</span></code> dimensions which may
+contains body names, but cannot be stored body-by-body in the <code class="docutils literal notranslate"><span class="pre">body</span></code>
+dimension).
+(<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/887">PR 887</a>)</p>
+</dd>
+</dl>
+</li>
+<li><p><strong>New internal data model for rigid body dofs</strong> with the classes
 <a class="reference internal" href="developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.TranslationDof" title="capytaine.bodies.dofs.TranslationDof"><code class="xref py py-class docutils literal notranslate"><span class="pre">TranslationDof</span></code></a> and
 <a class="reference internal" href="developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.RotationDof" title="capytaine.bodies.dofs.RotationDof"><code class="xref py py-class docutils literal notranslate"><span class="pre">RotationDof</span></code></a>. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/838">PR 838</a>)
 This should ensure that rigid dofs are detected and treated as such, without
 relying only on their name.
 This is relevant for multiple bodies and articulated bodies when computing:
 * hydrostatics, where the exact hydrostatic stiffness formula for rigid body dofs can be used instead of the approximation for generalized dofs.
-* forward speed, where the m-term is currently only implemented for rigid dofs.</p></li>
+* forward speed, where the m-term is currently only implemented for rigid dofs.</p>
+<p>Subsequently <a class="reference internal" href="developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.rigid_body_dofs" title="capytaine.bodies.dofs.rigid_body_dofs"><code class="xref py py-func docutils literal notranslate"><span class="pre">rigid_body_dofs()</span></code></a> now instantiates the new dof class instead of a placeholder.
+It now has an additional input argument <code class="docutils literal notranslate"><span class="pre">only</span></code> to have only some of the six rigid body dofs.
+Also a rotation center should be passed, because the properties of the body
+(e.g. <cite>center_of_mass</cite>) cannot be accessed at that stage. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/838">PR 838</a>)</p>
+</li>
+<li><p><strong>Far-field mean drift force</strong> evaluation with <a class="reference internal" href="developer_manual/api/capytaine.post_pro.mean_drift_force.html#capytaine.post_pro.mean_drift_force.far_field_mean_drift_force" title="capytaine.post_pro.mean_drift_force.far_field_mean_drift_force"><code class="xref py py-func docutils literal notranslate"><span class="pre">far_field_mean_drift_force()</span></code></a>.
+Export of far-field mean drift force to WAMIT <cite>.8</cite> format has also been implemented.</p></li>
 </ul>
 </section>
 <section id="minor-changes">
@@ -203,24 +230,20 @@ deprecated since version 2.0. Consider using instead:</p>
 <p>or something equivalent, separating the geometric mesh generation from the
 floating body definition.</p>
 </li>
-<li><p><a class="reference internal" href="developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.rigid_body_dofs" title="capytaine.bodies.dofs.rigid_body_dofs"><code class="xref py py-func docutils literal notranslate"><span class="pre">rigid_body_dofs()</span></code></a> now instantiate the new dof class instead of a placeholder.
-It now has an additional input argument <code class="docutils literal notranslate"><span class="pre">only</span></code> to have only some of the six rigid body dofs.
-Also a rotation center should be passed, because the properties of the body
-(e.g. <cite>center_of_mass</cite>) cannot be accessed at that stage. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/838">PR 838</a>)</p></li>
 <li><p>Mesh quadrature (if defined) is used for hydrostatics computations.
 Since meshes have no quadrature by default, the default hydrostatics results remain the same.
 Using <cite>mesh.with_quadrature(‘Gauss-Legendre 2’)</cite> can lead to slightly better results,
 although the limitation is often the geometric approximation of the shape by a flat panels mesh.
 (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/847">PR 847</a>)</p></li>
-<li><p>Add function <a class="reference internal" href="developer_manual/api/capytaine.post_pro.mean_drift_force.html#capytaine.post_pro.mean_drift_force.far_field_mean_drift_force" title="capytaine.post_pro.mean_drift_force.far_field_mean_drift_force"><code class="xref py py-func docutils literal notranslate"><span class="pre">far_field_mean_drift_force()</span></code></a> to compute the horizontal mean drift forces using far field formulation.
-Only the single-direction second-order term is currently implemented.</p></li>
 <li><p><strong>Breaking</strong> The deprecated <code class="docutils literal notranslate"><span class="pre">FreeSurface</span></code> class and <code class="docutils literal notranslate"><span class="pre">BEMSolver.get_potential_on_mesh</span></code> and <code class="docutils literal notranslate"><span class="pre">BEMSolver.get_free_surface_elevation</span></code> methods have been removed.
 They can be replaced by just any mesh representation of the free surface and the methods <a class="reference internal" href="developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.compute_potential" title="capytaine.bem.solver.BEMSolver.compute_potential"><code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_potential()</span></code></a> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_free_surface_elevation()</span></code>.</p></li>
-<li><p>Computing the pressure or free surface elevation in post-processing does not allocate a very large matrix for a single matrix-vector product, but instead allocate and evaluate only a few rows of the matrix at a time (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/860">PR 860</a>).</p></li>
+<li><p>Computing the pressure or free surface elevation in post-processing does not
+allocate a very large matrix for a single matrix-vector product, but instead
+allocate and evaluate only a few rows of the matrix at a time (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/860">PR 860</a>).</p></li>
 <li><p>Warn the user if the <code class="docutils literal notranslate"><span class="pre">water_depth</span></code> would be better set to infinity than to a very large number (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/880">PR 880</a>).</p></li>
 <li><p><strong>Breaking</strong> Remove the <cite>body_name</cite> dimension from output dataset, and the possibility to automatically stack together outputs for different “bodies” (that is geometries) in the same dataset.
 Now <a class="reference internal" href="developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.problems_from_dataset" title="capytaine.io.xarray.problems_from_dataset"><code class="xref py py-func docutils literal notranslate"><span class="pre">problems_from_dataset()</span></code></a> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_dataset()</span></code> can only take a single body as input (or a list with a single element for backward compatibility).
-This decision is meant to make it easier to output multibody hydrostatics, meshes data and local pressures in the output dataset. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/885">PR 885</a>)</p></li>
+This decision is meant to make it easier to output multibody hydrostatics (see above), meshes data and local pressures in the output dataset. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/885">PR 885</a>)</p></li>
 </ul>
 </section>
 <section id="bug-fixes">
@@ -266,9 +289,6 @@ decomposition and symmetries. (<a class="extlink-pull reference external" href="
 <code class="docutils literal notranslate"><span class="pre">bem/engines.py</span></code> and <code class="docutils literal notranslate"><span class="pre">tool/lru_caches.py</span></code> have been removed from
 Capytaine. For compatibility, they will remain accessible from a separate
 package. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/757">PR 757</a>, <a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/765">PR 765</a>)</p></li>
-<li><p>Instead of creating a <code class="docutils literal notranslate"><span class="pre">CollectionOfMeshes</span></code>, now <code class="docutils literal notranslate"><span class="pre">join_bodies</span></code> merges the
-meshes of the bodies together. The legacy behavior is still available from
-Fakeblocks <code class="docutils literal notranslate"><span class="pre">join_bodies</span></code>. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/779">PR 779</a>)</p></li>
 <li><p>The new <code class="docutils literal notranslate"><span class="pre">Mesh</span></code> class has a <code class="docutils literal notranslate"><span class="pre">faces_metadata</span></code> attribute storing fields
 defined on each faces of the mesh. When faces are added or removed, the
 metadata are automatically updated accordingly. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/791">PR 791</a>)</p></li>
@@ -284,7 +304,7 @@ object. Also the geometric center is not used anymore as a fallback value for
 <li><p>The S matrix can now be computed even if the K matrix is not defined,
 for example when evaluating the <code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_free_surface_elevation()</span></code> along the waterline.</p></li>
 <li><p>New function implemented <code class="xref py py-func docutils literal notranslate"><span class="pre">waterline_integral()</span></code> to compute the integral of a function along the water line of a mesh.</p></li>
-<li><p>“Full double-layer matrices” are now stored as array of shape (3, n, m)
+<li><p><strong>Breaking</strong> “Full double-layer matrices” are now stored as array of shape (3, n, m)
 (or 3 matrices of shape (n, m)) instead of (n, m, 3) (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/869">PR 869</a>).</p></li>
 </ul>
 </section>
