@@ -477,9 +477,20 @@ window.runMermaid = runMermaid;</script>
           <div class="body" role="main">
             
   <h1>Source code for capytaine.bem.engines</h1><div class="highlight"><pre>
-<span></span><span class="sd">&quot;&quot;&quot;Definition of the methods to build influence matrices, using possibly some sparse structures.&quot;&quot;&quot;</span>
-<span class="c1"># Copyright (C) 2017-2019 Matthieu Ancellin</span>
-<span class="c1"># See LICENSE file at &lt;https://github.com/capytaine/capytaine&gt;</span>
+<span></span><span class="c1"># Copyright 2026 Capytaine developers</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+<span class="sd">&quot;&quot;&quot;Definition of the methods to build influence matrices, using possibly some sparse structures.&quot;&quot;&quot;</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
@@ -578,12 +589,10 @@ window.runMermaid = runMermaid;</script>
 <span class="n">LUDecomposedMatrixOrNot</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">MatrixLike</span><span class="p">,</span> <span class="n">LUDecomposedMatrixLike</span><span class="p">]</span>
 
 
-<div class="viewcode-block" id="BasicMatrixEngine">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">BasicMatrixEngine</span><span class="p">(</span><span class="n">MatrixEngine</span><span class="p">):</span>
+<div class="viewcode-block" id="DefaultMatrixEngine">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.DefaultMatrixEngine">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DefaultMatrixEngine</span><span class="p">(</span><span class="n">MatrixEngine</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Default matrix engine.</span>
-
 <span class="sd">    Features:</span>
 <span class="sd">        - Caching of the last computed matrices.</span>
 <span class="sd">        - Supports plane symmetries and nested plane symmetries.</span>
@@ -614,14 +623,14 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">last_computed_matrices</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;engine&#39;</span><span class="p">:</span> <span class="s1">&#39;BasicMatrixEngine&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;engine&#39;</span><span class="p">:</span> <span class="s1">&#39;DefaultMatrixEngine&#39;</span><span class="p">,</span>
             <span class="s1">&#39;linear_solver&#39;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">linear_solver</span><span class="p">),</span>
             <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">,</span>
         <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">params</span><span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;green_function=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;linear_solver=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_linear_solver</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;BasicMatrixEngine(</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;DefaultMatrixEngine(</span><span class="si">{</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">params</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
@@ -629,8 +638,8 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
         <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">())</span>
 
-<div class="viewcode-block" id="BasicMatrixEngine.build_S_matrix">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine.build_S_matrix">[docs]</a>
+<div class="viewcode-block" id="DefaultMatrixEngine.build_S_matrix">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.DefaultMatrixEngine.build_S_matrix">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_S_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Similar to :code:`build_matrices`, but returning only :math:`S`</span>
 
@@ -656,8 +665,8 @@ window.runMermaid = runMermaid;</script>
             <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="BasicMatrixEngine.build_fullK_matrix">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine.build_fullK_matrix">[docs]</a>
+<div class="viewcode-block" id="DefaultMatrixEngine.build_fullK_matrix">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.DefaultMatrixEngine.build_fullK_matrix">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_fullK_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Similar to :code:`build_matrices`, but returning only full :math:`K`</span>
 <span class="sd">        (that is the three components of the gradient, not just the normal one)&quot;&quot;&quot;</span>
@@ -766,8 +775,8 @@ window.runMermaid = runMermaid;</script>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">last_computed_matrices</span>
 
     <span class="c1"># Main interface for compliance with AbstractGreenFunction interface</span>
-<div class="viewcode-block" id="BasicMatrixEngine.build_matrices">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine.build_matrices">[docs]</a>
+<div class="viewcode-block" id="DefaultMatrixEngine.build_matrices">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.DefaultMatrixEngine.build_matrices">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">build_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Build the influence matrices between mesh1 and mesh2.</span>
 
@@ -796,8 +805,8 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="BasicMatrixEngine.linear_solver">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine.linear_solver">[docs]</a>
+<div class="viewcode-block" id="DefaultMatrixEngine.linear_solver">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.DefaultMatrixEngine.linear_solver">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">linear_solver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">LUDecomposedMatrixOrNot</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve a linear system with left-hand side A and right-hand-side b</span>
 
@@ -843,12 +852,12 @@ window.runMermaid = runMermaid;</script>
 
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Unknown `linear_solver` in BasicMatrixEngine: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_linear_solver</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Unknown `linear_solver` in DefaultMatrixEngine: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_linear_solver</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="BasicMatrixEngine.compute_ram_estimation">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.BasicMatrixEngine.compute_ram_estimation">[docs]</a>
+<div class="viewcode-block" id="DefaultMatrixEngine.compute_ram_estimation">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.DefaultMatrixEngine.compute_ram_estimation">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_ram_estimation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">):</span>
         <span class="n">nb_faces</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span>
         <span class="n">nb_matrices</span> <span class="o">=</span> <span class="mi">2</span>

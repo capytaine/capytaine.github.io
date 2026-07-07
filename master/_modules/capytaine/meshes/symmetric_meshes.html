@@ -677,7 +677,13 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="ReflectionSymmetricMesh.join_meshes">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.symmetric_meshes.html#capytaine.meshes.ReflectionSymmetricMesh.join_meshes">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">join_meshes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">meshes</span><span class="p">,</span> <span class="n">return_masks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">ReflectionSymmetricMesh</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">join_meshes</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">meshes</span><span class="p">,</span>
+        <span class="n">return_masks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">symmetry_warning_detail</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">ReflectionSymmetricMesh</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">]:</span>
         <span class="k">if</span> <span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">)</span> <span class="ow">and</span>
             <span class="nb">all</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">plane</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">plane</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">)):</span>
                 <span class="k">if</span> <span class="n">return_masks</span><span class="p">:</span>
@@ -713,11 +719,14 @@ window.runMermaid = runMermaid;</script>
                     <span class="k">return</span> <span class="n">joined_mesh</span>
 
         <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Warn if symmetry is being discarded</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Joining symmetric mesh with non-symmetric mesh or mesh with different symmetry</span><span class="si">{</span><span class="n">symmetry_warning_detail</span><span class="si">}</span><span class="s2">. &quot;</span>
+                       <span class="s2">&quot;Symmetry will be discarded.&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">Mesh</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">merged</span><span class="p">(),</span>
                 <span class="o">*</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">],</span>
                 <span class="n">return_masks</span><span class="o">=</span><span class="n">return_masks</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="n">name</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
             <span class="p">)</span></div>
 
 
@@ -1070,7 +1079,13 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="RotationSymmetricMesh.join_meshes">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.symmetric_meshes.html#capytaine.meshes.RotationSymmetricMesh.join_meshes">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">join_meshes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">meshes</span><span class="p">,</span> <span class="n">return_masks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">RotationSymmetricMesh</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">]:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">join_meshes</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="o">*</span><span class="n">meshes</span><span class="p">,</span>
+        <span class="n">return_masks</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">symmetry_warning_detail</span><span class="o">=</span><span class="s2">&quot;&quot;</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">RotationSymmetricMesh</span><span class="p">,</span> <span class="n">Mesh</span><span class="p">]:</span>
         <span class="k">if</span> <span class="p">(</span><span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">RotationSymmetricMesh</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">)</span> <span class="ow">and</span>
             <span class="nb">all</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">n</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">n</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">)):</span>
                 <span class="k">if</span> <span class="n">return_masks</span><span class="p">:</span>
@@ -1105,11 +1120,14 @@ window.runMermaid = runMermaid;</script>
                     <span class="k">return</span> <span class="n">joined_mesh</span>
 
         <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Warn if symmetry is being discarded</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Joining symmetric mesh with non-symmetric mesh or mesh with different symmetry</span><span class="si">{</span><span class="n">symmetry_warning_detail</span><span class="si">}</span><span class="s2">. &quot;</span>
+                       <span class="s2">&quot;Symmetry will be discarded.&quot;</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">Mesh</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">merged</span><span class="p">(),</span>
                 <span class="o">*</span><span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">meshes</span><span class="p">],</span>
                 <span class="n">return_masks</span><span class="o">=</span><span class="n">return_masks</span><span class="p">,</span>
-                <span class="n">name</span><span class="o">=</span><span class="n">name</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
             <span class="p">)</span></div>
 
 
