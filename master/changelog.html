@@ -64,27 +64,27 @@ the <code class="docutils literal notranslate"><span class="pre">meshes</span></
 <li><p><strong>No in-place mutation of the mesh objects.</strong>
 To make the maintenance of the mesh routines easier, all in-place transformation of the objects have been removed.
 Code such as the following:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s2">"..."</span><span class="p">)</span>
 <span class="n">mesh</span><span class="o">.</span><span class="n">translate_x</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
 <span class="n">mesh</span><span class="o">.</span><span class="n">keep_immersed_part</span><span class="p">()</span>
 <span class="n">mesh</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>  <span class="c1"># Show translated and clipped mesh</span>
 </pre></div>
 </div>
 <p>can be rewritted as:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s2">"..."</span><span class="p">)</span>
 <span class="n">mesh</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">translated_x</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span>
 <span class="n">mesh</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
 <span class="n">mesh</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>or more consisely:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">translated_x</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s2">"..."</span><span class="p">)</span><span class="o">.</span><span class="n">translated_x</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
 <span class="n">mesh</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>In the latter version, each method call returns a new Python object of class <code class="docutils literal notranslate"><span class="pre">Mesh</span></code> which is the object now referred to by the variable name <code class="docutils literal notranslate"><span class="pre">mesh</span></code>.
 The new version makes it less error prone to have complex workflows such as:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">full_mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">full_mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s2">"..."</span><span class="p">)</span>
 <span class="n">full_mesh_draft</span> <span class="o">=</span> <span class="n">full_mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
 <span class="k">for</span> <span class="n">draft</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]:</span>
     <span class="n">mesh</span> <span class="o">=</span> <span class="n">full_mesh</span><span class="o">.</span><span class="n">translated_z</span><span class="p">(</span><span class="n">full_mesh_draft</span> <span class="o">-</span> <span class="n">draft</span><span class="p">)</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
@@ -103,7 +103,7 @@ For the same reasons as above, the in-place transformations of the <code class="
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">)</span>
 <span class="n">body</span><span class="o">.</span><span class="n">rotation_center</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
 <span class="n">body</span><span class="o">.</span><span class="n">add_all_rigid_body_dofs</span><span class="p">()</span>
-<span class="n">body</span><span class="o">.</span><span class="n">keep_only_dofs</span><span class="p">([</span><span class="s1">&#39;Heave&#39;</span><span class="p">])</span>
+<span class="n">body</span><span class="o">.</span><span class="n">keep_only_dofs</span><span class="p">([</span><span class="s1">'Heave'</span><span class="p">])</span>
 <span class="n">body</span><span class="o">.</span><span class="n">keep_immersed_part</span><span class="p">()</span>
 <span class="n">body</span><span class="o">.</span><span class="n">translate</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
 </pre></div>
@@ -111,7 +111,7 @@ For the same reasons as above, the in-place transformations of the <code class="
 <p>can be rewritten as:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
   <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span>
-  <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">only</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Heave&quot;</span><span class="p">])</span>
+  <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">only</span><span class="o">=</span><span class="p">[</span><span class="s2">"Heave"</span><span class="p">])</span>
 <span class="p">)</span>
 <span class="n">body</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
 <span class="n">body</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">translated</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>

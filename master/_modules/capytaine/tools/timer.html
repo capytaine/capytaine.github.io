@@ -399,18 +399,18 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for capytaine.tools.timer</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright 2026 Capytaine developers</span>
 <span class="c1">#</span>
-<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the "License");</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
 <span class="c1"># You may obtain a copy of the License at</span>
 <span class="c1">#</span>
 <span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
 <span class="c1">#</span>
 <span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
-<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># distributed under the License is distributed on an "AS IS" BASIS,</span>
 <span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
-<span class="sd">&quot;&quot;&quot;A simple timer class used to measure the time spent in various parts of the BEM solver.&quot;&quot;&quot;</span>
+<span class="sd">"""A simple timer class used to measure the time spent in various parts of the BEM solver."""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
@@ -421,14 +421,14 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="Timer">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.timer.html#capytaine.tools.timer.Timer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Timer</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A timer class that can be used as context manager or as decorator using `wraps_function` method.</span>
+<span class="w">    </span><span class="sd">"""A timer class that can be used as context manager or as decorator using `wraps_function` method.</span>
 <span class="sd">    Several timing measurement can be nested.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    timings: List[Dict]]</span>
 <span class="sd">        List of records of each timing measurement.</span>
-<span class="sd">        The record is a dict with a &#39;timing&#39; key and any number of other metadata keys.</span>
+<span class="sd">        The record is a dict with a 'timing' key and any number of other metadata keys.</span>
 <span class="sd">    default_tags: Optional[Dict]</span>
 <span class="sd">        Tags added to all the timing measurements.</span>
 <span class="sd">    _start_times: List[float]</span>
@@ -442,12 +442,12 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">        timer = Timer()</span>
 
-<span class="sd">        with timer(tag=&quot;run 1&quot;):</span>
+<span class="sd">        with timer(tag="run 1"):</span>
 <span class="sd">            sleep(1.0)</span>
 
 <span class="sd">        print(timer.total)  # 1.0...</span>
 
-<span class="sd">        @timer.wraps_function(tag=&quot;run function&quot;)</span>
+<span class="sd">        @timer.wraps_function(tag="run function")</span>
 <span class="sd">        def my_function():</span>
 <span class="sd">            sleep(0.5)</span>
 
@@ -456,13 +456,13 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        my_function()</span>
 <span class="sd">        print(timer.total)  # 2.0...</span>
 
-<span class="sd">        with timer(tag=&quot;outer&quot;):</span>
+<span class="sd">        with timer(tag="outer"):</span>
 <span class="sd">            sleep(0.3)</span>
-<span class="sd">            with timer(tag=&quot;inner&quot;):</span>
+<span class="sd">            with timer(tag="inner"):</span>
 <span class="sd">                sleep(0.3)</span>
 <span class="sd">            sleep(0.3)</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">default_tags</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">timings</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">if</span> <span class="n">default_tags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
@@ -471,7 +471,7 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_start_times</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Starting time of ongoing sub-timers</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Timer(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"Timer(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="si">}</span><span class="s2">)"</span>
 
 <div class="viewcode-block" id="Timer.add_data_from_other_timer">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.timer.html#capytaine.tools.timer.Timer.add_data_from_other_timer">[docs]</a>
@@ -486,7 +486,7 @@ window.runMermaid = runMermaid;</script>
             <span class="k">yield</span>
         <span class="k">finally</span><span class="p">:</span>
             <span class="n">timing</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">perf_counter</span><span class="p">()</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start_times</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">&#39;timing&#39;</span><span class="p">:</span> <span class="n">timing</span><span class="p">,</span> <span class="o">**</span><span class="n">tags</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">default_tags</span><span class="p">})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="s1">'timing'</span><span class="p">:</span> <span class="n">timing</span><span class="p">,</span> <span class="o">**</span><span class="n">tags</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">default_tags</span><span class="p">})</span>
 
 <div class="viewcode-block" id="Timer.wraps_function">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.timer.html#capytaine.tools.timer.Timer.wraps_function">[docs]</a>
@@ -505,14 +505,14 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.timer.html#capytaine.tools.timer.Timer.as_dataframe">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">as_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([{</span><span class="s1">&#39;timing&#39;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">}])</span>
+            <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">([{</span><span class="s1">'timing'</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">}])</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timings</span><span class="p">)</span></div>
 
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">total</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_dataframe</span><span class="p">()[</span><span class="s1">&#39;timing&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_dataframe</span><span class="p">()[</span><span class="s1">'timing'</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span></div>
 
 </pre></div>
 

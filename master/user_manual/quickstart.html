@@ -54,7 +54,7 @@ More examples files can be found in the <a class="reference internal" href="../e
 <span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
 
-<span class="n">mesh_1</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s2">&quot;./boat_200.mar&quot;</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="s2">&quot;nemoh&quot;</span><span class="p">)</span>
+<span class="n">mesh_1</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">load_mesh</span><span class="p">(</span><span class="s2">"./boat_200.mar"</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="s2">"nemoh"</span><span class="p">)</span>
 <span class="n">body_1</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
             <span class="n">mesh</span><span class="o">=</span><span class="n">mesh_1</span><span class="p">,</span>
             <span class="n">lid_mesh</span><span class="o">=</span><span class="n">mesh_1</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">(</span><span class="n">faces_max_radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>  <span class="c1"># Adjust to the desired mesh resolution or remove lid entirely</span>
@@ -64,17 +64,17 @@ More examples files can be found in the <a class="reference internal" href="../e
 <span class="n">body_1</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="n">body_1</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="mi">1025</span><span class="p">)</span>
 <span class="n">body_1</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">body_1</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="mi">1025</span><span class="p">)</span>
 
-<span class="c1"># If you have several rigid bodies, copy the code above to define &quot;body_2&quot;, &quot;body_3&quot;, etc.</span>
+<span class="c1"># If you have several rigid bodies, copy the code above to define "body_2", "body_3", etc.</span>
 
-<span class="n">all_bodies</span> <span class="o">=</span> <span class="n">body_1</span>  <span class="c1"># Replace &quot;body_1&quot; by &quot;body_1 + body_2 + body_3&quot; for multibody problem.</span>
+<span class="n">all_bodies</span> <span class="o">=</span> <span class="n">body_1</span>  <span class="c1"># Replace "body_1" by "body_1 + body_2 + body_3" for multibody problem.</span>
 
 <span class="c1"># Set up parameters</span>
 <span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">({</span>
-        <span class="s2">&quot;omega&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>  <span class="c1"># Can also specify &quot;freq&quot; (in Hz), &quot;period&quot;, &quot;wavelength&quot; or &quot;wavenumber&quot;</span>
-        <span class="s2">&quot;wave_direction&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
-        <span class="s2">&quot;radiating_dof&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_bodies</span><span class="o">.</span><span class="n">dofs</span><span class="p">),</span>
-        <span class="s2">&quot;water_depth&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span>
-        <span class="s2">&quot;rho&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1025</span><span class="p">],</span>
+        <span class="s2">"omega"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>  <span class="c1"># Can also specify "freq" (in Hz), "period", "wavelength" or "wavenumber"</span>
+        <span class="s2">"wave_direction"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+        <span class="s2">"radiating_dof"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_bodies</span><span class="o">.</span><span class="n">dofs</span><span class="p">),</span>
+        <span class="s2">"water_depth"</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span>
+        <span class="s2">"rho"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1025</span><span class="p">],</span>
         <span class="p">})</span>
 
 <span class="c1"># Do the resolution</span>
@@ -82,7 +82,7 @@ More examples files can be found in the <a class="reference internal" href="../e
 <span class="n">dataset</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">all_bodies</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">())</span>
 
 <span class="c1"># Export to netcdf file</span>
-<span class="n">cpt</span><span class="o">.</span><span class="n">export_dataset</span><span class="p">(</span><span class="s2">&quot;capy_dataset.nc&quot;</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
+<span class="n">cpt</span><span class="o">.</span><span class="n">export_dataset</span><span class="p">(</span><span class="s2">"capy_dataset.nc"</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

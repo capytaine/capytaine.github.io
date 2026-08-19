@@ -399,18 +399,18 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for capytaine.bodies.bodies</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright 2026 Capytaine developers</span>
 <span class="c1">#</span>
-<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the "License");</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
 <span class="c1"># You may obtain a copy of the License at</span>
 <span class="c1">#</span>
 <span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
 <span class="c1">#</span>
 <span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
-<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># distributed under the License is distributed on an "AS IS" BASIS,</span>
 <span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
-<span class="sd">&quot;&quot;&quot;Floating bodies to be used in radiation-diffraction problems.&quot;&quot;&quot;</span>
+<span class="sd">"""Floating bodies to be used in radiation-diffraction problems."""</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
 
@@ -442,7 +442,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="FloatingBody">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">FloatingBody</span><span class="p">(</span><span class="n">_FloatingBodyHydrostaticsMixin</span><span class="p">,</span> <span class="n">AbstractBody</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;A floating body described as a mesh and some degrees of freedom.</span>
+<span class="w">    </span><span class="sd">"""A floating body described as a mesh and some degrees of freedom.</span>
 
 <span class="sd">    The mesh structure is stored as a Mesh from capytaine.mesh.mesh or a</span>
 <span class="sd">    CollectionOfMeshes from capytaine.mesh.meshes_collection.</span>
@@ -481,11 +481,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        The hull mesh joined with the lid mesh</span>
 <span class="sd">    hull_mask: np.array</span>
 <span class="sd">        The indices of the faces in mesh_including_lid that are part of the hull</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dofs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">lid_mesh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">center_of_mass</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">mass</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;dummy_mesh&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"dummy_mesh"</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span> <span class="o">=</span> <span class="n">mesh</span>
 
@@ -493,12 +493,12 @@ window.runMermaid = runMermaid;</script>
             <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">AbstractMesh</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">lid_mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Lid mesh </span><span class="si">%s</span><span class="s2"> provided for body initialization is empty. The lid mesh is ignored.&quot;</span><span class="p">,</span> <span class="n">lid_mesh</span><span class="p">)</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"Lid mesh </span><span class="si">%s</span><span class="s2"> provided for body initialization is empty. The lid mesh is ignored."</span><span class="p">,</span> <span class="n">lid_mesh</span><span class="p">)</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="o">=</span> <span class="n">lid_mesh</span><span class="o">.</span><span class="n">with_normal_vector_going_down</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Unrecognized `lid_mesh` object passed to the FloatingBody constructor.&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">"Unrecognized `lid_mesh` object passed to the FloatingBody constructor."</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mesh_including_lid</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span>
@@ -507,17 +507,17 @@ window.runMermaid = runMermaid;</script>
             <span class="bp">self</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span> <span class="n">masks</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">join_meshes</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span><span class="p">,</span>
                 <span class="n">return_masks</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                <span class="n">symmetry_warning_detail</span><span class="o">=</span><span class="s2">&quot; (hull mesh and lid mesh)&quot;</span>
+                <span class="n">symmetry_warning_detail</span><span class="o">=</span><span class="s2">" (hull mesh and lid mesh)"</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">hull_mask</span> <span class="o">=</span> <span class="n">masks</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;dummy_body&quot;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">"dummy_body"</span>
         <span class="k">elif</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="s2">&quot;name&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">name</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;anonymous_body&quot;</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">"anonymous_body"</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
 
@@ -537,16 +537,16 @@ window.runMermaid = runMermaid;</script>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_dofs_shape_consistency</span><span class="p">()</span>
 
-        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;New floating body: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"New floating body: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
 
 <div class="viewcode-block" id="FloatingBody.from_meshio">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.from_meshio">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_meshio</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;FloatingBody&#39;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a FloatingBody from a meshio mesh object.</span>
-<span class="sd">        Kinda deprecated, use cpt.load_mesh instead.&quot;&quot;&quot;</span>
-        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Deprecation warning: The method FloatingBody.from_meshio(...) is deprecated. &quot;</span>
-                    <span class="s2">&quot;Please prefer FloatingBody(mesh=cpt.load_mesh(...), ...)&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_meshio</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">'FloatingBody'</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Create a FloatingBody from a meshio mesh object.</span>
+<span class="sd">        Kinda deprecated, use cpt.load_mesh instead."""</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"Deprecation warning: The method FloatingBody.from_meshio(...) is deprecated. "</span>
+                    <span class="s2">"Please prefer FloatingBody(mesh=cpt.load_mesh(...), ...)"</span><span class="p">)</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_mesh</span>
         <span class="k">return</span> <span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">load_mesh</span><span class="p">(</span><span class="n">mesh</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
 
@@ -554,11 +554,11 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="FloatingBody.from_file">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.from_file">[docs]</a>
     <span class="nd">@staticmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;FloatingBody&#39;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a FloatingBody from a mesh file using meshmagick.</span>
-<span class="sd">        Kinda deprecated, use cpt.load_mesh instead.&quot;&quot;&quot;</span>
-        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Deprecation warning: The method FloatingBody.from_file(...) is deprecated. &quot;</span>
-                    <span class="s2">&quot;Please prefer FloatingBody(mesh=cpt.load_mesh(...), ...)&quot;</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_file</span><span class="p">(</span><span class="n">filename</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">file_format</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">'FloatingBody'</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Create a FloatingBody from a mesh file using meshmagick.</span>
+<span class="sd">        Kinda deprecated, use cpt.load_mesh instead."""</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"Deprecation warning: The method FloatingBody.from_file(...) is deprecated. "</span>
+                    <span class="s2">"Please prefer FloatingBody(mesh=cpt.load_mesh(...), ...)"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="n">filename</span>
         <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_mesh</span>
@@ -568,7 +568,7 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">bodies</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;For consistency with Multibody&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""For consistency with Multibody"""</span>
         <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="p">]</span>
 
     <span class="c1">##########</span>
@@ -577,13 +577,13 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">nb_dofs</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of degrees of freedom.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Number of degrees of freedom."""</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">)</span>
 
 <div class="viewcode-block" id="FloatingBody.add_translation_dof">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.add_translation_dof">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_translation_dof</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a new translation dof (in place).</span>
+<span class="w">        </span><span class="sd">"""Add a new translation dof (in place).</span>
 <span class="sd">        If no direction is given, the code tries to infer it from the name.</span>
 
 <span class="sd">        Parameters</span>
@@ -592,10 +592,10 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            the direction of the translation</span>
 <span class="sd">        name : str, optional</span>
 <span class="sd">            a name for the degree of freedom</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;dof_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_dofs</span><span class="si">}</span><span class="s2">_translation&quot;</span>
-        <span class="k">if</span> <span class="n">direction</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">normalize_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;Surge&quot;</span><span class="p">,</span> <span class="s2">&quot;Sway&quot;</span><span class="p">,</span> <span class="s2">&quot;Heave&quot;</span><span class="p">}:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"dof_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_dofs</span><span class="si">}</span><span class="s2">_translation"</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">normalize_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"Surge"</span><span class="p">,</span> <span class="s2">"Sway"</span><span class="p">,</span> <span class="s2">"Heave"</span><span class="p">}:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">rigid_body_dofs</span><span class="p">()[</span><span class="n">normalize_name</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">TranslationDof</span><span class="p">(</span>
@@ -606,7 +606,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="FloatingBody.add_rotation_dof">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.add_rotation_dof">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_rotation_dof</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rotation_center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add a new rotation dof (in place).</span>
+<span class="w">        </span><span class="sd">"""Add a new rotation dof (in place).</span>
 <span class="sd">        If no axis is given, the code tries to infer it from the name.</span>
 
 <span class="sd">        Parameters</span>
@@ -617,20 +617,20 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            The direction of the rotation axis</span>
 <span class="sd">        name : str, optional</span>
 <span class="sd">            a name for the degree of freedom</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;dof_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_dofs</span><span class="si">}</span><span class="s2">_rotation&quot;</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"dof_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_dofs</span><span class="si">}</span><span class="s2">_rotation"</span>
         <span class="k">if</span> <span class="n">rotation_center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_center</span><span class="p">)):</span>
                 <span class="c1"># Already has a rotation center from another dof</span>
                 <span class="n">rotation_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_center</span>
-                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The rotation dof </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> has been initialized around the point: &quot;</span>
-                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2">.rotation_center = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_center</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The rotation dof </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> has been initialized around the point: "</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2">.rotation_center = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_center</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
             <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">rotation_center</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span>
-                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The rotation dof </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> has been initialized around the point: &quot;</span>
-                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2">.center_of_mass = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">direction</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">normalize_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;Roll&quot;</span><span class="p">,</span> <span class="s2">&quot;Pitch&quot;</span><span class="p">,</span> <span class="s2">&quot;Yaw&quot;</span><span class="p">}:</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The rotation dof </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> has been initialized around the point: "</span>
+                            <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2">.center_of_mass = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">direction</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">normalize_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"Roll"</span><span class="p">,</span> <span class="s2">"Pitch"</span><span class="p">,</span> <span class="s2">"Yaw"</span><span class="p">}:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="n">rotation_center</span><span class="p">)[</span><span class="n">normalize_name</span><span class="p">(</span><span class="n">name</span><span class="p">)]</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">RotationDof</span><span class="p">(</span>
@@ -642,13 +642,13 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="FloatingBody.add_all_rigid_body_dofs">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.add_all_rigid_body_dofs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">add_all_rigid_body_dofs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">rotation_center</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add the six degrees of freedom of rigid bodies (in place).&quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Surge&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Sway&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;Heave&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_rotation_dof</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="n">rotation_center</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Roll&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_rotation_dof</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="n">rotation_center</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Pitch&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">add_rotation_dof</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="n">rotation_center</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Yaw&quot;</span><span class="p">)</span></div>
+<span class="w">        </span><span class="sd">"""Add the six degrees of freedom of rigid bodies (in place)."""</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"Surge"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"Sway"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_translation_dof</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"Heave"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_rotation_dof</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="n">rotation_center</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"Roll"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_rotation_dof</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="n">rotation_center</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"Pitch"</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">add_rotation_dof</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="n">rotation_center</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s2">"Yaw"</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="FloatingBody.integrate_pressure">
@@ -671,7 +671,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="FloatingBody.keep_only_dofs">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.keep_only_dofs">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">keep_only_dofs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;`keep_only_dofs` has been removed. Consider using `body = body.with_only_dofs([&#39;dof_name&#39;])` instead.&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"`keep_only_dofs` has been removed. Consider using `body = body.with_only_dofs(['dof_name'])` instead."</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="FloatingBody.with_only_dofs">
@@ -684,9 +684,9 @@ window.runMermaid = runMermaid;</script>
                             <span class="n">center_of_mass</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span><span class="p">,</span>
                             <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;inertia_matrix&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'inertia_matrix'</span><span class="p">):</span>
             <span class="n">body</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inertia_matrix</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">radiating_dof</span><span class="o">=</span><span class="n">dofs</span><span class="p">,</span> <span class="n">influenced_dof</span><span class="o">=</span><span class="n">dofs</span><span class="p">)</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;hydrostatic_stiffness&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'hydrostatic_stiffness'</span><span class="p">):</span>
             <span class="n">body</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">radiating_dof</span><span class="o">=</span><span class="n">dofs</span><span class="p">,</span> <span class="n">influenced_dof</span><span class="o">=</span><span class="n">dofs</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">body</span></div>
@@ -696,33 +696,33 @@ window.runMermaid = runMermaid;</script>
         <span class="k">for</span> <span class="n">dof_name</span><span class="p">,</span> <span class="n">dof</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">AbstractDof</span><span class="p">)</span> <span class="ow">and</span>
                     <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">dof</span><span class="p">)</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">))):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;The array defining the dof </span><span class="si">{</span><span class="n">dof_name</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2"> does not have the expected shape.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                                 <span class="sa">f</span><span class="s2">&quot;Expected shape: (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="si">}</span><span class="s2">, 3)</span><span class="se">\n</span><span class="s2">&quot;</span>
-                                 <span class="sa">f</span><span class="s2">&quot;  Actual shape: </span><span class="si">{</span><span class="n">dof</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The array defining the dof </span><span class="si">{</span><span class="n">dof_name</span><span class="si">}</span><span class="s2"> of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2"> does not have the expected shape.</span><span class="se">\n</span><span class="s2">"</span>
+                                 <span class="sa">f</span><span class="s2">"Expected shape: (</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="si">}</span><span class="s2">, 3)</span><span class="se">\n</span><span class="s2">"</span>
+                                 <span class="sa">f</span><span class="s2">"  Actual shape: </span><span class="si">{</span><span class="n">dof</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">rotation_center</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Try to infer a rotation center by looking at the dofs.</span>
+<span class="w">        </span><span class="sd">"""Try to infer a rotation center by looking at the dofs.</span>
 <span class="sd">        Most bodies are rigid bodies with one and only one rotation center, but not all.</span>
-<span class="sd">        Only used for exporting data, as it might not be defined.&quot;&quot;&quot;</span>
+<span class="sd">        Only used for exporting data, as it might not be defined."""</span>
         <span class="n">centers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">dof_name</span><span class="p">,</span> <span class="n">dof</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">DofOnSubmesh</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dof</span><span class="o">.</span><span class="n">dof</span><span class="p">,</span> <span class="s2">&quot;rotation_center&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">DofOnSubmesh</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dof</span><span class="o">.</span><span class="n">dof</span><span class="p">,</span> <span class="s2">"rotation_center"</span><span class="p">):</span>
                 <span class="n">centers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">dof</span><span class="o">.</span><span class="n">dof</span><span class="o">.</span><span class="n">rotation_center</span><span class="p">))</span>
-            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="s2">&quot;rotation_center&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="s2">"rotation_center"</span><span class="p">):</span>
                 <span class="n">centers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="n">dof</span><span class="o">.</span><span class="n">rotation_center</span><span class="p">))</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">centers</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">])</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">centers</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Body </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> has no uniquely defined rotation center. Returning an arbitrary one.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                        <span class="sa">f</span><span class="s2">&quot;Exporting an arbitrary one among the found ones: </span><span class="si">{</span><span class="n">centers</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Body </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> has no uniquely defined rotation center. Returning an arbitrary one.</span><span class="se">\n</span><span class="s2">"</span>
+                        <span class="sa">f</span><span class="s2">"Exporting an arbitrary one among the found ones: </span><span class="si">{</span><span class="n">centers</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="nb">next</span><span class="p">(</span><span class="nb">iter</span><span class="p">(</span><span class="n">centers</span><span class="p">)))</span>
 
     <span class="nd">@rotation_center</span><span class="o">.</span><span class="n">setter</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">rotation_center</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">_</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">&quot;Deprecated: cannot set the rotation center of a body directly.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                             <span class="s2">&quot;Set it in the definition of the degrees of freedom instead, e.g. &quot;</span>
-                             <span class="s2">&quot;`body = cpt.FloatingBody(..., dofs=cpt.rigid_body_dofs(rotation_center=c))`.&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s2">"Deprecated: cannot set the rotation center of a body directly.</span><span class="se">\n</span><span class="s2">"</span>
+                             <span class="s2">"Set it in the definition of the degrees of freedom instead, e.g. "</span>
+                             <span class="s2">"`body = cpt.FloatingBody(..., dofs=cpt.rigid_body_dofs(rotation_center=c))`."</span><span class="p">)</span>
 
     <span class="c1">###################</span>
     <span class="c1"># Transformations #</span>
@@ -730,36 +730,36 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="FloatingBody.copy">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.copy">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;FloatingBody&#39;</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a deep copy of the body.</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">copy</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">'FloatingBody'</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Return a deep copy of the body.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        name : str, optional</span>
 <span class="sd">            a name for the new copy</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_check_dofs_shape_consistency</span><span class="p">()</span>
 
         <span class="n">new_body</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">new_body</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;copy_of_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Copy </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">new_body</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"copy_of_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Copy </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">new_body</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Copy </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> under the name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Copy </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> under the name </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">new_body</span></div>
 
 
 <div class="viewcode-block" id="FloatingBody.rename">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.rename">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="s1">&#39;str&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">&#39;FloatingBody&#39;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rename</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="s1">'str'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s1">'FloatingBody'</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="FloatingBody.assemble_regular_array">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.assemble_regular_array">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">assemble_regular_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">distance</span><span class="p">,</span> <span class="n">nb_bodies</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create an regular array of identical bodies.</span>
+<span class="w">        </span><span class="sd">"""Create an regular array of identical bodies.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -771,9 +771,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        FloatingBody</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">bodies</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">translated</span><span class="p">((</span><span class="n">i</span><span class="o">*</span><span class="n">distance</span><span class="p">,</span> <span class="n">j</span><span class="o">*</span><span class="n">distance</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_bodies</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_bodies</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
-        <span class="n">array</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="o">.</span><span class="n">join_bodies</span><span class="p">(</span><span class="o">*</span><span class="n">bodies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;array_of_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="sd">        """</span>
+        <span class="n">bodies</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">translated</span><span class="p">((</span><span class="n">i</span><span class="o">*</span><span class="n">distance</span><span class="p">,</span> <span class="n">j</span><span class="o">*</span><span class="n">distance</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">i</span><span class="si">}</span><span class="s2">_</span><span class="si">{</span><span class="n">j</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_bodies</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nb_bodies</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+        <span class="n">array</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="o">.</span><span class="n">join_bodies</span><span class="p">(</span><span class="o">*</span><span class="n">bodies</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"array_of_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">array</span></div>
 
 
@@ -781,26 +781,26 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.assemble_arbitrary_array">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">assemble_arbitrary_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">locations</span><span class="p">:</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">locations</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;locations must be of type np.ndarray&#39;</span><span class="p">)</span>
-        <span class="k">assert</span> <span class="n">locations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;locations must be of shape nx2, received </span><span class="si">{:}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">locations</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">'locations must be of type np.ndarray'</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">locations</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">'locations must be of shape nx2, received </span><span class="si">{:}</span><span class="s1">'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">locations</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 
         <span class="n">fb_list</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">li</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">locations</span><span class="p">):</span>
-            <span class="n">fb_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">translated</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">li</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;arbitrary_array_body</span><span class="si">{:02d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">)))</span>
-        <span class="n">arbitrary_array</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="o">.</span><span class="n">join_bodies</span><span class="p">(</span><span class="o">*</span><span class="n">fb_list</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;array_of_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">fb_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">translated</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">li</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="s1">'arbitrary_array_body</span><span class="si">{:02d}</span><span class="s1">'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">idx</span><span class="p">)))</span>
+        <span class="n">arbitrary_array</span> <span class="o">=</span> <span class="n">FloatingBody</span><span class="o">.</span><span class="n">join_bodies</span><span class="p">(</span><span class="o">*</span><span class="n">fb_list</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">"array_of_</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">arbitrary_array</span></div>
 
 
 <div class="viewcode-block" id="FloatingBody.mirrored">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.mirrored">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">mirrored</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">&#39;xOz&#39;</span><span class="p">,</span> <span class="s1">&#39;yOz&#39;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">&quot;FloatingBody&quot;</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">plane</span> <span class="o">==</span> <span class="s2">&quot;xOz&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">mirrored</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">plane</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s1">'xOz'</span><span class="p">,</span> <span class="s1">'yOz'</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="s2">"FloatingBody"</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">plane</span> <span class="o">==</span> <span class="s2">"xOz"</span><span class="p">:</span>
             <span class="n">mirrored_coord</span> <span class="o">=</span> <span class="mi">1</span>
-        <span class="k">elif</span> <span class="n">plane</span> <span class="o">==</span> <span class="s2">&quot;yOz&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="n">plane</span> <span class="o">==</span> <span class="s2">"yOz"</span><span class="p">:</span>
             <span class="n">mirrored_coord</span> <span class="o">=</span> <span class="mi">0</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unsupported value for plane: </span><span class="si">{</span><span class="n">plane</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unsupported value for plane: </span><span class="si">{</span><span class="n">plane</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">mirror</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">TranslationDof</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">TranslationDof</span><span class="p">(</span>
@@ -828,7 +828,7 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="FloatingBody.translated">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.translated">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">translated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FloatingBody&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">translated</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"FloatingBody"</span><span class="p">:</span>
         <span class="n">shift</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">shift</span><span class="p">)</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">translate_dof</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">RotationDof</span><span class="p">):</span>
@@ -852,7 +852,7 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="FloatingBody.rotated_with_matrix">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.rotated_with_matrix">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">rotated_with_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FloatingBody&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">rotated_with_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">R</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"FloatingBody"</span><span class="p">:</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">rotate_dof</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">TranslationDof</span><span class="p">):</span>
                 <span class="k">return</span> <span class="n">TranslationDof</span><span class="p">(</span>
@@ -879,12 +879,12 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">_apply_on_mesh</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
         <span class="n">mesh_with_ids</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">with_metadata</span><span class="p">(</span><span class="n">origin_panel</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
         <span class="n">transformed_mesh</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">mesh_with_ids</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-        <span class="n">transformed_mesh</span><span class="p">,</span> <span class="n">faces_ids</span> <span class="o">=</span> <span class="n">transformed_mesh</span><span class="o">.</span><span class="n">pop_metadata</span><span class="p">(</span><span class="s2">&quot;origin_panel&quot;</span><span class="p">)</span>
+        <span class="n">transformed_mesh</span><span class="p">,</span> <span class="n">faces_ids</span> <span class="o">=</span> <span class="n">transformed_mesh</span><span class="o">.</span><span class="n">pop_metadata</span><span class="p">(</span><span class="s2">"origin_panel"</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">transformed_lid_mesh</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">transformed_lid_mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Empty lid mesh </span><span class="si">%s</span><span class="s2"> has been removed.&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span><span class="p">)</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">"Empty lid mesh </span><span class="si">%s</span><span class="s2"> has been removed."</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span><span class="p">)</span>
                 <span class="n">transformed_lid_mesh</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">transformed_lid_mesh</span> <span class="o">=</span> <span class="kc">None</span>
@@ -906,11 +906,11 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="FloatingBody.clipped">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.clipped">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">clipped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">normal</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FloatingBody&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">clipped</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">origin</span><span class="p">,</span> <span class="n">normal</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"FloatingBody"</span><span class="p">:</span>
         <span class="n">clipped_mesh</span><span class="p">,</span> <span class="n">clipped_lid_mesh</span><span class="p">,</span> <span class="n">updated_dofs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_on_mesh</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">clipped</span><span class="p">,</span>
             <span class="p">(),</span>
-            <span class="p">{</span><span class="s1">&#39;origin&#39;</span><span class="p">:</span> <span class="n">origin</span><span class="p">,</span> <span class="s1">&#39;normal&#39;</span><span class="p">:</span> <span class="n">normal</span><span class="p">}</span>
+            <span class="p">{</span><span class="s1">'origin'</span><span class="p">:</span> <span class="n">origin</span><span class="p">,</span> <span class="s1">'normal'</span><span class="p">:</span> <span class="n">normal</span><span class="p">}</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
@@ -925,11 +925,11 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="FloatingBody.immersed_part">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.immersed_part">[docs]</a>
     <span class="nd">@lru_cache</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">immersed_part</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;FloatingBody&quot;</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">immersed_part</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">sea_bottom</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"FloatingBody"</span><span class="p">:</span>
         <span class="n">clipped_mesh</span><span class="p">,</span> <span class="n">clipped_lid_mesh</span><span class="p">,</span> <span class="n">updated_dofs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_apply_on_mesh</span><span class="p">(</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">,</span>
             <span class="p">(</span><span class="n">free_surface</span><span class="p">,),</span>
-            <span class="p">{</span><span class="s1">&#39;sea_bottom&#39;</span><span class="p">:</span> <span class="n">sea_bottom</span><span class="p">,</span> <span class="s1">&#39;water_depth&#39;</span><span class="p">:</span> <span class="n">water_depth</span><span class="p">}</span>
+            <span class="p">{</span><span class="s1">'sea_bottom'</span><span class="p">:</span> <span class="n">sea_bottom</span><span class="p">,</span> <span class="s1">'water_depth'</span><span class="p">:</span> <span class="n">water_depth</span><span class="p">}</span>
         <span class="p">)</span>
         <span class="k">if</span> <span class="n">name</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
@@ -941,9 +941,9 @@ window.runMermaid = runMermaid;</script>
             <span class="n">mass</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">,</span>
             <span class="n">name</span><span class="o">=</span><span class="n">name</span>
         <span class="p">)</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;inertia_matrix&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'inertia_matrix'</span><span class="p">):</span>
             <span class="n">new_body</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">inertia_matrix</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">&#39;hydrostatic_stiffness&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'hydrostatic_stiffness'</span><span class="p">):</span>
             <span class="n">new_body</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span>
         <span class="k">return</span> <span class="n">new_body</span></div>
 
@@ -953,35 +953,35 @@ window.runMermaid = runMermaid;</script>
     <span class="c1">#############</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__short_str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(..., name=</span><span class="se">\&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(..., name=</span><span class="se">\"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\"</span><span class="s2">)"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_optional_params_str</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">items</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;mass=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="si">}</span><span class="s2">, &quot;</span><span class="p">)</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;center_of_mass=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span><span class="si">}</span><span class="s2">, &quot;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"mass=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="si">}</span><span class="s2">, "</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span> <span class="n">items</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"center_of_mass=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span><span class="si">}</span><span class="s2">, "</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">''</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">items</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">short_dofs</span> <span class="o">=</span> <span class="s1">&#39;{&#39;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot;: ...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;}&#39;</span>
+        <span class="n">short_dofs</span> <span class="o">=</span> <span class="s1">'{'</span> <span class="o">+</span> <span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">'"</span><span class="si">{}</span><span class="s1">": ...'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">)</span> <span class="o">+</span> <span class="s1">'}'</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">lid_mesh_str</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">lid_mesh_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(mesh=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2">, lid_mesh=</span><span class="si">{</span><span class="n">lid_mesh_str</span><span class="si">}</span><span class="s2">, &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;dofs=</span><span class="si">{</span><span class="n">short_dofs</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_optional_params_str</span><span class="p">()</span><span class="si">}</span><span class="s2">name=</span><span class="se">\&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(mesh=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">__short_str__</span><span class="p">()</span><span class="si">}</span><span class="s2">, lid_mesh=</span><span class="si">{</span><span class="n">lid_mesh_str</span><span class="si">}</span><span class="s2">, "</span>
+                <span class="sa">f</span><span class="s2">"dofs=</span><span class="si">{</span><span class="n">short_dofs</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_optional_params_str</span><span class="p">()</span><span class="si">}</span><span class="s2">name=</span><span class="se">\"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\"</span><span class="s2">)"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="n">short_dofs</span> <span class="o">=</span> <span class="s1">&#39;{&#39;</span> <span class="o">+</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">&#39;&quot;</span><span class="si">{}</span><span class="s1">&quot;: ...&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;}&#39;</span>
+        <span class="n">short_dofs</span> <span class="o">=</span> <span class="s1">'{'</span> <span class="o">+</span> <span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s1">'"</span><span class="si">{}</span><span class="s1">": ...'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">)</span> <span class="o">+</span> <span class="s1">'}'</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">lid_mesh_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">lid_mesh_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="kc">None</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(mesh=</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="si">}</span><span class="s2">, lid_mesh=</span><span class="si">{</span><span class="n">lid_mesh_str</span><span class="si">}</span><span class="s2">, &quot;</span>
-                <span class="sa">f</span><span class="s2">&quot;dofs=</span><span class="si">{</span><span class="n">short_dofs</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_optional_params_str</span><span class="p">()</span><span class="si">}</span><span class="s2">name=</span><span class="se">\&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">)&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(mesh=</span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span><span class="si">}</span><span class="s2">, lid_mesh=</span><span class="si">{</span><span class="n">lid_mesh_str</span><span class="si">}</span><span class="s2">, "</span>
+                <span class="sa">f</span><span class="s2">"dofs=</span><span class="si">{</span><span class="n">short_dofs</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_optional_params_str</span><span class="p">()</span><span class="si">}</span><span class="s2">name=</span><span class="se">\"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="se">\"</span><span class="s2">)"</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
         <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">())</span>
@@ -989,20 +989,20 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">__rich_repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">class</span><span class="w"> </span><span class="nc">DofWithShortRepr</span><span class="p">:</span>
             <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-                <span class="k">return</span> <span class="s1">&#39;...&#39;</span>
-        <span class="k">yield</span> <span class="s2">&quot;mesh&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span>
-        <span class="k">yield</span> <span class="s2">&quot;lid_mesh&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span>
-        <span class="k">yield</span> <span class="s2">&quot;dofs&quot;</span><span class="p">,</span> <span class="p">{</span><span class="n">d</span><span class="p">:</span> <span class="n">DofWithShortRepr</span><span class="p">()</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">}</span>
+                <span class="k">return</span> <span class="s1">'...'</span>
+        <span class="k">yield</span> <span class="s2">"mesh"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span>
+        <span class="k">yield</span> <span class="s2">"lid_mesh"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span>
+        <span class="k">yield</span> <span class="s2">"dofs"</span><span class="p">,</span> <span class="p">{</span><span class="n">d</span><span class="p">:</span> <span class="n">DofWithShortRepr</span><span class="p">()</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">}</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">yield</span> <span class="s2">&quot;mass&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">,</span> <span class="kc">None</span>
+            <span class="k">yield</span> <span class="s2">"mass"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mass</span><span class="p">,</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">yield</span> <span class="s2">&quot;center_of_mass&quot;</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span><span class="p">)</span>
-        <span class="k">yield</span> <span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">yield</span> <span class="s2">"center_of_mass"</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">center_of_mass</span><span class="p">)</span>
+        <span class="k">yield</span> <span class="s2">"name"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
 
 <div class="viewcode-block" id="FloatingBody.animate">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.animate">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">animate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">motion</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Not yet re-implemented in version 3&quot;</span><span class="p">)</span></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"Not yet re-implemented in version 3"</span><span class="p">)</span></div>
 
 
     <span class="c1">#################################</span>
@@ -1011,7 +1011,7 @@ window.runMermaid = runMermaid;</script>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">minimal_computable_wavelength</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;For accuracy of the resolution, wavelength should not be smaller than this value.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""For accuracy of the resolution, wavelength should not be smaller than this value."""</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">max</span><span class="p">(</span><span class="mi">8</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="mi">8</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span><span class="o">.</span><span class="n">faces_radiuses</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>
@@ -1021,7 +1021,7 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.first_irregular_frequency_estimate">[docs]</a>
     <span class="nd">@lru_cache</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">first_irregular_frequency_estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">g</span><span class="o">=</span><span class="mf">9.81</span><span class="p">):</span>
-<span class="w">        </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Estimates the angular frequency of the lowest irregular</span>
+<span class="w">        </span><span class="sa">r</span><span class="sd">"""Estimates the angular frequency of the lowest irregular</span>
 <span class="sd">        frequency.</span>
 <span class="sd">        This is based on the formula for the lowest irregular frequency of a</span>
 <span class="sd">        parallelepiped of size :math:`L \times B` and draft :math:`H`:</span>
@@ -1036,7 +1036,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        conservative.</span>
 <span class="sd">        The definition of a lid (supposed to be fully covering and horizontal)</span>
 <span class="sd">        is taken into account.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">draft</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">())</span>
         <span class="k">else</span><span class="p">:</span>

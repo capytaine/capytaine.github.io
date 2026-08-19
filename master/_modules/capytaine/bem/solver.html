@@ -399,25 +399,25 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for capytaine.bem.solver</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright 2026 Capytaine developers</span>
 <span class="c1">#</span>
-<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the "License");</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
 <span class="c1"># You may obtain a copy of the License at</span>
 <span class="c1">#</span>
 <span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
 <span class="c1">#</span>
 <span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
-<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># distributed under the License is distributed on an "AS IS" BASIS,</span>
 <span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
-<span class="sd">&quot;&quot;&quot;Solver for the BEM problem.</span>
+<span class="sd">"""Solver for the BEM problem.</span>
 
 <span class="sd">.. code-block:: python</span>
 
 <span class="sd">    problem = RadiationProblem(...)</span>
 <span class="sd">    result = BEMSolver(engine=..., method=...).solve(problem)</span>
 
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">shutil</span>
@@ -458,7 +458,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="BEMSolver">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">BEMSolver</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Solver for linear potential flow problems.</span>
 
 <span class="sd">    Parameters</span>
@@ -468,8 +468,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        (default: :class:`~capytaine.bem.engines.DefaultMatrixEngine`)</span>
 <span class="sd">    method: string, optional</span>
 <span class="sd">        select boundary integral equation used to solve the problems.</span>
-<span class="sd">        Accepted values: &quot;indirect&quot; (as in e.g. Nemoh), &quot;direct&quot; (as in e.g. WAMIT)</span>
-<span class="sd">        Default value: &quot;indirect&quot;</span>
+<span class="sd">        Accepted values: "indirect" (as in e.g. Nemoh), "direct" (as in e.g. WAMIT)</span>
+<span class="sd">        Default value: "indirect"</span>
 <span class="sd">    green_function: AbstractGreenFunction, optional</span>
 <span class="sd">        For convenience and backward compatibility, the Green function can be</span>
 <span class="sd">        set here if the engine is the default one.</span>
@@ -481,32 +481,32 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Storing the time spent on each subtasks of the resolution</span>
 <span class="sd">    exportable_settings : dict</span>
 <span class="sd">        Settings of the solver that can be saved to reinit the same solver later.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">green_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;indirect&quot;</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">green_function</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">engine</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">"indirect"</span><span class="p">):</span>
 
         <span class="k">if</span> <span class="n">engine</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">DefaultMatrixEngine</span><span class="p">(</span><span class="n">green_function</span><span class="o">=</span><span class="n">green_function</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">green_function</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;If you are not using the default engine, set the Green function in the engine.</span><span class="se">\n</span><span class="s2">&quot;</span>
-                                 <span class="s2">&quot;Setting the Green function in the solver is only a shortcut to set up &quot;</span>
-                                 <span class="s2">&quot;the Green function of the default engine since Capytaine version 3.0&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"If you are not using the default engine, set the Green function in the engine.</span><span class="se">\n</span><span class="s2">"</span>
+                                 <span class="s2">"Setting the Green function in the solver is only a shortcut to set up "</span>
+                                 <span class="s2">"the Green function of the default engine since Capytaine version 3.0"</span><span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">engine</span>
 
-        <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">&quot;direct&quot;</span><span class="p">,</span> <span class="s2">&quot;indirect&quot;</span><span class="p">}:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Unrecognized method when initializing solver: </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="si">}</span><span class="s2">. Expected </span><span class="se">\&quot;</span><span class="s2">direct</span><span class="se">\&quot;</span><span class="s2"> or </span><span class="se">\&quot;</span><span class="s2">indirect</span><span class="se">\&quot;</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"direct"</span><span class="p">,</span> <span class="s2">"indirect"</span><span class="p">}:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Unrecognized method when initializing solver: </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">method</span><span class="p">)</span><span class="si">}</span><span class="s2">. Expected </span><span class="se">\"</span><span class="s2">direct</span><span class="se">\"</span><span class="s2"> or </span><span class="se">\"</span><span class="s2">indirect</span><span class="se">\"</span><span class="s2">."</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">method</span> <span class="o">=</span> <span class="n">method</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">reset_timer</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span> <span class="o">=</span> <span class="p">{</span>
             <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">,</span>
-            <span class="s2">&quot;method&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
+            <span class="s2">"method"</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="p">,</span>
         <span class="p">}</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;BEMSolver(engine=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="si">}</span><span class="s2">, method=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"BEMSolver(engine=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="si">}</span><span class="s2">, method=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">method</span><span class="si">}</span><span class="s2">)"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="fm">__str__</span><span class="p">()</span>
@@ -514,19 +514,19 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="BEMSolver.reset_timer">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.reset_timer">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">reset_timer</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span> <span class="o">=</span> <span class="n">Timer</span><span class="p">(</span><span class="n">default_tags</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;process&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span></div>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timer</span> <span class="o">=</span> <span class="n">Timer</span><span class="p">(</span><span class="n">default_tags</span><span class="o">=</span><span class="p">{</span><span class="s2">"process"</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span></div>
 
 
 <div class="viewcode-block" id="BEMSolver.timer_summary">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.timer_summary">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">timer_summary</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">as_dataframe</span><span class="p">()</span>
-        <span class="n">df</span><span class="p">[</span><span class="s2">&quot;step&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;step&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
-                <span class="n">df</span><span class="p">[</span><span class="s2">&quot;step&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;Total&quot;</span><span class="p">),</span> <span class="s2">&quot;  &quot;</span> <span class="o">+</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;step&quot;</span><span class="p">]</span>
+        <span class="n">df</span><span class="p">[</span><span class="s2">"step"</span><span class="p">]</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">"step"</span><span class="p">]</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="n">df</span><span class="p">[</span><span class="s2">"step"</span><span class="p">]</span><span class="o">.</span><span class="n">str</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">"Total"</span><span class="p">),</span> <span class="s2">"  "</span> <span class="o">+</span> <span class="n">df</span><span class="p">[</span><span class="s2">"step"</span><span class="p">]</span>
                 <span class="p">)</span>
         <span class="n">total</span> <span class="o">=</span> <span class="p">(</span>
-                <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">&quot;step&quot;</span><span class="p">,</span> <span class="s2">&quot;process&quot;</span><span class="p">])</span>
-                <span class="p">[</span><span class="s2">&quot;timing&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
+                <span class="n">df</span><span class="o">.</span><span class="n">groupby</span><span class="p">([</span><span class="s2">"step"</span><span class="p">,</span> <span class="s2">"process"</span><span class="p">])</span>
+                <span class="p">[</span><span class="s2">"timing"</span><span class="p">]</span><span class="o">.</span><span class="n">sum</span><span class="p">()</span>
                 <span class="o">.</span><span class="n">unstack</span><span class="p">()</span>
                 <span class="p">)</span>
         <span class="k">return</span> <span class="n">total</span></div>
@@ -539,10 +539,10 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="n">width</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">width</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">get_terminal_size</span><span class="p">(</span><span class="n">fallback</span><span class="o">=</span><span class="p">(</span><span class="mi">80</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span><span class="o">.</span><span class="n">columns</span> <span class="o">-</span> <span class="mi">25</span>
         <span class="n">total_str</span> <span class="o">=</span> <span class="n">total</span><span class="o">.</span><span class="n">to_string</span><span class="p">(</span>
-                <span class="n">float_format</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{:.2f}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">,</span>
+                <span class="n">float_format</span><span class="o">=</span><span class="s2">"</span><span class="si">{:.2f}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">,</span>
                 <span class="n">line_width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
                 <span class="p">)</span>
-        <span class="k">return</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="n">total_str</span><span class="p">,</span> <span class="s2">&quot;  &quot;</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">indent</span><span class="p">(</span><span class="n">total_str</span><span class="p">,</span> <span class="s2">"  "</span><span class="p">)</span></div>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
@@ -556,8 +556,8 @@ window.runMermaid = runMermaid;</script>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Called by BEMSolver.solve. See the documentation therein.&quot;&quot;&quot;</span>
-        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Solve </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="n">problem</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Called by BEMSolver.solve. See the documentation therein."""</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Solve </span><span class="si">%s</span><span class="s2">."</span><span class="p">,</span> <span class="n">problem</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">_check_wavelength</span><span class="p">:</span>
             <span class="n">_check_wavelength_and_mesh_resolution</span><span class="p">([</span><span class="n">problem</span><span class="p">])</span>
@@ -565,7 +565,7 @@ window.runMermaid = runMermaid;</script>
             <span class="n">_check_wavelength_and_irregular_frequencies</span><span class="p">([</span><span class="n">problem</span><span class="p">])</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">DiffractionProblem</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">float</span><span class="p">(</span><span class="n">problem</span><span class="o">.</span><span class="n">encounter_omega</span><span class="p">)</span> <span class="ow">in</span> <span class="p">{</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">}:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Diffraction problems at zero or infinite frequency are not defined&quot;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Diffraction problems at zero or infinite frequency are not defined"</span><span class="p">)</span>
             <span class="c1"># This error used to be raised when initializing the problem.</span>
             <span class="c1"># It is now raised here, in order to be catchable by</span>
             <span class="c1"># _solve_and_catch_errors, such that batch resolution</span>
@@ -582,32 +582,32 @@ window.runMermaid = runMermaid;</script>
 
         <span class="n">linear_solver</span> <span class="o">=</span> <span class="n">supporting_symbolic_multiplication</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">linear_solver</span><span class="p">)</span>
         <span class="n">method</span> <span class="o">=</span> <span class="n">method</span> <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">method</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s1">&#39;direct&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">method</span> <span class="o">==</span> <span class="s1">'direct'</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">problem</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Direct solver is not able to solve problems with forward speed.&quot;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"Direct solver is not able to solve problems with forward speed."</span><span class="p">)</span>
 
-            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">&quot;Green function&quot;</span><span class="p">):</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">"Green function"</span><span class="p">):</span>
                 <span class="n">S</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
                         <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span>
                         <span class="o">**</span><span class="n">gf_params</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">diagonal_term_in_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                         <span class="p">)</span>
-            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">&quot;Matrix-vector product&quot;</span><span class="p">):</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">"Matrix-vector product"</span><span class="p">):</span>
                 <span class="n">rhs</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">problem</span><span class="o">.</span><span class="n">boundary_condition</span>
-            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">&quot;Linear solver&quot;</span><span class="p">):</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">"Linear solver"</span><span class="p">):</span>
                 <span class="n">rhs</span> <span class="o">=</span> <span class="n">rhs</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">COMPLEX_DTYPE</span><span class="p">[</span><span class="n">D</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span><span class="p">])</span>
                 <span class="n">potential</span> <span class="o">=</span> <span class="n">linear_solver</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
             <span class="n">pressure</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="n">potential</span>
             <span class="n">sources</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">&quot;Green function&quot;</span><span class="p">):</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">"Green function"</span><span class="p">):</span>
                 <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_matrices</span><span class="p">(</span>
                         <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span> <span class="n">problem</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span>
                         <span class="o">**</span><span class="n">gf_params</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">diagonal_term_in_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                         <span class="p">)</span>
-            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">&quot;Linear solver&quot;</span><span class="p">):</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">"Linear solver"</span><span class="p">):</span>
                 <span class="n">rhs</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">boundary_condition</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">COMPLEX_DTYPE</span><span class="p">[</span><span class="n">K</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span><span class="p">])</span>
                 <span class="n">sources</span> <span class="o">=</span> <span class="n">linear_solver</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)</span>
-            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">&quot;Matrix-vector product&quot;</span><span class="p">):</span>
+            <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">"Matrix-vector product"</span><span class="p">):</span>
                 <span class="n">potential</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">sources</span>
             <span class="n">pressure</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">omega</span> <span class="o">*</span> <span class="n">problem</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="n">potential</span>
             <span class="k">if</span> <span class="n">problem</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
@@ -623,14 +623,14 @@ window.runMermaid = runMermaid;</script>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">problem</span><span class="o">.</span><span class="n">make_results_container</span><span class="p">(</span><span class="n">forces</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">potential</span><span class="p">,</span> <span class="n">pressure</span><span class="p">)</span>
 
-        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Done!&quot;</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Done!"</span><span class="p">)</span>
 
         <span class="k">return</span> <span class="n">result</span>
 
 <div class="viewcode-block" id="BEMSolver.solve">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">n_threads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve the linear potential flow problem.</span>
+<span class="w">        </span><span class="sd">"""Solve the linear potential flow problem.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -654,15 +654,15 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        -------</span>
 <span class="sd">        LinearPotentialFlowResult</span>
 <span class="sd">            an object storing the problem data and its results</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="c1"># Thin wrapper around _solve adding the timer and the threading control</span>
-        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">&quot;Total solve function&quot;</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">"Total solve function"</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">n_threads</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="n">keep_details</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="n">_check_wavelength</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">threadpoolctl</span> <span class="o">=</span> <span class="n">import_optional_dependency</span><span class="p">(</span>
-                        <span class="s2">&quot;threadpoolctl&quot;</span><span class="p">,</span>
-                        <span class="n">error_message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Setting the `n_threads` argument to </span><span class="si">{</span><span class="n">n_threads</span><span class="si">}</span><span class="s2"> with `n_jobs=1` requires the missing optional dependency &#39;threadpoolctl&#39;.&quot;</span>
+                        <span class="s2">"threadpoolctl"</span><span class="p">,</span>
+                        <span class="n">error_message</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Setting the `n_threads` argument to </span><span class="si">{</span><span class="n">n_threads</span><span class="si">}</span><span class="s2"> with `n_jobs=1` requires the missing optional dependency 'threadpoolctl'."</span>
                         <span class="p">)</span>
                 <span class="k">with</span> <span class="n">threadpoolctl</span><span class="o">.</span><span class="n">threadpool_limits</span><span class="p">(</span><span class="n">limits</span><span class="o">=</span><span class="n">n_threads</span><span class="p">):</span>
                     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="n">keep_details</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="n">_check_wavelength</span><span class="p">)</span></div>
@@ -670,8 +670,8 @@ window.runMermaid = runMermaid;</script>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_solve_and_catch_errors</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problem</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">_display_errors</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Same as BEMSolver.solve() but returns a</span>
-<span class="sd">        FailedLinearPotentialFlowResult when the resolution failed.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Same as BEMSolver.solve() but returns a</span>
+<span class="sd">        FailedLinearPotentialFlowResult when the resolution failed."""</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">problem</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
@@ -684,7 +684,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="BEMSolver.solve_all">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve_all">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">solve_all</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">problems</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_threads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">progress_bar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">_display_errors</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve several problems.</span>
+<span class="w">        </span><span class="sd">"""Solve several problems.</span>
 <span class="sd">        Optional keyword arguments are passed to `BEMSolver.solve`.</span>
 
 <span class="sd">        Parameters</span>
@@ -717,7 +717,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        -------</span>
 <span class="sd">        list of LinearPotentialFlowResult</span>
 <span class="sd">            the solved problems</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">_check_wavelength</span><span class="p">:</span>
             <span class="n">_check_wavelength_and_mesh_resolution</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
             <span class="n">_check_wavelength_and_water_depth</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>
@@ -726,7 +726,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">_check_ram</span><span class="p">(</span><span class="n">problems</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">,</span> <span class="n">n_jobs</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">progress_bar</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">progress_bar</span> <span class="o">=</span> <span class="n">look_for_boolean_var</span><span class="p">(</span><span class="s2">&quot;CAPYTAINE_PROGRESS_BAR&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">progress_bar</span> <span class="o">=</span> <span class="n">look_for_boolean_var</span><span class="p">(</span><span class="s2">"CAPYTAINE_PROGRESS_BAR"</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
         <span class="n">groups_of_problems</span> <span class="o">=</span> <span class="n">LinearPotentialFlowProblem</span><span class="o">.</span><span class="n">_group_for_parallel_resolution</span><span class="p">(</span><span class="n">problems</span><span class="p">)</span>  <span class="c1"># or not parallel resolution</span>
 
@@ -738,18 +738,18 @@ window.runMermaid = runMermaid;</script>
                                                         <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_threads</span><span class="o">=</span><span class="n">n_threads</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">progress_bar</span><span class="p">:</span>
-                    <span class="n">groups_of_problems</span> <span class="o">=</span> <span class="n">track</span><span class="p">(</span><span class="n">groups_of_problems</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">groups_of_problems</span><span class="p">),</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Solving BEM problems&quot;</span><span class="p">)</span>
+                    <span class="n">groups_of_problems</span> <span class="o">=</span> <span class="n">track</span><span class="p">(</span><span class="n">groups_of_problems</span><span class="p">,</span> <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">groups_of_problems</span><span class="p">),</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Solving BEM problems"</span><span class="p">)</span>
 
                 <span class="n">results</span> <span class="o">=</span> <span class="p">[</span><span class="n">solve_single_pb</span><span class="p">(</span><span class="n">pb</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups_of_problems</span> <span class="k">for</span> <span class="n">pb</span> <span class="ow">in</span> <span class="n">group</span><span class="p">]</span>
 
             <span class="k">else</span><span class="p">:</span>
                 <span class="n">joblib</span> <span class="o">=</span> <span class="n">import_optional_dependency</span><span class="p">(</span>
-                    <span class="s2">&quot;joblib&quot;</span><span class="p">,</span>
-                    <span class="n">error_message</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Setting the `n_jobs` argument to </span><span class="si">{</span><span class="n">n_jobs</span><span class="si">}</span><span class="s2"> requires the missing optional dependency &#39;joblib&#39;.&quot;</span>
+                    <span class="s2">"joblib"</span><span class="p">,</span>
+                    <span class="n">error_message</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Setting the `n_jobs` argument to </span><span class="si">{</span><span class="n">n_jobs</span><span class="si">}</span><span class="s2"> requires the missing optional dependency 'joblib'."</span>
                 <span class="p">)</span>
 
                 <span class="k">def</span><span class="w"> </span><span class="nf">solver_group_of_problems_in_other_process</span><span class="p">(</span><span class="n">group</span><span class="p">):</span>
-                    <span class="c1"># Meant to be called in another process by joblib&#39;s backend.</span>
+                    <span class="c1"># Meant to be called in another process by joblib's backend.</span>
 
                     <span class="bp">self</span><span class="o">.</span><span class="n">reset_timer</span><span class="p">()</span>
                     <span class="c1"># Timer data will be concatenated to the Timer of the main process.</span>
@@ -767,15 +767,15 @@ window.runMermaid = runMermaid;</script>
 
                     <span class="k">return</span> <span class="n">group_results</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">getpid</span><span class="p">()</span>
 
-                <span class="k">with</span> <span class="n">joblib</span><span class="o">.</span><span class="n">parallel_config</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s1">&#39;loky&#39;</span><span class="p">,</span> <span class="n">inner_max_num_threads</span><span class="o">=</span><span class="n">n_threads</span><span class="p">):</span>
-                    <span class="n">parallel</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">Parallel</span><span class="p">(</span><span class="n">return_as</span><span class="o">=</span><span class="s2">&quot;generator&quot;</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
+                <span class="k">with</span> <span class="n">joblib</span><span class="o">.</span><span class="n">parallel_config</span><span class="p">(</span><span class="n">backend</span><span class="o">=</span><span class="s1">'loky'</span><span class="p">,</span> <span class="n">inner_max_num_threads</span><span class="o">=</span><span class="n">n_threads</span><span class="p">):</span>
+                    <span class="n">parallel</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">Parallel</span><span class="p">(</span><span class="n">return_as</span><span class="o">=</span><span class="s2">"generator"</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">)</span>
                     <span class="n">groups_of_results</span> <span class="o">=</span> <span class="n">parallel</span><span class="p">(</span><span class="n">joblib</span><span class="o">.</span><span class="n">delayed</span><span class="p">(</span><span class="n">solver_group_of_problems_in_other_process</span><span class="p">)(</span><span class="n">group</span><span class="p">)</span> <span class="k">for</span> <span class="n">group</span> <span class="ow">in</span> <span class="n">groups_of_problems</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="n">progress_bar</span><span class="p">:</span>
                     <span class="c1"># The progress bar is on the results iterator, because the inputs are consumed immediately by joblib</span>
                     <span class="n">groups_of_results</span> <span class="o">=</span> <span class="n">track</span><span class="p">(</span><span class="n">groups_of_results</span><span class="p">,</span>
                                               <span class="n">total</span><span class="o">=</span><span class="nb">len</span><span class="p">(</span><span class="n">groups_of_problems</span><span class="p">),</span>
-                                              <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;Solving BEM problems with </span><span class="si">{</span><span class="n">n_jobs</span><span class="si">}</span><span class="s2"> processes:&quot;</span><span class="p">)</span>
+                                              <span class="n">description</span><span class="o">=</span><span class="sa">f</span><span class="s2">"Solving BEM problems with </span><span class="si">{</span><span class="n">n_jobs</span><span class="si">}</span><span class="s2"> processes:"</span><span class="p">)</span>
 
                 <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
                 <span class="n">process_id_mapping</span> <span class="o">=</span> <span class="p">{}</span>
@@ -786,7 +786,7 @@ window.runMermaid = runMermaid;</script>
                         <span class="n">process_id_mapping</span><span class="p">[</span><span class="n">process_id</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">process_id_mapping</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="o">.</span><span class="n">add_data_from_other_timer</span><span class="p">(</span><span class="n">other_timer</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="n">process_id_mapping</span><span class="p">[</span><span class="n">process_id</span><span class="p">])</span>
 
-        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Solver timer summary (in seconds):</span><span class="se">\n</span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">displayed_total_summary</span><span class="p">())</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Solver timer summary (in seconds):</span><span class="se">\n</span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">displayed_total_summary</span><span class="p">())</span>
         <span class="k">return</span> <span class="n">results</span></div>
 
 
@@ -794,7 +794,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="BEMSolver.fill_dataset">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">fill_dataset</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dataset</span><span class="p">,</span> <span class="n">bodies</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_threads</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">progress_bar</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Solve a set of problems defined by the coordinates of an xarray dataset.</span>
+<span class="w">        </span><span class="sd">"""Solve a set of problems defined by the coordinates of an xarray dataset.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -827,15 +827,15 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
 <span class="sd">        xarray Dataset</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;start_of_computation&#39;</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+<span class="sd">        """</span>
+        <span class="n">attrs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'start_of_computation'</span><span class="p">:</span> <span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
                  <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="p">}</span>
         <span class="k">if</span> <span class="n">method</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># Overrides the method in self.exportable_settings</span>
-            <span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;method&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
+            <span class="n">attrs</span><span class="p">[</span><span class="s2">"method"</span><span class="p">]</span> <span class="o">=</span> <span class="n">method</span>
         <span class="n">problems</span> <span class="o">=</span> <span class="n">problems_from_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">bodies</span><span class="p">)</span>
-        <span class="k">if</span> <span class="s1">&#39;theta&#39;</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">'theta'</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
             <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">problems</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="n">method</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="n">n_jobs</span><span class="p">,</span> <span class="n">n_threads</span><span class="o">=</span><span class="n">n_threads</span><span class="p">,</span> <span class="n">_check_wavelength</span><span class="o">=</span><span class="n">_check_wavelength</span><span class="p">,</span> <span class="n">progress_bar</span><span class="o">=</span><span class="n">progress_bar</span><span class="p">)</span>
-            <span class="n">kochin</span> <span class="o">=</span> <span class="n">kochin_data_array</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;theta&#39;</span><span class="p">])</span>
+            <span class="n">kochin</span> <span class="o">=</span> <span class="n">kochin_data_array</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">'theta'</span><span class="p">])</span>
             <span class="n">dataset</span> <span class="o">=</span> <span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="n">attrs</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
             <span class="n">dataset</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kochin</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
@@ -848,7 +848,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="BEMSolver.compute_potential">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.compute_potential">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_potential</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the value of the potential at given points for a previously solved potential flow problem.</span>
+<span class="w">        </span><span class="sd">"""Compute the value of the potential at given points for a previously solved potential flow problem.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -865,16 +865,16 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        Exception: if the :code:`LinearPotentialFlowResult` object given as input does not contain the source distribution.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">gf_params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">free_surface</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">encounter_wavenumber</span><span class="p">)</span>
 
         <span class="n">points</span><span class="p">,</span> <span class="n">output_shape</span> <span class="o">=</span> <span class="n">_normalize_points</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;The values of the sources of </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2"> cannot been found.</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">"""The values of the sources of </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2"> cannot been found.</span>
 <span class="s2">            They probably have not been stored by the solver because the option keep_details=True have not been set or the direct method has been used.</span>
-<span class="s2">            Please re-run the resolution with the indirect method and keep_details=True.&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="s2">            Please re-run the resolution with the indirect method and keep_details=True."""</span><span class="p">)</span>
 
-        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">&quot;Post-processing potential&quot;</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">"Post-processing potential"</span><span class="p">):</span>
             <span class="n">S</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_S_matrix</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">)</span>
             <span class="n">potential</span> <span class="o">=</span> <span class="n">S</span> <span class="o">@</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span>  <span class="c1"># Sum the contributions of all panels in the mesh</span>
         <span class="k">return</span> <span class="n">potential</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span></div>
@@ -885,12 +885,12 @@ window.runMermaid = runMermaid;</script>
         <span class="c1"># keep_mesh, because we need the normal vectors associated with each collocation points to compute the fullK matrix</span>
 
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">sources</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;&quot;&quot;The values of the sources of </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2"> cannot been found.</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s2">"""The values of the sources of </span><span class="si">{</span><span class="n">result</span><span class="si">}</span><span class="s2"> cannot been found.</span>
 <span class="s2">            They probably have not been stored by the solver because the option keep_details=True have not been set.</span>
-<span class="s2">            Please re-run the resolution with this option.&quot;&quot;&quot;</span><span class="p">)</span>
+<span class="s2">            Please re-run the resolution with this option."""</span><span class="p">)</span>
 
         <span class="n">gf_params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">free_surface</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">free_surface</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">water_depth</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="n">result</span><span class="o">.</span><span class="n">encounter_wavenumber</span><span class="p">)</span>
-        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">&quot;Post-processing velocity&quot;</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">timer</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="s2">"Post-processing velocity"</span><span class="p">):</span>
             <span class="n">gradG</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="o">.</span><span class="n">build_fullK_matrix</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh_including_lid</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">)</span>
             <span class="c1"># gradG is either:</span>
             <span class="c1"># - an array of shape (3, nb_points, mesh_including_lid.nb_faces)</span>
@@ -906,7 +906,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="BEMSolver.compute_velocity">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.compute_velocity">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_velocity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the value of the velocity vector at given points for a previously solved potential flow problem.</span>
+<span class="w">        </span><span class="sd">"""Compute the value of the velocity vector at given points for a previously solved potential flow problem.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -923,7 +923,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        Exception: if the :code:`LinearPotentialFlowResult` object given as input does not contain the source distribution.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">nabla_phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_potential_gradient</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">:</span>
             <span class="n">nabla_phi</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">-=</span> <span class="n">result</span><span class="o">.</span><span class="n">forward_speed</span>
@@ -933,7 +933,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="BEMSolver.compute_pressure">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.compute_pressure">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_pressure</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the value of the pressure at given points for a previously solved potential flow problem.</span>
+<span class="w">        </span><span class="sd">"""Compute the value of the pressure at given points for a previously solved potential flow problem.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -950,7 +950,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        Exception: if the :code:`LinearPotentialFlowResult` object given as input does not contain the source distribution.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">pressure</span> <span class="o">=</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">result</span><span class="o">.</span><span class="n">encounter_omega</span> <span class="o">*</span> <span class="n">result</span><span class="o">.</span><span class="n">rho</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">compute_potential</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
             <span class="n">nabla_phi</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_compute_potential_gradient</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
@@ -964,7 +964,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="BEMSolver.compute_free_surface_elevation">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.compute_free_surface_elevation">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compute_free_surface_elevation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">result</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute the value of the free surface elevation at given points for a previously solved potential flow problem.</span>
+<span class="w">        </span><span class="sd">"""Compute the value of the free surface elevation at given points for a previously solved potential flow problem.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -981,7 +981,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Raises</span>
 <span class="sd">        ------</span>
 <span class="sd">        Exception: if the :code:`LinearPotentialFlowResult` object given as input does not contain the source distribution.</span>
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">points</span><span class="p">,</span> <span class="n">output_shape</span> <span class="o">=</span> <span class="n">_normalize_free_surface_points</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">forward_speed</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>

@@ -399,14 +399,14 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for capytaine.meshes.quality</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright 2025 Mews Labs</span>
 <span class="c1">#</span>
-<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the "License");</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
 <span class="c1"># You may obtain a copy of the License at</span>
 <span class="c1">#</span>
 <span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
 <span class="c1">#</span>
 <span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
-<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># distributed under the License is distributed on an "AS IS" BASIS,</span>
 <span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
@@ -423,44 +423,44 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="check_mesh_quality">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.quality.html#capytaine.meshes.quality.check_mesh_quality">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_mesh_quality</span><span class="p">(</span><span class="n">mesh</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Perform a set of geometric and metric quality checks on mesh data.</span>
 
 <span class="sd">    Checks performed:</span>
 <span class="sd">    - Non-coplanar faces</span>
 <span class="sd">    - Non-convex faces</span>
 <span class="sd">    - Aspect ratio via PyVista (if available)</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">non_coplanar</span> <span class="o">=</span> <span class="n">indices_of_non_coplanar_faces</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">_faces</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">non_coplanar</span><span class="p">:</span>
-        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">non_coplanar</span><span class="p">)</span><span class="si">}</span><span class="s2"> non-coplanar faces detected in </span><span class="si">{</span><span class="n">mesh</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">non_coplanar</span><span class="p">)</span><span class="si">}</span><span class="s2"> non-coplanar faces detected in </span><span class="si">{</span><span class="n">mesh</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
 
     <span class="n">non_convex</span> <span class="o">=</span> <span class="n">indices_of_non_convex_faces</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">_faces</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">non_convex</span><span class="p">:</span>
-        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">non_convex</span><span class="p">)</span><span class="si">}</span><span class="s2"> non-convex faces detected in </span><span class="si">{</span><span class="n">mesh</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">non_convex</span><span class="p">)</span><span class="si">}</span><span class="s2"> non-convex faces detected in </span><span class="si">{</span><span class="n">mesh</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
         <span class="n">pv_mesh</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">export_to_pyvista</span><span class="p">()</span>
 
         <span class="k">try</span><span class="p">:</span>
-            <span class="n">arq</span> <span class="o">=</span> <span class="n">pv_mesh</span><span class="o">.</span><span class="n">cell_quality</span><span class="p">(</span><span class="s2">&quot;aspect_ratio&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">cell_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;aspect_ratio&quot;</span><span class="p">)</span>
+            <span class="n">arq</span> <span class="o">=</span> <span class="n">pv_mesh</span><span class="o">.</span><span class="n">cell_quality</span><span class="p">(</span><span class="s2">"aspect_ratio"</span><span class="p">)</span><span class="o">.</span><span class="n">cell_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"aspect_ratio"</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>  <span class="c1"># Older version of PyVista</span>
-            <span class="n">arq</span> <span class="o">=</span> <span class="n">pv_mesh</span><span class="o">.</span><span class="n">compute_cell_quality</span><span class="p">(</span><span class="s2">&quot;aspect_ratio&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">cell_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CellQuality&quot;</span><span class="p">)</span>
+            <span class="n">arq</span> <span class="o">=</span> <span class="n">pv_mesh</span><span class="o">.</span><span class="n">compute_cell_quality</span><span class="p">(</span><span class="s2">"aspect_ratio"</span><span class="p">)</span><span class="o">.</span><span class="n">cell_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"CellQuality"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">arq</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">ratio_ok</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">arq</span> <span class="o">&lt;</span> <span class="mi">5</span><span class="p">)</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">arq</span><span class="p">)</span>
             <span class="k">if</span> <span class="n">ratio_ok</span> <span class="o">&lt;</span> <span class="mf">0.9</span><span class="p">:</span>
-                <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Aspect Ratio of </span><span class="si">{</span><span class="n">mesh</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Aspect Ratio of </span><span class="si">{</span><span class="n">mesh</span><span class="si">}</span><span class="s2">:"</span><span class="p">)</span>
                 <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;  Min: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">arq</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> | Max: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">arq</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> | Mean: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">arq</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">"  Min: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">arq</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> | Max: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">arq</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2"> | Mean: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">arq</span><span class="p">)</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">"</span>
                 <span class="p">)</span>
-                <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  Elements with AR &lt; 5: </span><span class="si">{</span><span class="n">ratio_ok</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"  Elements with AR &lt; 5: </span><span class="si">{</span><span class="n">ratio_ok</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%"</span><span class="p">)</span>
                 <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
-                    <span class="s2">&quot;Low quality: more than 10</span><span class="si">% o</span><span class="s2">f elements have aspect ratio higher than 5.&quot;</span>
+                    <span class="s2">"Low quality: more than 10</span><span class="si">% o</span><span class="s2">f elements have aspect ratio higher than 5."</span>
                 <span class="p">)</span>
     <span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
         <span class="k">global</span> <span class="n">SHOWED_PYVISTA_WARNING</span>
         <span class="k">if</span> <span class="n">LOG</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">SHOWED_PYVISTA_WARNING</span><span class="p">:</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;PyVista not installed, skipping aspect ratio check.&quot;</span><span class="p">)</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"PyVista not installed, skipping aspect ratio check."</span><span class="p">)</span>
             <span class="n">SHOWED_PYVISTA_WARNING</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 
@@ -485,7 +485,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="indices_of_non_coplanar_faces">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.quality.html#capytaine.meshes.quality.indices_of_non_coplanar_faces">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">indices_of_non_coplanar_faces</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Identify the indices of quadrilateral faces that are not coplanar.</span>
 
 <span class="sd">    Parameters</span>
@@ -499,7 +499,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    -------</span>
 <span class="sd">    list[int]</span>
 <span class="sd">        List of indices of non-coplanar quadrilateral faces.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">indices</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">face</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">faces</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">face</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
@@ -525,7 +525,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="indices_of_non_convex_faces">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.meshes.quality.html#capytaine.meshes.quality.indices_of_non_convex_faces">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">indices_of_non_convex_faces</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Identify indices of quadrilateral faces in the mesh that are not convex.</span>
 
 <span class="sd">    Parameters</span>
@@ -537,7 +537,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    -------</span>
 <span class="sd">    list[int]</span>
 <span class="sd">        List of indices of non-convex quadrilateral faces.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">indices</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">face</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">faces</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">face</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">4</span><span class="p">:</span>
@@ -553,15 +553,15 @@ window.runMermaid = runMermaid;</script>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">_is_valid</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Check that every face index is valid for the given vertices.</span>
 <span class="sd">    Now: an empty face-list is considered valid (as long as vertices exist).</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># If you have no vertices at all, only accept if also no faces</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">vertices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">faces</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span>
 
-    <span class="c1"># If you have vertices but zero faces → that&#39;s fine</span>
+    <span class="c1"># If you have vertices but zero faces → that's fine</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">faces</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="k">return</span> <span class="kc">True</span>
 

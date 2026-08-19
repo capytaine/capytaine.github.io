@@ -399,14 +399,14 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for capytaine.tools.memory_monitor</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright 2026 Capytaine developers</span>
 <span class="c1">#</span>
-<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the "License");</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
 <span class="c1"># You may obtain a copy of the License at</span>
 <span class="c1">#</span>
 <span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
 <span class="c1">#</span>
 <span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
-<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># distributed under the License is distributed on an "AS IS" BASIS,</span>
 <span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
@@ -421,20 +421,20 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="MemoryMonitor">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.memory_monitor.html#capytaine.tools.memory_monitor.MemoryMonitor">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">MemoryMonitor</span><span class="p">(</span><span class="n">Thread</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Monitor the memory usage in a separate thread.</span>
+<span class="w">    </span><span class="sd">"""Monitor the memory usage in a separate thread.</span>
 <span class="sd">    from : https://joblib.readthedocs.io/en/stable/auto_examples/parallel_generator.html#sphx-glr-auto-examples-parallel-generator-py</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">stop</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">memory_buffer</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">psutil</span> <span class="o">=</span> <span class="n">silently_import_optional_dependency</span><span class="p">(</span><span class="s2">&quot;psutil&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">psutil</span> <span class="o">=</span> <span class="n">silently_import_optional_dependency</span><span class="p">(</span><span class="s2">"psutil"</span><span class="p">)</span>
 
 <div class="viewcode-block" id="MemoryMonitor.get_memory">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.memory_monitor.html#capytaine.tools.memory_monitor.MemoryMonitor.get_memory">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">get_memory</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="s2">&quot;Get memory of a process and its children.&quot;</span>
+        <span class="s2">"Get memory of a process and its children."</span>
         <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">psutil</span><span class="o">.</span><span class="n">Process</span><span class="p">()</span>
         <span class="n">memory</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">memory_info</span><span class="p">()</span><span class="o">.</span><span class="n">rss</span>
         <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">p</span><span class="o">.</span><span class="n">children</span><span class="p">():</span>
@@ -472,9 +472,9 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="fm">__exit__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">):</span>
         <span class="n">memory_peak</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_memory_peak</span><span class="p">()</span>
         <span class="k">if</span> <span class="n">memory_peak</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Actual peak RAM usage: Not measured since optional dependency `psutil` cannot be found.&quot;</span><span class="p">)</span>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Actual peak RAM usage: Not measured since optional dependency `psutil` cannot be found."</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Actual peak RAM usage: </span><span class="si">{</span><span class="n">memory_peak</span><span class="si">}</span><span class="s2"> GB.&quot;</span><span class="p">)</span></div>
+            <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Actual peak RAM usage: </span><span class="si">{</span><span class="n">memory_peak</span><span class="si">}</span><span class="s2"> GB."</span><span class="p">)</span></div>
 
 </pre></div>
 

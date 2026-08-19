@@ -399,18 +399,18 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for capytaine.post_pro.impedance</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright 2026 Capytaine developers</span>
 <span class="c1">#</span>
-<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the "License");</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
 <span class="c1"># You may obtain a copy of the License at</span>
 <span class="c1">#</span>
 <span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
 <span class="c1">#</span>
 <span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
-<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># distributed under the License is distributed on an "AS IS" BASIS,</span>
 <span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
-<span class="sd">&quot;&quot;&quot;Computation of the impendance matrix.&quot;&quot;&quot;</span>
+<span class="sd">"""Computation of the impendance matrix."""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
@@ -420,13 +420,13 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="rao_transfer_function">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.post_pro.impedance.html#capytaine.post_pro.impedance.rao_transfer_function">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">rao_transfer_function</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">dissipation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stiffness</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Complex-valued matrix used for the computation of the RAO.</span>
+<span class="w">    </span><span class="sd">"""Complex-valued matrix used for the computation of the RAO.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    dataset: xarray Dataset</span>
 <span class="sd">        The hydrodynamical dataset.</span>
-<span class="sd">        This function supposes that variables named &#39;inertia_matrix&#39; and &#39;hydrostatic_stiffness&#39; are in the dataset.</span>
+<span class="sd">        This function supposes that variables named 'inertia_matrix' and 'hydrostatic_stiffness' are in the dataset.</span>
 <span class="sd">        Other variables can be computed by Capytaine, by those two should be manually added to the dataset.</span>
 <span class="sd">    dissipation: array, optional</span>
 <span class="sd">        An optional dissipation matrix (e.g. Power Take Off) to be included in the transfer function.</span>
@@ -439,23 +439,23 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    -------</span>
 <span class="sd">    xarray DataArray</span>
 <span class="sd">        The matrix as an array depending of omega and the degrees of freedom.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="s1">&#39;inertia_matrix&#39;</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Computing the impedance matrix requires an `inertia_matrix` matrix to be defined in the hydrodynamical dataset&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="s1">'inertia_matrix'</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">'Computing the impedance matrix requires an `inertia_matrix` matrix to be defined in the hydrodynamical dataset'</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="s1">&#39;hydrostatic_stiffness&#39;</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Computing the impedance matrix requires an `hydrostatic_stiffness` matrix to be defined in the hydrodynamical dataset&#39;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="s1">'hydrostatic_stiffness'</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">'Computing the impedance matrix requires an `hydrostatic_stiffness` matrix to be defined in the hydrodynamical dataset'</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="s1">&#39;encounter_omega&#39;</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
-        <span class="n">omega</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;encounter_omega&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="s1">'encounter_omega'</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">'encounter_omega'</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">omega</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;omega&#39;</span><span class="p">]</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">'omega'</span><span class="p">]</span>
 
     <span class="c1"># ASSEMBLE MATRICES</span>
-    <span class="n">H</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;inertia_matrix&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;added_mass&#39;</span><span class="p">])</span>
-         <span class="o">-</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">omega</span><span class="o">*</span><span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;radiation_damping&#39;</span><span class="p">]</span>
-         <span class="o">+</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">&#39;hydrostatic_stiffness&#39;</span><span class="p">])</span>
+    <span class="n">H</span> <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="n">omega</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s1">'inertia_matrix'</span><span class="p">]</span> <span class="o">+</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">'added_mass'</span><span class="p">])</span>
+         <span class="o">-</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">omega</span><span class="o">*</span><span class="n">dataset</span><span class="p">[</span><span class="s1">'radiation_damping'</span><span class="p">]</span>
+         <span class="o">+</span> <span class="n">dataset</span><span class="p">[</span><span class="s1">'hydrostatic_stiffness'</span><span class="p">])</span>
 
     <span class="k">if</span> <span class="n">dissipation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">H</span> <span class="o">=</span> <span class="n">H</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">omega</span><span class="o">*</span><span class="n">dissipation</span>
@@ -470,7 +470,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="impedance">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.post_pro.impedance.html#capytaine.post_pro.impedance.impedance">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">impedance</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">dissipation</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stiffness</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Complex-valued mechanical impedance matrix.</span>
+<span class="w">    </span><span class="sd">"""Complex-valued mechanical impedance matrix.</span>
 <span class="sd">    See Falnes for more theoretical details::</span>
 
 <span class="sd">        @book{falnes2002ocean,</span>
@@ -486,7 +486,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    ----------</span>
 <span class="sd">    dataset: xarray Dataset</span>
 <span class="sd">        The hydrodynamical dataset.</span>
-<span class="sd">        This function supposes that variables named &#39;inertia_matrix&#39; and &#39;hydrostatic_stiffness&#39; are in the dataset.</span>
+<span class="sd">        This function supposes that variables named 'inertia_matrix' and 'hydrostatic_stiffness' are in the dataset.</span>
 <span class="sd">        Other variables can be computed by Capytaine, by those two should be manually added to the dataset.</span>
 <span class="sd">    dissipation: array, optional</span>
 <span class="sd">        An optional dissipation matrix (e.g. Power Take Off) to be included in the impedance.</span>
@@ -499,11 +499,11 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    -------</span>
 <span class="sd">    xarray DataArray</span>
 <span class="sd">        The impedance as an array depending of omega and the degrees of freedom.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">if</span> <span class="s1">&#39;encounter_omega&#39;</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
-        <span class="n">omega</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;encounter_omega&#39;</span><span class="p">]</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="s1">'encounter_omega'</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">'encounter_omega'</span><span class="p">]</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">omega</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">&#39;omega&#39;</span><span class="p">]</span>
+        <span class="n">omega</span> <span class="o">=</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">'omega'</span><span class="p">]</span>
     <span class="k">return</span> <span class="mi">1</span><span class="o">/</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">omega</span><span class="p">)</span> <span class="o">*</span> <span class="n">rao_transfer_function</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">dissipation</span><span class="p">,</span> <span class="n">stiffness</span><span class="p">)</span></div>
 
 </pre></div>

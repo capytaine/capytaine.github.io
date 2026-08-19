@@ -399,26 +399,26 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for capytaine.tools.symbolic_multiplication</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright 2026 Capytaine developers</span>
 <span class="c1">#</span>
-<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the "License");</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
 <span class="c1"># You may obtain a copy of the License at</span>
 <span class="c1">#</span>
 <span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
 <span class="c1">#</span>
 <span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
-<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># distributed under the License is distributed on an "AS IS" BASIS,</span>
 <span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
-<span class="sd">&quot;&quot;&quot;This module is used for the handling of zero and infinite frequencies.</span>
+<span class="sd">"""This module is used for the handling of zero and infinite frequencies.</span>
 <span class="sd">In this cases, the magnitudes that the solver has to manipulate are in the form of ω times a non-zero term.</span>
 <span class="sd">Instead of evaluating this multiplication as zero of infinity, we keep it symbolic using the class defined here.</span>
 
 <span class="sd">The frequency can be provided to the solver as something like</span>
-<span class="sd">`SymbolicMultiplication(&quot;0&quot;, 1.0)` (that is zero) and the solver will return an</span>
-<span class="sd">output of the form `SymbolicMultiplication(&quot;0&quot;, np.array(...))`</span>
+<span class="sd">`SymbolicMultiplication("0", 1.0)` (that is zero) and the solver will return an</span>
+<span class="sd">output of the form `SymbolicMultiplication("0", np.array(...))`</span>
 <span class="sd">(that is also actually zero, except we may be intested in the non-zero array).</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span><span class="p">,</span> <span class="n">total_ordering</span>
@@ -429,11 +429,11 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">symbol</span><span class="p">,</span> <span class="n">value</span><span class="o">=</span><span class="mf">1.0</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">=</span> <span class="n">symbol</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">&quot;shape&quot;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s2">"shape"</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">shape</span>  <span class="c1"># When wrapping Numpy arrays</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__format__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format_spec</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2">×</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="fm">__format__</span><span class="p">(</span><span class="n">format_spec</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2">×</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="o">.</span><span class="fm">__format__</span><span class="p">(</span><span class="n">format_spec</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
 
     <span class="n">__array_priority__</span> <span class="o">=</span> <span class="mf">1.0</span>
 
@@ -448,13 +448,13 @@ window.runMermaid = runMermaid;</script>
                 <span class="k">return</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="n">arrays</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="n">func</span><span class="p">([</span><span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">arrays</span><span class="p">],</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-                    <span class="sa">f</span><span class="s2">&quot;Cannot apply function </span><span class="si">{</span><span class="n">func</span><span class="si">}</span><span class="s2"> to mismatch of arrays with &quot;</span>
-                    <span class="sa">f</span><span class="s2">&quot;different symbolic multiplication: </span><span class="si">{</span><span class="n">arrays</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">"Cannot apply function </span><span class="si">{</span><span class="n">func</span><span class="si">}</span><span class="s2"> to mismatch of arrays with "</span>
+                    <span class="sa">f</span><span class="s2">"different symbolic multiplication: </span><span class="si">{</span><span class="n">arrays</span><span class="si">}</span><span class="s2">"</span>
                 <span class="p">)</span>
         <span class="k">elif</span> <span class="p">(</span>
                 <span class="n">func</span> <span class="ow">in</span> <span class="p">{</span><span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">}</span> <span class="ow">and</span>
                 <span class="nb">len</span><span class="p">([</span><span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">actual_args</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">SymbolicMultiplication</span><span class="p">)])</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span>
-                <span class="s2">&quot;out&quot;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span>
+                <span class="s2">"out"</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span>
                 <span class="p">):</span>
             <span class="c1"># Einsum with one of the array being wrapped in SymbolicMultiplication</span>
             <span class="n">unwrapped</span> <span class="o">=</span> <span class="p">[</span><span class="n">a</span><span class="o">.</span><span class="n">value</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">SymbolicMultiplication</span><span class="p">)</span> <span class="k">else</span> <span class="n">a</span> <span class="k">for</span> <span class="n">a</span> <span class="ow">in</span> <span class="n">actual_args</span><span class="p">]</span>
@@ -469,10 +469,10 @@ window.runMermaid = runMermaid;</script>
 
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2">×</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="s2">×</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="si">}</span><span class="s2">"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;SymbolicMultiplication(</span><span class="se">\&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="se">\&quot;</span><span class="s2">, </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"SymbolicMultiplication(</span><span class="se">\"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="si">}</span><span class="se">\"</span><span class="s2">, </span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__add__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_concretize</span><span class="p">()</span> <span class="o">+</span> <span class="n">x</span>
@@ -496,18 +496,18 @@ window.runMermaid = runMermaid;</script>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__truediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;symbol&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">symbol</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">'symbol'</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">symbol</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">/</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span> <span class="o">/</span> <span class="n">x</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__rtruediv__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;symbol&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">symbol</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">'symbol'</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="n">x</span><span class="o">.</span><span class="n">symbol</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">value</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">&quot;0&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="s2">&quot;∞&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">&quot;∞&quot;</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">"0"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="s2">"∞"</span><span class="p">,</span> <span class="n">x</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">"∞"</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="s2">"0"</span><span class="p">,</span> <span class="n">x</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span>
 
@@ -546,17 +546,17 @@ window.runMermaid = runMermaid;</script>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_concretize</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">&quot;0&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">"0"</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">&quot;∞&quot;</span><span class="p">:</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">"∞"</span><span class="p">:</span>
                 <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">full_like</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__float__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">&quot;0&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">"0"</span><span class="p">:</span>
             <span class="k">return</span> <span class="mf">0.0</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">&quot;∞&quot;</span><span class="p">:</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">symbol</span> <span class="o">==</span> <span class="s2">"∞"</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="o">*</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">value</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span>
@@ -582,15 +582,15 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="supporting_symbolic_multiplication">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.symbolic_multiplication.html#capytaine.tools.symbolic_multiplication.supporting_symbolic_multiplication">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">supporting_symbolic_multiplication</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    When this decorator is applied to a function, this function can now take</span>
 <span class="sd">    as input a `SymbolicMultiplication` object. The function is applied on the</span>
 <span class="sd">    `value` part of the `SymbolicMultiplication` without modifying the</span>
 <span class="sd">    `symbol`.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="nd">@wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">wrapped_f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;symbol&#39;</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">'symbol'</span><span class="p">):</span>
             <span class="k">return</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>

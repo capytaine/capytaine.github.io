@@ -399,20 +399,20 @@ window.runMermaid = runMermaid;</script>
   <h1>Source code for capytaine.tools.prony_decomposition</h1><div class="highlight"><pre>
 <span></span><span class="c1"># Copyright 2026 Capytaine developers</span>
 <span class="c1">#</span>
-<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the "License");</span>
 <span class="c1"># you may not use this file except in compliance with the License.</span>
 <span class="c1"># You may obtain a copy of the License at</span>
 <span class="c1">#</span>
 <span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
 <span class="c1">#</span>
 <span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
-<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># distributed under the License is distributed on an "AS IS" BASIS,</span>
 <span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
 <span class="c1"># See the License for the specific language governing permissions and</span>
 <span class="c1"># limitations under the License.</span>
-<span class="sd">&quot;&quot;&quot;Prony decomposition: tool to approximate a function as a sum of exponentials.</span>
+<span class="sd">"""Prony decomposition: tool to approximate a function as a sum of exponentials.</span>
 <span class="sd">Used in particular in the finite depth Green function.</span>
-<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 
@@ -428,7 +428,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="exponential_decomposition">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.prony_decomposition.html#capytaine.tools.prony_decomposition.exponential_decomposition">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">exponential_decomposition</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">m</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Use Prony&#39;s method to approximate the sampled real function F=f(X) as a sum of m</span>
+<span class="w">    </span><span class="sd">"""Use Prony's method to approximate the sampled real function F=f(X) as a sum of m</span>
 <span class="sd">    exponential functions x → Σ a_i exp(lamda_i x).</span>
 
 <span class="sd">    Parameters</span>
@@ -446,10 +446,10 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        coefficients of the exponentials</span>
 <span class="sd">    lamda: 1D array (size m)</span>
 <span class="sd">        growth rate of the exponentials</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="k">assert</span> <span class="n">X</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">F</span><span class="o">.</span><span class="n">shape</span>
 
-    <span class="c1"># Compute the coefficients of the polynomials of Prony&#39;s method</span>
+    <span class="c1"># Compute the coefficients of the polynomials of Prony's method</span>
     <span class="n">A</span> <span class="o">=</span> <span class="n">toeplitz</span><span class="p">(</span><span class="n">c</span><span class="o">=</span><span class="n">F</span><span class="p">[</span><span class="n">m</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">r</span><span class="o">=</span><span class="n">F</span><span class="p">[:</span><span class="n">m</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
     <span class="n">P</span><span class="p">,</span> <span class="o">*</span><span class="n">_</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">lstsq</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">F</span><span class="p">[</span><span class="n">m</span><span class="p">:],</span> <span class="n">rcond</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
@@ -468,7 +468,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">lamda</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">lamda</span><span class="p">)</span>
     <span class="n">lamda</span> <span class="o">=</span> <span class="n">lamda</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">logical_and</span><span class="p">(</span><span class="o">-</span><span class="mf">20.0</span> <span class="o">&lt;</span> <span class="n">lamda</span><span class="p">,</span> <span class="n">lamda</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">)]</span>
 
-    <span class="c1"># Fit the values of &#39;a&#39; on the curve</span>
+    <span class="c1"># Fit the values of 'a' on the curve</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">f</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">ar</span><span class="p">):</span>
         <span class="n">ar</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ar</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
         <span class="n">la</span> <span class="o">=</span> <span class="n">lamda</span><span class="p">[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
@@ -482,7 +482,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="error_exponential_decomposition">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.prony_decomposition.html#capytaine.tools.prony_decomposition.error_exponential_decomposition">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">error_exponential_decomposition</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">F</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">lamda</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Mean square error of the exponential decomposition defined by the</span>
+<span class="w">    </span><span class="sd">"""Mean square error of the exponential decomposition defined by the</span>
 <span class="sd">    coefficients a and lamda with respect to the reference values in F.</span>
 
 <span class="sd">    Parameters</span>
@@ -500,7 +500,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    -------</span>
 <span class="sd">    error: float</span>
 <span class="sd">        mean square error of the decomposition</span>
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="n">a</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">a</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
     <span class="n">lamda</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">lamda</span><span class="p">)[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
 
@@ -521,7 +521,7 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="find_best_exponential_decomposition">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.prony_decomposition.html#capytaine.tools.prony_decomposition.find_best_exponential_decomposition">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">find_best_exponential_decomposition</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">x_min</span><span class="p">,</span> <span class="n">x_max</span><span class="p">,</span> <span class="n">n_exp_range</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">,</span> <span class="n">noise_on_domain_points_std</span><span class="o">=</span><span class="mf">0.01</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Tries to construct an exponential decompositoin of the function f on the</span>
+<span class="w">    </span><span class="sd">"""Tries to construct an exponential decompositoin of the function f on the</span>
 <span class="sd">    domain [x_min, x_max] by testing the number of exponentials in n_exp_range.</span>
 
 <span class="sd">    Parameters</span>
@@ -540,7 +540,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Introduces some random variability on the points where the function is evaluated.</span>
 <span class="sd">        Set this parameter to zero to disable randomness.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
+<span class="sd">    """</span>
     <span class="c1"># Try different range of evaluation points to construct the decomposition.</span>
     <span class="k">for</span> <span class="n">n_exp</span> <span class="ow">in</span> <span class="n">n_exp_range</span><span class="p">:</span>
 
@@ -565,9 +565,9 @@ window.runMermaid = runMermaid;</script>
             <span class="k">continue</span>
 
     <span class="k">raise</span> <span class="n">PronyDecompositionFailure</span><span class="p">(</span>
-            <span class="s2">&quot;No suitable Prony decomposition has been found in &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;[</span><span class="si">{</span><span class="n">x_min</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">x_max</span><span class="si">}</span><span class="s2">] for tol=</span><span class="si">{</span><span class="n">tol</span><span class="si">}</span><span class="s2"> &quot;</span>
-            <span class="sa">f</span><span class="s2">&quot;using a number of terms in </span><span class="si">{</span><span class="n">n_exp_range</span><span class="si">}</span><span class="s2">.&quot;</span>
+            <span class="s2">"No suitable Prony decomposition has been found in "</span>
+            <span class="sa">f</span><span class="s2">"[</span><span class="si">{</span><span class="n">x_min</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">x_max</span><span class="si">}</span><span class="s2">] for tol=</span><span class="si">{</span><span class="n">tol</span><span class="si">}</span><span class="s2"> "</span>
+            <span class="sa">f</span><span class="s2">"using a number of terms in </span><span class="si">{</span><span class="n">n_exp_range</span><span class="si">}</span><span class="s2">."</span>
             <span class="p">)</span></div>
 
 </pre></div>
