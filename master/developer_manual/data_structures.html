@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Data structures &#8212; capytaine 3.1.dev0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/proof.css" />
+    <link rel="stylesheet" type="text/css" href="../_static/copybutton.css?v=76b2166b" />
+    <script src="../_static/documentation_options.js?v=4bc36534"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script src="../_static/clipboard.min.js?v=a7894cd8"></script>
+    <script src="../_static/copybutton.js?v=f281be69"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Making a release" href="making_a_release.html" />
+    <link rel="prev" title="Testing Capytaine" href="testing.html" />
+    <script defer data-domain="capytaine.github.io" src="https://plausible.io/js/script.js"></script>
+    <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+    
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+
+  </head><body>
+  
+
+    <div class="document">
+<div id="new-doc-warning-banner" style="width:100%; background-color:#ADD8E6; text-align: center;">This page is part of the documentation of the development version 3.1.dev0 of Capytaine.<br><a href="https://capytaine.github.io/stable/">Latest stable version is available here.</a></div>
+    
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="data-structures">
+<h1>Data structures<a class="headerlink" href="#data-structures" title="Link to this heading">¶</a></h1>
+<p>This page discuss some of the implementation details of how data are stored internally in Capytaine.</p>
+<section id="simple-mesh">
+<h2>Simple mesh<a class="headerlink" href="#simple-mesh" title="Link to this heading">¶</a></h2>
+<p>A mesh can be seen as a list of faces.
+Data on faces (such as the area of each face) are stored in array of length the number of faces.
+The ordering in the array should be consistent for all fields defined on this mesh.</p>
+</section>
+<section id="symmetric-mesh">
+<h2>Symmetric mesh<a class="headerlink" href="#symmetric-mesh" title="Link to this heading">¶</a></h2>
+<p>A reflection symmetric mesh is stored as two halves.
+An array storing a data field on the mesh is organised such that the first half of the array is the reference half of the mesh and the second half of the array is the reflected half of the mesh.
+Taking advantage of the symmetries in the resolution requires the matrices to have a block circulant structure that would be too inconvenient to implement if the reference faces and the symmetric faces were ordered in a different way.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">|</span>  <span class="n">half</span> <span class="mi">1</span>    <span class="o">|</span>   <span class="n">half</span> <span class="mi">2</span>   <span class="o">|</span>
+</pre></div>
+</div>
+</section>
+<section id="body-with-lid">
+<h2>Body with lid<a class="headerlink" href="#body-with-lid" title="Link to this heading">¶</a></h2>
+<p>Assume a FloatingBody defined with a hull mesh and a lid mesh:</p>
+<ul class="simple">
+<li><p>the dofs of the body are defined only on the hull</p></li>
+<li><p>the input Neumann boundary condition of the LinearPotentialFlowProblem, as well as the source and potential outputs fields are defined on the hull and the lid</p></li>
+</ul>
+<p>In general, the lid are the last panels of the boundary condition, but this will not be the case in the following more complicated cases, so to access only the panels on the hull, the attribute <code class="docutils literal notranslate"><span class="pre">hull_masks</span></code>, stored as a boolean array, should be used.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>           <span class="o">|</span>  <span class="n">hull</span>      <span class="o">|</span>  <span class="n">lid</span>  <span class="o">|</span>
+<span class="n">dof</span><span class="p">:</span>       <span class="o">|------------|</span>
+<span class="n">bc</span><span class="p">:</span>        <span class="o">|--------------------|</span>
+
+<span class="n">hull_mask</span><span class="p">:</span> <span class="o">|</span><span class="n">TTTTTTTTTTTTTFFFFFFF</span><span class="o">|</span>
+</pre></div>
+</div>
+</section>
+<section id="body-with-lid-and-symmetry">
+<h2>Body with lid and symmetry<a class="headerlink" href="#body-with-lid-and-symmetry" title="Link to this heading">¶</a></h2>
+<p>For a single body with a lid and symmetry, the last panels are always the symmetric part, so the data about the lid panels are distributed in the array:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>           <span class="o">|</span>  <span class="n">hull</span>      <span class="o">|</span>   <span class="n">lid</span>   <span class="o">|</span>  <span class="n">sym</span> <span class="n">hull</span>  <span class="o">|</span> <span class="n">sym</span> <span class="n">lid</span> <span class="o">|</span>
+<span class="n">dof</span><span class="p">:</span>       <span class="o">|------------|</span>         <span class="o">|------------|</span>
+<span class="n">bc</span><span class="p">:</span>        <span class="o">|---------------------------------------------|</span>
+
+<span class="n">hull_mask</span><span class="p">:</span> <span class="o">|</span><span class="n">TTTTTTTTTTTTTFFFFFFFFFTTTTTTTTTTTTTTFFFFFFFFF</span><span class="o">|</span>
+</pre></div>
+</div>
+</section>
+<section id="multibody">
+<h2>Multibody<a class="headerlink" href="#multibody" title="Link to this heading">¶</a></h2>
+<p>For multibodies, the dofs in <code class="docutils literal notranslate"><span class="pre">Multibody.dofs</span></code> are stored in arrays of the length of the total number of panels of the mesh of all bodies, possibly using the <code class="docutils literal notranslate"><span class="pre">DofOnSubmesh</span></code> class.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>           <span class="o">|</span>  <span class="n">hull</span> <span class="mi">1</span>    <span class="o">|</span>   <span class="n">hull2</span>    <span class="o">|</span>
+<span class="n">dof</span> <span class="n">body</span> <span class="mi">1</span><span class="p">:</span><span class="o">|------------|</span>            <span class="o">|</span>
+<span class="n">dof</span> <span class="n">body</span> <span class="mi">2</span><span class="p">:</span>             <span class="o">|------------|</span>
+<span class="n">dof</span><span class="p">:</span>       <span class="o">|-------------------------|</span>
+<span class="n">bodymask</span> <span class="mi">1</span><span class="p">:</span><span class="o">|</span><span class="n">TTTTTTTTTTTTTFFFFFFFFFFFF</span><span class="o">|</span>
+<span class="n">bodymask</span> <span class="mi">2</span><span class="p">:</span><span class="o">|</span><span class="n">FFFFFFFFFFFFFTTTTTTTTTTTT</span><span class="o">|</span>
+
+<span class="n">bc</span><span class="p">:</span>        <span class="o">|-------------------------|</span>
+</pre></div>
+</div>
+</section>
+<section id="multibody-with-symmetry">
+<h2>Multibody with symmetry<a class="headerlink" href="#multibody-with-symmetry" title="Link to this heading">¶</a></h2>
+<p>For multiple bodies composed of symmetric bodies</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>           <span class="o">|</span>  <span class="n">hull</span> <span class="mi">1</span>    <span class="o">|</span>   <span class="n">hull2</span>    <span class="o">|</span> <span class="n">sym</span> <span class="n">hull</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">sym</span> <span class="n">hull</span> <span class="mi">2</span> <span class="o">|</span>
+<span class="n">dof</span> <span class="n">body</span> <span class="mi">1</span><span class="p">:</span><span class="o">|------------|</span>            <span class="o">|------------|</span>
+<span class="n">dof</span> <span class="n">body</span> <span class="mi">2</span><span class="p">:</span>             <span class="o">|------------|</span>            <span class="o">|------------|</span>
+<span class="n">dof</span><span class="p">:</span>       <span class="o">|---------------------------------------------------|</span>
+<span class="n">bodymask</span> <span class="mi">1</span><span class="p">:</span><span class="o">|</span><span class="n">TTTTTTTTTTTTTFFFFFFFFFFFFFTTTTTTTTTTTTFFFFFFFFFFFFF</span><span class="o">|</span>
+<span class="n">bodymask</span> <span class="mi">2</span><span class="p">:</span><span class="o">|</span><span class="n">FFFFFFFFFFFFFTTTTTTTTTTTTFFFFFFFFFFFFFTTTTTTTTTTTTT</span><span class="o">|</span>
+
+<span class="n">bc</span><span class="p">:</span>        <span class="o">|---------------------------------------------------|</span>
+</pre></div>
+</div>
+</section>
+<section id="multibody-with-lid">
+<h2>Multibody with lid<a class="headerlink" href="#multibody-with-lid" title="Link to this heading">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>              <span class="o">|</span>  <span class="n">hull</span> <span class="mi">1</span>    <span class="o">|</span>  <span class="n">lid</span> <span class="mi">1</span> <span class="o">|</span>  <span class="n">hull2</span>    <span class="o">|</span> <span class="n">lid</span> <span class="mi">2</span> <span class="o">|</span>
+   <span class="n">dof</span> <span class="n">body</span> <span class="mi">1</span><span class="p">:</span><span class="o">|------------|</span>
+   <span class="n">dof</span> <span class="n">body</span> <span class="mi">2</span><span class="p">:</span>                      <span class="o">|-----------|</span>
+   <span class="n">dof</span><span class="p">:</span>       <span class="o">|------------|</span>        <span class="o">|-----------|</span>
+   <span class="n">bodymask</span> <span class="mi">1</span><span class="p">:</span><span class="o">|</span><span class="n">TTTTTTTTTTTT</span><span class="o">|</span>        <span class="o">|</span><span class="n">FFFFFFFFFFF</span><span class="o">|</span>
+   <span class="n">bodymask</span> <span class="mi">2</span><span class="p">:</span><span class="o">|</span><span class="n">FFFFFFFFFFFF</span><span class="o">|</span>        <span class="o">|</span><span class="n">TTTTTTTTTTT</span><span class="o">|</span>
+
+   <span class="n">bc</span><span class="p">:</span>        <span class="o">|-----------------------------------------|</span>
+   <span class="n">hull_mask</span><span class="p">:</span> <span class="o">|</span><span class="n">TTTTTTTTTTTTTFFFFFFFFTTTTTTTTTTTTTFFFFFFF</span><span class="o">|</span>
+
+
+<span class="n">The</span> <span class="n">body</span> <span class="kn">from</span><span class="w"> </span><span class="nn">which</span> <span class="n">each</span> <span class="n">lid</span> <span class="n">face</span> <span class="n">originates</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">tracked</span><span class="p">,</span> <span class="k">as</span> <span class="n">there</span> <span class="ow">is</span> <span class="n">no</span> <span class="n">use</span> <span class="k">for</span> <span class="n">it</span><span class="o">.</span>
+</pre></div>
+</div>
+</section>
+<section id="multibody-with-lid-and-symmetry">
+<h2>Multibody with lid and symmetry<a class="headerlink" href="#multibody-with-lid-and-symmetry" title="Link to this heading">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>           <span class="o">|</span>  <span class="n">hull</span> <span class="mi">1</span>    <span class="o">|</span> <span class="n">hull</span> <span class="mi">2</span>     <span class="o">|</span> <span class="n">lid</span> <span class="mi">1</span>     <span class="o">|</span> <span class="n">lid</span> <span class="mi">2</span>     <span class="o">|</span> <span class="n">sym</span> <span class="n">hull</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">sym</span> <span class="n">hull</span> <span class="mi">2</span> <span class="o">|</span> <span class="n">sym</span> <span class="n">lid</span> <span class="mi">1</span> <span class="o">|</span> <span class="n">sym</span> <span class="n">lid</span> <span class="mi">2</span> <span class="o">|</span>
+<span class="n">dof</span> <span class="n">body</span> <span class="mi">1</span><span class="p">:</span><span class="o">|------------|</span>                                    <span class="o">|------------|</span>
+<span class="n">dof</span> <span class="n">body</span> <span class="mi">2</span><span class="p">:</span>             <span class="o">|------------|</span>                                    <span class="o">|------------|</span>
+<span class="n">dof</span><span class="p">:</span>       <span class="o">|-------------------------|</span>                       <span class="o">|-------------------------|</span>
+<span class="n">bodymask</span> <span class="mi">1</span><span class="p">:</span><span class="o">|</span><span class="n">TTTTTTTTTTTTFFFFFFFFFFFFF</span><span class="o">|</span>                       <span class="o">|</span><span class="n">TTTTTTTTTTTTFFFFFFFFFFFFF</span><span class="o">|</span>
+<span class="n">bodymask</span> <span class="mi">1</span><span class="p">:</span><span class="o">|</span><span class="n">FFFFFFFFFFFFTTTTTTTTTTTTT</span><span class="o">|</span>                       <span class="o">|</span><span class="n">FFFFFFFFFFFFTTTTTTTTTTTTT</span><span class="o">|</span>
+
+<span class="n">bc</span><span class="p">:</span>        <span class="o">|---------------------------------------------------------------------------------------------------|</span>
+<span class="n">hull_mask</span><span class="p">:</span> <span class="o">|</span><span class="n">TTTTTTTTTTTTTTTTTTTTTTTTTFFFFFFFFFFFFFFFFFFFFFFFFTTTTTTTTTTTTTTTTTTTTTTTTTTTFFFFFFFFFFFFFFFFFFFFFFF</span><span class="o">|</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">capytaine</a></h1>
+
+
+
+<p class="blurb">a Python-based linear potential flow BEM solver</p>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../features.html">Features</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../user_manual/index.html">User manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples/index.html">Example scripts</a></li>
+</ul>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Developer manual</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="installation.html">Installation for developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview.html">Overview of the modules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Testing Capytaine</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Data structures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="making_a_release.html">Making a release</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api/modules.html">API documentation</a></li>
+</ul>
+</li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../theory_manual/index.html">Theory manual</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../citing.html">Citing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../changelog.html">Changelog</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Developer manual</a><ul>
+      <li>Previous: <a href="testing.html" title="previous chapter">Testing Capytaine</a></li>
+      <li>Next: <a href="making_a_release.html" title="next chapter">Making a release</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2026, Capytaine developpers.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/developer_manual/data_structures.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
