@@ -62,6 +62,19 @@ For older changelogs, see:</p>
 <li><p>Fix computation of hydrostatic stiffness on multibodies treated as generalized dofs as in previous version. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/936">PR 936</a>)</p></li>
 </ul>
 </section>
+<section id="internals">
+<h3>Internals<a class="headerlink" href="#internals" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p>Fix <a class="reference internal" href="developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.AbstractDof.evaluate_motion_at_points" title="capytaine.bodies.dofs.AbstractDof.evaluate_motion_at_points"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate_motion_at_points()</span></code></a> and
+<a class="reference internal" href="developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.AbstractDof.evaluate_gradient_of_motion_at_points" title="capytaine.bodies.dofs.AbstractDof.evaluate_gradient_of_motion_at_points"><code class="xref py py-meth docutils literal notranslate"><span class="pre">evaluate_gradient_of_motion_at_points()</span></code></a>
+to accept arrays of points of shape <code class="docutils literal notranslate"><span class="pre">(...,</span> <span class="pre">3)</span></code> instead of only <code class="docutils literal notranslate"><span class="pre">(nb_points,</span> <span class="pre">3)</span></code>.
+Also fix <a class="reference internal" href="developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.DofOnSubmesh" title="capytaine.bodies.dofs.DofOnSubmesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">DofOnSubmesh</span></code></a>, whose
+<code class="docutils literal notranslate"><span class="pre">evaluate_motion_at_points</span></code> and <code class="docutils literal notranslate"><span class="pre">evaluate_gradient_of_motion_at_points</span></code>
+methods were indexing arbitrary points as if they were mesh faces; they now
+raise <code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code> and <code class="docutils literal notranslate"><span class="pre">evaluate_motion</span></code>/<code class="docutils literal notranslate"><span class="pre">evaluate_gradient_of_motion</span></code>
+should be used instead. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/938">PR 938</a>)</p></li>
+</ul>
+</section>
 </section>
 <section id="new-in-version-3-0-2026-08-21">
 <h2>New in version 3.0 (2026-08-21)<a class="headerlink" href="#new-in-version-3-0-2026-08-21" title="Link to this heading">¶</a></h2>
@@ -287,8 +300,8 @@ logging’s setting are only set if no logging has been set before.
 (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/922">PR 922</a>)</p></li>
 </ul>
 </section>
-<section id="internals">
-<h3>Internals<a class="headerlink" href="#internals" title="Link to this heading">¶</a></h3>
+<section id="id2">
+<h3>Internals<a class="headerlink" href="#id2" title="Link to this heading">¶</a></h3>
 <ul class="simple">
 <li><p><strong>Breaking</strong> The <code class="docutils literal notranslate"><span class="pre">green_function</span></code> is not an attribute of the <a class="reference internal" href="developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver" title="capytaine.bem.solver.BEMSolver"><code class="xref py py-class docutils literal notranslate"><span class="pre">BEMSolver</span></code></a> anymore, but of the engine.
 The motivation is that not all engines can be made compatible with all Green function implementations (although the builtins one are).
