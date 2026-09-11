@@ -72,7 +72,9 @@ vector has magnitude 23941 Newton at <span class="math notranslate nohighlight">
 <p>For radiation problems, the result object also contain <code class="docutils literal notranslate"><span class="pre">added_mass</span></code> and
 <code class="docutils literal notranslate"><span class="pre">radiation_damping</span></code> attributes, with the same shape of a Python dictionary.</p>
 <p>It the solver was called with <code class="docutils literal notranslate"><span class="pre">keep_details=True</span></code>, the result object also
-contains the potential and pressure fields on each face of the mesh of the hull:</p>
+contains the potential and pressure fields on each face of the mesh used for
+the resolution (that is, including the lid faces, if a lid has been defined
+on the body to remove irregular frequencies):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">potential</span><span class="p">)</span>
 <span class="c1"># [-1.72534485e-03+0.14128629j -3.98932611e-03+0.33387497j</span>
 <span class="c1">#  -6.54135830e-03+0.54208628j ... -2.09853806e+00-0.56106653j</span>
@@ -85,9 +87,15 @@ contains the potential and pressure fields on each face of the mesh of the hull:
 </pre></div>
 </div>
 <p>These magnitudes are stored in an one-dimensional array as long as the number
-of faces of the mesh, and stored in the same order as the faces in the <code class="docutils literal notranslate"><span class="pre">Mesh</span></code>
-object. In other words, <code class="docutils literal notranslate"><span class="pre">result.pressure[3]</span></code> contains the pressure on the
-face of center <code class="docutils literal notranslate"><span class="pre">body.mesh.faces_centers[3]</span></code>.</p>
+of faces of the mesh, and stored in the same order as the faces in the
+<code class="docutils literal notranslate"><span class="pre">mesh_including_lid</span></code> object. In other words, <code class="docutils literal notranslate"><span class="pre">result.pressure[3]</span></code>
+contains the pressure on the face of center
+<code class="docutils literal notranslate"><span class="pre">body.mesh_including_lid.faces_centers[3]</span></code>.</p>
+<p>Since the pressure on the lid is not physically meaningful, the result object
+also provides <code class="docutils literal notranslate"><span class="pre">result.pressure_on_hull</span></code>, which is <code class="docutils literal notranslate"><span class="pre">result.pressure</span></code>
+restricted to the faces of <code class="docutils literal notranslate"><span class="pre">body.mesh</span></code> (that is, excluding the lid). When no
+lid has been defined, <code class="docutils literal notranslate"><span class="pre">result.pressure_on_hull</span></code> and <code class="docutils literal notranslate"><span class="pre">result.pressure</span></code> are
+the same.</p>
 <p>Recall that the potential and the pressure are related by <span class="math notranslate nohighlight">\(p = j \rho
 \omega \Phi\)</span>, where <span class="math notranslate nohighlight">\(\rho\)</span> is the fluid density and <span class="math notranslate nohighlight">\(\omega\)</span> is the
 angular frequency.</p>
@@ -133,6 +141,19 @@ the dataset (number of faces, quadrature method).</p></li>
 <li><p><code class="code docutils literal notranslate"><span class="pre">hydrostatics</span></code> (default: <code class="code docutils literal notranslate"><span class="pre">True</span></code>): if hydrostatics data are
 available in the <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code>, they are added to the dataset.</p></li>
 </ul>
+<p>In addition, <code class="code docutils literal notranslate"><span class="pre">fill_dataset</span></code> accepts a <code class="code docutils literal notranslate"><span class="pre">keep_details</span></code> keyword
+argument (default: <code class="code docutils literal notranslate"><span class="pre">False</span></code>), forwarded to <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve_all" title="capytaine.bem.solver.BEMSolver.solve_all"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve_all()</span></code></a>.
+When set to <code class="code docutils literal notranslate"><span class="pre">True</span></code>, the potential, pressure and sources computed for
+each problem are kept and the resulting dataset contains the pressure
+distribution on the hull as the data variables <code class="code docutils literal notranslate"><span class="pre">diffraction_pressure</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">Froude_Krylov_pressure</span></code> and <code class="code docutils literal notranslate"><span class="pre">radiation_pressure</span></code> (with a
+<code class="code docutils literal notranslate"><span class="pre">hull_face</span></code> dimension, in the same order as the faces of <code class="code docutils literal notranslate"><span class="pre">body.mesh</span></code>):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s2">"diffraction_pressure"</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>Keeping these details increases the memory usage of the dataset, so this
+option is disabled by default.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The code does its best to keep the degrees of freedom in the same

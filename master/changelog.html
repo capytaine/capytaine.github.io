@@ -63,6 +63,9 @@ For older changelogs, see:</p>
 The legacy style of defining a dof with an array of motions allowed that already, but this new interface also allows optionally to give the gradient (actually jacobian) of the motion which is useful for hydrostatics, forward speed and second-order forces.
 Passing the <code class="docutils literal notranslate"><span class="pre">divergence</span></code> parameter to <code class="xref py py-meth docutils literal notranslate"><span class="pre">compute_hydrostatic_stiffness()</span></code> is discouraged in favor of this new construct.
 (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/939">PR 939</a>)</p></li>
+<li><p><a class="reference internal" href="developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.fill_dataset" title="capytaine.bem.solver.BEMSolver.fill_dataset"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fill_dataset()</span></code></a> has a new keyword argument <code class="docutils literal notranslate"><span class="pre">keep_details</span></code> (default: <code class="docutils literal notranslate"><span class="pre">False</span></code>).
+When set to <code class="docutils literal notranslate"><span class="pre">True</span></code>, the pressure field on the hull is kept for each problem and automatically included in the returned dataset as the data variables <code class="docutils literal notranslate"><span class="pre">diffraction_pressure</span></code>, <code class="docutils literal notranslate"><span class="pre">Froude_Krylov_pressure</span></code> and <code class="docutils literal notranslate"><span class="pre">radiation_pressure</span></code>.
+See <a class="reference internal" href="user_manual/post_pro.html"><span class="doc">Post-processing and collection in dataset</span></a> for more details.</p></li>
 </ul>
 </section>
 <section id="bug-fixes">
@@ -82,6 +85,10 @@ Also fix <a class="reference internal" href="developer_manual/api/capytaine.bodi
 methods were indexing arbitrary points as if they were mesh faces; they now
 raise <code class="docutils literal notranslate"><span class="pre">NotImplementedError</span></code> and <code class="docutils literal notranslate"><span class="pre">evaluate_motion</span></code>/<code class="docutils literal notranslate"><span class="pre">evaluate_gradient_of_motion</span></code>
 should be used instead. (<a class="extlink-pull reference external" href="https://github.com/capytaine/capytaine/pull/938">PR 938</a>)</p></li>
+<li><p>Add a <code class="code docutils literal notranslate"><span class="pre">pressure_on_hull</span></code> attribute to
+<a class="reference internal" href="developer_manual/api/capytaine.bem.problems_and_results.html#capytaine.bem.problems_and_results.LinearPotentialFlowResult" title="capytaine.bem.problems_and_results.LinearPotentialFlowResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">LinearPotentialFlowResult</span></code></a>, equal
+to <code class="code docutils literal notranslate"><span class="pre">pressure</span></code> restricted to the faces of the hull mesh, excluding the
+lid used to remove irregular frequencies (if any).</p></li>
 </ul>
 </section>
 </section>

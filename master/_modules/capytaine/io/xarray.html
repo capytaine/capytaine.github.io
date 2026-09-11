@@ -436,6 +436,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.problems_and_results</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">LinearPotentialFlowProblem</span><span class="p">,</span> <span class="n">DiffractionProblem</span><span class="p">,</span> <span class="n">RadiationProblem</span><span class="p">,</span>
     <span class="n">LinearPotentialFlowResult</span><span class="p">,</span> <span class="n">_default_parameters</span><span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.airy_waves</span><span class="w"> </span><span class="kn">import</span> <span class="n">airy_waves_pressure_dataarray</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.post_pro.kochin</span><span class="w"> </span><span class="kn">import</span> <span class="n">compute_kochin</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.bemio</span><span class="w"> </span><span class="kn">import</span> <span class="n">dataframe_from_bemio</span>
 
@@ -663,7 +664,6 @@ window.runMermaid = runMermaid;</script>
     <span class="n">da</span> <span class="o">=</span> <span class="n">_squeeze_dimensions</span><span class="p">(</span><span class="n">da</span><span class="p">,</span> <span class="n">dimensions</span><span class="o">=</span><span class="n">optional_dims</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">da</span>
 
-
 <span class="k">def</span><span class="w"> </span><span class="nf">_rotation_center_data_array</span><span class="p">(</span><span class="n">body</span><span class="p">:</span> <span class="n">AbstractBody</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">]:</span>
     <span class="n">rotation_centers</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">b</span><span class="o">.</span><span class="n">rotation_center</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">bodies</span><span class="p">])</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">rotation_centers</span><span class="p">)):</span>
@@ -884,6 +884,18 @@ window.runMermaid = runMermaid;</script>
         <span class="s2">"Froude_Krylov_force"</span><span class="p">:</span> <span class="p">{</span>
             <span class="s1">'long_name'</span><span class="p">:</span> <span class="s2">"Froude Krylov force"</span><span class="p">,</span>
             <span class="p">},</span>
+        <span class="s2">"radiation_pressure"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">'long_name'</span><span class="p">:</span> <span class="s2">"Radiation pressure"</span><span class="p">,</span>
+            <span class="s1">'units'</span><span class="p">:</span> <span class="s1">'Pa'</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="s2">"diffraction_pressure"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">'long_name'</span><span class="p">:</span> <span class="s2">"Diffraction pressure"</span><span class="p">,</span>
+            <span class="s1">'units'</span><span class="p">:</span> <span class="s1">'Pa'</span><span class="p">,</span>
+            <span class="p">},</span>
+        <span class="s2">"Froude_Krylov_pressure"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s1">'long_name'</span><span class="p">:</span> <span class="s2">"Froude Krylov pressure"</span><span class="p">,</span>
+            <span class="s1">'units'</span><span class="p">:</span> <span class="s1">'Pa'</span><span class="p">,</span>
+            <span class="p">},</span>
         <span class="p">}</span>
 
 <div class="viewcode-block" id="assemble_dataset">
@@ -1083,6 +1095,28 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">computed_hydrostatics</span> <span class="o">=</span> <span class="n">computed_hydrostatics</span><span class="o">.</span><span class="n">assign_coords</span><span class="p">(</span><span class="n">influenced_dof</span><span class="o">=</span><span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">"influenced_dof"</span><span class="p">]</span><span class="o">.</span><span class="n">to_index</span><span class="p">())</span>
 
             <span class="n">dataset</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">merge</span><span class="p">([</span><span class="n">dataset</span><span class="p">,</span> <span class="n">computed_hydrostatics</span><span class="p">],</span> <span class="n">compat</span><span class="o">=</span><span class="s2">"no_conflicts"</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">"outer"</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">bemio_import</span><span class="p">:</span>
+        <span class="c1"># Only keep results with a free surface, consistently with `records` above.</span>
+        <span class="n">pressure_results</span> <span class="o">=</span> <span class="p">[</span><span class="n">r</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">if</span> <span class="n">r</span><span class="o">.</span><span class="n">free_surface</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">pressure_results</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">pressure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">pressure_results</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">DiffractionProblem</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">pressure_results</span><span class="p">):</span>
+            <span class="n">dataset</span><span class="p">[</span><span class="s2">"diffraction_pressure"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_squeeze_dimensions</span><span class="p">(</span><span class="n">xr</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">pressure_dataarray</span><span class="p">()</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">pressure_results</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">DiffractionProblem</span><span class="p">)],</span>
+                    <span class="n">compat</span><span class="o">=</span><span class="s2">"no_conflicts"</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">"outer"</span>
+                    <span class="p">)[</span><span class="s1">'pressure'</span><span class="p">],</span> <span class="n">dimensions</span><span class="o">=</span><span class="n">optional_dims</span><span class="p">)</span>
+            <span class="n">dataset</span><span class="p">[</span><span class="s2">"Froude_Krylov_pressure"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_squeeze_dimensions</span><span class="p">(</span><span class="n">xr</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">airy_waves_pressure_dataarray</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">problem</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">pressure_results</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">DiffractionProblem</span><span class="p">)],</span>
+                    <span class="n">compat</span><span class="o">=</span><span class="s2">"no_conflicts"</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">"outer"</span>
+                    <span class="p">)[</span><span class="s1">'pressure'</span><span class="p">],</span> <span class="n">dimensions</span><span class="o">=</span><span class="n">optional_dims</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">RadiationProblem</span><span class="p">)</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">pressure_results</span><span class="p">):</span>
+            <span class="n">dataset</span><span class="p">[</span><span class="s2">"radiation_pressure"</span><span class="p">]</span> <span class="o">=</span> <span class="n">_squeeze_dimensions</span><span class="p">(</span><span class="n">xr</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span>
+                    <span class="p">[</span><span class="n">r</span><span class="o">.</span><span class="n">pressure_dataarray</span><span class="p">()</span> <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">pressure_results</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">problem</span><span class="p">,</span> <span class="n">RadiationProblem</span><span class="p">)],</span>
+                    <span class="n">compat</span><span class="o">=</span><span class="s2">"no_conflicts"</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">"outer"</span>
+                    <span class="p">)[</span><span class="s1">'pressure'</span><span class="p">],</span> <span class="n">dimensions</span><span class="o">=</span><span class="n">optional_dims</span> <span class="o">+</span> <span class="p">[</span><span class="s1">'wave_direction'</span><span class="p">])</span>
 
     <span class="k">for</span> <span class="n">var</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span> <span class="o">|</span> <span class="nb">set</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">var</span> <span class="ow">in</span> <span class="n">VARIABLES_ATTRIBUTES</span><span class="p">:</span>
