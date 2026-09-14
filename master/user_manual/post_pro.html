@@ -136,11 +136,30 @@ arguments to store more information in the dataset:</p>
 (default: all <cite>True</cite>): control whether which of the representations of the
 wave frequency are stored in the dataset. At least one should be included, by
 default they all are.</p></li>
-<li><p><code class="code docutils literal notranslate"><span class="pre">mesh</span></code> (default: <code class="code docutils literal notranslate"><span class="pre">False</span></code>): add some information about the mesh in
-the dataset (number of faces, quadrature method).</p></li>
-<li><p><code class="code docutils literal notranslate"><span class="pre">hydrostatics</span></code> (default: <code class="code docutils literal notranslate"><span class="pre">True</span></code>): if hydrostatics data are
-available in the <code class="code docutils literal notranslate"><span class="pre">FloatingBody</span></code>, they are added to the dataset.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">hydrostatics</span></code> (default: <code class="code docutils literal notranslate"><span class="pre">True</span></code>): tries to compute the
+hydrostatic properties of the <code class="docutils literal notranslate"><span class="pre">FloatingBody</span></code> and add them to the dataset.</p></li>
+<li><p><code class="code docutils literal notranslate"><span class="pre">mesh</span></code> (default: <code class="code docutils literal notranslate"><span class="pre">False</span></code>): stores in the dataset the full mesh for
+the hull and the lid, as well as the dofs.
+- The hull mesh is stored using the <code class="docutils literal notranslate"><span class="pre">hull_face</span></code> dimension in the arrays <code class="code docutils literal notranslate"><span class="pre">mesh_vertices</span></code> (shape <cite>(hull_face, 4, 3)`</cite> and <code class="code docutils literal notranslate"><span class="pre">mesh_faces_center</span></code> (shape: <code class="docutils literal notranslate"><span class="pre">(hull_face,</span> <span class="pre">3)</span></code>).
+- If the body has a lid, it is stored similarly using the <code class="docutils literal notranslate"><span class="pre">lid_face</span></code> dimension in the arrays <code class="code docutils literal notranslate"><span class="pre">lid_mesh_vertices</span></code> (shape <code class="docutils literal notranslate"><span class="pre">(lid_face,</span> <span class="pre">4,</span> <span class="pre">3)</span></code> and <code class="code docutils literal notranslate"><span class="pre">lid_mesh_faces_center</span></code> (shape: <code class="docutils literal notranslate"><span class="pre">(lid_face,</span> <span class="pre">3)</span></code>).
+- If the body has dofs, the array <code class="docutils literal notranslate"><span class="pre">dof_motions</span></code> (shape: <code class="docutils literal notranslate"><span class="pre">(influenced_dof,</span> <span class="pre">hull_face,</span> <span class="pre">3)</span></code>) stores the displacement at each face center due to each dof.
+- If the dofs have a Jacobian defined (as do rigid body dofs or <a class="reference internal" href="../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.CustomDof" title="capytaine.bodies.dofs.CustomDof"><code class="xref py py-class docutils literal notranslate"><span class="pre">CustomDof</span></code></a> when setting the <code class="docutils literal notranslate"><span class="pre">gradient_of_motion</span></code> parameter), it is stored also in an array of shape <code class="docutils literal notranslate"><span class="pre">(influenced_dof,</span> <span class="pre">hull_face,</span> <span class="pre">3,</span> <span class="pre">3)</span></code>.
+- The name of the quadrature scheme used for the mesh is stored as a string in the <code class="code docutils literal notranslate"><span class="pre">quadrature_method</span></code> variable.</p></li>
 </ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If the body’s mesh takes advantage of a planar or rotational
+symmetry (e.g. a <a class="reference internal" href="../developer_manual/api/capytaine.meshes.symmetric_meshes.html#capytaine.meshes.symmetric_meshes.ReflectionSymmetricMesh" title="capytaine.meshes.symmetric_meshes.ReflectionSymmetricMesh"><code class="xref py py-class docutils literal notranslate"><span class="pre">ReflectionSymmetricMesh</span></code></a>),
+the symmetry itself is <strong>not</strong> preserved by <code class="code docutils literal notranslate"><span class="pre">mesh=True</span></code>, as of
+the current version of Capytaine: <code class="code docutils literal notranslate"><span class="pre">mesh_vertices</span></code>,
+<code class="code docutils literal notranslate"><span class="pre">mesh_faces_center</span></code> and <code class="code docutils literal notranslate"><span class="pre">dof_motions</span></code> always contain the
+full, explicit list of faces (as if <code class="xref py py-meth docutils literal notranslate"><span class="pre">merged()</span></code>
+had been called first), with nothing in the dataset indicating that
+the original mesh was symmetric. This only affects the exported
+mesh/dofs data itself; the hydrodynamic coefficients are unaffected
+and are still computed by taking advantage of the symmetry
+internally.</p>
+</div>
 <p>In addition, <code class="code docutils literal notranslate"><span class="pre">fill_dataset</span></code> accepts a <code class="code docutils literal notranslate"><span class="pre">keep_details</span></code> keyword
 argument (default: <code class="code docutils literal notranslate"><span class="pre">False</span></code>), forwarded to <a class="reference internal" href="../developer_manual/api/capytaine.bem.solver.html#capytaine.bem.solver.BEMSolver.solve_all" title="capytaine.bem.solver.BEMSolver.solve_all"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solve_all()</span></code></a>.
 When set to <code class="code docutils literal notranslate"><span class="pre">True</span></code>, the potential, pressure and sources computed for
@@ -176,7 +195,7 @@ So selecting a value by the name of the dof will always return the right one:</p
 cases with a free surface.
 Cases without a free surface (<code class="code docutils literal notranslate"><span class="pre">free_surface=inf</span></code>) are ignored.</p>
 </div>
-<p>The results can also be collected by <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.assemble_matrices" title="capytaine.io.xarray.assemble_matrices"><code class="xref py py-func docutils literal notranslate"><span class="pre">assemble_matrices()</span></code></a>, which returns the matrices of <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.assemble_dataset" title="capytaine.io.xarray.assemble_dataset"><code class="xref py py-func docutils literal notranslate"><span class="pre">assemble_dataset()</span></code></a> as numpy arrays stripped of their metadata.
+<p>The results can also be collected by <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.assemble_matrices" title="capytaine.io.xarray.assemble_matrices"><code class="xref py py-func docutils literal notranslate"><span class="pre">assemble_matrices()</span></code></a>, which returns some matrices of <a class="reference internal" href="../developer_manual/api/capytaine.io.xarray.html#capytaine.io.xarray.assemble_dataset" title="capytaine.io.xarray.assemble_dataset"><code class="xref py py-func docutils literal notranslate"><span class="pre">assemble_dataset()</span></code></a> as numpy arrays stripped of their metadata.
 This function is meant to be used for teaching, to assemble the matrices without getting the students in contact with <code class="docutils literal notranslate"><span class="pre">xarray</span></code>.</p>
 </section>
 <section id="pressure-velocity-free-surface-elevation">

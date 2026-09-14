@@ -433,6 +433,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.abstract_bodies</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractBody</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.bodies</span><span class="w"> </span><span class="kn">import</span> <span class="n">FloatingBody</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.multibodies</span><span class="w"> </span><span class="kn">import</span> <span class="n">Multibody</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.dofs</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractDof</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.problems_and_results</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">LinearPotentialFlowProblem</span><span class="p">,</span> <span class="n">DiffractionProblem</span><span class="p">,</span> <span class="n">RadiationProblem</span><span class="p">,</span>
     <span class="n">LinearPotentialFlowResult</span><span class="p">,</span> <span class="n">_default_parameters</span><span class="p">)</span>
@@ -725,7 +726,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">hs</span><span class="p">[</span><span class="s2">"disp_mass"</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
         <span class="p">[[</span><span class="n">b</span><span class="o">.</span><span class="n">disp_mass</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="n">rho</span><span class="p">)</span> <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">bodies</span><span class="p">]],</span>
         <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">"rho"</span><span class="p">,</span> <span class="s2">"body"</span><span class="p">),</span>
-        <span class="n">attrs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">long_name</span><span class="o">=</span><span class="s2">"Diplaced mass"</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">"kg"</span><span class="p">)</span>
+        <span class="n">attrs</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">long_name</span><span class="o">=</span><span class="s2">"Displaced mass"</span><span class="p">,</span> <span class="n">units</span><span class="o">=</span><span class="s2">"kg"</span><span class="p">)</span>
     <span class="p">)</span>
 
     <span class="k">try</span><span class="p">:</span>
@@ -905,10 +906,6 @@ window.runMermaid = runMermaid;</script>
                      <span class="n">mesh</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">hydrostatics</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">attrs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""Transform a list of :class:`LinearPotentialFlowResult` into a :class:`xarray.Dataset`.</span>
 
-<span class="sd">    .. todo:: The :code:`mesh` option to store information on the mesh could be improved.</span>
-<span class="sd">              It could store the full mesh in the dataset to ensure the reproducibility of</span>
-<span class="sd">              the results.</span>
-
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    results: list of LinearPotentialFlowResult or BEMIO dataset</span>
@@ -924,7 +921,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    period: bool, optional</span>
 <span class="sd">        If True, the coordinate 'period' will be added to the output dataset.</span>
 <span class="sd">    mesh: bool, optional</span>
-<span class="sd">        If True, store some infos on the mesh in the output dataset.</span>
+<span class="sd">        If True, store the mesh (vertices and centers of each face of the hull,</span>
+<span class="sd">        and of the lid if any) and the dofs (motion, and when available its</span>
+<span class="sd">        gradient, of each dof evaluated on the hull) in the output dataset, as</span>
+<span class="sd">        the data variables ``mesh_vertices``, ``mesh_faces_center``,</span>
+<span class="sd">        ``lid_mesh_vertices``, ``lid_mesh_faces_center``, ``dof_motions`` and</span>
+<span class="sd">        ``dof_gradient_of_motions``.</span>
 <span class="sd">    hydrostatics: bool, optional</span>
 <span class="sd">        If True, store the hydrostatic data in the output dataset if they exist.</span>
 <span class="sd">    attrs: dict, optional</span>
@@ -1058,10 +1060,56 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="n">bemio_import</span><span class="p">:</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">'Bemio data does not include mesh data. mesh=True is ignored.'</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">body</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span>
-            <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">'nb_faces'</span><span class="p">]</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span>
-            <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">'quadrature_method'</span><span class="p">]</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">quadrature_method</span>
-            <span class="c1"># TODO: Store full mesh...</span>
+            <span class="n">body</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span>  <span class="c1"># Assumed to be all the same</span>
+            <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">'quadrature_method'</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">quadrature_method</span><span class="p">)</span>
+            <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">"space_coordinate"</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">([</span><span class="s2">"x"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">,</span> <span class="s2">"z"</span><span class="p">],</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">"space_coordinate"</span><span class="p">])</span>
+            <span class="c1"># `as_array_of_faces` is only defined on plain `Mesh`, not on a</span>
+            <span class="c1"># symmetric mesh (e.g. ReflectionSymmetricMesh/RotationSymmetricMesh)</span>
+            <span class="c1"># or a Multibody's joined mesh, so `.merged()` is used to get a plain</span>
+            <span class="c1"># mesh first. This does not change `nb_faces` or the order of the</span>
+            <span class="c1"># faces (matching `faces_centers` below), but it does mean any</span>
+            <span class="c1"># symmetry of the original mesh is not preserved in the dataset.</span>
+            <span class="n">dataset</span><span class="p">[</span><span class="s2">"mesh_vertices"</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s2">"hull_face"</span><span class="p">,</span> <span class="s2">"vertices_of_face"</span><span class="p">,</span> <span class="s2">"space_coordinate"</span><span class="p">],</span> <span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span><span class="o">.</span><span class="n">as_array_of_faces</span><span class="p">())</span>
+            <span class="n">dataset</span><span class="p">[</span><span class="s2">"mesh_faces_center"</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s2">"hull_face"</span><span class="p">,</span> <span class="s2">"space_coordinate"</span><span class="p">],</span> <span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">dataset</span><span class="p">[</span><span class="s2">"lid_mesh_vertices"</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s2">"lid_face"</span><span class="p">,</span> <span class="s2">"vertices_of_face"</span><span class="p">,</span> <span class="s2">"space_coordinate"</span><span class="p">],</span> <span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span><span class="o">.</span><span class="n">as_array_of_faces</span><span class="p">())</span>
+                <span class="n">dataset</span><span class="p">[</span><span class="s2">"lid_mesh_faces_center"</span><span class="p">]</span> <span class="o">=</span> <span class="p">([</span><span class="s2">"lid_face"</span><span class="p">,</span> <span class="s2">"space_coordinate"</span><span class="p">],</span> <span class="n">body</span><span class="o">.</span><span class="n">lid_mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># `influenced_dof` (rather than `radiating_dof`) is used here because it</span>
+                <span class="c1"># always covers the full set of body.dofs and is present as soon as any</span>
+                <span class="c1"># radiation or diffraction result exists, whereas `radiating_dof` may be</span>
+                <span class="c1"># a user-restricted subset, or absent entirely for diffraction-only results.</span>
+                <span class="k">if</span> <span class="s2">"influenced_dof"</span> <span class="ow">in</span> <span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">:</span>
+                    <span class="n">dof_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">"influenced_dof"</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">dof_names</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+                <span class="n">dof_motions</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">dof_gradient_of_motions</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="n">any_abstract_dof</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">dof_name</span> <span class="ow">in</span> <span class="n">dof_names</span><span class="p">:</span>
+                    <span class="n">dof</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="p">[</span><span class="n">dof_name</span><span class="p">]</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">AbstractDof</span><span class="p">):</span>
+                        <span class="n">any_abstract_dof</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="n">dof_motions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dof</span><span class="o">.</span><span class="n">evaluate_motion</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">))</span>
+                        <span class="n">dof_gradient_of_motions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dof</span><span class="o">.</span><span class="n">evaluate_gradient_of_motion</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">dof_motions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dof</span><span class="p">)</span>
+                        <span class="n">dof_gradient_of_motions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">))</span>
+
+                <span class="n">mesh_dofs_dataset</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span>
+                        <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">"influenced_dof"</span><span class="p">:</span> <span class="n">dof_names</span><span class="p">},</span>
+                        <span class="n">data_vars</span><span class="o">=</span><span class="p">{</span>
+                            <span class="s2">"dof_motions"</span><span class="p">:</span> <span class="p">([</span><span class="s2">"influenced_dof"</span><span class="p">,</span> <span class="s2">"hull_face"</span><span class="p">,</span> <span class="s2">"space_coordinate"</span><span class="p">],</span> <span class="n">dof_motions</span><span class="p">),</span>
+                            <span class="p">},</span>
+                        <span class="p">)</span>
+                <span class="k">if</span> <span class="n">any_abstract_dof</span><span class="p">:</span>
+                    <span class="n">mesh_dofs_dataset</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">"gradient"</span><span class="p">]</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">([</span><span class="s2">"dx"</span><span class="p">,</span> <span class="s2">"dy"</span><span class="p">,</span> <span class="s2">"dz"</span><span class="p">],</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">"gradient"</span><span class="p">])</span>
+                    <span class="n">mesh_dofs_dataset</span><span class="p">[</span><span class="s2">"dof_gradient_of_motions"</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="p">[</span><span class="s2">"influenced_dof"</span><span class="p">,</span> <span class="s2">"hull_face"</span><span class="p">,</span> <span class="s2">"space_coordinate"</span><span class="p">,</span> <span class="s2">"gradient"</span><span class="p">],</span> <span class="n">dof_gradient_of_motions</span><span class="p">)</span>
+                <span class="n">dataset</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">merge</span><span class="p">([</span><span class="n">dataset</span><span class="p">,</span> <span class="n">mesh_dofs_dataset</span><span class="p">],</span> <span class="n">compat</span><span class="o">=</span><span class="s2">"no_conflicts"</span><span class="p">,</span> <span class="n">join</span><span class="o">=</span><span class="s2">"outer"</span><span class="p">)</span>
 
     <span class="c1"># HYDROSTATICS</span>
     <span class="k">if</span> <span class="n">hydrostatics</span><span class="p">:</span>
@@ -1204,7 +1252,8 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="n">ds</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span><span class="o">.</span><span class="n">dtype</span> <span class="o">==</span> <span class="nb">complex</span><span class="p">:</span>
             <span class="n">da</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span>
             <span class="n">new_da</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">da</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">imag</span><span class="p">(</span><span class="n">da</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="p">)),</span>
-                                  <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s1">'complex'</span><span class="p">,)</span> <span class="o">+</span> <span class="n">da</span><span class="o">.</span><span class="n">dims</span><span class="p">)</span>
+                                  <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s1">'complex'</span><span class="p">,)</span> <span class="o">+</span> <span class="n">da</span><span class="o">.</span><span class="n">dims</span><span class="p">,</span>
+                                  <span class="n">attrs</span><span class="o">=</span><span class="n">da</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
             <span class="n">ds</span><span class="p">[</span><span class="n">variable</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_da</span>
             <span class="n">ds</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">'complex'</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'re'</span><span class="p">,</span> <span class="s1">'im'</span><span class="p">]</span>
     <span class="k">return</span> <span class="n">ds</span></div>
