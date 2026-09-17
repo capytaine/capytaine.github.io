@@ -986,8 +986,11 @@ window.runMermaid = runMermaid;</script>
     <span class="p">)</span></div>
 
 
-<span class="c1"># def export_wamit_9(dataset, *args, **kwargs):</span>
-<span class="c1">#     return _export_wamit_mean_drift(dataset["near_field_mean_drift_force"], *args, **kwargs)</span>
+<div class="viewcode-block" id="export_wamit_9">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.io.wamit.html#capytaine.io.wamit.export_wamit_9">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">export_wamit_9</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">_export_wamit_mean_drift</span><span class="p">(</span><span class="n">dataset</span><span class="p">[</span><span class="s2">"near_field_mean_drift_force"</span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
 
 <span class="c1">###############################################################################</span>
 
@@ -996,7 +999,7 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">export_to_wamit</span><span class="p">(</span>
     <span class="n">dataset</span><span class="p">:</span> <span class="n">xarray</span><span class="o">.</span><span class="n">Dataset</span><span class="p">,</span>
     <span class="n">problem_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
-    <span class="n">exports</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"1"</span><span class="p">,</span> <span class="s2">"3"</span><span class="p">,</span> <span class="s2">"3fk"</span><span class="p">,</span> <span class="s2">"3sc"</span><span class="p">,</span> <span class="s2">"8"</span><span class="p">,</span> <span class="s2">"hst"</span><span class="p">),</span>
+    <span class="n">exports</span><span class="p">:</span> <span class="n">Iterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s2">"1"</span><span class="p">,</span> <span class="s2">"3"</span><span class="p">,</span> <span class="s2">"3fk"</span><span class="p">,</span> <span class="s2">"3sc"</span><span class="p">,</span> <span class="s2">"8"</span><span class="p">,</span> <span class="s2">"9"</span><span class="p">,</span> <span class="s2">"hst"</span><span class="p">),</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">"""</span>
 <span class="sd">    Master function to export a Capytaine dataset to WAMIT-format files.</span>
@@ -1008,7 +1011,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    problem_name: str</span>
 <span class="sd">        Base filename for WAMIT files (e.g. "output" → output.1, output.3fk, etc.).</span>
 <span class="sd">    exports: iterable of str</span>
-<span class="sd">        Which files to export: any combination of "1", "3", "3fk", "3sc", "hst".</span>
+<span class="sd">        Which files to export: any combination of "1", "3", "3fk", "3sc", "hst", "8", "9".</span>
 <span class="sd">    """</span>
     <span class="n">export_map</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s2">"1"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"radiation coefficients"</span><span class="p">,</span> <span class="n">export_wamit_1</span><span class="p">,</span> <span class="s2">".1"</span><span class="p">),</span>
@@ -1016,6 +1019,7 @@ window.runMermaid = runMermaid;</script>
         <span class="s2">"3fk"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"Froude-Krylov force"</span><span class="p">,</span> <span class="n">export_wamit_3fk</span><span class="p">,</span> <span class="s2">".3fk"</span><span class="p">),</span>
         <span class="s2">"3sc"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"diffraction force"</span><span class="p">,</span> <span class="n">export_wamit_3sc</span><span class="p">,</span> <span class="s2">".3sc"</span><span class="p">),</span>
         <span class="s2">"8"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"mean drift force (far field)"</span><span class="p">,</span> <span class="n">export_wamit_8</span><span class="p">,</span> <span class="s2">".8"</span><span class="p">),</span>
+        <span class="s2">"9"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"mean drift force (near field)"</span><span class="p">,</span> <span class="n">export_wamit_9</span><span class="p">,</span> <span class="s2">".9"</span><span class="p">),</span>
         <span class="s2">"hst"</span><span class="p">:</span> <span class="p">(</span><span class="s2">"hydrostatics"</span><span class="p">,</span> <span class="n">export_wamit_hst</span><span class="p">,</span> <span class="s2">".hst"</span><span class="p">),</span>
     <span class="p">}</span>
     <span class="n">check_dataset_ready_for_export</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
