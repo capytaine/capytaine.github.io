@@ -90,9 +90,32 @@ does not take into account the wave amplitude.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="capytaine.post_pro.mean_drift_force.near_field_mean_drift_force">
-<span class="sig-prename descclassname"><span class="pre">capytaine.post_pro.mean_drift_force.</span></span><span class="sig-name descname"><span class="pre">near_field_mean_drift_force</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rao</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/post_pro/mean_drift_force.html#near_field_mean_drift_force"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.post_pro.mean_drift_force.near_field_mean_drift_force" title="Link to this definition">¶</a></dt>
-<dd><p>Current assumptions: all results are for the same body, the same rho and g.
+<span class="sig-prename descclassname"><span class="pre">capytaine.post_pro.mean_drift_force.</span></span><span class="sig-name descname"><span class="pre">near_field_mean_drift_force</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rao</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_pressure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/post_pro/mean_drift_force.html#near_field_mean_drift_force"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.post_pro.mean_drift_force.near_field_mean_drift_force" title="Link to this definition">¶</a></dt>
+<dd><p>Compute the mean drift force using the near field formulation.</p>
+<p>Current assumptions: all results are for the same body, the same rho and g.
 Several wavelengths and dofs are taken into account at once.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rao</strong> (<em>xarray DataArray</em>) – The motion RAO, as returned by <a class="reference internal" href="capytaine.post_pro.rao.html#capytaine.post_pro.rao.rao" title="capytaine.post_pro.rao.rao"><code class="xref py py-func docutils literal notranslate"><span class="pre">capytaine.post_pro.rao.rao()</span></code></a>.</p></li>
+<li><p><strong>results</strong> (<em>list of LinearPotentialFlowResult</em>) – The diffraction and radiation results used to compute the RAO, for all the wavelengths
+and wave directions of interest.</p></li>
+<li><p><strong>solver</strong> (<em>BEMSolver</em>) – The solver used to compute the potential and its gradient on the hull at the requested
+points.</p></li>
+<li><p><strong>output_pressure</strong> (<em>bool, optional</em>) – If True, also return the second-order pressure field on the hull. Default: False.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dataset with a <code class="docutils literal notranslate"><span class="pre">near_field_mean_drift_force</span></code> variable of shape
+<code class="docutils literal notranslate"><span class="pre">(nb_freq,</span> <span class="pre">nb_wave_direction,</span> <span class="pre">nb_wave_direction,</span> <span class="pre">nb_dofs)</span></code>.
+If <code class="docutils literal notranslate"><span class="pre">output_pressure</span></code> is True, the dataset also contains a <code class="docutils literal notranslate"><span class="pre">second_order_pressure</span></code>
+variable with the mean drift pressure field on the hull, of shape
+<code class="docutils literal notranslate"><span class="pre">(nb_freq,</span> <span class="pre">nb_wave_direction,</span> <span class="pre">nb_wave_direction,</span> <span class="pre">nb_hull_faces)</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>xarray Dataset</p>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py function">
