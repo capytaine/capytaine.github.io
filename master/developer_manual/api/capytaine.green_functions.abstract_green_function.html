@@ -54,7 +54,35 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.green_functions.abstract_green_function.AbstractGreenFunction.evaluate">
 <span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_surface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavenumber</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjoint_double_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_dot_product</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diagonal_term_in_double_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/green_functions/abstract_green_function.html#AbstractGreenFunction.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.green_functions.abstract_green_function.AbstractGreenFunction.evaluate" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Assemble the influence matrices between mesh1 and mesh2.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mesh1</strong> (<em>MeshLike or array of shape (n, 3)</em>) – mesh of the receiving body (where the potential is measured), or
+an array of points (only supported if only S is wanted or
+early_dot_product is False).</p></li>
+<li><p><strong>mesh2</strong> (<em>MeshLike</em>) – mesh of the source body (over which the source distribution is integrated)</p></li>
+<li><p><strong>free_surface</strong> (<em>float</em>) – position of the free surface</p></li>
+<li><p><strong>water_depth</strong> (<em>float</em>) – constant depth of water</p></li>
+<li><p><strong>wavenumber</strong> (<em>float</em>) – wavenumber</p></li>
+<li><p><strong>adjoint_double_layer</strong> (<em>bool, optional</em>) – compute double layer for direct method (D) or adjoint double layer
+for indirect method (K) matrices (default: True)</p></li>
+<li><p><strong>early_dot_product</strong> (<em>bool, optional</em>) – if True, K is the matrix of ∫∇G·n, if False it is the gradient ∫∇G
+(default: True)</p></li>
+<li><p><strong>diagonal_term_in_double_layer</strong> (<em>bool, optional</em>) – if True, add the I/2 term in the double layer operator (default: True)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>the matrices S and K, with shapes (n, m) for S and
+(n, m) for K if early_dot_product is True or (3, n, m) otherwise,
+where n is the number of receiving points of mesh1 and m the
+number of faces of mesh2.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>tuple of arrays</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="capytaine.green_functions.abstract_green_function.AbstractGreenFunction.floating_point_precision">
