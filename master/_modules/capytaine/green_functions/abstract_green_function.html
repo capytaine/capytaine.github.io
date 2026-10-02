@@ -433,6 +433,32 @@ window.runMermaid = runMermaid;</script>
 
     <span class="n">floating_point_precision</span><span class="p">:</span> <span class="nb">str</span>
 
+    <span class="c1"># Settings of the Green function, as a dict of hashable values. It is used</span>
+    <span class="c1"># for the string representation, the hash and the export in the outputs.</span>
+    <span class="n">exportable_settings</span><span class="p">:</span> <span class="nb">dict</span>
+    <span class="c1"># Default values of the settings that can be passed to the constructor</span>
+    <span class="c1"># (subset of `exportable_settings`). Only those are shown in `repr` and `str`.</span>
+    <span class="n">_default_parameters</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Print only the non-default values.</span>
+        <span class="n">to_be_printed</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_parameters</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_parameters</span><span class="p">[</span><span class="n">name</span><span class="p">]]</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">to_be_printed</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Same as __str__ except all values are printed even when they are the</span>
+        <span class="c1"># default value.</span>
+        <span class="n">to_be_printed</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="n">value</span><span class="si">!r}</span><span class="s2">"</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                         <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_default_parameters</span><span class="p">]</span>
+        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">to_be_printed</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
+        <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">())</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">hash</span><span class="p">(</span><span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="o">.</span><span class="n">items</span><span class="p">()))</span>
+
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_colocation_points_and_normals</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">):</span>
         <span class="k">try</span><span class="p">:</span>
             <span class="n">collocation_points</span> <span class="o">=</span> <span class="n">mesh1</span><span class="o">.</span><span class="n">faces_centers</span>
@@ -464,6 +490,9 @@ window.runMermaid = runMermaid;</script>
 
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_init_matrices</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="p">):</span>
+        <span class="c1"># Helper for the Fortran-based implementations, which fill</span>
+        <span class="c1"># Fortran-ordered NumPy arrays in place. Green functions using another</span>
+        <span class="c1"># array library do not need to call it.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">floating_point_precision</span> <span class="o">==</span> <span class="s2">"float32"</span><span class="p">:</span>
             <span class="n">dtype</span> <span class="o">=</span> <span class="s2">"complex64"</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">floating_point_precision</span> <span class="o">==</span> <span class="s2">"float64"</span><span class="p">:</span>

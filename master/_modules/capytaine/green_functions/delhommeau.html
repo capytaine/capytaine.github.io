@@ -428,20 +428,6 @@ window.runMermaid = runMermaid;</script>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<span class="n">_default_parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
-    <span class="n">tabulation_nr</span><span class="o">=</span><span class="mi">676</span><span class="p">,</span>
-    <span class="n">tabulation_rmax</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span>
-    <span class="n">tabulation_nz</span><span class="o">=</span><span class="mi">372</span><span class="p">,</span>
-    <span class="n">tabulation_zmin</span><span class="o">=-</span><span class="mf">251.0</span><span class="p">,</span>
-    <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="mi">1001</span><span class="p">,</span>
-    <span class="n">tabulation_grid_shape</span><span class="o">=</span><span class="s2">"scaled_nemoh3"</span><span class="p">,</span>
-    <span class="n">finite_depth_method</span><span class="o">=</span><span class="s2">"newer"</span><span class="p">,</span>
-    <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="s2">"python"</span><span class="p">,</span>
-    <span class="n">floating_point_precision</span><span class="o">=</span><span class="s2">"float64"</span><span class="p">,</span>
-    <span class="n">gf_singularities</span><span class="o">=</span><span class="s2">"low_freq"</span><span class="p">,</span>
-<span class="p">)</span>
-
-
 <div class="viewcode-block" id="Delhommeau">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Delhommeau</span><span class="p">(</span><span class="n">AbstractGreenFunction</span><span class="p">):</span>
@@ -513,8 +499,20 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Tabulated Delhommeau integrals.</span>
 <span class="sd">    """</span>
 
-    <span class="n">dispersion_relation_roots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># dummy array</span>
+    <span class="n">_default_parameters</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
+            <span class="n">tabulation_nr</span><span class="o">=</span><span class="mi">676</span><span class="p">,</span>
+            <span class="n">tabulation_rmax</span><span class="o">=</span><span class="mf">100.0</span><span class="p">,</span>
+            <span class="n">tabulation_nz</span><span class="o">=</span><span class="mi">372</span><span class="p">,</span>
+            <span class="n">tabulation_zmin</span><span class="o">=-</span><span class="mf">251.0</span><span class="p">,</span>
+            <span class="n">tabulation_nb_integration_points</span><span class="o">=</span><span class="mi">1001</span><span class="p">,</span>
+            <span class="n">tabulation_grid_shape</span><span class="o">=</span><span class="s2">"scaled_nemoh3"</span><span class="p">,</span>
+            <span class="n">finite_depth_method</span><span class="o">=</span><span class="s2">"newer"</span><span class="p">,</span>
+            <span class="n">finite_depth_prony_decomposition_method</span><span class="o">=</span><span class="s2">"python"</span><span class="p">,</span>
+            <span class="n">floating_point_precision</span><span class="o">=</span><span class="s2">"float64"</span><span class="p">,</span>
+            <span class="n">gf_singularities</span><span class="o">=</span><span class="s2">"low_freq"</span><span class="p">,</span>
+    <span class="p">)</span>
 
+    <span class="n">dispersion_relation_roots</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># dummy array</span>
 
     <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
                  <span class="n">tabulation_nr</span><span class="o">=</span><span class="n">_default_parameters</span><span class="p">[</span><span class="s2">"tabulation_nr"</span><span class="p">],</span>
@@ -582,31 +580,6 @@ window.runMermaid = runMermaid;</script>
             <span class="s1">'floating_point_precision'</span><span class="p">:</span> <span class="n">floating_point_precision</span><span class="p">,</span>
             <span class="s1">'gf_singularities'</span><span class="p">:</span> <span class="n">gf_singularities</span><span class="p">,</span>
         <span class="p">}</span>
-
-        <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span> <span class="o">=</span> <span class="nb">hash</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="o">.</span><span class="n">values</span><span class="p">())</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__hash__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hash</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Print only the non-default values.</span>
-        <span class="n">to_be_printed</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_default_parameters</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">!=</span> <span class="n">_default_parameters</span><span class="p">[</span><span class="n">name</span><span class="p">]:</span>
-                <span class="n">to_be_printed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">to_be_printed</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="c1"># Same as __str__ except all values are printed even when they are the</span>
-        <span class="c1"># default value.</span>
-        <span class="n">to_be_printed</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">exportable_settings</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-            <span class="k">if</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">_default_parameters</span><span class="p">:</span>
-                <span class="n">to_be_printed</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">=</span><span class="si">{</span><span class="nb">repr</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-        <span class="k">return</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">(</span><span class="si">{</span><span class="s1">', '</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">to_be_printed</span><span class="p">)</span><span class="si">}</span><span class="s2">)"</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">_repr_pretty_</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">p</span><span class="p">,</span> <span class="n">cycle</span><span class="p">):</span>
-        <span class="n">p</span><span class="o">.</span><span class="n">text</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="fm">__repr__</span><span class="p">())</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_create_or_load_tabulation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tabulation_nr</span><span class="p">,</span> <span class="n">tabulation_rmax</span><span class="p">,</span>
                                    <span class="n">tabulation_nz</span><span class="p">,</span> <span class="n">tabulation_zmin</span><span class="p">,</span>
