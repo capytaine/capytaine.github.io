@@ -419,7 +419,10 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.symbolic_multiplication</span><span class="w"> </span><span class="kn">import</span> <span class="n">SymbolicMultiplication</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"array_namespace"</span><span class="p">,</span> <span class="s2">"device"</span><span class="p">,</span> <span class="s2">"is_array"</span><span class="p">,</span> <span class="s2">"is_numpy_namespace"</span><span class="p">,</span> <span class="s2">"complex_dtype"</span><span class="p">,</span> <span class="s2">"to_backend_of"</span><span class="p">,</span> <span class="s2">"to_numpy"</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">"array_namespace"</span><span class="p">,</span> <span class="s2">"device"</span><span class="p">,</span> <span class="s2">"is_array"</span><span class="p">,</span> <span class="s2">"is_numpy_namespace"</span><span class="p">,</span> <span class="s2">"complex_dtype"</span><span class="p">,</span> <span class="s2">"to_backend_of"</span><span class="p">,</span> <span class="s2">"to_numpy"</span><span class="p">,</span>
+    <span class="s2">"IterableTensor"</span><span class="p">,</span> <span class="s2">"split"</span><span class="p">,</span> <span class="s2">"leading_dimensions_at_the_end"</span><span class="p">,</span> <span class="s2">"ending_dimensions_at_the_beginning"</span><span class="p">,</span>
+<span class="p">]</span>
 
 
 <div class="viewcode-block" id="is_array">
@@ -473,6 +476,72 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">from_dlpack</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>                  <span class="c1"># Arrays in host memory, any library</span>
     <span class="k">except</span> <span class="p">(</span><span class="ne">BufferError</span><span class="p">,</span> <span class="ne">RuntimeError</span><span class="p">,</span> <span class="ne">TypeError</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">to_device</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s2">"cpu"</span><span class="p">))</span>    <span class="c1"># e.g. torch tensors on GPU</span></div>
+
+
+
+<div class="viewcode-block" id="split">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.array_backend.html#capytaine.tools.array_backend.split">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">split</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Split an array in `n` parts of equal sizes along its first axis (replaces `np.split`, that is not in the array API standard)."""</span>
+    <span class="n">size</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">//</span> <span class="n">n</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">x</span><span class="p">[</span><span class="n">i</span><span class="o">*</span><span class="n">size</span><span class="p">:(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">size</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">)]</span></div>
+
+
+
+<div class="viewcode-block" id="leading_dimensions_at_the_end">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.array_backend.html#capytaine.tools.array_backend.leading_dimensions_at_the_end">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">leading_dimensions_at_the_end</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Transform an array of shape (n, m, ...) into (..., n, m).</span>
+<span class="sd">    Invert of `ending_dimensions_at_the_beginning`"""</span>
+    <span class="n">xp</span> <span class="o">=</span> <span class="n">array_namespace</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="n">permute_dims</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="o">*</span><span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">ndim</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="ending_dimensions_at_the_beginning">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.array_backend.html#capytaine.tools.array_backend.ending_dimensions_at_the_beginning">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ending_dimensions_at_the_beginning</span><span class="p">(</span><span class="n">a</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Transform an array of shape (..., n, m) into (n, m, ...).</span>
+<span class="sd">    Invert of `leading_dimensions_at_the_end`"""</span>
+    <span class="n">xp</span> <span class="o">=</span> <span class="n">array_namespace</span><span class="p">(</span><span class="n">a</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="n">permute_dims</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">2</span><span class="p">,</span> <span class="n">a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">*</span><span class="nb">range</span><span class="p">(</span><span class="n">a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">2</span><span class="p">)))</span></div>
+
+
+
+<div class="viewcode-block" id="IterableTensor">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.array_backend.html#capytaine.tools.array_backend.IterableTensor">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">IterableTensor</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Sequence of the sub-arrays along the first axis of an array, or of a list of arrays.</span>
+
+<span class="sd">    It can be built from a list of arrays of the same shape or from a single array</span>
+<span class="sd">    of shape (n, ...), which is then kept as it is (no copy, e.g. to apply a FFT across the first axis)</span>
+<span class="sd">    and the items are the views `array[i, ...]`.</span>
+
+<span class="sd">    Arrays of the array API standard can not always be iterated, sliced, unpacked or measured with `len`</span>
+<span class="sd">    (unlike the ones of NumPy, PyTorch or JAX), and an index has to cover all the dimensions of the array.</span>
+<span class="sd">    This class gives the usual behavior of a sequence in all cases.</span>
+<span class="sd">    """</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array</span> <span class="o">=</span> <span class="n">tensor</span> <span class="k">if</span> <span class="n">is_array</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_list</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">is_array</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span> <span class="k">else</span> <span class="nb">list</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_list</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">index</span><span class="p">,</span> <span class="nb">slice</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">[</span><span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="o">*</span><span class="n">index</span><span class="o">.</span><span class="n">indices</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)))]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span><span class="p">[</span><span class="n">index</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_list</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)))</span>
+
+<div class="viewcode-block" id="IterableTensor.as_array">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.array_backend.html#capytaine.tools.array_backend.IterableTensor.as_array">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">as_array</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xp</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""All the items in a single array of shape (n, ...)"""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">xp</span><span class="o">.</span><span class="n">stack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_list</span><span class="p">)</span></div>
+</div>
 
 </pre></div>
 

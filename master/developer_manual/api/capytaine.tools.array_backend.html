@@ -46,6 +46,25 @@
   <section id="module-capytaine.tools.array_backend">
 <span id="capytaine-tools-array-backend-module"></span><h1>capytaine.tools.array_backend module<a class="headerlink" href="#module-capytaine.tools.array_backend" title="Link to this heading">¶</a></h1>
 <p>Helpers to write code that works with any array library implementing the array API standard.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="capytaine.tools.array_backend.IterableTensor">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">capytaine.tools.array_backend.</span></span><span class="sig-name descname"><span class="pre">IterableTensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/array_backend.html#IterableTensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.array_backend.IterableTensor" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Sequence of the sub-arrays along the first axis of an array, or of a list of arrays.</p>
+<p>It can be built from a list of arrays of the same shape or from a single array
+of shape (n, …), which is then kept as it is (no copy, e.g. to apply a FFT across the first axis)
+and the items are the views <cite>array[i, …]</cite>.</p>
+<p>Arrays of the array API standard can not always be iterated, sliced, unpacked or measured with <cite>len</cite>
+(unlike the ones of NumPy, PyTorch or JAX), and an index has to cover all the dimensions of the array.
+This class gives the usual behavior of a sequence in all cases.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.tools.array_backend.IterableTensor.as_array">
+<span class="sig-name descname"><span class="pre">as_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/array_backend.html#IterableTensor.as_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.array_backend.IterableTensor.as_array" title="Link to this definition">¶</a></dt>
+<dd><p>All the items in a single array of shape (n, …)</p>
+</dd></dl>
+
+</dd></dl>
+
 <dl class="py function">
 <dt class="sig sig-object py" id="capytaine.tools.array_backend.array_namespace">
 <span class="sig-prename descclassname"><span class="pre">capytaine.tools.array_backend.</span></span><span class="sig-name descname"><span class="pre">array_namespace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">xs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">object</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">complex</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_version</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_compat</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ModuleType</span></span></span><a class="reference internal" href="../../_modules/array_api_compat/common/_helpers.html#array_namespace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.array_backend.array_namespace" title="Link to this definition">¶</a></dt>
@@ -132,6 +151,13 @@ special <cite>DASK_DEVICE</cite> object.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="capytaine.tools.array_backend.ending_dimensions_at_the_beginning">
+<span class="sig-prename descclassname"><span class="pre">capytaine.tools.array_backend.</span></span><span class="sig-name descname"><span class="pre">ending_dimensions_at_the_beginning</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/array_backend.html#ending_dimensions_at_the_beginning"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.array_backend.ending_dimensions_at_the_beginning" title="Link to this definition">¶</a></dt>
+<dd><p>Transform an array of shape (…, n, m) into (n, m, …).
+Invert of <cite>leading_dimensions_at_the_end</cite></p>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="capytaine.tools.array_backend.is_array">
 <span class="sig-prename descclassname"><span class="pre">capytaine.tools.array_backend.</span></span><span class="sig-name descname"><span class="pre">is_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/array_backend.html#is_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.array_backend.is_array" title="Link to this definition">¶</a></dt>
 <dd><p>True if x is an array of any library supported by array-api-compat.</p>
@@ -142,6 +168,19 @@ special <cite>DASK_DEVICE</cite> object.</p>
 <span class="sig-prename descclassname"><span class="pre">capytaine.tools.array_backend.</span></span><span class="sig-name descname"><span class="pre">is_numpy_namespace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">xp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/array_backend.html#is_numpy_namespace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.array_backend.is_numpy_namespace" title="Link to this definition">¶</a></dt>
 <dd><p>True if <cite>xp</cite> is the NumPy namespace.
 (<cite>array_api_compat.is_numpy_namespace</cite> is only available since array-api-compat 1.9.)</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="capytaine.tools.array_backend.leading_dimensions_at_the_end">
+<span class="sig-prename descclassname"><span class="pre">capytaine.tools.array_backend.</span></span><span class="sig-name descname"><span class="pre">leading_dimensions_at_the_end</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/array_backend.html#leading_dimensions_at_the_end"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.array_backend.leading_dimensions_at_the_end" title="Link to this definition">¶</a></dt>
+<dd><p>Transform an array of shape (n, m, …) into (…, n, m).
+Invert of <cite>ending_dimensions_at_the_beginning</cite></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="capytaine.tools.array_backend.split">
+<span class="sig-prename descclassname"><span class="pre">capytaine.tools.array_backend.</span></span><span class="sig-name descname"><span class="pre">split</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/array_backend.html#split"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.array_backend.split" title="Link to this definition">¶</a></dt>
+<dd><p>Split an array in <cite>n</cite> parts of equal sizes along its first axis (replaces <cite>np.split</cite>, that is not in the array API standard).</p>
 </dd></dl>
 
 <dl class="py function">
