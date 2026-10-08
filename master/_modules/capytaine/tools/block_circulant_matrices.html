@@ -422,6 +422,8 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span><span class="p">,</span> <span class="n">ArrayLike</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sl</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.array_backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">array_namespace</span><span class="p">,</span> <span class="n">device</span>
+
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
@@ -450,9 +452,20 @@ window.runMermaid = runMermaid;</script>
 
 
 
+<span class="k">class</span><span class="w"> </span><span class="nc">_BlockMatrixBackendMixin</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Make the array library and the device of the blocks accessible, as for an array."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__array_namespace__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">api_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">array_namespace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">device</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+
 <div class="viewcode-block" id="BlockCirculantMatrix">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.BlockCirculantMatrix">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">BlockCirculantMatrix</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BlockCirculantMatrix</span><span class="p">(</span><span class="n">_BlockMatrixBackendMixin</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Data-sparse representation of a block matrix of the following form::</span>
 
 <span class="sd">        ( a  d  c  b )</span>
@@ -585,7 +598,7 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="NestedBlockCirculantMatrix">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">NestedBlockCirculantMatrix</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">NestedBlockCirculantMatrix</span><span class="p">(</span><span class="n">_BlockMatrixBackendMixin</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Data-sparse representation of a block matrix of the following form::</span>
 
 <span class="sd">       ( a  b | e  d | c  f )</span>
@@ -742,7 +755,7 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="BlockDiagonalMatrix">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.BlockDiagonalMatrix">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">BlockDiagonalMatrix</span><span class="p">:</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">BlockDiagonalMatrix</span><span class="p">(</span><span class="n">_BlockMatrixBackendMixin</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Data-sparse representation of a block matrix of the following form::</span>
 
 <span class="sd">        ( a  0  0  0 )</span>
@@ -814,6 +827,15 @@ window.runMermaid = runMermaid;</script>
     <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span>
     <span class="n">dtype</span><span class="p">:</span> <span class="nb">object</span>
 
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">__array_namespace__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">api_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Array library of the matrix that has been decomposed, as for an array of the array API standard."""</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Device of the matrix that has been decomposed, as for an array of the array API standard."""</span>
+
 <div class="viewcode-block" id="AbstractLUDecomposedMatrix.solve">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.AbstractLUDecomposedMatrix.solve">[docs]</a>
     <span class="nd">@abstractmethod</span>
@@ -846,6 +868,15 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span> <span class="o">=</span> <span class="n">sl</span><span class="o">.</span><span class="n">lu_factor</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">overwrite_a</span><span class="o">=</span><span class="n">overwrite_a</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_namespace</span> <span class="o">=</span> <span class="n">array_namespace</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_device</span> <span class="o">=</span> <span class="n">device</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__array_namespace__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">api_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_namespace</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_device</span>
 
 <div class="viewcode-block" id="LUDecomposedMatrix.solve">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.LUDecomposedMatrix.solve">[docs]</a>
@@ -870,6 +901,13 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">=</span> <span class="n">bdm</span><span class="o">.</span><span class="n">nb_blocks</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">bdm</span><span class="o">.</span><span class="n">dtype</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">__array_namespace__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">api_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">__array_namespace__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+
 <div class="viewcode-block" id="LUDecomposedBlockDiagonalMatrix.solve">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.LUDecomposedBlockDiagonalMatrix.solve">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
@@ -892,6 +930,13 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">bcm</span><span class="o">.</span><span class="n">shape</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">=</span> <span class="n">bcm</span><span class="o">.</span><span class="n">nb_blocks</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">bcm</span><span class="o">.</span><span class="n">dtype</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">__array_namespace__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">api_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span><span class="o">.</span><span class="n">__array_namespace__</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span><span class="o">.</span><span class="n">device</span>
 
 <div class="viewcode-block" id="LUDecomposedBlockCirculantMatrix.solve">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.LUDecomposedBlockCirculantMatrix.solve">[docs]</a>

@@ -426,6 +426,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.abstract_green_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGreenFunction</span><span class="p">,</span> <span class="n">GreenFunctionEvaluationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.delhommeau</span><span class="w"> </span><span class="kn">import</span> <span class="n">Delhommeau</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.array_backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">array_namespace</span><span class="p">,</span> <span class="n">complex_dtype</span><span class="p">,</span> <span class="n">is_numpy_namespace</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.lazy_matrices</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyMatrix</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.lists_of_points</span><span class="w"> </span><span class="kn">import</span> <span class="n">_normalize_points</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.block_circulant_matrices</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
@@ -562,11 +563,16 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="DefaultMatrixEngine.build_S_matrix">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.DefaultMatrixEngine.build_S_matrix">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">build_S_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_S_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Similar to :code:`build_matrices`, but returning only :math:`S`</span>
 
 <span class="sd">        points: np.ndarray of shape (nb_collocations_points, 3)</span>
 <span class="sd">            List of collocation points. Usually went through `_normalize_points`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        array or LazyMatrix</span>
+<span class="sd">            The array library of the matrix is the one of the Green function.</span>
 <span class="sd">        """</span>
         <span class="n">full_mesh</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span>
         <span class="k">def</span><span class="w"> </span><span class="nf">build_S_rows</span><span class="p">(</span><span class="n">slice_</span><span class="p">):</span>
@@ -579,19 +585,24 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="n">nb_points</span> <span class="o">&lt;</span> <span class="mi">500</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">build_S_rows</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nb_points</span><span class="p">))</span>  <span class="c1"># Just the full matrix</span>
         <span class="k">else</span><span class="p">:</span>
+            <span class="n">xp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">matrices_namespace</span>
+            <span class="n">real_dtype</span> <span class="o">=</span> <span class="n">xp</span><span class="o">.</span><span class="n">float32</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">floating_point_precision</span> <span class="o">==</span> <span class="s2">"float32"</span> <span class="k">else</span> <span class="n">xp</span><span class="o">.</span><span class="n">float64</span>
             <span class="k">return</span> <span class="n">LazyMatrix</span><span class="p">(</span>
                 <span class="n">build_S_rows</span><span class="p">,</span>
                 <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">),</span>
-                <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">,</span>
-                <span class="n">chunk_size</span><span class="o">=</span><span class="mi">100</span>
+                <span class="n">chunk_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                <span class="n">dtype</span><span class="o">=</span><span class="n">complex_dtype</span><span class="p">(</span><span class="n">xp</span><span class="p">,</span> <span class="n">real_dtype</span><span class="p">),</span>
+                <span class="n">namespace</span><span class="o">=</span><span class="n">xp</span><span class="p">,</span>
+                <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">matrices_device</span><span class="p">,</span>
             <span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="DefaultMatrixEngine.build_fullK_matrix">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.DefaultMatrixEngine.build_fullK_matrix">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">build_fullK_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">build_fullK_matrix</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">**</span><span class="n">gf_params</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Similar to :code:`build_matrices`, but returning only full :math:`K`</span>
-<span class="sd">        (that is the three components of the gradient, not just the normal one)"""</span>
+<span class="sd">        (that is the three components of the gradient, not just the normal one).</span>
+<span class="sd">        The array library of the returned array is the one of the Green function."""</span>
         <span class="c1"># TODO: could use symmetries. In particular for forward, we compute the</span>
         <span class="c1"># full velocity on the same mesh so symmetries could be used.</span>
         <span class="n">gf_params</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"diagonal_term_in_double_layer"</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>  <span class="c1"># Unclear if this is a good default</span>
@@ -719,7 +730,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        tuple of matrix-like (Numpy arrays or BlockCirculantMatrix)</span>
+<span class="sd">        tuple of matrix-like (arrays of the array library of the Green function, or BlockCirculantMatrix)</span>
 <span class="sd">            the matrices :math:`S` and :math:`K`</span>
 <span class="sd">        """</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_and_cache_matrices_with_symmetries</span><span class="p">(</span>
@@ -729,20 +740,20 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="DefaultMatrixEngine.linear_solver">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.DefaultMatrixEngine.linear_solver">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">linear_solver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">LUDecomposedMatrixOrNot</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">linear_solver</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">LUDecomposedMatrixOrNot</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Solve a linear system with left-hand side A and right-hand-side b</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        A: matrix-like</span>
 <span class="sd">            Expected to be the second output of `build_matrices`</span>
-<span class="sd">        b: np.ndarray</span>
-<span class="sd">            Vector of the correct length</span>
+<span class="sd">        b: array</span>
+<span class="sd">            Vector of the correct length, from the same array library as A</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        x: np.ndarray</span>
-<span class="sd">            Vector such that A@x = b</span>
+<span class="sd">        x: array</span>
+<span class="sd">            Vector such that A@x = b, from the same array library as A</span>
 <span class="sd">        """</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_linear_solver</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="c1"># If not a string, it is expected to be a custom function that can</span>
@@ -770,6 +781,10 @@ window.runMermaid = runMermaid;</script>
             <span class="k">return</span> <span class="n">luA</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
 
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">_linear_solver</span> <span class="o">==</span> <span class="s2">"gmres"</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">is_numpy_namespace</span><span class="p">(</span><span class="n">array_namespace</span><span class="p">(</span><span class="n">A</span><span class="p">)):</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+                    <span class="s2">"The 'gmres' linear solver is only available for matrices stored as NumPy arrays."</span>
+                <span class="p">)</span>
             <span class="k">return</span> <span class="n">solve_gmres</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span>
 
         <span class="k">else</span><span class="p">:</span>
@@ -838,7 +853,8 @@ window.runMermaid = runMermaid;</script>
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.engines.html#capytaine.bem.engines.check_if_nan_in_matrix">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">check_if_nan_in_matrix</span><span class="p">(</span><span class="n">matrices</span><span class="p">):</span>
     <span class="k">for</span> <span class="n">matrix</span> <span class="ow">in</span> <span class="n">matrices</span><span class="p">:</span>
-        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">matrix</span><span class="p">)):</span>
+        <span class="n">xp</span> <span class="o">=</span> <span class="n">array_namespace</span><span class="p">(</span><span class="n">matrix</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">matrix</span><span class="p">))):</span>
             <span class="k">raise</span> <span class="n">GreenFunctionEvaluationError</span><span class="p">(</span>
                     <span class="s2">"Green function returned a NaN in the interaction matrix.</span><span class="se">\n</span><span class="s2">"</span>
                     <span class="s2">"It could be due to overlapping panels."</span><span class="p">)</span></div>

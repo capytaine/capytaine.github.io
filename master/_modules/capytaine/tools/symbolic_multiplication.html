@@ -423,7 +423,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">"""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span><span class="p">,</span> <span class="n">total_ordering</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">wraps</span>
 
 <div class="viewcode-block" id="SymbolicMultiplication">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.symbolic_multiplication.html#capytaine.tools.symbolic_multiplication.SymbolicMultiplication">[docs]</a>
@@ -581,21 +581,21 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<div class="viewcode-block" id="supporting_symbolic_multiplication">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.symbolic_multiplication.html#capytaine.tools.symbolic_multiplication.supporting_symbolic_multiplication">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">supporting_symbolic_multiplication</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
+<div class="viewcode-block" id="method_supporting_symbolic_multiplication">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.symbolic_multiplication.html#capytaine.tools.symbolic_multiplication.method_supporting_symbolic_multiplication">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">method_supporting_symbolic_multiplication</span><span class="p">(</span><span class="n">f</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""</span>
-<span class="sd">    When this decorator is applied to a function, this function can now take</span>
-<span class="sd">    as input a `SymbolicMultiplication` object. The function is applied on the</span>
-<span class="sd">    `value` part of the `SymbolicMultiplication` without modifying the</span>
-<span class="sd">    `symbol`.</span>
+<span class="sd">    When this decorator is applied to a method `f(self, a, x, ...)`, this method</span>
+<span class="sd">    can now take as input a `SymbolicMultiplication` object as `x`. The method</span>
+<span class="sd">    is applied on the `value` part of the `SymbolicMultiplication` without</span>
+<span class="sd">    modifying the `symbol`. Further arguments are passed to the method unchanged.</span>
 <span class="sd">    """</span>
     <span class="nd">@wraps</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">wrapped_f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">wrapped_f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">'symbol'</span><span class="p">):</span>
-            <span class="k">return</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span><span class="p">))</span>
+            <span class="k">return</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">a</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">wrapped_f</span></div>
 
 </pre></div>

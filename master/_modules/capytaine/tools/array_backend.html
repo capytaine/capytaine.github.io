@@ -419,7 +419,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.symbolic_multiplication</span><span class="w"> </span><span class="kn">import</span> <span class="n">SymbolicMultiplication</span>
 
-<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"array_namespace"</span><span class="p">,</span> <span class="s2">"is_array"</span><span class="p">,</span> <span class="s2">"complex_dtype"</span><span class="p">,</span> <span class="s2">"asarray_like"</span><span class="p">,</span> <span class="s2">"to_numpy"</span><span class="p">]</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"array_namespace"</span><span class="p">,</span> <span class="s2">"device"</span><span class="p">,</span> <span class="s2">"is_array"</span><span class="p">,</span> <span class="s2">"is_numpy_namespace"</span><span class="p">,</span> <span class="s2">"complex_dtype"</span><span class="p">,</span> <span class="s2">"to_backend_of"</span><span class="p">,</span> <span class="s2">"to_numpy"</span><span class="p">]</span>
 
 
 <div class="viewcode-block" id="is_array">
@@ -434,6 +434,15 @@ window.runMermaid = runMermaid;</script>
 
 
 
+<div class="viewcode-block" id="is_numpy_namespace">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.array_backend.html#capytaine.tools.array_backend.is_numpy_namespace">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">is_numpy_namespace</span><span class="p">(</span><span class="n">xp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""True if `xp` is the NumPy namespace.</span>
+<span class="sd">    (`array_api_compat.is_numpy_namespace` is only available since array-api-compat 1.9.)"""</span>
+    <span class="k">return</span> <span class="n">xp</span> <span class="ow">is</span> <span class="n">array_namespace</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="mi">0</span><span class="p">))</span></div>
+
+
+
 <div class="viewcode-block" id="complex_dtype">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.array_backend.html#capytaine.tools.array_backend.complex_dtype">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">complex_dtype</span><span class="p">(</span><span class="n">xp</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
@@ -442,12 +451,10 @@ window.runMermaid = runMermaid;</script>
 
 
 
-<div class="viewcode-block" id="asarray_like">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.array_backend.html#capytaine.tools.array_backend.asarray_like">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">asarray_like</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">like</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">complex_</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="to_backend_of">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.array_backend.html#capytaine.tools.array_backend.to_backend_of">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">to_backend_of</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">like</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">complex_</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Convert `x` to the array library, device and (complex) precision of `like`."""</span>
-    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">SymbolicMultiplication</span><span class="p">):</span>
-        <span class="k">return</span> <span class="n">SymbolicMultiplication</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">symbol</span><span class="p">,</span> <span class="n">asarray_like</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">like</span><span class="p">,</span> <span class="n">complex_</span><span class="o">=</span><span class="n">complex_</span><span class="p">))</span>
     <span class="n">xp</span> <span class="o">=</span> <span class="n">array_namespace</span><span class="p">(</span><span class="n">like</span><span class="p">)</span>
     <span class="n">dtype</span> <span class="o">=</span> <span class="n">complex_dtype</span><span class="p">(</span><span class="n">xp</span><span class="p">,</span> <span class="n">like</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span> <span class="k">if</span> <span class="n">complex_</span> <span class="k">else</span> <span class="n">like</span><span class="o">.</span><span class="n">dtype</span>
     <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">(</span><span class="n">like</span><span class="p">))</span></div>
