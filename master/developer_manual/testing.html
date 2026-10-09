@@ -73,6 +73,36 @@ the code.</p>
 </div>
 </li>
 </ul>
+<p>The test suite runs much faster when the OpenMP parallelization of the Fortran
+core is disabled, since most tests use small meshes for which multithreading is
+mostly overhead:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">OMP_NUM_THREADS</span><span class="o">=</span><span class="mi">1</span> <span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pytest</span>
+</pre></div>
+</div>
+</section>
+<section id="writing-tests">
+<h2>Writing tests<a class="headerlink" href="#writing-tests" title="Link to this heading">¶</a></h2>
+<p>Pytest fixtures are avoided in Capytaine’s test suite: simple fixtures are
+replaced by plain functions, possibly cached with <code class="xref py py-func docutils literal notranslate"><span class="pre">functools.lru_cache()</span></code>.</p>
+<p>Helpers shared by several test files are gathered in
+<code class="docutils literal notranslate"><span class="pre">pytest/capytaine_test_helpers.py</span></code>, that can be imported in a test file as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">capytaine_test_helpers</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">helpers</span>
+</pre></div>
+</div>
+<p>It provides in particular:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">helpers.solver(method=...,</span> <span class="pre">**gf_kwargs)</span></code>, to be used instead of
+<code class="docutils literal notranslate"><span class="pre">cpt.BEMSolver()</span></code>. It returns a new solver using a Green function shared
+between all the tests (<code class="docutils literal notranslate"><span class="pre">helpers.green_function(**gf_kwargs)</span></code>), since
+building a new <a class="reference internal" href="api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau" title="capytaine.green_functions.delhommeau.Delhommeau"><code class="xref py py-class docutils literal notranslate"><span class="pre">Delhommeau</span></code></a>
+requires to load its tabulation from the disk.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">helpers.small_sphere_mesh()</span></code> and <code class="docutils literal notranslate"><span class="pre">helpers.small_sphere_body(...)</span></code>, a
+coarse floating sphere for tests that need a body but whose results do not
+depend on its geometry.</p></li>
+</ul>
+<p>Only the objects that are not modified by the tests (such as meshes and Green
+functions) should be cached. Bodies and solvers are mutable and are thus built
+anew at each call.</p>
 </section>
 <section id="testing-in-isolated-environments">
 <h2>Testing in isolated environments<a class="headerlink" href="#testing-in-isolated-environments" title="Link to this heading">¶</a></h2>
