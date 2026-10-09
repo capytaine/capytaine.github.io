@@ -417,12 +417,10 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">cmath</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span><span class="p">,</span> <span class="n">singledispatch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">lru_cache</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Sequence</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sl</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.linear_solvers</span><span class="w"> </span><span class="kn">import</span> <span class="n">lu_decompose</span><span class="p">,</span> <span class="n">AbstractLUDecomposedMatrix</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.array_backend</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">IterableTensor</span><span class="p">,</span> <span class="n">array_namespace</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">ending_dimensions_at_the_beginning</span><span class="p">,</span> <span class="n">is_array</span><span class="p">,</span>
     <span class="n">leading_dimensions_at_the_end</span><span class="p">,</span> <span class="n">split</span><span class="p">,</span> <span class="n">to_numpy</span><span class="p">,</span>
@@ -442,11 +440,11 @@ window.runMermaid = runMermaid;</script>
 <span class="w">    </span><span class="sd">"""Make the array library and the device of the blocks accessible, as for an array."""</span>
 
     <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_namespace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_array_backend</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">array_namespace</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__array_namespace__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">api_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -514,7 +512,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="fm">__matmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">is_array</span><span class="p">(</span><span class="n">other</span><span class="p">)</span> <span class="ow">and</span> <span class="n">other</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">NotImplemented</span>
-        <span class="n">xp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span>
+        <span class="n">xp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span>
         <span class="n">n</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
             <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span>
@@ -564,7 +562,7 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">b</span> <span class="o">-</span> <span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">d</span><span class="p">,</span>
             <span class="p">])</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="n">xp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span>
+            <span class="n">xp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span>
             <span class="k">return</span> <span class="n">BlockDiagonalMatrix</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">as_array</span><span class="p">(</span><span class="n">xp</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
@@ -575,7 +573,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Called solve on </span><span class="si">%s</span><span class="s2"> of shape </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
                   <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="n">xp</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span>
+        <span class="n">xp</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span>
         <span class="n">b_fft</span> <span class="o">=</span> <span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
         <span class="n">res_fft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_diagonalize</span><span class="p">()</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">b_fft</span><span class="p">)</span>
         <span class="n">res</span> <span class="o">=</span> <span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">res_fft</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -672,7 +670,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        * For i&gt;0: ``[[blocks[2*i], blocks[2*n-2*i+1]], [blocks[2*i+1], blocks[2*n-2*i]]]``</span>
 <span class="sd">        """</span>
         <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">//</span> <span class="mi">2</span>
-        <span class="n">xp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span>
+        <span class="n">xp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span>
 
         <span class="c1"># Create the macro-blocks for the BlockCirculantMatrix</span>
         <span class="n">macro_blocks</span> <span class="o">=</span> <span class="p">[]</span>
@@ -791,7 +789,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Called solve on </span><span class="si">%s</span><span class="s2"> of shape </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
                   <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="n">xp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span>
+        <span class="n">xp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span>
         <span class="n">rhs</span> <span class="o">=</span> <span class="n">split</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span><span class="p">)</span>
         <span class="c1"># The right-hand side is always given to `solve` as a 2D array (with a single column</span>
         <span class="c1"># for a vector), because the behaviour of `solve` for a 1D right-hand side depends</span>
@@ -800,86 +798,6 @@ window.runMermaid = runMermaid;</script>
                <span class="k">for</span> <span class="p">(</span><span class="n">Ai</span><span class="p">,</span> <span class="n">bi</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)]</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Done"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
-</div>
-
-
-
-<span class="n">MatrixLike</span> <span class="o">=</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">BlockDiagonalMatrix</span><span class="p">,</span> <span class="n">NestedBlockCirculantMatrix</span><span class="p">,</span> <span class="n">BlockCirculantMatrix</span><span class="p">]</span>
-
-
-<div class="viewcode-block" id="AbstractLUDecomposedMatrix">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.AbstractLUDecomposedMatrix">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">AbstractLUDecomposedMatrix</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Base class of the LU decompositions of matrices.</span>
-
-<span class="sd">    New matrix types (e.g. matrices stored with another array library) can be</span>
-<span class="sd">    supported by the linear solvers of Capytaine by registering a function</span>
-<span class="sd">    returning a subclass of this class with :func:`lu_decompose`.</span>
-<span class="sd">    """</span>
-    <span class="n">shape</span><span class="p">:</span> <span class="nb">tuple</span>
-    <span class="n">dtype</span><span class="p">:</span> <span class="nb">object</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">_namespace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__array_namespace__</span><span class="p">()</span>
-
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">__array_namespace__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">api_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Array library of the matrix that has been decomposed, as for an array of the array API standard."""</span>
-
-    <span class="nd">@property</span>
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Device of the matrix that has been decomposed, as for an array of the array API standard."""</span>
-
-<div class="viewcode-block" id="AbstractLUDecomposedMatrix.solve">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.AbstractLUDecomposedMatrix.solve">[docs]</a>
-    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">"""Solve the linear system with the decomposed matrix as left-hand side and `b` as right-hand side."""</span></div>
-</div>
-
-
-
-<div class="viewcode-block" id="lu_decompose">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.lu_decompose">[docs]</a>
-<span class="nd">@singledispatch</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">lu_decompose</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">overwrite_a</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AbstractLUDecomposedMatrix</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Compute the LU decomposition of `A`.</span>
-
-<span class="sd">    This is a :func:`functools.singledispatch` function: the implementation for</span>
-<span class="sd">    a new type of matrix can be added with ``lu_decompose.register(MyMatrix, my_function)``,</span>
-<span class="sd">    where ``my_function(A, *, overwrite_a=False)`` returns an :class:`AbstractLUDecomposedMatrix`.</span>
-<span class="sd">    """</span>
-    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No LU decomposition registered for </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span></div>
-
-
-
-<div class="viewcode-block" id="LUDecomposedMatrix">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.LUDecomposedMatrix">[docs]</a>
-<span class="k">class</span><span class="w"> </span><span class="nc">LUDecomposedMatrix</span><span class="p">(</span><span class="n">AbstractLUDecomposedMatrix</span><span class="p">):</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">A</span><span class="p">:</span> <span class="n">NDArray</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">overwrite_a</span> <span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"LU decomp of </span><span class="si">%s</span><span class="s2"> of shape </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
-                  <span class="n">A</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span> <span class="o">=</span> <span class="n">sl</span><span class="o">.</span><span class="n">lu_factor</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">overwrite_a</span><span class="o">=</span><span class="n">overwrite_a</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">shape</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">dtype</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_array_namespace</span> <span class="o">=</span> <span class="n">array_namespace</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_device</span> <span class="o">=</span> <span class="n">device</span><span class="p">(</span><span class="n">A</span><span class="p">)</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">__array_namespace__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">api_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_namespace</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_device</span>
-
-<div class="viewcode-block" id="LUDecomposedMatrix.solve">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.LUDecomposedMatrix.solve">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-        <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Called solve on </span><span class="si">%s</span><span class="s2"> of shape </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
-                  <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">sl</span><span class="o">.</span><span class="n">lu_solve</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span><span class="p">,</span> <span class="n">b</span><span class="p">)</span></div>
 </div>
 
 
@@ -896,20 +814,18 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">bdm</span><span class="o">.</span><span class="n">shape</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">=</span> <span class="n">bdm</span><span class="o">.</span><span class="n">nb_blocks</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">bdm</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span> <span class="o">=</span> <span class="n">array_namespace</span><span class="p">(</span><span class="n">bdm</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span><span class="p">(</span><span class="n">bdm</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__array_namespace__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">api_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">__array_namespace__</span><span class="p">()</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">device</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span>
 
 <div class="viewcode-block" id="LUDecomposedBlockDiagonalMatrix.solve">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.LUDecomposedBlockDiagonalMatrix.solve">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Called solve on </span><span class="si">%s</span><span class="s2"> of shape </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
                   <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="n">xp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span>
+        <span class="n">xp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span>
         <span class="n">rhs</span> <span class="o">=</span> <span class="n">split</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span><span class="p">)</span>
         <span class="n">res</span> <span class="o">=</span> <span class="p">[</span><span class="n">Ai</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">bi</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">Ai</span><span class="p">,</span> <span class="n">bi</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)]</span>
         <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span></div>
@@ -927,30 +843,23 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">bcm</span><span class="o">.</span><span class="n">shape</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">=</span> <span class="n">bcm</span><span class="o">.</span><span class="n">nb_blocks</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">bcm</span><span class="o">.</span><span class="n">dtype</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span> <span class="o">=</span> <span class="n">array_namespace</span><span class="p">(</span><span class="n">bcm</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span><span class="p">(</span><span class="n">bcm</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__array_namespace__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">api_version</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span><span class="o">.</span><span class="n">__array_namespace__</span><span class="p">()</span>
-
-    <span class="nd">@property</span>
-    <span class="k">def</span><span class="w"> </span><span class="nf">device</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span><span class="o">.</span><span class="n">device</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span>
 
 <div class="viewcode-block" id="LUDecomposedBlockCirculantMatrix.solve">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.LUDecomposedBlockCirculantMatrix.solve">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Called solve on </span><span class="si">%s</span><span class="s2"> of shape </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
                   <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="n">xp</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_namespace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span>
+        <span class="n">xp</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span>
         <span class="n">b_fft</span> <span class="o">=</span> <span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
         <span class="n">res_fft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">b_fft</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">res_fft</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
 </div>
 
-
-
-<span class="nd">@lu_decompose</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
-<span class="k">def</span><span class="w"> </span><span class="nf">_lu_decompose_ndarray</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">overwrite_a</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-    <span class="k">return</span> <span class="n">LUDecomposedMatrix</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">overwrite_a</span><span class="o">=</span><span class="n">overwrite_a</span><span class="p">)</span>
 
 
 <span class="nd">@lu_decompose</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">BlockDiagonalMatrix</span><span class="p">)</span>
@@ -965,14 +874,8 @@ window.runMermaid = runMermaid;</script>
 
 <span class="nd">@lu_decompose</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">NestedBlockCirculantMatrix</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">_lu_decompose_nested_block_circulant</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">overwrite_a</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="c1"># Drop the nested block circulant structure and LU-decompose the outer block circulant structure only.</span>
     <span class="k">return</span> <span class="n">LUDecomposedBlockCirculantMatrix</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">to_BlockCirculantMatrix</span><span class="p">(),</span> <span class="n">overwrite_a</span><span class="o">=</span><span class="n">overwrite_a</span><span class="p">)</span>
-
-
-<div class="viewcode-block" id="has_been_lu_decomposed">
-<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.has_been_lu_decomposed">[docs]</a>
-<span class="k">def</span><span class="w"> </span><span class="nf">has_been_lu_decomposed</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
-    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">AbstractLUDecomposedMatrix</span><span class="p">)</span></div>
-
 </pre></div>
 
           </div>

@@ -414,15 +414,33 @@ window.runMermaid = runMermaid;</script>
 <span class="c1"># limitations under the License.</span>
 <span class="sd">"""Helpers to write code that works with any array library implementing the array API standard."""</span>
 
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Protocol</span><span class="p">,</span> <span class="n">Tuple</span>
+
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">array_api_compat</span><span class="w"> </span><span class="kn">import</span> <span class="n">array_namespace</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">is_numpy_array</span><span class="p">,</span> <span class="n">to_device</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.symbolic_multiplication</span><span class="w"> </span><span class="kn">import</span> <span class="n">SymbolicMultiplication</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">"array_namespace"</span><span class="p">,</span> <span class="s2">"device"</span><span class="p">,</span> <span class="s2">"is_array"</span><span class="p">,</span> <span class="s2">"is_numpy_namespace"</span><span class="p">,</span> <span class="s2">"complex_dtype"</span><span class="p">,</span> <span class="s2">"to_backend_of"</span><span class="p">,</span> <span class="s2">"to_numpy"</span><span class="p">,</span>
+    <span class="s2">"MatrixLike"</span><span class="p">,</span> <span class="s2">"array_namespace"</span><span class="p">,</span> <span class="s2">"device"</span><span class="p">,</span> <span class="s2">"is_array"</span><span class="p">,</span> <span class="s2">"is_numpy_namespace"</span><span class="p">,</span> <span class="s2">"complex_dtype"</span><span class="p">,</span> <span class="s2">"to_backend_of"</span><span class="p">,</span> <span class="s2">"to_numpy"</span><span class="p">,</span>
     <span class="s2">"IterableTensor"</span><span class="p">,</span> <span class="s2">"split"</span><span class="p">,</span> <span class="s2">"leading_dimensions_at_the_end"</span><span class="p">,</span> <span class="s2">"ending_dimensions_at_the_beginning"</span><span class="p">,</span>
 <span class="p">]</span>
+
+
+<div class="viewcode-block" id="MatrixLike">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.array_backend.html#capytaine.tools.array_backend.MatrixLike">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MatrixLike</span><span class="p">(</span><span class="n">Protocol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Any 2D (or batched) matrix: an array of any library supported by array-api-compat,</span>
+<span class="sd">    or a custom data-sparse matrix such as BlockCirculantMatrix.</span>
+
+<span class="sd">    Only used for type annotations. `__array_namespace__` is not required, since</span>
+<span class="sd">    some arrays (e.g. torch tensors) get it from array-api-compat instead of defining it."""</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="o">...</span><span class="p">]:</span> <span class="o">...</span>
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dtype</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__matmul__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Any</span><span class="p">:</span> <span class="o">...</span></div>
+
 
 
 <div class="viewcode-block" id="is_array">

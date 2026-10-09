@@ -426,17 +426,18 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.abstract_green_function</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractGreenFunction</span><span class="p">,</span> <span class="n">GreenFunctionEvaluationError</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.green_functions.delhommeau</span><span class="w"> </span><span class="kn">import</span> <span class="n">Delhommeau</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.array_backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">array_namespace</span><span class="p">,</span> <span class="n">complex_dtype</span><span class="p">,</span> <span class="n">is_numpy_namespace</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.array_backend</span><span class="w"> </span><span class="kn">import</span> <span class="n">MatrixLike</span><span class="p">,</span> <span class="n">array_namespace</span><span class="p">,</span> <span class="n">complex_dtype</span><span class="p">,</span> <span class="n">is_numpy_namespace</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.lazy_matrices</span><span class="w"> </span><span class="kn">import</span> <span class="n">LazyMatrix</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.lists_of_points</span><span class="w"> </span><span class="kn">import</span> <span class="n">_normalize_points</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.block_circulant_matrices</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">BlockCirculantMatrix</span><span class="p">,</span>
     <span class="n">NestedBlockCirculantMatrix</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.linear_solvers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
     <span class="n">lu_decompose</span><span class="p">,</span>
     <span class="n">has_been_lu_decomposed</span><span class="p">,</span>
-    <span class="n">MatrixLike</span><span class="p">,</span>
     <span class="n">AbstractLUDecomposedMatrix</span>
 <span class="p">)</span>
+
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -585,14 +586,14 @@ window.runMermaid = runMermaid;</script>
         <span class="k">if</span> <span class="n">nb_points</span> <span class="o">&lt;</span> <span class="mi">500</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">build_S_rows</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nb_points</span><span class="p">))</span>  <span class="c1"># Just the full matrix</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="n">xp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">matrices_namespace</span>
+            <span class="n">xp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">matrices_array_backend</span>
             <span class="n">real_dtype</span> <span class="o">=</span> <span class="n">xp</span><span class="o">.</span><span class="n">float32</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">floating_point_precision</span> <span class="o">==</span> <span class="s2">"float32"</span> <span class="k">else</span> <span class="n">xp</span><span class="o">.</span><span class="n">float64</span>
             <span class="k">return</span> <span class="n">LazyMatrix</span><span class="p">(</span>
                 <span class="n">build_S_rows</span><span class="p">,</span>
                 <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">),</span>
                 <span class="n">chunk_size</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
                 <span class="n">dtype</span><span class="o">=</span><span class="n">complex_dtype</span><span class="p">(</span><span class="n">xp</span><span class="p">,</span> <span class="n">real_dtype</span><span class="p">),</span>
-                <span class="n">namespace</span><span class="o">=</span><span class="n">xp</span><span class="p">,</span>
+                <span class="n">array_backend</span><span class="o">=</span><span class="n">xp</span><span class="p">,</span>
                 <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">green_function</span><span class="o">.</span><span class="n">matrices_device</span><span class="p">,</span>
             <span class="p">)</span></div>
 
