@@ -521,6 +521,29 @@ window.runMermaid = runMermaid;</script>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_second_order_motion_at_points</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AbstractDof.evaluate_gradient_of_second_order_motion_at_points">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.AbstractDof.evaluate_gradient_of_second_order_motion_at_points">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_second_order_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">AbstractDof</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="c1"># Gradient (Jacobian matrix, with the same conventions as `evaluate_gradient_of_motion_at_points`)</span>
+        <span class="c1"># of δ²u_kj = dofs[k].evaluate_second_order_motion_at_points(dofs[j], X).</span>
+        <span class="c1"># Zero for all pair of dofs, except for some pairs of rotations.</span>
+
+        <span class="c1"># points is an array of shape (..., 3)</span>
+        <span class="c1"># output is of shape (..., 3, 3)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="o">*</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="AbstractDof.evaluate_gradient_of_second_order_motion">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.AbstractDof.evaluate_gradient_of_second_order_motion">[docs]</a>
+    <span class="nd">@lru_cache</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_second_order_motion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">AbstractDof</span><span class="p">,</span> <span class="n">mesh</span><span class="p">:</span> <span class="n">AbstractMesh</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="c1"># output is of shape (nb_faces, 3, 3)</span>
+        <span class="k">if</span> <span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_gradient_of_second_order_motion_at_points</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">)</span></div>
 </div>
 
 
@@ -590,24 +613,41 @@ window.runMermaid = runMermaid;</script>
             <span class="p">)</span>
         <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">axis</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_outer_and_inner_rotations</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">RotationDof</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_center</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">rotation_center</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"For second order motion, all rotations should have the same rotation center"</span><span class="p">)</span>
+        <span class="c1"># The rotations are composed in the roll-pitch-yaw sequence of WAMIT</span>
+        <span class="c1"># (WAMIT manual v7.6, eq. 15.48-15.49), R = R_roll R_pitch R_yaw.</span>
+        <span class="c1"># The second-order term of the product of two different rotations depends on this order:</span>
+        <span class="c1"># δ²u_kj = δ²u_jk = ω_outer × (ω_inner × (X - X_center))</span>
+        <span class="c1"># with the outer rotation being the one applied last (roll, then pitch, then yaw).</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roll_pitch_yaw_rank</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">_roll_pitch_yaw_rank</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span>
+
 <div class="viewcode-block" id="RotationDof.evaluate_second_order_motion_at_points">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.RotationDof.evaluate_second_order_motion_at_points">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_second_order_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">AbstractDof</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">RotationDof</span><span class="p">):</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">rotation_center</span><span class="p">,</span> <span class="n">other</span><span class="o">.</span><span class="n">rotation_center</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"For second order motion, all rotations should have the same rotation center"</span><span class="p">)</span>
-            <span class="c1"># The rotations are composed in the roll-pitch-yaw sequence of WAMIT</span>
-            <span class="c1"># (WAMIT manual v7.6, eq. 15.48-15.49), R = R_roll R_pitch R_yaw.</span>
-            <span class="c1"># The second-order term of the product of two different rotations depends on this order:</span>
-            <span class="c1"># δ²u_kj = δ²u_jk = ω_outer × (ω_inner × (X - X_center))</span>
-            <span class="c1"># with the outer rotation being the one applied last (roll, then pitch, then yaw).</span>
-            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_roll_pitch_yaw_rank</span><span class="p">()</span> <span class="o">&lt;=</span> <span class="n">other</span><span class="o">.</span><span class="n">_roll_pitch_yaw_rank</span><span class="p">():</span>
-                <span class="n">outer</span><span class="p">,</span> <span class="n">inner</span> <span class="o">=</span> <span class="bp">self</span><span class="p">,</span> <span class="n">other</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="n">outer</span><span class="p">,</span> <span class="n">inner</span> <span class="o">=</span> <span class="n">other</span><span class="p">,</span> <span class="bp">self</span>
+            <span class="n">outer</span><span class="p">,</span> <span class="n">inner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outer_and_inner_rotations</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">outer</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">inner</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span> <span class="n">points</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">rotation_center</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="o">*</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">3</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="RotationDof.evaluate_gradient_of_second_order_motion_at_points">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.RotationDof.evaluate_gradient_of_second_order_motion_at_points">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_second_order_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">AbstractDof</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">RotationDof</span><span class="p">):</span>
+            <span class="n">outer</span><span class="p">,</span> <span class="n">inner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_outer_and_inner_rotations</span><span class="p">(</span><span class="n">other</span><span class="p">)</span>
+            <span class="c1"># ∇(ω_outer × (ω_inner × r)) = S(ω_outer) S(ω_inner), see `evaluate_gradient_of_motion_at_points`</span>
+            <span class="c1"># for the transposition.</span>
+            <span class="n">S_outer</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">outer</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+            <span class="n">S_inner</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">inner</span><span class="o">.</span><span class="n">direction</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">T</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">S_outer</span> <span class="o">@</span> <span class="n">S_inner</span><span class="p">,</span> <span class="p">(</span><span class="o">*</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="o">*</span><span class="n">points</span><span class="o">.</span><span class="n">shape</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="RotationDof.evaluate_second_order_motion">
@@ -620,6 +660,16 @@ window.runMermaid = runMermaid;</script>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Most likely sent to `RotationDof.evaluate_second_order_motion_at_points`</span>
             <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">evaluate_second_order_motion</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="RotationDof.evaluate_gradient_of_second_order_motion">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.RotationDof.evaluate_gradient_of_second_order_motion">[docs]</a>
+    <span class="nd">@lru_cache</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_second_order_motion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">AbstractDof</span><span class="p">,</span> <span class="n">mesh</span><span class="p">:</span> <span class="n">AbstractMesh</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">DofOnSubmesh</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">other</span><span class="o">.</span><span class="n">evaluate_gradient_of_second_order_motion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">evaluate_gradient_of_second_order_motion</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">mesh</span><span class="p">)</span></div>
 </div>
 
 
@@ -673,6 +723,16 @@ window.runMermaid = runMermaid;</script>
             <span class="s2">"DofOnSubmesh.evaluate_second_order_motion_at_points() is not defined for arbitrary points: "</span>
             <span class="s2">"membership in the submesh is only meaningful relative to the faces of the mesh "</span>
             <span class="s2">"this dof was built from. Use evaluate_second_order_motion(mesh) instead."</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DofOnSubmesh.evaluate_gradient_of_second_order_motion_at_points">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.DofOnSubmesh.evaluate_gradient_of_second_order_motion_at_points">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_second_order_motion_at_points</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">AbstractDof</span><span class="p">,</span> <span class="n">points</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">"DofOnSubmesh.evaluate_gradient_of_second_order_motion_at_points() is not defined for arbitrary points: "</span>
+            <span class="s2">"membership in the submesh is only meaningful relative to the faces of the mesh "</span>
+            <span class="s2">"this dof was built from. Use evaluate_gradient_of_second_order_motion(mesh) instead."</span>
         <span class="p">)</span></div>
 
 
@@ -733,6 +793,19 @@ window.runMermaid = runMermaid;</script>
         <span class="n">motion</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
         <span class="n">motion</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dof</span><span class="o">.</span><span class="n">evaluate_second_order_motion_at_points</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="p">:])</span>
         <span class="k">return</span> <span class="n">motion</span></div>
+
+
+<div class="viewcode-block" id="DofOnSubmesh.evaluate_gradient_of_second_order_motion">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.dofs.html#capytaine.bodies.dofs.DofOnSubmesh.evaluate_gradient_of_second_order_motion">[docs]</a>
+    <span class="nd">@lru_cache</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">evaluate_gradient_of_second_order_motion</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">:</span> <span class="n">AbstractDof</span><span class="p">,</span> <span class="n">mesh</span><span class="p">:</span> <span class="n">AbstractMesh</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="n">mask</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_mask</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">DofOnSubmesh</span><span class="p">):</span>
+            <span class="n">mask</span> <span class="o">&amp;=</span> <span class="n">other</span><span class="o">.</span><span class="n">faces_mask</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
+            <span class="n">other</span> <span class="o">=</span> <span class="n">other</span><span class="o">.</span><span class="n">dof</span>
+        <span class="n">grad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">grad</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="p">:,</span> <span class="p">:]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">dof</span><span class="o">.</span><span class="n">evaluate_gradient_of_second_order_motion_at_points</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[</span><span class="n">mask</span><span class="p">,</span> <span class="p">:])</span>
+        <span class="k">return</span> <span class="n">grad</span></div>
 </div>
 
 
