@@ -47,13 +47,63 @@
 <span id="capytaine-tools-perturbation-expansion-module"></span><h1>capytaine.tools.perturbation_expansion module<a class="headerlink" href="#module-capytaine.tools.perturbation_expansion" title="Link to this heading">¶</a></h1>
 <p>Truncated perturbation series (“higher-order dual numbers”).</p>
 <dl class="py class">
+<dt class="sig sig-object py" id="capytaine.tools.perturbation_expansion.DifferenceFrequencyExpansion">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">capytaine.tools.perturbation_expansion.</span></span><span class="sig-name descname"><span class="pre">DifferenceFrequencyExpansion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coefficients</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/perturbation_expansion.html#DifferenceFrequencyExpansion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.perturbation_expansion.DifferenceFrequencyExpansion" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#capytaine.tools.perturbation_expansion.PerturbationExpansion" title="capytaine.tools.perturbation_expansion.PerturbationExpansion"><code class="xref py py-class docutils literal notranslate"><span class="pre">PerturbationExpansion</span></code></a></p>
+<p>Order-2 expansion of a field in a sea made of several wave components at one frequency.</p>
+<p>For a field of shape S, with W wave components (e.g. wave directions):</p>
+<ul class="simple">
+<li><p>order 0, shape <cite>S</cite>: still water value (geometry, hydrostatic pressure, …). Must be real.</p></li>
+<li><p>order 1, shape <cite>(W, *S)</cite>: <cite>x1[m]</cite> is the complex amplitude of the response to wave m alone.</p></li>
+<li><p>order 2, shape <cite>(W, W, *S)</cite>: <cite>x2[m, n]</cite> is the difference-frequency QTF: the second-order
+part of the field is <cite>sum_mn x2[m, n] exp(-i (omega_m - omega_n) t)</cite>. Hermitian in (m, n).</p></li>
+</ul>
+<p>Products keep the difference-frequency part of the product of first-order terms:
+<cite>Q_mn = 1/4 (a_m conj(b_n) + conj(a_n) b_m)</cite>, such that <cite>Q_mm = 1/2 Re(a_m conj(b_m))</cite> is the mean value.
+A complex factor (e.g. i*omega) must be applied to the first-order amplitudes before
+building the expansion, never to an expansion that has an order-2 part.</p>
+<p>The order-0 and order-2 coefficients can be given as scalars (e.g. 0), and are then broadcast.
+When two operands have a different number of field axes, size-1 axes are inserted in front
+of the field axes of the one that has fewer (NumPy broadcasting of the field axes only).
+The wave axes are leading batch axes and the field axes are at the end: index with <cite>x[…, i]</cite>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.tools.perturbation_expansion.DifferenceFrequencyExpansion.constant">
+<span class="sig-name descname"><span class="pre">constant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">order</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/perturbation_expansion.html#DifferenceFrequencyExpansion.constant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.perturbation_expansion.DifferenceFrequencyExpansion.constant" title="Link to this definition">¶</a></dt>
+<dd><p>Embed <cite>value</cite> as the order-0 term, zero elsewhere (stored as broadcast views).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.tools.perturbation_expansion.DifferenceFrequencyExpansion.evaluate">
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">eps</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/perturbation_expansion.html#DifferenceFrequencyExpansion.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.perturbation_expansion.DifferenceFrequencyExpansion.evaluate" title="Link to this definition">¶</a></dt>
+<dd><p>Numerically sum the series at a concrete eps (mainly for validation/testing).</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.tools.perturbation_expansion.DifferenceFrequencyExpansion.field_ndim">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">field_ndim</span></span><a class="headerlink" href="#capytaine.tools.perturbation_expansion.DifferenceFrequencyExpansion.field_ndim" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="capytaine.tools.perturbation_expansion.DifferenceFrequencyExpansion.nb_waves">
+<span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">nb_waves</span></span><a class="headerlink" href="#capytaine.tools.perturbation_expansion.DifferenceFrequencyExpansion.nb_waves" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
 <dt class="sig sig-object py" id="capytaine.tools.perturbation_expansion.PerturbationExpansion">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">capytaine.tools.perturbation_expansion.</span></span><span class="sig-name descname"><span class="pre">PerturbationExpansion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coefficients</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/perturbation_expansion.html#PerturbationExpansion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.perturbation_expansion.PerturbationExpansion" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>A quantity x0 + eps*x1 + eps^2*x2 + … + eps^N*xN, truncated at order N.</p>
 <p>Each coefficient may be a plain scalar or a numpy array (vector, matrix, …).
 Use <cite>.coefficients[k]</cite> to get the raw coefficient of a specific order.
-Two expansions can only be combined if they share the same truncation order N.</p>
+Two expansions can only be combined if they share the same truncation order N.
+Plain scalars and arrays used as operands are constants: <cite>x</cite> stands for <cite>x + 0*eps + …</cite>.</p>
+<p>The axes of the “field” (e.g. <cite>(nb_faces, 3)</cite> for a vector field) are at the end of the coefficients.
+Leading axes are batch axes, such as the wave axes of <cite>DifferenceFrequencyExpansion</cite>.
+Operations act on each coefficient with the usual NumPy broadcasting rules.
+Methods taking an axis (<cite>sum</cite>, <cite>expand_dims</cite>, <cite>squeeze</cite>) take a negative axis (<cite>axis=-1</cite> for the last one),
+and <cite>trace</cite> and <cite>T</cite> act on the last two axes.</p>
 <dl class="py property">
 <dt class="sig sig-object py" id="capytaine.tools.perturbation_expansion.PerturbationExpansion.T">
 <span class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">T</span></span><a class="headerlink" href="#capytaine.tools.perturbation_expansion.PerturbationExpansion.T" title="Link to this definition">¶</a></dt>
@@ -68,7 +118,7 @@ Two expansions can only be combined if they share the same truncation order N.</
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.tools.perturbation_expansion.PerturbationExpansion.det">
 <span class="sig-name descname"><span class="pre">det</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/perturbation_expansion.html#PerturbationExpansion.det"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.perturbation_expansion.PerturbationExpansion.det" title="Link to this definition">¶</a></dt>
-<dd><p>Matrix determinant. Expansion of det(I + εA1 + ε²A2)</p>
+<dd><p>Matrix determinant. Expansion of det(I + A) = 1 + tr(A) + 1/2 (tr(A)^2 - tr(A &#64; A)) + …, up to order 2.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -78,15 +128,40 @@ Two expansions can only be combined if they share the same truncation order N.</
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="capytaine.tools.perturbation_expansion.PerturbationExpansion.expand_dims">
+<span class="sig-name descname"><span class="pre">expand_dims</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/perturbation_expansion.html#PerturbationExpansion.expand_dims"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.perturbation_expansion.PerturbationExpansion.expand_dims" title="Link to this definition">¶</a></dt>
+<dd><p>Insert a field axis of size 1 at position <cite>axis</cite> (negative).</p>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="capytaine.tools.perturbation_expansion.PerturbationExpansion.inv">
 <span class="sig-name descname"><span class="pre">inv</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/perturbation_expansion.html#PerturbationExpansion.inv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.perturbation_expansion.PerturbationExpansion.inv" title="Link to this definition">¶</a></dt>
-<dd><p>Matrix inverse. Expansion of (I + εA1 + ε²A2)^-1)</p>
+<dd><p>Matrix inverse. Expansion of (I + A)^-1 = I - A + A &#64; A - …, up to order 2.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.tools.perturbation_expansion.PerturbationExpansion.squeeze">
+<span class="sig-name descname"><span class="pre">squeeze</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/perturbation_expansion.html#PerturbationExpansion.squeeze"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.perturbation_expansion.PerturbationExpansion.squeeze" title="Link to this definition">¶</a></dt>
+<dd><p>Remove the field axis of size 1 at position <cite>axis</cite> (negative).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.tools.perturbation_expansion.PerturbationExpansion.sum">
+<span class="sig-name descname"><span class="pre">sum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">axis</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/perturbation_expansion.html#PerturbationExpansion.sum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.perturbation_expansion.PerturbationExpansion.sum" title="Link to this definition">¶</a></dt>
+<dd><p>Sum over the field axis (or tuple of axes) <cite>axis</cite> (negative).</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.tools.perturbation_expansion.PerturbationExpansion.trace">
+<span class="sig-name descname"><span class="pre">trace</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/perturbation_expansion.html#PerturbationExpansion.trace"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.perturbation_expansion.PerturbationExpansion.trace" title="Link to this definition">¶</a></dt>
+<dd><p>Trace over the last two field axes.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.tools.perturbation_expansion.PerturbationExpansion.transpose">
 <span class="sig-name descname"><span class="pre">transpose</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/tools/perturbation_expansion.html#PerturbationExpansion.transpose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.tools.perturbation_expansion.PerturbationExpansion.transpose" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Swap the last two field axes.</p>
+</dd></dl>
 
 </dd></dl>
 
