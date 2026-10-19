@@ -426,7 +426,7 @@ window.runMermaid = runMermaid;</script>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.abstract_meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractMesh</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.meshes</span><span class="w"> </span><span class="kn">import</span> <span class="n">Mesh</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">connected_components</span><span class="p">,</span> <span class="n">connected_components_of_waterline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.meshes.geometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">connected_components</span><span class="p">,</span> <span class="n">connected_components_of_waterline</span><span class="p">,</span> <span class="n">compute_faces_normals</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.dofs</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
         <span class="n">AbstractDof</span><span class="p">,</span>
         <span class="n">TranslationDof</span><span class="p">,</span>
@@ -437,6 +437,7 @@ window.runMermaid = runMermaid;</script>
         <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.abstract_bodies</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractBody</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.hydrostatics</span><span class="w"> </span><span class="kn">import</span> <span class="n">_FloatingBodyHydrostaticsMixin</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.perturbation_expansion</span><span class="w"> </span><span class="kn">import</span> <span class="n">PerturbationExpansion</span><span class="p">,</span> <span class="n">DifferenceFrequencyExpansion</span>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -668,6 +669,123 @@ window.runMermaid = runMermaid;</script>
             <span class="c1"># Sum over all faces:</span>
             <span class="n">forces</span><span class="p">[</span><span class="n">dof_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pressure</span> <span class="o">*</span> <span class="n">normal_dof_amplitude_on_face</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_areas</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">forces</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_dofs_on_faces</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Motion of the dofs and their gradients at the faces centers.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        motion: array of shape (nb_dofs, nb_faces, 3)</span>
+<span class="sd">        gradient: array of shape (nb_dofs, nb_faces, 3, 3)</span>
+<span class="sd">        second_order: dict</span>
+<span class="sd">            ``{(j, k): (δ²u_jk, ∇δ²u_jk)}`` with arrays of shape (nb_faces, 3) and (nb_faces, 3, 3),</span>
+<span class="sd">            only for the pairs of dofs with a non-zero second-order motion (some pairs of rotations).</span>
+<span class="sd">        """</span>
+        <span class="n">motion</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="n">gradient</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="p">(</span><span class="n">dof_name</span><span class="p">,</span> <span class="n">dof</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">AbstractDof</span><span class="p">):</span>
+                <span class="n">motion</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">dof</span><span class="o">.</span><span class="n">evaluate_motion</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+                <span class="n">gradient</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">dof</span><span class="o">.</span><span class="n">evaluate_gradient_of_motion</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">motion</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">dof</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">"For dof </span><span class="si">{</span><span class="n">dof_name</span><span class="si">}</span><span class="s2">, no gradient of motion specified, computing the following assuming 0."</span><span class="p">)</span>
+
+        <span class="n">second_order</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">abstract_dofs</span> <span class="o">=</span> <span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="n">dof</span><span class="p">)</span> <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">dof</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">values</span><span class="p">())</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">AbstractDof</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span> <span class="n">dof_j</span> <span class="ow">in</span> <span class="n">abstract_dofs</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">dof_k</span> <span class="ow">in</span> <span class="n">abstract_dofs</span><span class="p">:</span>
+                <span class="n">motion_jk</span> <span class="o">=</span> <span class="n">dof_j</span><span class="o">.</span><span class="n">evaluate_second_order_motion</span><span class="p">(</span><span class="n">dof_k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+                <span class="n">gradient_jk</span> <span class="o">=</span> <span class="n">dof_j</span><span class="o">.</span><span class="n">evaluate_gradient_of_second_order_motion</span><span class="p">(</span><span class="n">dof_k</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">motion_jk</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">)</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">gradient_jk</span> <span class="o">!=</span> <span class="mf">0.0</span><span class="p">):</span>
+                    <span class="n">second_order</span><span class="p">[(</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">)]</span> <span class="o">=</span> <span class="p">(</span><span class="n">motion_jk</span><span class="p">,</span> <span class="n">gradient_jk</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">motion</span><span class="p">,</span> <span class="n">gradient</span><span class="p">,</span> <span class="n">second_order</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_displacement_expansions</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">first_order_motion_amplitude</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Displacement u = Σ_j q_j δu_j + 1/2 Σ_jk q_j q_k δ²u_jk at the faces centers, and its gradient.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        first_order_motion_amplitude: array of shape (nb_wave_directions, nb_dofs)</span>
+<span class="sd">            Complex amplitudes q of the dofs at one frequency, for each wave direction.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        DifferenceFrequencyExpansion with field (nb_faces, 3), and DifferenceFrequencyExpansion with field (nb_faces, 3, 3)</span>
+<span class="sd">        """</span>
+        <span class="n">Expansion</span> <span class="o">=</span> <span class="n">DifferenceFrequencyExpansion</span>
+        <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">first_order_motion_amplitude</span><span class="p">)</span>
+        <span class="n">motion</span><span class="p">,</span> <span class="n">gradient</span><span class="p">,</span> <span class="n">second_order</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dofs_on_faces</span><span class="p">()</span>
+        <span class="n">u</span> <span class="o">=</span> <span class="n">Expansion</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">q</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">motion</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">])</span>
+        <span class="n">grad_u</span> <span class="o">=</span> <span class="n">Expansion</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">q</span><span class="p">[:,</span> <span class="p">:,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="n">gradient</span><span class="p">[</span><span class="kc">None</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="mf">0.0</span><span class="p">])</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">k</span><span class="p">),</span> <span class="p">(</span><span class="n">motion_jk</span><span class="p">,</span> <span class="n">gradient_jk</span><span class="p">)</span> <span class="ow">in</span> <span class="n">second_order</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">q_jk</span> <span class="o">=</span> <span class="n">Expansion</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">q</span><span class="p">[:,</span> <span class="n">j</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">])</span> <span class="o">*</span> <span class="n">Expansion</span><span class="p">([</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">q</span><span class="p">[:,</span> <span class="n">k</span><span class="p">],</span> <span class="mf">0.0</span><span class="p">])</span>  <span class="c1"># Field ()</span>
+            <span class="n">u</span> <span class="o">=</span> <span class="n">u</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">q_jk</span> <span class="o">*</span> <span class="n">motion_jk</span>
+            <span class="n">grad_u</span> <span class="o">=</span> <span class="n">grad_u</span> <span class="o">+</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">q_jk</span> <span class="o">*</span> <span class="n">gradient_jk</span>
+        <span class="k">return</span> <span class="n">u</span><span class="p">,</span> <span class="n">grad_u</span>
+
+<div class="viewcode-block" id="FloatingBody.integrate_pressure_on_moving_body">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.integrate_pressure_on_moving_body">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">integrate_pressure_on_moving_body</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pressure</span><span class="p">,</span> <span class="n">first_order_motion_amplitude</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Integrate the pressure on the moving body, up to second order. Experimental.</span>
+
+<span class="sd">        Computes the order-2 expansion of F_j = -∫ p(X+u) δu_j(X+u)·(A n) dS on the mean body surface,</span>
+<span class="sd">        where u is the displacement of the body for the motion given by `first_order_motion_amplitude`,</span>
+<span class="sd">        δu_j(X+u) the motion of dof j at the displaced point, and A n dS the displaced</span>
+<span class="sd">        normal and surface element (Nanson's formula, A = det(F) F^-T with F = I + ∇u).</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pressure: DifferenceFrequencyExpansion</span>
+<span class="sd">            Pressure at the displaced faces centers p(X+u), with field (nb_faces,).</span>
+<span class="sd">        first_order_motion_amplitude: array of shape (nb_wave_directions, nb_dofs)</span>
+<span class="sd">            Complex amplitudes of the dofs at one frequency, for each of the wave directions of `pressure`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        DifferenceFrequencyExpansion</span>
+<span class="sd">            The generalized forces, with field (nb_dofs,).</span>
+<span class="sd">        """</span>
+        <span class="n">u</span><span class="p">,</span> <span class="n">grad_u</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_displacement_expansions</span><span class="p">(</span><span class="n">first_order_motion_amplitude</span><span class="p">)</span>
+        <span class="n">motion</span><span class="p">,</span> <span class="n">gradient</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dofs_on_faces</span><span class="p">()</span>
+        <span class="n">deformation</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">+</span> <span class="n">grad_u</span>  <span class="c1"># F</span>
+        <span class="n">nanson</span> <span class="o">=</span> <span class="n">deformation</span><span class="o">.</span><span class="n">det</span><span class="p">()</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">deformation</span><span class="o">.</span><span class="n">inv</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>
+        <span class="n">displaced_normals</span> <span class="o">=</span> <span class="p">(</span><span class="n">nanson</span> <span class="o">@</span> <span class="n">np</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_normals</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (nb_faces, 3)</span>
+        <span class="n">displaced_dofs</span> <span class="o">=</span> <span class="n">motion</span> <span class="o">+</span> <span class="p">(</span><span class="n">gradient</span> <span class="o">@</span> <span class="n">u</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">)</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># (nb_dofs, nb_faces, 3), Hessian of the dofs neglected</span>
+        <span class="c1"># The minus sign is because we want the force of the fluid on the body and not the force of the body on the fluid.</span>
+        <span class="n">normal_dof_amplitude_on_face</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">displaced_dofs</span> <span class="o">*</span> <span class="n">displaced_normals</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="o">-</span><span class="mi">3</span><span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_areas</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">pressure</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">normal_dof_amplitude_on_face</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FloatingBody.integrate_pressure_on_waterline">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody.integrate_pressure_on_waterline">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">integrate_pressure_on_waterline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pressure</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Integrate a lineic pressure along the mean waterline.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        pressure: array of shape (nb_edges_waterline,) or DifferenceFrequencyExpansion</span>
+<span class="sd">            Integrated pressure over the height of the strip between the mean waterline and the free surface</span>
+<span class="sd">            (force per unit length), at the middle of the edges of the waterline of `self.mesh.merged()`.</span>
+<span class="sd">            It is projected on the horizontal normal of the faces of the waterline, scaled by 1/sqrt(1 - nz²).</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict[str, complex] or DifferenceFrequencyExpansion</span>
+<span class="sd">            For an array, the forces as a dictionary with the names of the dofs as keys.</span>
+<span class="sd">            For a DifferenceFrequencyExpansion (experimental), an expansion with field (nb_dofs,).</span>
+<span class="sd">        """</span>
+        <span class="n">mesh</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span>  <span class="c1"># The waterline data of symmetric meshes is computed on the merged mesh.</span>
+        <span class="n">normal</span> <span class="o">=</span> <span class="n">compute_faces_normals</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="n">mesh</span><span class="o">.</span><span class="n">faces_waterline</span><span class="p">)</span>
+        <span class="n">normal_waterline</span> <span class="o">=</span> <span class="n">normal</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">normal</span><span class="p">[:,</span> <span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)[:,</span> <span class="kc">None</span><span class="p">]</span>  <span class="c1"># (nb_edges_waterline, 3)</span>
+        <span class="n">motion</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">dof</span><span class="o">.</span><span class="n">evaluate_motion_at_points</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">middle_edges_waterline</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span>
+        <span class="c1"># The minus sign is because we want the force of the fluid on the body and not the force of the body on the fluid.</span>
+        <span class="n">normal_dof_amplitude_on_waterline</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">motion</span> <span class="o">*</span> <span class="n">normal_waterline</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">mesh</span><span class="o">.</span><span class="n">length_edges_waterline</span>  <span class="c1"># (nb_dofs, nb_edges_waterline)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pressure</span><span class="p">,</span> <span class="n">PerturbationExpansion</span><span class="p">):</span>
+            <span class="k">return</span> <span class="p">(</span><span class="n">pressure</span><span class="o">.</span><span class="n">expand_dims</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span> <span class="o">*</span> <span class="n">normal_dof_amplitude_on_waterline</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">pressure</span> <span class="o">*</span> <span class="n">normal_dof_amplitude_on_waterline</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)))</span></div>
 
 
 <div class="viewcode-block" id="FloatingBody.keep_only_dofs">

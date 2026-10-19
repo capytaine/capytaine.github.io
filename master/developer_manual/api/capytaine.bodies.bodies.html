@@ -213,6 +213,50 @@ Kinda deprecated, use cpt.load_mesh instead.</p>
 <dd></dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="capytaine.bodies.bodies.FloatingBody.integrate_pressure_on_moving_body">
+<span class="sig-name descname"><span class="pre">integrate_pressure_on_moving_body</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pressure</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">first_order_motion_amplitude</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.integrate_pressure_on_moving_body"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.integrate_pressure_on_moving_body" title="Link to this definition">¶</a></dt>
+<dd><p>Integrate the pressure on the moving body, up to second order. Experimental.</p>
+<p>Computes the order-2 expansion of F_j = -∫ p(X+u) δu_j(X+u)·(A n) dS on the mean body surface,
+where u is the displacement of the body for the motion given by <cite>first_order_motion_amplitude</cite>,
+δu_j(X+u) the motion of dof j at the displaced point, and A n dS the displaced
+normal and surface element (Nanson’s formula, A = det(F) F^-T with F = I + ∇u).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pressure</strong> (<em>DifferenceFrequencyExpansion</em>) – Pressure at the displaced faces centers p(X+u), with field (nb_faces,).</p></li>
+<li><p><strong>first_order_motion_amplitude</strong> (<em>array of shape (nb_wave_directions, nb_dofs)</em>) – Complex amplitudes of the dofs at one frequency, for each of the wave directions of <cite>pressure</cite>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The generalized forces, with field (nb_dofs,).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="capytaine.tools.perturbation_expansion.html#capytaine.tools.perturbation_expansion.DifferenceFrequencyExpansion" title="capytaine.tools.perturbation_expansion.DifferenceFrequencyExpansion">DifferenceFrequencyExpansion</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="capytaine.bodies.bodies.FloatingBody.integrate_pressure_on_waterline">
+<span class="sig-name descname"><span class="pre">integrate_pressure_on_waterline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pressure</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.integrate_pressure_on_waterline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.integrate_pressure_on_waterline" title="Link to this definition">¶</a></dt>
+<dd><p>Integrate a lineic pressure along the mean waterline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>pressure</strong> (<em>array of shape (nb_edges_waterline,) or DifferenceFrequencyExpansion</em>) – Integrated pressure over the height of the strip between the mean waterline and the free surface
+(force per unit length), at the middle of the edges of the waterline of <cite>self.mesh.merged()</cite>.
+It is projected on the horizontal normal of the faces of the waterline, scaled by 1/sqrt(1 - nz²).</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>For an array, the forces as a dictionary with the names of the dofs as keys.
+For a DifferenceFrequencyExpansion (experimental), an expansion with field (nb_dofs,).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict[str, complex] or <a class="reference internal" href="capytaine.tools.perturbation_expansion.html#capytaine.tools.perturbation_expansion.DifferenceFrequencyExpansion" title="capytaine.tools.perturbation_expansion.DifferenceFrequencyExpansion">DifferenceFrequencyExpansion</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="capytaine.bodies.bodies.FloatingBody.keep_only_dofs">
 <span class="sig-name descname"><span class="pre">keep_only_dofs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/bodies/bodies.html#FloatingBody.keep_only_dofs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.bodies.bodies.FloatingBody.keep_only_dofs" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
