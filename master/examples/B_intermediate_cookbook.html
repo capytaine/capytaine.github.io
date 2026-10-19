@@ -63,6 +63,8 @@ The scripts can be downloaded individually as Python files from the <a class="re
 <li><p><a class="reference internal" href="#b6-animated-free-surface-elevation" id="id7">B6. Animated free surface elevation</a></p></li>
 <li><p><a class="reference internal" href="#b7-animation-of-the-rao" id="id8">B7. Animation of the RAO</a></p></li>
 <li><p><a class="reference internal" href="#b8-pressure-field-for-zero-or-infinite-frequency" id="id9">B8. Pressure field for zero or infinite frequency</a></p></li>
+<li><p><a class="reference internal" href="#b9-mean-drift-force" id="id10">B9. Mean drift force</a></p></li>
+<li><p><a class="reference internal" href="#b10-mean-drift-pressure-field" id="id11">B10. Mean drift pressure field</a></p></li>
 </ul>
 </li>
 </ul>
@@ -461,6 +463,260 @@ The example below shows an example of extracting this value.</p>
 <span class="c1"># However p/omega^2 is finite (hence the finite added mass)</span>
 <span class="n">p_over_omega2</span> <span class="o">=</span> <span class="n">p</span><span class="o">/</span><span class="n">pb</span><span class="o">.</span><span class="n">omega</span><span class="o">**</span><span class="mi">2</span>
 <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Pressure/omega^2 on panel </span><span class="si">{</span><span class="n">i_panel</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">p_over_omega2</span><span class="p">[</span><span class="n">i_panel</span><span class="p">]</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="b9-mean-drift-force">
+<h2><a class="toc-backref" href="#id10" role="doc-backlink">B9. Mean drift force</a><a class="headerlink" href="#b9-mean-drift-force" title="Link to this heading">¶</a></h2>
+<p>This example computes the mean drift force on a floating box with both the near field and the far field formulations, and compares them.
+The near field mean drift force is still an experimental feature, whose interface may change in the future.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">"""Near field mean-drift-force is still an experimental feature with unfinished user interface. In particular, the interface should be made more consistent with the far-field mean drift force.</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.io.xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">problems_from_dataset</span><span class="p">,</span> <span class="n">kochin_data_array</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.post_pro.mean_drift_force</span><span class="w"> </span><span class="kn">import</span> <span class="n">far_field_mean_drift_force</span><span class="p">,</span> <span class="n">near_field_mean_drift_force</span>
+
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_parallelepiped</span><span class="p">(</span><span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">))</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span><span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span> <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(),</span> <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">))</span>
+
+<span class="n">wave_direction</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">4</span><span class="p">]</span>
+<span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">(</span><span class="n">coords</span><span class="o">=</span><span class="p">{</span>
+    <span class="s1">'wavenumber'</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span>
+    <span class="s1">'wave_direction'</span><span class="p">:</span> <span class="n">wave_direction</span><span class="p">,</span>
+    <span class="s1">'theta'</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">8</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">100</span><span class="p">),</span>
+    <span class="s1">'radiating_dof'</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="p">})</span>
+
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
+<span class="n">pbs</span> <span class="o">=</span> <span class="n">problems_from_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">body</span><span class="p">)</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">pbs</span><span class="p">)</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+<span class="n">dataset</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kochin_data_array</span><span class="p">(</span><span class="n">results</span><span class="p">,</span> <span class="n">test_matrix</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s1">'theta'</span><span class="p">]))</span>
+
+<span class="n">rao</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">post_pro</span><span class="o">.</span><span class="n">rao</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+<span class="n">nf_mdf</span> <span class="o">=</span> <span class="n">near_field_mean_drift_force</span><span class="p">(</span><span class="n">rao</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">solver</span><span class="p">,</span> <span class="n">output_pressure</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">ff_mdf</span> <span class="o">=</span> <span class="n">far_field_mean_drift_force</span><span class="p">(</span><span class="n">rao</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">np</span><span class="o">.</span><span class="n">printoptions</span><span class="p">(</span><span class="n">precision</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">suppress</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'Surge'</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Far field: "</span><span class="p">,</span> <span class="n">ff_mdf</span><span class="p">[</span><span class="s1">'drift_force_surge'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Near field: "</span><span class="p">,</span> <span class="n">nf_mdf</span><span class="p">[</span><span class="s1">'near_field_mean_drift_force'</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">influenced_dof</span><span class="o">=</span><span class="s1">'Surge'</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="nb">print</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'Yaw'</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Far field: "</span><span class="p">,</span> <span class="n">ff_mdf</span><span class="p">[</span><span class="s1">'drift_force_yaw'</span><span class="p">]</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">"Near field: "</span><span class="p">,</span> <span class="n">nf_mdf</span><span class="p">[</span><span class="s1">'near_field_mean_drift_force'</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">influenced_dof</span><span class="o">=</span><span class="s1">'Yaw'</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="b10-mean-drift-pressure-field">
+<h2><a class="toc-backref" href="#id11" role="doc-backlink">B10. Mean drift pressure field</a><a class="headerlink" href="#b10-mean-drift-pressure-field" title="Link to this heading">¶</a></h2>
+<p>This example extracts the pressure fields from the near field mean drift force computation, for a sea made of two waves with the same frequency:
+the first-order pressure on the hull, the mean drift pressure on the hull, and the waterline term spread along a semi-elliptic profile around the mean waterline.
+They are plotted on the mesh of the whole box, and the first-order pressure is animated over a wave period.
+To save the animation as a video, uncomment the call to <code class="docutils literal notranslate"><span class="pre">anim.save</span></code> (requires <a class="reference external" href="https://ffmpeg.org/">ffmpeg</a>).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="sd">"""Example of extracting mean drift force pressure field from mean drift computation in Capytaine.</span>
+<span class="sd">The whole file is heavily using DataArray, such that the meaning of each array dimension are explicit, for teaching purpose.</span>
+<span class="sd">"""</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">xr</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.animation</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">animation</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.spatial</span><span class="w"> </span><span class="kn">import</span> <span class="n">cKDTree</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">capytaine</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cpt</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.post_pro.mean_drift_force</span><span class="w"> </span><span class="kn">import</span> <span class="n">near_field_mean_drift_force</span>
+
+<span class="n">full_mesh</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">mesh_parallelepiped</span><span class="p">(</span><span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">,</span> <span class="mi">30</span><span class="p">))</span>
+<span class="n">mesh</span> <span class="o">=</span> <span class="n">full_mesh</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">()</span>
+<span class="n">body</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">FloatingBody</span><span class="p">(</span>
+    <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span>
+    <span class="n">lid_mesh</span><span class="o">=</span><span class="n">mesh</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">(),</span>
+    <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
+    <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="p">)</span>
+
+<span class="n">wavelengths</span> <span class="o">=</span> <span class="p">[</span><span class="mf">2.0</span><span class="p">]</span>
+<span class="n">wave_directions</span> <span class="o">=</span> <span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">]</span>
+
+<span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
+<span class="n">pbs</span> <span class="o">=</span> <span class="p">[</span><span class="n">cpt</span><span class="o">.</span><span class="n">DiffractionProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">wavelength</span><span class="o">=</span><span class="n">wavelength</span><span class="p">,</span> <span class="n">wave_direction</span><span class="o">=</span><span class="n">beta</span><span class="p">)</span>
+       <span class="k">for</span> <span class="n">beta</span> <span class="ow">in</span> <span class="n">wave_directions</span> <span class="k">for</span> <span class="n">wavelength</span> <span class="ow">in</span> <span class="n">wavelengths</span><span class="p">]</span>
+<span class="n">pbs</span> <span class="o">+=</span> <span class="p">[</span><span class="n">cpt</span><span class="o">.</span><span class="n">RadiationProblem</span><span class="p">(</span><span class="n">body</span><span class="o">=</span><span class="n">body</span><span class="p">,</span> <span class="n">wavelength</span><span class="o">=</span><span class="n">wavelength</span><span class="p">,</span> <span class="n">radiating_dof</span><span class="o">=</span><span class="n">dof</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">dofs</span> <span class="k">for</span> <span class="n">wavelength</span> <span class="ow">in</span> <span class="n">wavelengths</span><span class="p">]</span>
+<span class="n">results</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">solve_all</span><span class="p">(</span><span class="n">pbs</span><span class="p">)</span>
+<span class="n">ds</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">assemble_dataset</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+<span class="n">rao</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">post_pro</span><span class="o">.</span><span class="n">rao</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span>
+<span class="n">ds</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">near_field_mean_drift_force</span><span class="p">(</span><span class="n">rao</span><span class="p">,</span> <span class="n">results</span><span class="p">,</span> <span class="n">solver</span><span class="p">,</span> <span class="n">output_pressure</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+
+<span class="c1"># The sea is made of the two waves, with the same frequency.</span>
+<span class="c1"># Their complex amplitudes set their heights and their phases (at the origin, at t=0).</span>
+<span class="n">amplitude</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.05</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">)]]),</span>
+    <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">"wavelength"</span><span class="p">,</span> <span class="s2">"wave_direction"</span><span class="p">],</span>
+    <span class="n">coords</span><span class="o">=</span><span class="p">{</span><span class="s2">"wavelength"</span><span class="p">:</span> <span class="n">ds</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">"wavelength"</span><span class="p">],</span> <span class="s2">"wave_direction"</span><span class="p">:</span> <span class="n">ds</span><span class="o">.</span><span class="n">coords</span><span class="p">[</span><span class="s2">"wave_direction"</span><span class="p">]}</span>
+<span class="p">)</span>
+
+<span class="c1"># Pressures on the immersed hull, transferred to the faces of the full mesh</span>
+<span class="c1"># without interpolation (nearest neighbors), setting zero on the emerged part.</span>
+<span class="n">distance</span><span class="p">,</span> <span class="n">immersed_face</span> <span class="o">=</span> <span class="n">cKDTree</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">)</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">full_mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">)</span>
+<span class="n">immersed_face</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">immersed_face</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">"full_mesh_face"</span><span class="p">])</span>
+<span class="n">is_immersed</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">distance</span> <span class="o">&lt;</span> <span class="mf">1e-8</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">"full_mesh_face"</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">remap_from_mesh_to_full_mesh</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">hull_face</span><span class="o">=</span><span class="n">immersed_face</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">is_immersed</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+
+
+<span class="c1"># ============================ FIRST ORDER PRESSURE ============================</span>
+<span class="n">first_order_pressure</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">amplitude</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">ds</span><span class="p">[</span><span class="s2">"pressure_diffraction"</span><span class="p">]</span> <span class="o">+</span> <span class="n">ds</span><span class="p">[</span><span class="s2">"pressure_Froude_Krylov"</span><span class="p">]</span>
+        <span class="o">+</span> <span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s2">"pressure_radiation"</span><span class="p">]</span> <span class="o">*</span> <span class="n">rao</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="s2">"radiating_dof"</span><span class="p">)</span>
+        <span class="p">))</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="p">[</span><span class="s2">"wave_direction"</span><span class="p">])</span>
+<span class="c1"># dims = (wavelength, hull_face)</span>
+<span class="n">first_order_pressure_full_mesh</span> <span class="o">=</span> <span class="n">remap_from_mesh_to_full_mesh</span><span class="p">(</span><span class="n">first_order_pressure</span><span class="p">)</span>
+<span class="c1"># dims = (wavelength, full_mesh_face)</span>
+
+
+<span class="c1"># ========================= SECOND ORDER HULL PRESSURE =========================</span>
+<span class="c1"># Sum over all pairs of waves of the difference-frequency QTF</span>
+<span class="n">amplitude_kl</span> <span class="o">=</span> <span class="p">(</span><span class="n">amplitude</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s2">"wave_direction"</span><span class="p">:</span> <span class="s2">"wave_direction_k"</span><span class="p">})</span>
+                    <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="n">amplitude</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s2">"wave_direction"</span><span class="p">:</span> <span class="s2">"wave_direction_l"</span><span class="p">})))</span>
+<span class="n">mean_drift_hull_pressure_per_pair_of_waves</span> <span class="o">=</span> <span class="n">amplitude_kl</span> <span class="o">*</span> <span class="n">ds</span><span class="p">[</span><span class="s2">"pressure_hull_mean_drift"</span><span class="p">]</span>
+<span class="n">mean_drift_hull_pressure</span> <span class="o">=</span> <span class="n">mean_drift_hull_pressure_per_pair_of_waves</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="p">[</span><span class="s2">"wave_direction_k"</span><span class="p">,</span> <span class="s2">"wave_direction_l"</span><span class="p">])</span>
+<span class="c1"># dims = (wavelength, hull_face)</span>
+<span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">mean_drift_hull_pressure</span><span class="o">.</span><span class="n">values</span><span class="o">.</span><span class="n">imag</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">1e-10</span>
+<span class="n">mean_drift_hull_pressure</span> <span class="o">=</span> <span class="n">mean_drift_hull_pressure</span><span class="o">.</span><span class="n">real</span>  <span class="c1"># Time independent pressure</span>
+<span class="n">mean_drift_hull_pressure_full_mesh</span> <span class="o">=</span> <span class="n">remap_from_mesh_to_full_mesh</span><span class="p">(</span><span class="n">mean_drift_hull_pressure</span><span class="p">)</span>
+<span class="c1"># dims = (wavelength, full_mesh_face)</span>
+
+
+<span class="c1"># ====================== SECOND ORDER WATERLINE PRESSURE =======================</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">mean_of_product</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="c1"># Difference-frequency QTF of the product of the first order fields a and b,</span>
+    <span class="c1"># 1/4 (a_k conj(b_l) + conj(a_l) b_k), summed over all pairs of waves (k, l).</span>
+    <span class="n">a_k</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s2">"wave_direction"</span><span class="p">:</span> <span class="s2">"wave_direction_k"</span><span class="p">})</span>
+    <span class="n">a_l</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s2">"wave_direction"</span><span class="p">:</span> <span class="s2">"wave_direction_l"</span><span class="p">})</span>
+    <span class="n">b_k</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s2">"wave_direction"</span><span class="p">:</span> <span class="s2">"wave_direction_k"</span><span class="p">})</span>
+    <span class="n">b_l</span> <span class="o">=</span> <span class="n">b</span><span class="o">.</span><span class="n">rename</span><span class="p">({</span><span class="s2">"wave_direction"</span><span class="p">:</span> <span class="s2">"wave_direction_l"</span><span class="p">})</span>
+    <span class="n">qtf</span> <span class="o">=</span> <span class="p">(</span><span class="n">a_k</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="n">b_l</span><span class="p">)</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">conjugate</span><span class="p">(</span><span class="n">a_l</span><span class="p">)</span> <span class="o">*</span> <span class="n">b_k</span><span class="p">)</span> <span class="o">/</span> <span class="mi">4</span>
+    <span class="k">return</span> <span class="n">qtf</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span><span class="s2">"wave_direction_k"</span><span class="p">,</span> <span class="s2">"wave_direction_l"</span><span class="p">])</span><span class="o">.</span><span class="n">real</span>  <span class="c1"># The imaginary part is zero.</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">remap_waterline_pressure</span><span class="p">(</span><span class="n">amplitude</span><span class="p">,</span> <span class="n">pressure_waterline_total</span><span class="p">,</span> <span class="n">relative_elevation_waterline</span><span class="p">,</span> <span class="n">mesh_waterline</span><span class="p">,</span> <span class="n">box_mesh</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Mean waterline pressure of the sea made of all the waves, spread on the faces of a box around the mean waterline.</span>
+
+<span class="sd">    The waterline term of the mean drift force is a lineic force &lt;p h&gt; per unit length of waterline, where p is the</span>
+<span class="sd">    pressure of the waterline strip and h the relative elevation of the free surface. It is spread in the vertical</span>
+<span class="sd">    coordinate z around the mean waterline along a semi-elliptic profile of half-width |h| (the amplitude of h):</span>
+
+<span class="sd">        &lt;p&gt;(z) = 2 &lt;p h&gt; / (pi |h|) * sqrt(1 - (z/|h|)^2)    for |z| &lt; |h|,</span>
+
+<span class="sd">    whose integral over z is &lt;p h&gt;. Each face of the box gets the value of this profile at its center, using the</span>
+<span class="sd">    waterline segment with the same horizontal position.</span>
+
+<span class="sd">    The waves have the same frequency: the mean value in the sea made of all of them is the sum over all pairs of</span>
+<span class="sd">    waves (k, l) of the difference-frequency QTF, which includes the cross terms between different waves.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    amplitude: DataArray with dims (..., wave_direction), complex</span>
+<span class="sd">        Complex amplitude of each wave, possibly with other dimensions such as `wavelength`.</span>
+<span class="sd">    pressure_waterline_total, relative_elevation_waterline: DataArrays with dims (..., wave_direction, waterline_segment), complex</span>
+<span class="sd">        Outputs of `near_field_mean_drift_force(..., output_pressure=True)`, for a unit amplitude.</span>
+<span class="sd">    mesh_waterline: DataArray with dims (waterline_segment, 2, 3)</span>
+<span class="sd">        Output of `near_field_mean_drift_force(..., output_pressure=True)`.</span>
+<span class="sd">    box_mesh: Mesh</span>
+<span class="sd">        Mesh of the whole box, including its part above the waterline, with the same horizontal resolution as the</span>
+<span class="sd">        immersed mesh.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    DataArray with dims (..., full_mesh_face), real</span>
+<span class="sd">        The other dimensions (such as `wavelength`) of the inputs are kept.</span>
+<span class="sd">    """</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">pressure_waterline_total</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">amplitude</span> <span class="o">*</span> <span class="n">relative_elevation_waterline</span>
+    <span class="n">ph</span> <span class="o">=</span> <span class="n">mean_of_product</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>  <span class="c1"># dims = (..., waterline_segment)</span>
+    <span class="n">abs_h</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">mean_of_product</span><span class="p">(</span><span class="n">h</span><span class="p">,</span> <span class="n">h</span><span class="p">))</span>  <span class="c1"># dims = (..., waterline_segment), since &lt;h h&gt; = |h|^2/2</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">segment</span> <span class="o">=</span> <span class="n">cKDTree</span><span class="p">(</span><span class="n">mesh_waterline</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">box_mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">segment</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">"full_mesh_face"</span><span class="p">])</span>
+    <span class="n">u</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span><span class="n">box_mesh</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">dims</span><span class="o">=</span><span class="p">[</span><span class="s2">"full_mesh_face"</span><span class="p">])</span> <span class="o">/</span> <span class="n">abs_h</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">waterline_segment</span><span class="o">=</span><span class="n">segment</span><span class="p">)</span>
+
+    <span class="c1"># Value at the center of the faces. When |h| is not much larger than the faces, their average</span>
+    <span class="c1"># (with the antiderivative u sqrt(1 - u^2) + arcsin(u) of 2 sqrt(1 - u^2)) is more accurate.</span>
+    <span class="k">return</span> <span class="p">(</span><span class="mi">2</span> <span class="o">*</span> <span class="n">ph</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">waterline_segment</span><span class="o">=</span><span class="n">segment</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">*</span> <span class="n">abs_h</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">waterline_segment</span><span class="o">=</span><span class="n">segment</span><span class="p">))</span>
+              <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">u</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="kc">None</span><span class="p">)))</span>  <span class="c1"># zero for |u| &gt; 1</span>
+
+
+<span class="n">mean_drift_waterline_pressure_full_mesh</span> <span class="o">=</span> <span class="n">remap_waterline_pressure</span><span class="p">(</span>
+        <span class="n">amplitude</span><span class="p">,</span>
+        <span class="n">ds</span><span class="p">[</span><span class="s2">"pressure_waterline_total"</span><span class="p">],</span>
+        <span class="n">ds</span><span class="p">[</span><span class="s2">"relative_elevation_waterline"</span><span class="p">],</span>
+        <span class="n">ds</span><span class="p">[</span><span class="s2">"mesh_waterline"</span><span class="p">],</span>
+        <span class="n">full_mesh</span><span class="p">,</span>
+        <span class="p">)</span>
+<span class="c1"># dims = (wavelength, full_mesh_face)</span>
+
+
+<span class="c1"># ================================== DISPLAY ==================================</span>
+<span class="c1"># Display only a single frequency</span>
+<span class="n">freq_display</span> <span class="o">=</span> <span class="n">wavelengths</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="n">first_order_pressure_displayed</span> <span class="o">=</span> <span class="n">first_order_pressure_full_mesh</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">wavelength</span><span class="o">=</span><span class="n">freq_display</span><span class="p">)</span>
+<span class="n">mean_drift_hull_pressure_displayed</span> <span class="o">=</span> <span class="n">mean_drift_hull_pressure_full_mesh</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">wavelength</span><span class="o">=</span><span class="n">freq_display</span><span class="p">)</span>
+<span class="n">mean_drift_waterline_pressure_displayed</span> <span class="o">=</span> <span class="n">mean_drift_waterline_pressure_full_mesh</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">wavelength</span><span class="o">=</span><span class="n">freq_display</span><span class="p">)</span>
+
+<span class="n">omega</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="s2">"omega"</span><span class="p">]</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">wavelength</span><span class="o">=</span><span class="n">freq_display</span><span class="p">))</span>
+<span class="n">period</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="n">omega</span>
+
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">get_cmap</span><span class="p">(</span><span class="s1">'coolwarm'</span><span class="p">)</span>
+<span class="n">first_order_vabs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">first_order_pressure_displayed</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+<span class="n">first_order_norm</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=-</span><span class="n">first_order_vabs</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">first_order_vabs</span><span class="p">)</span>
+<span class="n">mean_vabs</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">mean_drift_hull_pressure_displayed</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">mean_drift_waterline_pressure_displayed</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+<span class="n">mean_norm</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">Normalize</span><span class="p">(</span><span class="n">vmin</span><span class="o">=-</span><span class="n">mean_vabs</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">mean_vabs</span><span class="p">)</span>
+
+<span class="n">fields</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">(</span><span class="s2">"First order pressure"</span><span class="p">,</span> <span class="n">first_order_pressure_displayed</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">first_order_norm</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"Mean pressure on hull"</span><span class="p">,</span> <span class="n">mean_drift_hull_pressure_displayed</span><span class="p">,</span> <span class="n">mean_norm</span><span class="p">),</span>
+        <span class="p">(</span><span class="s2">"Remapped mean waterline pressure"</span><span class="p">,</span> <span class="n">mean_drift_waterline_pressure_displayed</span><span class="p">,</span> <span class="n">mean_norm</span><span class="p">),</span>
+        <span class="p">]</span>
+
+<span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">15</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+<span class="n">axs</span> <span class="o">=</span> <span class="p">[</span><span class="n">fig</span><span class="o">.</span><span class="n">add_subplot</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">fields</span><span class="p">),</span> <span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">projection</span><span class="o">=</span><span class="s1">'3d'</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fields</span><span class="p">))]</span>
+<span class="k">for</span> <span class="n">ax</span><span class="p">,</span> <span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="n">norm</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">axs</span><span class="p">,</span> <span class="n">fields</span><span class="p">):</span>
+    <span class="n">full_mesh</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
+            <span class="n">backend</span><span class="o">=</span><span class="s2">"matplotlib"</span><span class="p">,</span>
+            <span class="n">ax</span><span class="o">=</span><span class="n">ax</span><span class="p">,</span>
+            <span class="n">facecolors</span><span class="o">=</span><span class="n">cmap</span><span class="p">(</span><span class="n">norm</span><span class="p">(</span><span class="n">field</span><span class="p">)),</span>
+            <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="n">title</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">view_init</span><span class="p">(</span><span class="n">elev</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span> <span class="n">azim</span><span class="o">=-</span><span class="mi">135</span><span class="p">)</span>  <span class="c1"># Show the faces x = -0.5 and y = -0.5, on which the incoming waves hit</span>
+<span class="n">first_order_collection</span> <span class="o">=</span> <span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">collections</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="s2">", "</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">"wave from </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">beta</span><span class="p">)</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">°: amplitude </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">a</span><span class="p">)</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">m, phase </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">angle</span><span class="p">(</span><span class="n">a</span><span class="p">))</span><span class="si">:</span><span class="s2">.0f</span><span class="si">}</span><span class="s2">°"</span>
+                       <span class="k">for</span> <span class="n">beta</span><span class="p">,</span> <span class="n">a</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">wave_directions</span><span class="p">,</span> <span class="n">amplitude</span><span class="o">.</span><span class="n">sel</span><span class="p">(</span><span class="n">wavelength</span><span class="o">=</span><span class="n">freq_display</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">)))</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">first_order_norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">),</span> <span class="n">ax</span><span class="o">=</span><span class="n">axs</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shrink</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+<span class="n">fig</span><span class="o">.</span><span class="n">colorbar</span><span class="p">(</span><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">ScalarMappable</span><span class="p">(</span><span class="n">norm</span><span class="o">=</span><span class="n">mean_norm</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">),</span> <span class="n">ax</span><span class="o">=</span><span class="n">axs</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">shrink</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span>
+
+<span class="n">n_frames</span> <span class="o">=</span> <span class="mi">30</span>
+<span class="n">animation_duration</span> <span class="o">=</span> <span class="mf">3.0</span>  <span class="c1"># seconds, wall-clock time for one wave period</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">update</span><span class="p">(</span><span class="n">frame</span><span class="p">):</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">frame</span><span class="o">/</span><span class="n">n_frames</span> <span class="o">*</span> <span class="n">period</span>
+    <span class="n">phase</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">omega</span><span class="o">*</span><span class="n">t</span><span class="p">)</span>
+    <span class="n">first_order_collection</span><span class="o">.</span><span class="n">set_facecolor</span><span class="p">(</span><span class="n">cmap</span><span class="p">(</span><span class="n">first_order_norm</span><span class="p">((</span><span class="n">first_order_pressure_displayed</span> <span class="o">*</span> <span class="n">phase</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">first_order_collection</span><span class="p">,</span>
+
+
+<span class="n">anim</span> <span class="o">=</span> <span class="n">animation</span><span class="o">.</span><span class="n">FuncAnimation</span><span class="p">(</span><span class="n">fig</span><span class="p">,</span> <span class="n">update</span><span class="p">,</span> <span class="n">frames</span><span class="o">=</span><span class="n">n_frames</span><span class="p">,</span> <span class="n">interval</span><span class="o">=</span><span class="mi">1000</span><span class="o">*</span><span class="n">animation_duration</span><span class="o">/</span><span class="n">n_frames</span><span class="p">,</span> <span class="n">blit</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+<span class="c1"># anim.save("second_order_pressure_field.mp4", fps=n_frames/animation_duration)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </pre></div>
 </div>
 </section>
