@@ -69,25 +69,21 @@ does not take into account the wave amplitude.</p>
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="capytaine.post_pro.mean_drift_force.hydrostatics_forces">
-<span class="sig-prename descclassname"><span class="pre">capytaine.post_pro.mean_drift_force.</span></span><span class="sig-name descname"><span class="pre">hydrostatics_forces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">body</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rao</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/post_pro/mean_drift_force.html#hydrostatics_forces"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.post_pro.mean_drift_force.hydrostatics_forces" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="capytaine.post_pro.mean_drift_force.motion_order1">
-<span class="sig-prename descclassname"><span class="pre">capytaine.post_pro.mean_drift_force.</span></span><span class="sig-name descname"><span class="pre">motion_order1</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">points</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">body</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rao</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/post_pro/mean_drift_force.html#motion_order1"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.post_pro.mean_drift_force.motion_order1" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
 <dt class="sig sig-object py" id="capytaine.post_pro.mean_drift_force.near_field_mean_drift_force">
-<span class="sig-prename descclassname"><span class="pre">capytaine.post_pro.mean_drift_force.</span></span><span class="sig-name descname"><span class="pre">near_field_mean_drift_force</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rao</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_pressure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/post_pro/mean_drift_force.html#near_field_mean_drift_force"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.post_pro.mean_drift_force.near_field_mean_drift_force" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">capytaine.post_pro.mean_drift_force.</span></span><span class="sig-name descname"><span class="pre">near_field_mean_drift_force</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">first_order_motion_amplitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">solver</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_pressure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/post_pro/mean_drift_force.html#near_field_mean_drift_force"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.post_pro.mean_drift_force.near_field_mean_drift_force" title="Link to this definition">¶</a></dt>
 <dd><p>Compute the mean drift force using the near field formulation.</p>
-<p>Current assumptions: all results are for the same body, the same rho and g.
+<p>The force is the second-order part of the integral of the pressure on the moving body and along
+the waterline, for any dofs (rigid body motions or generalized modes with a gradient of motion).
+All the wave components have the same frequency, so all the terms of the result (for the same or for
+different wave directions) are at difference frequency zero, where the second-order potential does
+not contribute to the pressure.</p>
+<p>Current assumptions: all results are for the same <a class="reference internal" href="capytaine.bodies.bodies.html#capytaine.bodies.bodies.FloatingBody" title="capytaine.bodies.bodies.FloatingBody"><code class="xref py py-class docutils literal notranslate"><span class="pre">FloatingBody</span></code></a>
+(multibodies are not supported yet), the same rho and g.
 Several wavelengths and dofs are taken into account at once.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>rao</strong> (<em>xarray DataArray</em>) – The motion RAO, as returned by <a class="reference internal" href="capytaine.post_pro.rao.html#capytaine.post_pro.rao.rao" title="capytaine.post_pro.rao.rao"><code class="xref py py-func docutils literal notranslate"><span class="pre">capytaine.post_pro.rao.rao()</span></code></a>.</p></li>
+<li><p><strong>first_order_motion_amplitude</strong> (<em>xarray DataArray</em>) – The motion RAO, as returned by <a class="reference internal" href="capytaine.post_pro.rao.html#capytaine.post_pro.rao.rao" title="capytaine.post_pro.rao.rao"><code class="xref py py-func docutils literal notranslate"><span class="pre">capytaine.post_pro.rao.rao()</span></code></a>.</p></li>
 <li><p><strong>results</strong> (<em>list of LinearPotentialFlowResult</em>) – The diffraction and radiation results used to compute the RAO, for all the wavelengths
 and wave directions of interest.</p></li>
 <li><p><strong>solver</strong> (<em>BEMSolver</em>) – The solver used to compute the potential and its gradient on the hull at the requested
@@ -106,13 +102,16 @@ If <code class="docutils literal notranslate"><span class="pre">output_pressure<
 <code class="docutils literal notranslate"><span class="pre">(nb_freq,</span> <span class="pre">nb_wave_direction,</span> <span class="pre">nb_wave_direction,</span> <span class="pre">nb_hull_faces)</span></code>: the mean drift
 pressure field on the hull. It has the same normalization as
 <code class="docutils literal notranslate"><span class="pre">near_field_mean_drift_force</span></code>: its diagonal is the mean pressure in a single wave of
-unit amplitude. It does not include the waterline term.</p></li>
+unit amplitude. It does not include the waterline term.
+For a fixed body, the hull term of the force is the integral of this pressure on the mean hull.
+For a moving body, it also includes the first-order pressure times the first-order
+variations of the normals and of the motion of the dofs on the moving hull.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pressure_waterline_total</span></code>, of shape
 <code class="docutils literal notranslate"><span class="pre">(nb_freq,</span> <span class="pre">nb_wave_direction,</span> <span class="pre">nb_waterline_segments)</span></code>: the complex first-order
 pressure <code class="docutils literal notranslate"><span class="pre">p</span></code> in the strip between the mean waterline and the free surface, at the
 middle of each segment of the waterline, for a wave of unit amplitude.
 It is the total pressure on the freely floating body: incident, diffracted and
-radiated (with the motion given by <code class="docutils literal notranslate"><span class="pre">rao</span></code>) waves, as well as the hydrostatic pressure
+radiated (with the motion given by <code class="docutils literal notranslate"><span class="pre">first_order_motion_amplitude</span></code>) waves, as well as the hydrostatic pressure
 averaged over the height of the strip.</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">relative_elevation_waterline</span></code>, of the same shape: the complex first-order relative
 elevation <code class="docutils literal notranslate"><span class="pre">h</span></code> of the free surface with respect to the body, at the same points, for
@@ -121,8 +120,9 @@ a wave of unit amplitude.</p></li>
 the two ends of each segment of the waterline.</p></li>
 </ul>
 <p>For the waves <code class="docutils literal notranslate"><span class="pre">k</span></code> and <code class="docutils literal notranslate"><span class="pre">l</span></code>, the waterline term of <code class="docutils literal notranslate"><span class="pre">near_field_mean_drift_force</span></code> is
-the integral along the waterline of <code class="docutils literal notranslate"><span class="pre">(p_k</span> <span class="pre">conj(h_l)</span> <span class="pre">+</span> <span class="pre">conj(p_l)</span> <span class="pre">h_k)/2</span></code>, projected on
-the dofs.</p>
+the integral along the waterline of <code class="docutils literal notranslate"><span class="pre">(p_k</span> <span class="pre">conj(w_l)</span> <span class="pre">+</span> <span class="pre">conj(p_l)</span> <span class="pre">w_k)/4</span> <span class="pre">*</span> <span class="pre">(-n·δu_j)</span></code> for the dof <code class="docutils literal notranslate"><span class="pre">j</span></code>,
+where <code class="docutils literal notranslate"><span class="pre">w</span> <span class="pre">=</span> <span class="pre">h</span> <span class="pre">/</span> <span class="pre">sqrt(1</span> <span class="pre">-</span> <span class="pre">n_z²)</span></code> is the width of the strip along the hull and <code class="docutils literal notranslate"><span class="pre">n</span></code> the normal of the
+face containing the segment of the waterline.</p>
 </p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
@@ -130,11 +130,6 @@ the dofs.</p>
 </dd>
 </dl>
 </dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="capytaine.post_pro.mean_drift_force.skew_matrix">
-<span class="sig-prename descclassname"><span class="pre">capytaine.post_pro.mean_drift_force.</span></span><span class="sig-name descname"><span class="pre">skew_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/post_pro/mean_drift_force.html#skew_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.post_pro.mean_drift_force.skew_matrix" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="capytaine.post_pro.mean_drift_force.total_potential_gradient">
@@ -149,11 +144,6 @@ the dofs.</p>
 <dl class="py function">
 <dt class="sig sig-object py" id="capytaine.post_pro.mean_drift_force.total_pressure_on_hull">
 <span class="sig-prename descclassname"><span class="pre">capytaine.post_pro.mean_drift_force.</span></span><span class="sig-name descname"><span class="pre">total_pressure_on_hull</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">results</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rao</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/post_pro/mean_drift_force.html#total_pressure_on_hull"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.post_pro.mean_drift_force.total_pressure_on_hull" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="capytaine.post_pro.mean_drift_force.transformation_matrix">
-<span class="sig-prename descclassname"><span class="pre">capytaine.post_pro.mean_drift_force.</span></span><span class="sig-name descname"><span class="pre">transformation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rao_k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rao_l</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/post_pro/mean_drift_force.html#transformation_matrix"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.post_pro.mean_drift_force.transformation_matrix" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -249,7 +239,7 @@ the dofs.</p>
       &#169;2026, Capytaine developpers.
       
       |
-      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.1</a>
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |
