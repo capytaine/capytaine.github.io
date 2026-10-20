@@ -619,20 +619,25 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">            A tuple (edges, faces) where the edges are the edges of the water line (pairs of vertex indices)</span>
 <span class="sd">            and the faces are the corresponding faces of the mesh that contain these edges (quadruplet of vertex indices).</span>
 <span class="sd">        """</span>
+        <span class="n">edges_waterline</span><span class="p">,</span> <span class="n">indices_faces_waterline</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edges_and_indices_faces_waterline</span>
+        <span class="k">return</span> <span class="n">edges_waterline</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">[</span><span class="n">indices_faces_waterline</span><span class="p">,</span> <span class="p">:]</span></div>
+
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_edges_and_indices_faces_waterline</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">epsilon</span> <span class="o">=</span> <span class="mf">1e-6</span>
         <span class="n">edges_waterline</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="n">faces_waterline</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">indices_faces_waterline</span> <span class="o">=</span> <span class="p">[]</span>
 
         <span class="n">indices_vertices</span> <span class="o">=</span> <span class="p">[</span><span class="n">v</span> <span class="k">for</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_vertices</span><span class="p">)</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="n">v</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="n">epsilon</span><span class="p">]</span>
         <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">):</span>
             <span class="n">set_indices</span> <span class="o">=</span> <span class="p">{</span><span class="n">index</span> <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">[</span><span class="n">k</span><span class="p">,:]</span> <span class="k">if</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">indices_vertices</span><span class="p">}</span>
             <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">set_indices</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
                 <span class="n">edges_waterline</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">set_indices</span><span class="p">))</span>
-                <span class="n">faces_waterline</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="p">[</span><span class="n">k</span><span class="p">,:])</span>
+                <span class="n">indices_faces_waterline</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
 
         <span class="c1"># Reshape to keep two dimensions when the mesh has no waterline.</span>
-        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">edges_waterline</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">faces_waterline</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span></div>
-
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">edges_waterline</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">indices_faces_waterline</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">nb_edges_waterline</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
@@ -648,6 +653,11 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">faces_waterline</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Return an array with the faces of the water line as quadruplets of vertex indices with shape (nb_edges_waterline,4)."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges_faces_waterline</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="nd">@cached_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">indices_faces_waterline</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Return an array with the indices of the faces containing the edges of the water line with shape (nb_edges_waterline,)."""</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_edges_and_indices_faces_waterline</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
     <span class="nd">@cached_property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">length_edges_waterline</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
