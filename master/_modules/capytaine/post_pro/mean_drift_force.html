@@ -422,6 +422,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">airy_waves_velocity</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.bodies</span><span class="w"> </span><span class="kn">import</span> <span class="n">FloatingBody</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.multibodies</span><span class="w"> </span><span class="kn">import</span> <span class="n">Multibody</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bodies.dofs</span><span class="w"> </span><span class="kn">import</span> <span class="n">AbstractDof</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.problems_and_results</span><span class="w"> </span><span class="kn">import</span> <span class="n">DiffractionResult</span><span class="p">,</span> <span class="n">RadiationResult</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.perturbation_expansion</span><span class="w"> </span><span class="kn">import</span> <span class="n">DifferenceFrequencyExpansion</span> <span class="k">as</span> <span class="n">Expansion</span>
@@ -578,7 +579,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    not contribute to the pressure.</span>
 
 <span class="sd">    Current assumptions: all results are for the same :class:`~capytaine.bodies.bodies.FloatingBody`</span>
-<span class="sd">    (multibodies are not supported yet), the same rho and g.</span>
+<span class="sd">    or :class:`~capytaine.bodies.multibodies.Multibody`, the same rho and g.</span>
 <span class="sd">    Several wavelengths and dofs are taken into account at once.</span>
 
 <span class="sd">    Parameters</span>
@@ -630,8 +631,10 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        face containing the segment of the waterline.</span>
 <span class="sd">    """</span>
     <span class="n">body</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">body</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">Multibody</span><span class="p">):</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">as_FloatingBody</span>  <span class="c1"># Same mesh and dofs (`DofOnSubmesh`), with the methods of FloatingBody.</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">FloatingBody</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The near field mean drift force is only implemented for a single FloatingBody, not for </span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"The near field mean drift force is only implemented for a FloatingBody or a Multibody, not for </span><span class="si">{</span><span class="n">body</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="nb">all</span><span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">dof</span><span class="p">,</span> <span class="n">AbstractDof</span><span class="p">)</span> <span class="k">for</span> <span class="n">dof</span> <span class="ow">in</span> <span class="n">body</span><span class="o">.</span><span class="n">dofs</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"The near field mean drift force is only implemented for dofs defined as AbstractDof (e.g. TranslationDof, RotationDof, CustomDof), not as arrays."</span><span class="p">)</span>
     <span class="n">mesh</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">merged</span><span class="p">()</span>
