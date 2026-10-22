@@ -50,35 +50,83 @@
 <h2>Generalities<a class="headerlink" href="#generalities" title="Link to this heading">¶</a></h2>
 <section id="equation-of-motion-in-perturbation-theory">
 <h3>Equation of motion in perturbation theory<a class="headerlink" href="#equation-of-motion-in-perturbation-theory" title="Link to this heading">¶</a></h3>
+<p>The full equations of motion of a body interacting with waves are linearized using perturbation theory.
+Denoting by <span class="math notranslate nohighlight">\(M\)</span> the inertia matrix, <span class="math notranslate nohighlight">\(A\)</span> the added mass matrix,
+<span class="math notranslate nohighlight">\(B\)</span> the radiation damping matrix and <span class="math notranslate nohighlight">\(S\)</span> the hydrostatic stiffness
+matrix, we have at first order in frequency domain:</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-0">
+<span class="eqno">(151)<a class="headerlink" href="#equation-theory-manual-second-order-forces-0" title="Link to this equation">¶</a></span>\[\left(- \omega^2 (M + A(\omega)) - i \omega B(\omega) + S\right) \hat q^{(1)}(\omega) = \hat F^{(1)}_\text{excitation}(\omega)\]</div>
+<p>(or the Cummins equation equivalent in time domain) and at second order</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-1">
+<span class="eqno">(152)<a class="headerlink" href="#equation-theory-manual-second-order-forces-1" title="Link to this equation">¶</a></span>\[\left(- \omega^2 (M + A(\omega)) - i \omega B(\omega) + S\right) \hat q^{(2)}(\omega) = \hat F^{(2)}_\text{excitation}(\hat q^{(1)}, \omega) + ...\]</div>
+<p>where <span class="math notranslate nohighlight">\(...\)</span> encompasses all possible other second-order terms, such as gyroscopic effect or non-linear internal stiffness for elastic bodies.</p>
+<p>Both equations hold for all frequencies <span class="math notranslate nohighlight">\(\omega\)</span>, with the same operator on the left-hand side.
+They differ by the frequency content of their right-hand side.
+For a single incoming wave of frequency <span class="math notranslate nohighlight">\(\omega_i\)</span>, the first order force <span class="math notranslate nohighlight">\(\hat F^{(1)}\)</span> is non-zero at <span class="math notranslate nohighlight">\(\omega_i\)</span>, while the second-order force <span class="math notranslate nohighlight">\(\hat F^{(2)}\)</span> is non-zero at frequencies <span class="math notranslate nohighlight">\(0\)</span> and <span class="math notranslate nohighlight">\(2\omega_i\)</span>.</p>
+<p>This document is about the computation of <span class="math notranslate nohighlight">\(F^{(2)}_\text{excitation}(q^{(1)})\)</span>.</p>
 </section>
 <section id="time-domain-and-frequency-domain">
 <h3>Time domain and frequency domain<a class="headerlink" href="#time-domain-and-frequency-domain" title="Link to this heading">¶</a></h3>
 <p>Time domain interpretation of first order excitation force resulting from incoming plane wave with direction <span class="math notranslate nohighlight">\(\beta\)</span> and frequency <span class="math notranslate nohighlight">\(\omega\)</span></p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-0">
-<span class="eqno">(151)<a class="headerlink" href="#equation-theory-manual-second-order-forces-0" title="Link to this equation">¶</a></span>\[F^{(1)}(t, \beta) = \Re \left( \hat F^{(1)} (\omega, \beta) e^{- i \omega t} \right)\]</div>
-<p>In a mixture of plane waves with amplitudes <span class="math notranslate nohighlight">\(a(\omega, \beta)\)</span>, the total excitation force is computed linearly as:</p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-1">
-<span class="eqno">(152)<a class="headerlink" href="#equation-theory-manual-second-order-forces-1" title="Link to this equation">¶</a></span>\[F^{(1)}(t) = \sum_i \Re \left( a(\omega_i, \beta_i) \hat F^{(1)}(\omega_i, \beta_i) e^{- i \omega_i t} \right)\]</div>
-<p>Time domain interpretation of second order excitation force resulting from the interaction of two incoming plane waves of respectives directions <span class="math notranslate nohighlight">\(\beta_1\)</span> and <span class="math notranslate nohighlight">\(\beta_2\)</span> and respective frequencies <span class="math notranslate nohighlight">\(\omega_1\)</span> and <span class="math notranslate nohighlight">\(\omega_2\)</span></p>
 <div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-2">
-<span class="eqno">(153)<a class="headerlink" href="#equation-theory-manual-second-order-forces-2" title="Link to this equation">¶</a></span>\[F^{(2+)}(t, \beta_1, \beta_2) = \Re \left( \hat F^{(2+)} (\omega_1, \omega_2, \beta_1, \beta_2) e^{- i (\omega_1 + \omega_2) t} \right)\]</div>
+<span class="eqno">(153)<a class="headerlink" href="#equation-theory-manual-second-order-forces-2" title="Link to this equation">¶</a></span>\[F^{(1)}(t, \beta) = \Re \left( \hat F^{(1)} (\omega, \beta) e^{- i \omega t} \right)\]</div>
+<p>In a mixture of plane waves with amplitudes <span class="math notranslate nohighlight">\(a(\omega, \beta)\)</span>, the total excitation force is computed linearly as:</p>
 <div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-3">
-<span class="eqno">(154)<a class="headerlink" href="#equation-theory-manual-second-order-forces-3" title="Link to this equation">¶</a></span>\[F^{(2-)}(t, \beta_1, \beta_2) = \Re \left( \hat F^{(2-)} (\omega_1, \omega_2, \beta_1, \beta_2) e^{- i |\omega_1 - \omega_2| t} \right)\]</div>
-<p>In a mixture of plane waves, the total excitation force is computed bi-linearly as:</p>
+<span class="eqno">(154)<a class="headerlink" href="#equation-theory-manual-second-order-forces-3" title="Link to this equation">¶</a></span>\[F^{(1)}(t) = \sum_i \Re \left( a(\omega_i, \beta_i) \hat F^{(1)}(\omega_i, \beta_i) e^{- i \omega_i t} \right)\]</div>
+<p>In a mixture of plane waves, the total second order excitation force is computed bi-linearly as:</p>
 <div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-4">
-\begin{align*}
-   F^{(2+)}(t) &amp; = \sum_{i, j} \Re \left( a(\omega_i, \beta_i) \, a(\omega_j, \beta_j) \, \hat F^{(2+)}(\omega_i, \omega_j, \beta_i, \beta_j) \, e^{- i (\omega_i + \omega_j) t} \right) \\
-   F^{(2-)}(t) &amp; = \sum_{i, j} \Re \left( a(\omega_i, \beta_i) \, a(\omega_j, \beta_j)^* \, \hat F^{(2-)}(\omega_i, \omega_j, \beta_i, \beta_j) \, e^{- i |\omega_i - \omega_j| t} \right)
-\end{align*}</div><p>where the star is the complex conjugate.</p>
-<p>The mean drift force is the second-order force associated with the difference frequency of a frequency with itself, leading to a time-independant term.</p>
+\begin{align}
+   F^{(2)}(t) &amp; = \sum_{i, j} \Re \left( a(\omega_i, \beta_i) \, a(\omega_j, \beta_j) \, \hat F^{(2+)}(\omega_i, \omega_j, \beta_i, \beta_j) \, e^{- i (\omega_i + \omega_j) t} \right) \\
+              &amp; + \sum_{i, j} a(\omega_i, \beta_i) \, a(\omega_j, \beta_j)^* \, \hat F^{(2-)}(\omega_i, \omega_j, \beta_i, \beta_j) \, e^{- i (\omega_i - \omega_j) t}
+\end{align}</div><p>where the star is the complex conjugate and the sums are over all the pairs <span class="math notranslate nohighlight">\((i, j)\)</span>, including <span class="math notranslate nohighlight">\(i = j\)</span>.
+The transfer functions <span class="math notranslate nohighlight">\(\hat F^{(2+)}\)</span> and <span class="math notranslate nohighlight">\(\hat F^{(2-)}\)</span> are called QTFs (Quadratic Transfer Functions).
+The sum frequency transfer function is symmetric and the difference frequency transfer function is Hermitian:</p>
 <div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-5">
-<span class="eqno">(156)<a class="headerlink" href="#equation-theory-manual-second-order-forces-5" title="Link to this equation">¶</a></span>\[\hat{F}^{\text{mean drift}} (\omega, \beta_1, \beta_2) = \hat F^{(2-)} (\omega, \omega, \beta_1, \beta_2)\]</div>
+<span class="eqno">(156)<a class="headerlink" href="#equation-theory-manual-second-order-forces-5" title="Link to this equation">¶</a></span>\[\hat F^{(2+)}(\omega_j, \omega_i, \beta_j, \beta_i) = \hat F^{(2+)}(\omega_i, \omega_j, \beta_i, \beta_j)\]</div>
+<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-6">
+<span class="eqno">(157)<a class="headerlink" href="#equation-theory-manual-second-order-forces-6" title="Link to this equation">¶</a></span>\[\hat F^{(2-)}(\omega_j, \omega_i, \beta_j, \beta_i) = \hat F^{(2-)}(\omega_i, \omega_j, \beta_i, \beta_j)^*.\]</div>
+<p>Hence the terms <span class="math notranslate nohighlight">\((i, j)\)</span> and <span class="math notranslate nohighlight">\((j, i)\)</span> of the difference frequency sum are complex conjugate, and their sum is real without taking the real part.
+The exponent <span class="math notranslate nohighlight">\(\omega_i - \omega_j\)</span> of a single term can be negative.
+For <span class="math notranslate nohighlight">\(\omega_i \neq \omega_j\)</span>, only the sum of the two <span class="math notranslate nohighlight">\(i,j\)</span> and <span class="math notranslate nohighlight">\(j,i\)</span> terms has a physical meaning: it is a term oscillating at the positive difference frequency <span class="math notranslate nohighlight">\(|\omega_i - \omega_j|\)</span>.</p>
+<p>The mean drift force is the second-order force associated with the difference frequency of a frequency with itself, leading to a time-independent term, that is the mean value of the second-order force:</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-7">
+<span class="eqno">(158)<a class="headerlink" href="#equation-theory-manual-second-order-forces-7" title="Link to this equation">¶</a></span>\[\langle F^{(2)} \rangle = \sum_k \sum_{i, j} a(\omega_k, \beta_i) \, a(\omega_k, \beta_j)^* \, \hat F^{\text{mean drift}}(\omega_k, \beta_i, \beta_j),\]</div>
+<p>with</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-8">
+<span class="eqno">(159)<a class="headerlink" href="#equation-theory-manual-second-order-forces-8" title="Link to this equation">¶</a></span>\[\hat{F}^{\text{mean drift}} (\omega_k, \beta_i, \beta_j) = \hat F^{(2-)} (\omega_k, \omega_k, \beta_i, \beta_j)\]</div>
 </section>
-<section id="output-format">
-<h3>Output format<a class="headerlink" href="#output-format" title="Link to this heading">¶</a></h3>
-<blockquote>
-<div><p>TODO</p>
-</div></blockquote>
+<section id="cross-direction-components-of-the-difference-frequency-terms">
+<h3>Cross-direction components of the difference-frequency terms<a class="headerlink" href="#cross-direction-components-of-the-difference-frequency-terms" title="Link to this heading">¶</a></h3>
+<p>The quadratic second-order forces are built from products <span class="math notranslate nohighlight">\(u v\)</span> of two first-order quantities
+(pressure and displacement, two components of the velocity, …).
+Let <span class="math notranslate nohighlight">\(\hat u_i\)</span> and <span class="math notranslate nohighlight">\(\hat v_i\)</span> be the complex amplitudes of <span class="math notranslate nohighlight">\(u\)</span> and <span class="math notranslate nohighlight">\(v\)</span> in a single wave of direction <span class="math notranslate nohighlight">\(\beta_i\)</span> and unit amplitude.
+In a mixture of waves of the same frequency <span class="math notranslate nohighlight">\(\omega_k\)</span> and amplitudes <span class="math notranslate nohighlight">\(a_i = a(\omega_k, \beta_i)\)</span>,</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-9">
+<span class="eqno">(160)<a class="headerlink" href="#equation-theory-manual-second-order-forces-9" title="Link to this equation">¶</a></span>\[u(t) = \Re \left( \sum_i a_i \, \hat u_i \, e^{- i \omega_k t} \right), \qquad
+v(t) = \Re \left( \sum_j a_j \, \hat v_j \, e^{- i \omega_k t} \right),\]</div>
+<p>and the mean value of their product is</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-10">
+<span class="eqno">(161)<a class="headerlink" href="#equation-theory-manual-second-order-forces-10" title="Link to this equation">¶</a></span>\[\langle u v \rangle = \frac{1}{2} \Re \left( \sum_{i, j} a_i \, a_j^* \, \hat u_i \, \hat v_j^* \right)
+                    = \sum_{i, j} a_i \, a_j^* \, Q_{ij}(\hat u, \hat v)\]</div>
+<p>with</p>
+<div class="math notranslate nohighlight" id="equation-diff-freq-product-rule">
+<span class="eqno">(162)<a class="headerlink" href="#equation-diff-freq-product-rule" title="Link to this equation">¶</a></span>\[Q_{ij}(\hat u, \hat v) = \frac{1}{4} \left( \hat u_i \, \hat v_j^* + \hat u_j^* \, \hat v_i \right).\]</div>
+<p>The second equality is obtained by writing <span class="math notranslate nohighlight">\(\Re(z) = (z + z^*)/2\)</span> and swapping <span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(j\)</span> in the term with <span class="math notranslate nohighlight">\(z^*\)</span>.
+This choice of <span class="math notranslate nohighlight">\(Q_{ij}\)</span> among all the matrices giving the same mean value is the one that is Hermitian, <span class="math notranslate nohighlight">\(Q_{ji} = Q_{ij}^*\)</span>,
+such that the sum above is real term by term for each pair <span class="math notranslate nohighlight">\(\{i, j\}\)</span>.
+Its diagonal is the mean value in a single wave of unit amplitude:</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-11">
+<span class="eqno">(163)<a class="headerlink" href="#equation-theory-manual-second-order-forces-11" title="Link to this equation">¶</a></span>\[Q_{ii}(\hat u, \hat v) = \frac{1}{2} \Re \left( \hat u_i \, \hat v_i^* \right).\]</div>
+<p>This product rule is applied to each quadratic term of the second-order force,
+and the linear operations (sums, integration over the hull or along the waterline, multiplication by real coefficients) are applied to <span class="math notranslate nohighlight">\(Q_{ij}\)</span> directly.
+The resulting <span class="math notranslate nohighlight">\(\hat F^{\text{mean drift}}(\omega, \beta_i, \beta_j)\)</span> is then also Hermitian in <span class="math notranslate nohighlight">\((i, j)\)</span>.</p>
+<p>The product rule <a class="reference internal" href="#equation-diff-freq-product-rule">(162)</a> derived above for the mean-drift force is also valid for the other quadratic parts of the difference-frequency forces.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Complex factors, such as <span class="math notranslate nohighlight">\(i \omega \rho\)</span> to get the pressure from the potential,
+have to be applied to the first-order amplitudes <span class="math notranslate nohighlight">\(\hat u_i\)</span> before the product.
+Multiplying <span class="math notranslate nohighlight">\(Q_{ij}\)</span> by a complex number does not correspond to any physical quantity, and would break the Hermitian symmetry.</p>
+</div>
 </section>
 </section>
 <section id="evaluation-of-second-order-forces">
@@ -86,24 +134,24 @@
 <section id="far-field-mean-drift-force">
 <h3>Far-field mean drift force<a class="headerlink" href="#far-field-mean-drift-force" title="Link to this heading">¶</a></h3>
 <p>The expression of the mean drift force for the degrees of freedom Surge and Sway is the following:</p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-6">
-<span class="eqno">(157)<a class="headerlink" href="#equation-theory-manual-second-order-forces-6" title="Link to this equation">¶</a></span>\[\begin{split}\left\langle{\begin{matrix} F_x \\ F_y \end{matrix}}\right\rangle =
+<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-12">
+<span class="eqno">(164)<a class="headerlink" href="#equation-theory-manual-second-order-forces-12" title="Link to this equation">¶</a></span>\[\begin{split}\left\langle{\begin{matrix} F_x \\ F_y \end{matrix}}\right\rangle =
 -2 \pi \rho \omega\binom{\cos \beta}{\sin \beta} \Im( H(\beta))
 -2 \pi \rho \frac{k\left(k_0 h\right)^2}{h\left[\left(k h\right)^2-\left(k_0 h\right)^2+k_0 h\right]} \int_0^{2 \pi}|H(\theta)|^2\binom{\cos \theta}{\sin \theta} d \theta\end{split}\]</div>
 <p>where <span class="math notranslate nohighlight">\(\beta\)</span> is the wave direction, <span class="math notranslate nohighlight">\(H\)</span> the Kochin function, <span class="math notranslate nohighlight">\(k\)</span> the wavenumber, <span class="math notranslate nohighlight">\(h\)</span> the water depth and <span class="math notranslate nohighlight">\(k_0\)</span> the deep water wavenumber.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The coefficient in front of the integral above can be very large at high frequency and can make the result very sensitive to small numerical inaccuracies in the Kochin function.
-Unfortunately, numerical incurracies can be common at high frequency, that is when the wavelength is small with respect to the mesh resolution.
+Unfortunately, numerical inacuracies can be common at high frequency, that is when the wavelength is small with respect to the mesh resolution.
 In other words, mesh convergence should be checked carefully for the mean drift force at high frequency.</p>
 </div>
 <p>Here is the expression for the Yaw moment:</p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-7">
-<span class="eqno">(158)<a class="headerlink" href="#equation-theory-manual-second-order-forces-7" title="Link to this equation">¶</a></span>\[\left\langle{M_z}\right\rangle = 2 \pi \frac{\rho \omega}{k}\Re (\dot H(\beta)) -
+<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-13">
+<span class="eqno">(165)<a class="headerlink" href="#equation-theory-manual-second-order-forces-13" title="Link to this equation">¶</a></span>\[\left\langle{M_z}\right\rangle = 2 \pi \frac{\rho \omega}{k}\Re (\dot H(\beta)) -
 \frac{2 \pi \rho (k_0h)^2}{h[(kh)^2 - (k_0h)^2 + k_0h]}\Im (\int_0^{2 \pi} H(\theta)^* \dot H(\theta) \mathrm{d} \theta )\]</div>
-<p>The Kochin function has to be rebuild from the contributions of all the radiation problems and the diffraction problem:</p>
-<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-8">
-<span class="eqno">(159)<a class="headerlink" href="#equation-theory-manual-second-order-forces-8" title="Link to this equation">¶</a></span>\[H(\theta) = e^{i\frac{\pi}{2}} ( H_D(\theta) + \sum_{k=1}^6 X_k H_{R_k} (\theta))\]</div>
+<p>The Kochin function has to be rebuilt from the contributions of all the radiation problems and the diffraction problem:</p>
+<div class="math notranslate nohighlight" id="equation-theory-manual-second-order-forces-14">
+<span class="eqno">(166)<a class="headerlink" href="#equation-theory-manual-second-order-forces-14" title="Link to this equation">¶</a></span>\[H(\theta) = e^{i\frac{\pi}{2}} ( H_D(\theta) + \sum_{k=1}^6 X_k H_{R_k} (\theta))\]</div>
 <p>where <span class="math notranslate nohighlight">\(X_k\)</span> is the motion RAO of the body corresponding to the degree of freedom <span class="math notranslate nohighlight">\(k\)</span>,
 <span class="math notranslate nohighlight">\(H_{R_k}\)</span> is the Kochin function associated with the radiated potential of degree of freedom <span class="math notranslate nohighlight">\(k\)</span>
 and <span class="math notranslate nohighlight">\(H_{D}\)</span> is the Kochin function associated with the diffracted potential.</p>
