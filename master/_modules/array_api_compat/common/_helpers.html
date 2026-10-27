@@ -433,7 +433,9 @@ window.runMermaid = runMermaid;</script>
 <span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">cupy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">cp</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">dask.array</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">da</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">dpnp</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">jax</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">mparray</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">ndonnx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ndx</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
     <span class="kn">import</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">npt</span>
@@ -449,7 +451,10 @@ window.runMermaid = runMermaid;</script>
         <span class="n">npt</span><span class="o">.</span><span class="n">NDArray</span><span class="p">[</span><span class="n">Any</span><span class="p">]</span>
         <span class="o">|</span> <span class="n">cp</span><span class="o">.</span><span class="n">ndarray</span>
         <span class="o">|</span> <span class="n">da</span><span class="o">.</span><span class="n">Array</span>
+        <span class="o">|</span> <span class="n">dpnp</span><span class="o">.</span><span class="n">ndarray</span>
+        <span class="o">|</span> <span class="n">dpnp</span><span class="o">.</span><span class="n">tensor</span><span class="o">.</span><span class="n">usm_ndarray</span>
         <span class="o">|</span> <span class="n">jax</span><span class="o">.</span><span class="n">Array</span>
+        <span class="o">|</span> <span class="n">mparray</span><span class="o">.</span><span class="n">MPArray</span>
         <span class="o">|</span> <span class="n">ndx</span><span class="o">.</span><span class="n">Array</span>
         <span class="o">|</span> <span class="n">sparse</span><span class="o">.</span><span class="n">SparseArray</span>
         <span class="o">|</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span>
@@ -513,6 +518,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_dask_array</span>
 <span class="sd">    is_jax_array</span>
 <span class="sd">    is_pydata_sparse_array</span>
+<span class="sd">    is_dpnp_array</span>
+<span class="sd">    is_mparray_array</span>
 <span class="sd">    """</span>
     <span class="c1"># TODO: Should we reject ndarray subclasses?</span>
     <span class="bp">cls</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
@@ -542,6 +549,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_dask_array</span>
 <span class="sd">    is_jax_array</span>
 <span class="sd">    is_pydata_sparse_array</span>
+<span class="sd">    is_dpnp_array</span>
+<span class="sd">    is_mparray_array</span>
 <span class="sd">    """</span>
     <span class="bp">cls</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">_issubclass_fast</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">"cupy"</span><span class="p">,</span> <span class="s2">"ndarray"</span><span class="p">)</span>
@@ -564,6 +573,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_dask_array</span>
 <span class="sd">    is_jax_array</span>
 <span class="sd">    is_pydata_sparse_array</span>
+<span class="sd">    is_dpnp_array</span>
+<span class="sd">    is_mparray_array</span>
 <span class="sd">    """</span>
     <span class="bp">cls</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">_issubclass_fast</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">"torch"</span><span class="p">,</span> <span class="s2">"Tensor"</span><span class="p">)</span>
@@ -587,6 +598,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_dask_array</span>
 <span class="sd">    is_jax_array</span>
 <span class="sd">    is_pydata_sparse_array</span>
+<span class="sd">    is_dpnp_array</span>
+<span class="sd">    is_mparray_array</span>
 <span class="sd">    """</span>
     <span class="bp">cls</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">_issubclass_fast</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">"ndonnx"</span><span class="p">,</span> <span class="s2">"Array"</span><span class="p">)</span>
@@ -610,6 +623,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_ndonnx_array</span>
 <span class="sd">    is_jax_array</span>
 <span class="sd">    is_pydata_sparse_array</span>
+<span class="sd">    is_dpnp_array</span>
+<span class="sd">    is_mparray_array</span>
 <span class="sd">    """</span>
     <span class="bp">cls</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">_issubclass_fast</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">"dask.array"</span><span class="p">,</span> <span class="s2">"Array"</span><span class="p">)</span>
@@ -634,6 +649,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_ndonnx_array</span>
 <span class="sd">    is_dask_array</span>
 <span class="sd">    is_pydata_sparse_array</span>
+<span class="sd">    is_dpnp_array</span>
+<span class="sd">    is_mparray_array</span>
 <span class="sd">    """</span>
     <span class="bp">cls</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
     <span class="c1"># We test for jax.core.Tracer here to identify jax arrays during jit tracing. From jax 0.8.2 on,</span>
@@ -647,6 +664,31 @@ window.runMermaid = runMermaid;</script>
         <span class="ow">or</span> <span class="n">_issubclass_fast</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">"jax.core"</span><span class="p">,</span> <span class="s2">"Tracer"</span><span class="p">)</span>
         <span class="ow">or</span> <span class="n">_is_jax_zero_gradient_array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
     <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">is_mparray_array</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypeIs</span><span class="p">[</span><span class="n">mparray</span><span class="o">.</span><span class="n">MPArray</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return True if `x` is an mparray array.</span>
+
+<span class="sd">    This function does not import mparray if it has not already been imported</span>
+<span class="sd">    and is therefore cheap to use.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    array_namespace</span>
+<span class="sd">    is_array_api_obj</span>
+<span class="sd">    is_numpy_array</span>
+<span class="sd">    is_cupy_array</span>
+<span class="sd">    is_torch_array</span>
+<span class="sd">    is_ndonnx_array</span>
+<span class="sd">    is_dask_array</span>
+<span class="sd">    is_jax_array</span>
+<span class="sd">    is_pydata_sparse_array</span>
+<span class="sd">    is_dpnp_array</span>
+<span class="sd">    """</span>
+    <span class="bp">cls</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">_issubclass_fast</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">"mparray"</span><span class="p">,</span> <span class="s2">"MPArray"</span><span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">is_pydata_sparse_array</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypeIs</span><span class="p">[</span><span class="n">sparse</span><span class="o">.</span><span class="n">SparseArray</span><span class="p">]:</span>
@@ -668,10 +710,41 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_ndonnx_array</span>
 <span class="sd">    is_dask_array</span>
 <span class="sd">    is_jax_array</span>
+<span class="sd">    is_dpnp_array</span>
+<span class="sd">    is_mparray_array</span>
 <span class="sd">    """</span>
     <span class="c1"># TODO: Account for other backends.</span>
     <span class="bp">cls</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
     <span class="k">return</span> <span class="n">_issubclass_fast</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">"sparse"</span><span class="p">,</span> <span class="s2">"SparseArray"</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">is_dpnp_array</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Return True if `x` is a dpnp array.</span>
+
+<span class="sd">    This function does not import `dpnp` if it has not already been imported</span>
+<span class="sd">    and is therefore cheap to use.</span>
+
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    array_namespace</span>
+<span class="sd">    is_array_api_obj</span>
+<span class="sd">    is_numpy_array</span>
+<span class="sd">    is_cupy_array</span>
+<span class="sd">    is_torch_array</span>
+<span class="sd">    is_ndonnx_array</span>
+<span class="sd">    is_dask_array</span>
+<span class="sd">    is_jax_array</span>
+<span class="sd">    is_pydata_sparse_array</span>
+<span class="sd">    is_mparray_array</span>
+<span class="sd">    """</span>
+    <span class="bp">cls</span> <span class="o">=</span> <span class="n">cast</span><span class="p">(</span><span class="n">Hashable</span><span class="p">,</span> <span class="nb">type</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="k">return</span> <span class="p">(</span>
+    <span class="n">_issubclass_fast</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">"dpnp"</span><span class="p">,</span> <span class="s2">"ndarray"</span><span class="p">)</span>
+    <span class="ow">or</span> <span class="n">_issubclass_fast</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">"dpnp.tensor"</span><span class="p">,</span> <span class="s2">"usm_ndarray"</span><span class="p">)</span>
+    <span class="p">)</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">is_array_api_obj</span><span class="p">(</span><span class="n">x</span><span class="p">:</span> <span class="nb">object</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TypeGuard</span><span class="p">[</span><span class="n">_ArrayApiObj</span><span class="p">]:</span>
@@ -688,6 +761,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_ndonnx_array</span>
 <span class="sd">    is_dask_array</span>
 <span class="sd">    is_jax_array</span>
+<span class="sd">    is_pydata_sparse_array</span>
+<span class="sd">    is_dpnp_array</span>
+<span class="sd">    is_mparray_array</span>
 <span class="sd">    """</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="c1"># TODO: drop this check after np.matrix is gone</span>
@@ -739,6 +815,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_dask_namespace</span>
 <span class="sd">    is_jax_namespace</span>
 <span class="sd">    is_pydata_sparse_namespace</span>
+<span class="sd">    is_dpnp_namespace</span>
+<span class="sd">    is_mparray_namespace</span>
 <span class="sd">    is_array_api_strict_namespace</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"numpy"</span><span class="p">,</span> <span class="n">_compat_module_name</span><span class="p">()</span> <span class="o">+</span> <span class="s2">".numpy"</span><span class="p">}</span>
@@ -761,6 +839,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_dask_namespace</span>
 <span class="sd">    is_jax_namespace</span>
 <span class="sd">    is_pydata_sparse_namespace</span>
+<span class="sd">    is_dpnp_namespace</span>
+<span class="sd">    is_mparray_namespace</span>
 <span class="sd">    is_array_api_strict_namespace</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"cupy"</span><span class="p">,</span> <span class="n">_compat_module_name</span><span class="p">()</span> <span class="o">+</span> <span class="s2">".cupy"</span><span class="p">}</span>
@@ -783,6 +863,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_dask_namespace</span>
 <span class="sd">    is_jax_namespace</span>
 <span class="sd">    is_pydata_sparse_namespace</span>
+<span class="sd">    is_dpnp_namespace</span>
+<span class="sd">    is_mparray_namespace</span>
 <span class="sd">    is_array_api_strict_namespace</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"torch"</span><span class="p">,</span> <span class="n">_compat_module_name</span><span class="p">()</span> <span class="o">+</span> <span class="s2">".torch"</span><span class="p">}</span>
@@ -802,6 +884,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_dask_namespace</span>
 <span class="sd">    is_jax_namespace</span>
 <span class="sd">    is_pydata_sparse_namespace</span>
+<span class="sd">    is_dpnp_namespace</span>
+<span class="sd">    is_mparray_namespace</span>
 <span class="sd">    is_array_api_strict_namespace</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"ndonnx"</span>
@@ -824,6 +908,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_ndonnx_namespace</span>
 <span class="sd">    is_jax_namespace</span>
 <span class="sd">    is_pydata_sparse_namespace</span>
+<span class="sd">    is_dpnp_namespace</span>
+<span class="sd">    is_mparray_namespace</span>
 <span class="sd">    is_array_api_strict_namespace</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"dask.array"</span><span class="p">,</span> <span class="n">_compat_module_name</span><span class="p">()</span> <span class="o">+</span> <span class="s2">".dask.array"</span><span class="p">}</span>
@@ -846,9 +932,32 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_ndonnx_namespace</span>
 <span class="sd">    is_dask_namespace</span>
 <span class="sd">    is_pydata_sparse_namespace</span>
+<span class="sd">    is_dpnp_namespace</span>
+<span class="sd">    is_mparray_namespace</span>
 <span class="sd">    is_array_api_strict_namespace</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"jax.numpy"</span><span class="p">,</span> <span class="s2">"jax.experimental.array_api"</span><span class="p">}</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">is_mparray_namespace</span><span class="p">(</span><span class="n">xp</span><span class="p">:</span> <span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Returns True if `xp` is the mparray namespace.</span>
+
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    array_namespace</span>
+<span class="sd">    is_numpy_namespace</span>
+<span class="sd">    is_cupy_namespace</span>
+<span class="sd">    is_torch_namespace</span>
+<span class="sd">    is_ndonnx_namespace</span>
+<span class="sd">    is_dask_namespace</span>
+<span class="sd">    is_jax_namespace</span>
+<span class="sd">    is_pydata_sparse_namespace</span>
+<span class="sd">    is_dpnp_namespace</span>
+<span class="sd">    is_array_api_strict_namespace</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"mparray"</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">is_pydata_sparse_namespace</span><span class="p">(</span><span class="n">xp</span><span class="p">:</span> <span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -865,9 +974,34 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_ndonnx_namespace</span>
 <span class="sd">    is_dask_namespace</span>
 <span class="sd">    is_jax_namespace</span>
+<span class="sd">    is_dpnp_namespace</span>
+<span class="sd">    is_mparray_namespace</span>
 <span class="sd">    is_array_api_strict_namespace</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"sparse"</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">is_dpnp_namespace</span><span class="p">(</span><span class="n">xp</span><span class="p">:</span> <span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Returns True if `xp` is a dpnp namespace.</span>
+
+<span class="sd">    This includes `dpnp` and `dpnp.tensor`.</span>
+<span class="sd">    </span>
+<span class="sd">    See Also</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    array_namespace</span>
+<span class="sd">    is_numpy_namespace</span>
+<span class="sd">    is_cupy_namespace</span>
+<span class="sd">    is_torch_namespace</span>
+<span class="sd">    is_ndonnx_namespace</span>
+<span class="sd">    is_dask_namespace</span>
+<span class="sd">    is_jax_namespace</span>
+<span class="sd">    is_pydata_sparse_namespace</span>
+<span class="sd">    is_mparray_namespace</span>
+<span class="sd">    is_array_api_strict_namespace</span>
+<span class="sd">    """</span>
+    <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="vm">__name__</span> <span class="ow">in</span> <span class="p">{</span><span class="s2">"dpnp"</span><span class="p">,</span> <span class="s2">"dpnp.tensor"</span><span class="p">}</span>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">is_array_api_strict_namespace</span><span class="p">(</span><span class="n">xp</span><span class="p">:</span> <span class="n">Namespace</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
@@ -885,6 +1019,8 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_dask_namespace</span>
 <span class="sd">    is_jax_namespace</span>
 <span class="sd">    is_pydata_sparse_namespace</span>
+<span class="sd">    is_dpnp_namespace</span>
+<span class="sd">    is_mparray_namespace</span>
 <span class="sd">    """</span>
     <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s2">"array_api_strict"</span>
 
@@ -1047,7 +1183,9 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    is_torch_array</span>
 <span class="sd">    is_dask_array</span>
 <span class="sd">    is_jax_array</span>
+<span class="sd">    is_mparray_array</span>
 <span class="sd">    is_pydata_sparse_array</span>
+<span class="sd">    is_dpnp_array</span>
 
 <span class="sd">    """</span>
     <span class="n">namespaces</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="n">Namespace</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1307,7 +1445,7 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">    device : Hardware device the array data resides on.</span>
 
 <span class="sd">    """</span>
-    <span class="k">if</span> <span class="n">is_numpy_array</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">is_numpy_array</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="ow">or</span> <span class="n">is_mparray_array</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">stream</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"The stream argument to to_device() is not supported"</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">device</span> <span class="o">==</span> <span class="s2">"cpu"</span><span class="p">:</span>
@@ -1406,6 +1544,7 @@ window.runMermaid = runMermaid;</script>
         <span class="ow">or</span> <span class="n">_issubclass_fast</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">"cupy"</span><span class="p">,</span> <span class="s2">"ndarray"</span><span class="p">)</span>
         <span class="ow">or</span> <span class="n">_issubclass_fast</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">"torch"</span><span class="p">,</span> <span class="s2">"Tensor"</span><span class="p">)</span>
         <span class="ow">or</span> <span class="n">_issubclass_fast</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">"sparse"</span><span class="p">,</span> <span class="s2">"SparseArray"</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="n">_issubclass_fast</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="s2">"mparray"</span><span class="p">,</span> <span class="s2">"MPArray"</span><span class="p">)</span>
     <span class="p">):</span>
         <span class="k">return</span> <span class="kc">False</span>
     <span class="k">if</span> <span class="p">(</span>
@@ -1484,8 +1623,12 @@ window.runMermaid = runMermaid;</script>
     <span class="s2">"is_cupy_namespace"</span><span class="p">,</span>
     <span class="s2">"is_dask_array"</span><span class="p">,</span>
     <span class="s2">"is_dask_namespace"</span><span class="p">,</span>
+    <span class="s2">"is_dpnp_array"</span><span class="p">,</span>
+    <span class="s2">"is_dpnp_namespace"</span><span class="p">,</span>
     <span class="s2">"is_jax_array"</span><span class="p">,</span>
     <span class="s2">"is_jax_namespace"</span><span class="p">,</span>
+    <span class="s2">"is_mparray_array"</span><span class="p">,</span>
+    <span class="s2">"is_mparray_namespace"</span><span class="p">,</span>
     <span class="s2">"is_numpy_array"</span><span class="p">,</span>
     <span class="s2">"is_numpy_namespace"</span><span class="p">,</span>
     <span class="s2">"is_torch_array"</span><span class="p">,</span>
