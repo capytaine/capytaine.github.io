@@ -735,22 +735,65 @@ window.runMermaid = runMermaid;</script>
         <span class="k">return</span> <span class="n">Mesh</span><span class="p">(</span><span class="n">vertices</span><span class="p">,</span> <span class="n">faces</span><span class="p">)</span>
 
 
+<span class="k">def</span><span class="w"> </span><span class="nf">_fortran_tokens</span><span class="p">(</span><span class="n">line</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Split a line as a Fortran list-directed READ would (blanks or commas as separators)."""</span>
+    <span class="k">return</span> <span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">","</span><span class="p">,</span> <span class="s2">" "</span><span class="p">)</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fortran_float</span><span class="p">(</span><span class="n">token</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">"""Parse a Fortran real, possibly with a D exponent (e.g. 1.0D0)."""</span>
+    <span class="k">return</span> <span class="nb">float</span><span class="p">(</span><span class="n">token</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"D"</span><span class="p">,</span> <span class="s2">"E"</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">"d"</span><span class="p">,</span> <span class="s2">"e"</span><span class="p">))</span>
+
+
 <span class="k">def</span><span class="w"> </span><span class="nf">_read_gdf</span><span class="p">(</span><span class="n">file_obj</span><span class="p">:</span> <span class="n">IOBase</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">Mesh</span><span class="p">,</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">"""Low-order WAMIT GDF file.</span>
+
+<span class="sd">    As in WAMIT, the 12 coordinates of each panel are read by a single list-directed READ:</span>
+<span class="sd">    they can be spread over several lines, and the remaining tokens of the last line</span>
+<span class="sd">    (e.g. a panel number) are ignored. Anything after the NPAN panels is ignored, except</span>
+<span class="sd">    for a warning about the dipole panels of the Version 6 format."""</span>
     <span class="n">title</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
-    <span class="n">ulen</span><span class="p">,</span> <span class="n">grav</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">float</span><span class="p">,</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[:</span><span class="mi">2</span><span class="p">])</span>
-    <span class="n">isx</span><span class="p">,</span> <span class="n">isy</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[:</span><span class="mi">2</span><span class="p">])</span>
-    <span class="n">npan</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">file_obj</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">])</span>
-    <span class="n">faces_vertices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">genfromtxt</span><span class="p">(</span><span class="n">file_obj</span><span class="p">)</span>
+    <span class="n">ulen</span><span class="p">,</span> <span class="n">grav</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="n">_fortran_float</span><span class="p">,</span> <span class="n">_fortran_tokens</span><span class="p">(</span><span class="n">file_obj</span><span class="o">.</span><span class="n">readline</span><span class="p">())[:</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">isx</span><span class="p">,</span> <span class="n">isy</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="n">_fortran_tokens</span><span class="p">(</span><span class="n">file_obj</span><span class="o">.</span><span class="n">readline</span><span class="p">())[:</span><span class="mi">2</span><span class="p">])</span>
+    <span class="k">if</span> <span class="n">isx</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">or</span> <span class="n">isy</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"In GDF file, unsupported symmetry indices ISX=</span><span class="si">{</span><span class="n">isx</span><span class="si">}</span><span class="s2">, ISY=</span><span class="si">{</span><span class="n">isy</span><span class="si">}</span><span class="s2">: only 0 or 1 are supported "</span>
+        <span class="p">)</span>
+    <span class="n">npan_line</span> <span class="o">=</span> <span class="n">_fortran_tokens</span><span class="p">(</span><span class="n">file_obj</span><span class="o">.</span><span class="n">readline</span><span class="p">())</span>
+    <span class="n">npan</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">npan_line</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">npan_line</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">npan_line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s2">"+-"</span><span class="p">)</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">npan_line</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">"In GDF file, IGDEF=</span><span class="si">{</span><span class="n">npan_line</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s2"> is not supported: "</span>
+            <span class="s2">"only the geometry defined by flat panels (IGDEF=0) can be loaded."</span>
+        <span class="p">)</span>
+
+    <span class="n">faces_vertices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">((</span><span class="n">npan</span><span class="p">,</span> <span class="mi">12</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">i_panel</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">npan</span><span class="p">):</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">12</span><span class="p">:</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">file_obj</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">line</span> <span class="o">==</span> <span class="s2">""</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"In GDF file, NPAN=</span><span class="si">{</span><span class="n">npan</span><span class="si">}</span><span class="s2"> panels are announced, but the file ends after </span><span class="si">{</span><span class="n">i_panel</span><span class="si">}</span><span class="s2"> panels."</span>
+                <span class="p">)</span>
+            <span class="n">tokens</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_fortran_tokens</span><span class="p">(</span><span class="n">line</span><span class="p">))</span>
+        <span class="n">faces_vertices</span><span class="p">[</span><span class="n">i_panel</span><span class="p">,</span> <span class="p">:]</span> <span class="o">=</span> <span class="p">[</span><span class="n">_fortran_float</span><span class="p">(</span><span class="n">t</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tokens</span><span class="p">[:</span><span class="mi">12</span><span class="p">]]</span>
+
+    <span class="c1"># In the format of WAMIT Version 6, NPAN only counts the conventional panels,</span>
+    <span class="c1"># and is followed by the number NPAND of dipole panels and their coordinates.</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">file_obj</span><span class="p">:</span>
+        <span class="n">tokens</span> <span class="o">=</span> <span class="n">_fortran_tokens</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tokens</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="ow">and</span> <span class="nb">int</span><span class="p">(</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"The GDF file seems to define </span><span class="si">{</span><span class="n">tokens</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2"> dipole panels (zero-thickness elements) "</span>
+                    <span class="sa">f</span><span class="s2">"after its NPAN=</span><span class="si">{</span><span class="n">npan</span><span class="si">}</span><span class="s2"> panels. They are not supported and have been ignored."</span>
+                <span class="p">)</span>
+            <span class="k">break</span>
 
     <span class="n">faces_vertices</span> <span class="o">=</span> <span class="n">faces_vertices</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
     <span class="n">vertices</span><span class="p">,</span> <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">faces_vertices</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">faces</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">faces</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">npan</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">"In GDF file, npan value: </span><span class="si">{</span><span class="n">npan</span><span class="si">}</span><span class="s2"> is not equal to face count: </span><span class="se">\</span>
-<span class="s2">                </span><span class="si">{</span><span class="n">faces</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="si">}</span><span class="s2">."</span>
-        <span class="p">)</span>
 
     <span class="k">if</span> <span class="n">isx</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">isy</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">ReflectionSymmetricMesh</span><span class="p">(</span>
