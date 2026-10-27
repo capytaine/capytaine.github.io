@@ -929,8 +929,9 @@ window.runMermaid = runMermaid;</script>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        faces_id : array_like</span>
-<span class="sd">            Indices of faces to extract.</span>
+<span class="sd">        faces_id : array_like or slice</span>
+<span class="sd">            Indices of faces to extract (any index accepted by NumPy on an</span>
+<span class="sd">            array of length `nb_faces`, such as a list, a slice or a boolean mask).</span>
 <span class="sd">        name: str, optional</span>
 <span class="sd">            A name for the new mesh</span>
 
@@ -939,13 +940,12 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        Mesh</span>
 <span class="sd">            New mesh containing only the specified faces.</span>
 <span class="sd">        """</span>
-        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">faces_id</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
-            <span class="n">faces_id</span> <span class="o">=</span> <span class="n">faces_id</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
+        <span class="n">faces_id</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">)[</span><span class="n">faces_id</span><span class="p">]</span><span class="o">.</span><span class="n">ravel</span><span class="p">()</span>
         <span class="n">all_faces</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">as_list_of_faces</span><span class="p">()</span>
         <span class="n">selected_faces</span> <span class="o">=</span> <span class="p">[</span><span class="n">all_faces</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">faces_id</span><span class="p">]</span>
         <span class="k">return</span> <span class="n">Mesh</span><span class="o">.</span><span class="n">from_list_of_faces</span><span class="p">(</span>
             <span class="n">selected_faces</span><span class="p">,</span>
-            <span class="n">faces_metadata</span><span class="o">=</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">selected_faces</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">},</span>
+            <span class="n">faces_metadata</span><span class="o">=</span><span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">[</span><span class="n">k</span><span class="p">][</span><span class="n">faces_id</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">faces_metadata</span><span class="p">},</span>
             <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
             <span class="n">quadrature_method</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">quadrature_method</span><span class="p">,</span>
             <span class="n">auto_clean</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
