@@ -407,6 +407,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">numpy.typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">NDArray</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">scipy.linalg</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">sl</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">scipy.sparse.linalg</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ssl</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.array_backend</span><span class="w"> </span><span class="kn">import</span>  <span class="n">array_namespace</span><span class="p">,</span> <span class="n">device</span>
 
@@ -499,6 +500,50 @@ window.runMermaid = runMermaid;</script>
 <span class="nd">@lu_decompose</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">_lu_decompose_ndarray</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">overwrite_a</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
     <span class="k">return</span> <span class="n">LUDecomposedMatrix</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">overwrite_a</span><span class="o">=</span><span class="n">overwrite_a</span><span class="p">)</span>
+
+<span class="c1">#################################### GMRES #####################################</span>
+
+<div class="viewcode-block" id="solve_gmres">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.bem.linear_solvers.html#capytaine.bem.linear_solvers.solve_gmres">[docs]</a>
+<span class="nd">@singledispatch</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">solve_gmres</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Solve `A x = b` with GMRES, where `b` is a vector.</span>
+
+<span class="sd">    This is a :func:`functools.singledispatch` function: the implementation is chosen with the type of `A`.</span>
+<span class="sd">    GMRES for a new type of matrices (e.g. arrays of another array library) can be supported by</span>
+<span class="sd">    registering an implementation with ``@solve_gmres.register(MatrixType)``.</span>
+<span class="sd">    """</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">"The 'gmres' linear solver has not been implemented for matrix of </span><span class="si">{</span><span class="nb">type</span><span class="p">(</span><span class="n">A</span><span class="p">)</span><span class="si">}</span><span class="s2">"</span>
+    <span class="p">)</span></div>
+
+
+
+<span class="k">class</span><span class="w"> </span><span class="nc">_Counter</span><span class="p">:</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nb_iter</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nb_iter</span> <span class="o">+=</span> <span class="mi">1</span>
+
+
+<span class="nd">@solve_gmres</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_solve_gmres_scipy</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="sa">f</span><span class="s2">"Solve with GMRES for </span><span class="si">{</span><span class="n">A</span><span class="si">}</span><span class="s2">."</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">LOG</span><span class="o">.</span><span class="n">isEnabledFor</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">):</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="n">_Counter</span><span class="p">()</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">gmres</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">,</span> <span class="n">callback</span><span class="o">=</span><span class="n">counter</span><span class="p">,</span> <span class="n">callback_type</span><span class="o">=</span><span class="s2">"legacy"</span><span class="p">)</span>
+        <span class="n">LOG</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">"End of GMRES after </span><span class="si">{</span><span class="n">counter</span><span class="o">.</span><span class="n">nb_iter</span><span class="si">}</span><span class="s2"> iterations."</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">info</span> <span class="o">=</span> <span class="n">ssl</span><span class="o">.</span><span class="n">gmres</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">info</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s2">"No convergence of the GMRES after </span><span class="si">{</span><span class="n">info</span><span class="si">}</span><span class="s2"> iterations.</span><span class="se">\n</span><span class="s2">"</span>
+                            <span class="s2">"This can be due to overlapping panels or irregular frequencies."</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span>
 </pre></div>
 
           </div>

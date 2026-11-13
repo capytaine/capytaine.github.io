@@ -414,15 +414,14 @@ window.runMermaid = runMermaid;</script>
 <span class="c1"># limitations under the License.</span>
 <span class="sd">"""Implementation of block circulant matrices to be used for optimizing resolution with symmetries."""</span>
 
-<span class="kn">import</span><span class="w"> </span><span class="nn">cmath</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">functools</span><span class="w"> </span><span class="kn">import</span> <span class="n">cached_property</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">List</span><span class="p">,</span> <span class="n">Union</span><span class="p">,</span> <span class="n">Sequence</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.linear_solvers</span><span class="w"> </span><span class="kn">import</span> <span class="n">lu_decompose</span><span class="p">,</span> <span class="n">AbstractLUDecomposedMatrix</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.bem.linear_solvers</span><span class="w"> </span><span class="kn">import</span> <span class="n">lu_decompose</span><span class="p">,</span> <span class="n">AbstractLUDecomposedMatrix</span><span class="p">,</span> <span class="n">solve_gmres</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.array_backend</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
-    <span class="n">IterableTensor</span><span class="p">,</span> <span class="n">array_namespace</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">ending_dimensions_at_the_beginning</span><span class="p">,</span> <span class="n">is_array</span><span class="p">,</span>
+    <span class="n">IterableTensor</span><span class="p">,</span> <span class="n">array_namespace</span><span class="p">,</span> <span class="n">as_complex</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">ending_dimensions_at_the_beginning</span><span class="p">,</span> <span class="n">is_array</span><span class="p">,</span>
     <span class="n">leading_dimensions_at_the_end</span><span class="p">,</span> <span class="n">split</span><span class="p">,</span> <span class="n">to_numpy</span><span class="p">,</span>
 <span class="p">)</span>
 
@@ -434,6 +433,33 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">circular_permutation</span><span class="p">(</span><span class="n">l</span><span class="p">:</span> <span class="n">List</span><span class="p">,</span> <span class="n">i</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">List</span><span class="p">:</span>
     <span class="k">return</span> <span class="n">l</span><span class="p">[</span><span class="o">-</span><span class="n">i</span><span class="p">:]</span> <span class="o">+</span> <span class="n">l</span><span class="p">[:</span><span class="o">-</span><span class="n">i</span><span class="p">]</span></div>
 
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_block_fft</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">fourier_shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""FFT of `x` along its first axis, seen as made of blocks arranged in an array of shape `fourier_shape`.</span>
+
+<span class="sd">    For `fourier_shape = (n,)`, this is the FFT across the `n` blocks of `x`.</span>
+<span class="sd">    For `fourier_shape = (2, 2)`, this is the 2D FFT (here a Walsh-Hadamard transform) of the 2x2 nested blocks.</span>
+<span class="sd">    """</span>
+    <span class="n">xp</span> <span class="o">=</span> <span class="n">array_namespace</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">axes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fourier_shape</span><span class="p">)))</span>
+    <span class="c1"># The FFT of the array API standard only accepts complex arrays.</span>
+    <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fftn</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">as_complex</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="o">*</span><span class="n">fourier_shape</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">),</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_block_ifft</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">fourier_shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Inverse of `_block_fft`."""</span>
+    <span class="n">xp</span> <span class="o">=</span> <span class="n">array_namespace</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="n">axes</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">fourier_shape</span><span class="p">)))</span>
+    <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifftn</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">as_complex</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="p">(</span><span class="o">*</span><span class="n">fourier_shape</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">axes</span><span class="o">=</span><span class="n">axes</span><span class="p">),</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_solve_in_fourier_space</span><span class="p">(</span><span class="n">solve_block_diagonal</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">fourier_shape</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Solve a block circulant system, given a function solving the corresponding block diagonal system.</span>
+
+<span class="sd">    `fourier_shape` should be consistent with the `block_diagonalize` method of the matrix."""</span>
+    <span class="n">b_hat</span> <span class="o">=</span> <span class="n">_block_fft</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">fourier_shape</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_block_ifft</span><span class="p">(</span><span class="n">solve_block_diagonal</span><span class="p">(</span><span class="n">b_hat</span><span class="p">),</span> <span class="n">fourier_shape</span><span class="p">)</span>
 
 
 <span class="k">class</span><span class="w"> </span><span class="nc">_BlockMatrixBackendMixin</span><span class="p">:</span>
@@ -542,41 +568,33 @@ window.runMermaid = runMermaid;</script>
 <div class="viewcode-block" id="BlockCirculantMatrix.block_diagonalize">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.BlockCirculantMatrix.block_diagonalize">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">block_diagonalize</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">"BlockDiagonalMatrix"</span><span class="p">:</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">"""Block diagonal matrix whose blocks are the FFT of the blocks of this matrix.</span>
+
+<span class="sd">        For instance, with blocks ``[a, b, c]`` and ``w = exp(-2iπ/3)``, the diagonal blocks are</span>
+<span class="sd">        ``[a + b + c, a + w b + w² c, a + w² b + w c]``.</span>
+<span class="sd">        """</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="c1"># Special case, faster than the FFT, and keeping real blocks real.</span>
             <span class="n">a</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span>
             <span class="k">return</span> <span class="n">BlockDiagonalMatrix</span><span class="p">([</span><span class="n">a</span> <span class="o">+</span> <span class="n">b</span><span class="p">,</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span><span class="p">])</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
-            <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span>
-            <span class="n">w</span> <span class="o">=</span> <span class="n">cmath</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="mi">2</span><span class="n">j</span><span class="o">*</span><span class="n">cmath</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
-            <span class="k">return</span> <span class="n">BlockDiagonalMatrix</span><span class="p">([</span>
-                <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span><span class="p">,</span>
-                <span class="n">a</span> <span class="o">+</span> <span class="n">w</span> <span class="o">*</span> <span class="n">b</span> <span class="o">+</span> <span class="n">w</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span> <span class="o">*</span> <span class="n">c</span><span class="p">,</span>
-                <span class="n">a</span> <span class="o">+</span> <span class="n">w</span><span class="o">.</span><span class="n">conjugate</span><span class="p">()</span> <span class="o">*</span> <span class="n">b</span> <span class="o">+</span> <span class="n">w</span> <span class="o">*</span> <span class="n">c</span><span class="p">,</span>
-            <span class="p">])</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
-            <span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">blocks</span>
-            <span class="k">return</span> <span class="n">BlockDiagonalMatrix</span><span class="p">([</span>
-                <span class="n">a</span> <span class="o">+</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span> <span class="o">+</span> <span class="n">d</span><span class="p">,</span>
-                <span class="n">a</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">b</span> <span class="o">-</span> <span class="n">c</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">d</span><span class="p">,</span>
-                <span class="n">a</span> <span class="o">-</span> <span class="n">b</span> <span class="o">+</span> <span class="n">c</span> <span class="o">-</span> <span class="n">d</span><span class="p">,</span>
-                <span class="n">a</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">b</span> <span class="o">-</span> <span class="n">c</span> <span class="o">-</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">d</span><span class="p">,</span>
-            <span class="p">])</span>
-        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
-            <span class="n">xp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span>
-            <span class="k">return</span> <span class="n">BlockDiagonalMatrix</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">as_array</span><span class="p">(</span><span class="n">xp</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+            <span class="n">xp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span>
+            <span class="k">return</span> <span class="n">BlockDiagonalMatrix</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">as_complex</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">blocks</span><span class="o">.</span><span class="n">as_array</span><span class="p">(</span><span class="n">xp</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span></div>
 
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fourier_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Shape of the transform of the right-hand side consistent with `block_diagonalize`."""</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span><span class="p">,)</span>
 
 <div class="viewcode-block" id="BlockCirculantMatrix.solve">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.BlockCirculantMatrix.solve">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Called solve on </span><span class="si">%s</span><span class="s2"> of shape </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
                   <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="n">xp</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span>
-        <span class="n">b_fft</span> <span class="o">=</span> <span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="n">res_fft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">block_diagonalize</span><span class="p">()</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">b_fft</span><span class="p">)</span>
-        <span class="n">res</span> <span class="o">=</span> <span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">res_fft</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">_solve_in_fourier_space</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">block_diagonalize</span><span class="p">()</span><span class="o">.</span><span class="n">solve</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fourier_shape</span><span class="p">)</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Done"</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">res</span></div>
 </div>
@@ -731,6 +749,14 @@ window.runMermaid = runMermaid;</script>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_circulant_matrix</span><span class="o">.</span><span class="n">block_diagonalize</span><span class="p">()</span></div>
 
 
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fourier_shape</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Shape of the transform of the right-hand side consistent with `block_diagonalize`."""</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_block_circulant_matrix</span><span class="o">.</span><span class="n">_fourier_shape</span>
+
 <div class="viewcode-block" id="NestedBlockCirculantMatrix.solve">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.block_circulant_matrices.html#capytaine.tools.block_circulant_matrices.NestedBlockCirculantMatrix.solve">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
@@ -838,6 +864,7 @@ window.runMermaid = runMermaid;</script>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"LU decomp of </span><span class="si">%s</span><span class="s2"> of shape </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
                   <span class="n">bcm</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">bcm</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span> <span class="o">=</span> <span class="n">lu_decompose</span><span class="p">(</span><span class="n">bcm</span><span class="o">.</span><span class="n">block_diagonalize</span><span class="p">(),</span> <span class="n">overwrite_a</span><span class="o">=</span><span class="n">overwrite_a</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_fourier_shape</span> <span class="o">=</span> <span class="n">bcm</span><span class="o">.</span><span class="n">_fourier_shape</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">bcm</span><span class="o">.</span><span class="n">shape</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span> <span class="o">=</span> <span class="n">bcm</span><span class="o">.</span><span class="n">nb_blocks</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dtype</span> <span class="o">=</span> <span class="n">bcm</span><span class="o">.</span><span class="n">dtype</span>
@@ -852,10 +879,7 @@ window.runMermaid = runMermaid;</script>
     <span class="k">def</span><span class="w"> </span><span class="nf">solve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
         <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">"Called solve on </span><span class="si">%s</span><span class="s2"> of shape </span><span class="si">%s</span><span class="s2">"</span><span class="p">,</span>
                   <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="n">xp</span><span class="p">,</span> <span class="n">n</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_array_backend</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nb_blocks</span>
-        <span class="n">b_fft</span> <span class="o">=</span> <span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">fft</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-        <span class="n">res_fft</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">b_fft</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">fft</span><span class="o">.</span><span class="n">ifft</span><span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">res_fft</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="n">b</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span></div>
+        <span class="k">return</span> <span class="n">_solve_in_fourier_space</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_lu_decomp</span><span class="o">.</span><span class="n">solve</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fourier_shape</span><span class="p">)</span></div>
 </div>
 
 
@@ -874,6 +898,22 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">_lu_decompose_nested_block_circulant</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">overwrite_a</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
     <span class="c1"># Drop the nested block circulant structure and LU-decompose the outer block circulant structure only.</span>
     <span class="k">return</span> <span class="n">LUDecomposedBlockCirculantMatrix</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">_block_circulant_matrix</span><span class="p">,</span> <span class="n">overwrite_a</span><span class="o">=</span><span class="n">overwrite_a</span><span class="p">)</span>
+
+
+<span class="nd">@solve_gmres</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">BlockDiagonalMatrix</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_solve_gmres_block_diagonal</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="c1"># Independent GMRES for each block, dispatched on the type of the blocks</span>
+    <span class="c1"># (that is on the array library, e.g. scipy for NumPy arrays).</span>
+    <span class="n">xp</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">_array_backend</span>
+    <span class="n">rhs</span> <span class="o">=</span> <span class="n">split</span><span class="p">(</span><span class="n">b</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">nb_blocks</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">solve_gmres</span><span class="p">(</span><span class="n">Ai</span><span class="p">,</span> <span class="n">bi</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">Ai</span><span class="p">,</span> <span class="n">bi</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">blocks</span><span class="p">,</span> <span class="n">rhs</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+
+<span class="nd">@solve_gmres</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">BlockCirculantMatrix</span><span class="p">)</span>
+<span class="nd">@solve_gmres</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">NestedBlockCirculantMatrix</span><span class="p">)</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">_solve_gmres_block_circulant</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="n">diag_A</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="n">block_diagonalize</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">_solve_in_fourier_space</span><span class="p">(</span><span class="k">lambda</span> <span class="n">b_hat</span><span class="p">:</span> <span class="n">solve_gmres</span><span class="p">(</span><span class="n">diag_A</span><span class="p">,</span> <span class="n">b_hat</span><span class="p">),</span> <span class="n">b</span><span class="p">,</span> <span class="n">A</span><span class="o">.</span><span class="n">_fourier_shape</span><span class="p">)</span>
 </pre></div>
 
           </div>

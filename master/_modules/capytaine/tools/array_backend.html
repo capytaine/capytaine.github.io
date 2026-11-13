@@ -422,7 +422,7 @@ window.runMermaid = runMermaid;</script>
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.tools.symbolic_multiplication</span><span class="w"> </span><span class="kn">import</span> <span class="n">SymbolicMultiplication</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span>
-    <span class="s2">"MatrixLike"</span><span class="p">,</span> <span class="s2">"array_namespace"</span><span class="p">,</span> <span class="s2">"device"</span><span class="p">,</span> <span class="s2">"is_array"</span><span class="p">,</span> <span class="s2">"is_numpy_namespace"</span><span class="p">,</span> <span class="s2">"complex_dtype"</span><span class="p">,</span> <span class="s2">"to_backend_of"</span><span class="p">,</span> <span class="s2">"to_numpy"</span><span class="p">,</span>
+    <span class="s2">"MatrixLike"</span><span class="p">,</span> <span class="s2">"array_namespace"</span><span class="p">,</span> <span class="s2">"device"</span><span class="p">,</span> <span class="s2">"is_array"</span><span class="p">,</span> <span class="s2">"is_numpy_namespace"</span><span class="p">,</span> <span class="s2">"complex_dtype"</span><span class="p">,</span> <span class="s2">"as_complex"</span><span class="p">,</span> <span class="s2">"to_backend_of"</span><span class="p">,</span> <span class="s2">"to_numpy"</span><span class="p">,</span>
     <span class="s2">"IterableTensor"</span><span class="p">,</span> <span class="s2">"split"</span><span class="p">,</span> <span class="s2">"leading_dimensions_at_the_end"</span><span class="p">,</span> <span class="s2">"ending_dimensions_at_the_beginning"</span><span class="p">,</span>
 <span class="p">]</span>
 
@@ -469,6 +469,18 @@ window.runMermaid = runMermaid;</script>
 <span class="k">def</span><span class="w"> </span><span class="nf">complex_dtype</span><span class="p">(</span><span class="n">xp</span><span class="p">,</span> <span class="n">dtype</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">"""Complex dtype with the same precision as `dtype`."""</span>
     <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="n">complex64</span> <span class="k">if</span> <span class="n">dtype</span> <span class="ow">in</span> <span class="p">(</span><span class="n">xp</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">xp</span><span class="o">.</span><span class="n">complex64</span><span class="p">)</span> <span class="k">else</span> <span class="n">xp</span><span class="o">.</span><span class="n">complex128</span></div>
+
+
+
+<div class="viewcode-block" id="as_complex">
+<a class="viewcode-back" href="../../../developer_manual/api/capytaine.tools.array_backend.html#capytaine.tools.array_backend.as_complex">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">as_complex</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Cast a real array to the complex dtype of the same precision, in the same array library.</span>
+<span class="sd">    A complex array is returned unchanged."""</span>
+    <span class="n">xp</span> <span class="o">=</span> <span class="n">array_namespace</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">xp</span><span class="o">.</span><span class="n">isdtype</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">,</span> <span class="s2">"complex floating"</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">x</span>
+    <span class="k">return</span> <span class="n">xp</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">complex_dtype</span><span class="p">(</span><span class="n">xp</span><span class="p">,</span> <span class="n">x</span><span class="o">.</span><span class="n">dtype</span><span class="p">))</span></div>
 
 
 
