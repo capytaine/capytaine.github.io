@@ -56,8 +56,14 @@
 <p>Abstract method to evaluate the Green function.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.green_functions.abstract_green_function.AbstractGreenFunction.evaluate">
-<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_surface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavenumber</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjoint_double_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_dot_product</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diagonal_term_in_double_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/green_functions/abstract_green_function.html#AbstractGreenFunction.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.green_functions.abstract_green_function.AbstractGreenFunction.evaluate" title="Link to this definition">¶</a></dt>
+<span class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_surface</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water_depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavenumber</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjoint_double_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_dot_product</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/green_functions/abstract_green_function.html#AbstractGreenFunction.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.green_functions.abstract_green_function.AbstractGreenFunction.evaluate" title="Link to this definition">¶</a></dt>
 <dd><p>Assemble the influence matrices between mesh1 and mesh2.</p>
+<p>Where a point of mesh1 lies on a face of mesh2 (e.g. on the diagonal
+when mesh1 is mesh2), the double layer operators include the
+self-influence term: K (and the full gradient) is the limit from the
+side of the normal of the face (usually the fluid), which adds n/2 with
+the normal of that face, and D includes +1/2. Faces on the free surface
+(and on the sea bottom in finite depth) usually get 1 instead of 1/2.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -72,7 +78,6 @@ early_dot_product is False).</p></li>
 for indirect method (K) matrices (default: True)</p></li>
 <li><p><strong>early_dot_product</strong> (<em>bool, optional</em>) – if True, K is the matrix of ∫∇G·n, if False it is the gradient ∫∇G
 (default: True)</p></li>
-<li><p><strong>diagonal_term_in_double_layer</strong> (<em>bool, optional</em>) – if True, add the I/2 term in the double layer operator (default: True)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -99,7 +104,7 @@ number of faces of mesh2.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="capytaine.green_functions.abstract_green_function.AbstractGreenFunction.matrices_array_backend">
-<span class="sig-name descname"><span class="pre">matrices_array_backend</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;module</span> <span class="pre">'array_api_compat.numpy'</span> <span class="pre">from</span> <span class="pre">'/home/runner/work/_temp/setup-uv-cache/archive-v0/8A7Svb2955uP0LQx/lib/python3.14/site-packages/array_api_compat/numpy/__init__.py'&gt;</span></span><a class="headerlink" href="#capytaine.green_functions.abstract_green_function.AbstractGreenFunction.matrices_array_backend" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">matrices_array_backend</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;module</span> <span class="pre">'array_api_compat.numpy'</span> <span class="pre">from</span> <span class="pre">'/home/runner/work/_temp/setup-uv-cache/archive-v0/bllcG-YZ9MxfjXHk/lib/python3.14/site-packages/array_api_compat/numpy/__init__.py'&gt;</span></span><a class="headerlink" href="#capytaine.green_functions.abstract_green_function.AbstractGreenFunction.matrices_array_backend" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">

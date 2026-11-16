@@ -528,9 +528,15 @@ window.runMermaid = runMermaid;</script>
         <span class="n">wavenumber</span><span class="p">,</span>
         <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-        <span class="n">diagonal_term_in_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">        </span><span class="sd">"""Assemble the influence matrices between mesh1 and mesh2.</span>
+
+<span class="sd">        Where a point of mesh1 lies on a face of mesh2 (e.g. on the diagonal</span>
+<span class="sd">        when mesh1 is mesh2), the double layer operators include the</span>
+<span class="sd">        self-influence term: K (and the full gradient) is the limit from the</span>
+<span class="sd">        side of the normal of the face (usually the fluid), which adds n/2 with</span>
+<span class="sd">        the normal of that face, and D includes +1/2. Faces on the free surface</span>
+<span class="sd">        (and on the sea bottom in finite depth) usually get 1 instead of 1/2.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -552,8 +558,6 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        early_dot_product: bool, optional</span>
 <span class="sd">            if True, K is the matrix of ∫∇G·n, if False it is the gradient ∫∇G</span>
 <span class="sd">            (default: True)</span>
-<span class="sd">        diagonal_term_in_double_layer: bool, optional</span>
-<span class="sd">            if True, add the I/2 term in the double layer operator (default: True)</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>

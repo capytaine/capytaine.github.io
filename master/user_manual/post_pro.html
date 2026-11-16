@@ -268,14 +268,6 @@ The solver does not need to be the one that computed the result object.</p>
 </li>
 </ul>
 <p>The returned values is an array of shape matching the shape of the input points.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<p>There is a single case in which passing a mesh is not equivalent to a list of point: if you want the compute the velocity on the hull of the floating body. In this case, you should give the same mesh object that has been used for the resolution:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">solver</span><span class="o">.</span><span class="n">compute_velocity</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>Other Python objects might return incorrect values or errors.</p>
-</div>
 <p>For potential, pressure and velocity, 3 coordinates <span class="math notranslate nohighlight">\((x, y, z)\)</span> are expected for each points.
 For the free surface elevation, 2 coordinates <span class="math notranslate nohighlight">\((x, y)\)</span> are sufficient.</p>
 <div class="admonition note">
@@ -290,6 +282,18 @@ They can be accessed in Capytaine as in the following example:</p>
 <span class="n">pressure_over_omega_2</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">compute_pressure</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">res</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">pb</span><span class="o">.</span><span class="n">omega</span><span class="o">*</span><span class="n">pb</span><span class="o">.</span><span class="n">omega</span><span class="p">)</span>
 </pre></div>
 </div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>The velocity cannot be reliably reconstructed at points lying on a face of the mesh that is on the free surface
+(typically a face of a lid used for irregular frequencies removal), except at the center of the face (e.g. when
+passing the lid mesh itself as points).
+The singular part of the Green function on the free surface is only integrated specifically when the point is at the
+center of the face. At other points of the face, the velocity is inaccurate at finite frequency and wrong at
+infinite frequency.
+Even at the center of the face, the face is approximated by a disk of the same area for this integral.
+Such points are inside the body, that is outside of the fluid domain, so this is not expected to be a limitation in
+practice. Points on the free surface outside of the body are not affected.</p>
 </div>
 </section>
 <section id="impedance-and-rao">

@@ -72,8 +72,14 @@
 
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.green_functions.hams.FinGreen3D.evaluate">
-<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh2</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_surface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavenumber</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjoint_double_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_dot_product</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diagonal_term_in_double_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/green_functions/hams.html#FinGreen3D.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.green_functions.hams.FinGreen3D.evaluate" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh2</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_surface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavenumber</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjoint_double_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_dot_product</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/green_functions/hams.html#FinGreen3D.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.green_functions.hams.FinGreen3D.evaluate" title="Link to this definition">¶</a></dt>
 <dd><p>Assemble the influence matrices between mesh1 and mesh2.</p>
+<p>Where a point of mesh1 lies on a face of mesh2 (e.g. on the diagonal
+when mesh1 is mesh2), the double layer operators include the
+self-influence term: K (and the full gradient) is the limit from the
+side of the normal of the face (usually the fluid), which adds n/2 with
+the normal of that face, and D includes +1/2. Faces on the free surface
+(and on the sea bottom in finite depth) usually get 1 instead of 1/2.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -88,7 +94,6 @@ early_dot_product is False).</p></li>
 for indirect method (K) matrices (default: True)</p></li>
 <li><p><strong>early_dot_product</strong> (<em>bool, optional</em>) – if True, K is the matrix of ∫∇G·n, if False it is the gradient ∫∇G
 (default: True)</p></li>
-<li><p><strong>diagonal_term_in_double_layer</strong> (<em>bool, optional</em>) – if True, add the I/2 term in the double layer operator (default: True)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -115,7 +120,7 @@ number of faces of mesh2.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="capytaine.green_functions.hams.FinGreen3D.fortran_core">
-<span class="sig-name descname"><span class="pre">fortran_core</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;module</span> <span class="pre">'capytaine.green_functions.Delhommeau_float64'</span> <span class="pre">from</span> <span class="pre">'/home/runner/work/_temp/setup-uv-cache/archive-v0/8A7Svb2955uP0LQx/lib/python3.14/site-packages/capytaine/green_functions/Delhommeau_float64.cpython-314-x86_64-linux-gnu.so'&gt;</span></span><a class="headerlink" href="#capytaine.green_functions.hams.FinGreen3D.fortran_core" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fortran_core</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;module</span> <span class="pre">'capytaine.green_functions.Delhommeau_float64'</span> <span class="pre">from</span> <span class="pre">'/home/runner/work/_temp/setup-uv-cache/archive-v0/bllcG-YZ9MxfjXHk/lib/python3.14/site-packages/capytaine/green_functions/Delhommeau_float64.cpython-314-x86_64-linux-gnu.so'&gt;</span></span><a class="headerlink" href="#capytaine.green_functions.hams.FinGreen3D.fortran_core" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -130,17 +135,17 @@ number of faces of mesh2.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="capytaine.green_functions.hams.FinGreen3D.tabulated_integrals">
-<span class="sig-name descname"><span class="pre">tabulated_integrals</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([6.43548989e-310])</span></span><a class="headerlink" href="#capytaine.green_functions.hams.FinGreen3D.tabulated_integrals" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">tabulated_integrals</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([6.44425535e-310])</span></span><a class="headerlink" href="#capytaine.green_functions.hams.FinGreen3D.tabulated_integrals" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="capytaine.green_functions.hams.FinGreen3D.tabulated_r_range">
-<span class="sig-name descname"><span class="pre">tabulated_r_range</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([2.06272139e-315])</span></span><a class="headerlink" href="#capytaine.green_functions.hams.FinGreen3D.tabulated_r_range" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">tabulated_r_range</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([1.67984433e-315])</span></span><a class="headerlink" href="#capytaine.green_functions.hams.FinGreen3D.tabulated_r_range" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="capytaine.green_functions.hams.FinGreen3D.tabulated_z_range">
-<span class="sig-name descname"><span class="pre">tabulated_z_range</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([2.03378608e-315])</span></span><a class="headerlink" href="#capytaine.green_functions.hams.FinGreen3D.tabulated_z_range" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">tabulated_z_range</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([1.69123177e-315])</span></span><a class="headerlink" href="#capytaine.green_functions.hams.FinGreen3D.tabulated_z_range" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -163,6 +168,12 @@ number of faces of mesh2.</p>
 <dt class="sig sig-object py" id="capytaine.green_functions.hams.HAMS_GF.evaluate">
 <span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh2</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">water_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/green_functions/hams.html#HAMS_GF.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.green_functions.hams.HAMS_GF.evaluate" title="Link to this definition">¶</a></dt>
 <dd><p>Assemble the influence matrices between mesh1 and mesh2.</p>
+<p>Where a point of mesh1 lies on a face of mesh2 (e.g. on the diagonal
+when mesh1 is mesh2), the double layer operators include the
+self-influence term: K (and the full gradient) is the limit from the
+side of the normal of the face (usually the fluid), which adds n/2 with
+the normal of that face, and D includes +1/2. Faces on the free surface
+(and on the sea bottom in finite depth) usually get 1 instead of 1/2.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -177,7 +188,6 @@ early_dot_product is False).</p></li>
 for indirect method (K) matrices (default: True)</p></li>
 <li><p><strong>early_dot_product</strong> (<em>bool, optional</em>) – if True, K is the matrix of ∫∇G·n, if False it is the gradient ∫∇G
 (default: True)</p></li>
-<li><p><strong>diagonal_term_in_double_layer</strong> (<em>bool, optional</em>) – if True, add the I/2 term in the double layer operator (default: True)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -218,7 +228,7 @@ number of faces of mesh2.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="capytaine.green_functions.hams.LiangWuNoblesseGF.dispersion_relation_roots">
-<span class="sig-name descname"><span class="pre">dispersion_relation_roots</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([2.05849898e-315])</span></span><a class="headerlink" href="#capytaine.green_functions.hams.LiangWuNoblesseGF.dispersion_relation_roots" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">dispersion_relation_roots</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([1.67132767e-315])</span></span><a class="headerlink" href="#capytaine.green_functions.hams.LiangWuNoblesseGF.dispersion_relation_roots" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -228,8 +238,14 @@ number of faces of mesh2.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="capytaine.green_functions.hams.LiangWuNoblesseGF.evaluate">
-<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh2</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_surface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavenumber</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjoint_double_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_dot_product</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">diagonal_term_in_double_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/green_functions/hams.html#LiangWuNoblesseGF.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.green_functions.hams.LiangWuNoblesseGF.evaluate" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">evaluate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh2</span></span></em>, <em class="sig-param"><span class="keyword-only-separator o"><abbr title="Keyword-only parameters separator (PEP 3102)"><span class="pre">*</span></abbr></span></em>, <em class="sig-param"><span class="n"><span class="pre">free_surface</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">water_depth</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">inf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wavenumber</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adjoint_double_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">early_dot_product</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/capytaine/green_functions/hams.html#LiangWuNoblesseGF.evaluate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#capytaine.green_functions.hams.LiangWuNoblesseGF.evaluate" title="Link to this definition">¶</a></dt>
 <dd><p>Assemble the influence matrices between mesh1 and mesh2.</p>
+<p>Where a point of mesh1 lies on a face of mesh2 (e.g. on the diagonal
+when mesh1 is mesh2), the double layer operators include the
+self-influence term: K (and the full gradient) is the limit from the
+side of the normal of the face (usually the fluid), which adds n/2 with
+the normal of that face, and D includes +1/2. Faces on the free surface
+(and on the sea bottom in finite depth) usually get 1 instead of 1/2.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -244,7 +260,6 @@ early_dot_product is False).</p></li>
 for indirect method (K) matrices (default: True)</p></li>
 <li><p><strong>early_dot_product</strong> (<em>bool, optional</em>) – if True, K is the matrix of ∫∇G·n, if False it is the gradient ∫∇G
 (default: True)</p></li>
-<li><p><strong>diagonal_term_in_double_layer</strong> (<em>bool, optional</em>) – if True, add the I/2 term in the double layer operator (default: True)</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
@@ -276,7 +291,7 @@ number of faces of mesh2.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="capytaine.green_functions.hams.LiangWuNoblesseGF.fortran_core">
-<span class="sig-name descname"><span class="pre">fortran_core</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;module</span> <span class="pre">'capytaine.green_functions.Delhommeau_float64'</span> <span class="pre">from</span> <span class="pre">'/home/runner/work/_temp/setup-uv-cache/archive-v0/8A7Svb2955uP0LQx/lib/python3.14/site-packages/capytaine/green_functions/Delhommeau_float64.cpython-314-x86_64-linux-gnu.so'&gt;</span></span><a class="headerlink" href="#capytaine.green_functions.hams.LiangWuNoblesseGF.fortran_core" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">fortran_core</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">&lt;module</span> <span class="pre">'capytaine.green_functions.Delhommeau_float64'</span> <span class="pre">from</span> <span class="pre">'/home/runner/work/_temp/setup-uv-cache/archive-v0/bllcG-YZ9MxfjXHk/lib/python3.14/site-packages/capytaine/green_functions/Delhommeau_float64.cpython-314-x86_64-linux-gnu.so'&gt;</span></span><a class="headerlink" href="#capytaine.green_functions.hams.LiangWuNoblesseGF.fortran_core" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
@@ -286,17 +301,17 @@ number of faces of mesh2.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="capytaine.green_functions.hams.LiangWuNoblesseGF.tabulated_integrals">
-<span class="sig-name descname"><span class="pre">tabulated_integrals</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([2.05434777e-315])</span></span><a class="headerlink" href="#capytaine.green_functions.hams.LiangWuNoblesseGF.tabulated_integrals" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">tabulated_integrals</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([1.69371698e-315])</span></span><a class="headerlink" href="#capytaine.green_functions.hams.LiangWuNoblesseGF.tabulated_integrals" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="capytaine.green_functions.hams.LiangWuNoblesseGF.tabulated_r_range">
-<span class="sig-name descname"><span class="pre">tabulated_r_range</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([2.04451075e-315])</span></span><a class="headerlink" href="#capytaine.green_functions.hams.LiangWuNoblesseGF.tabulated_r_range" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">tabulated_r_range</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([1.67212024e-315])</span></span><a class="headerlink" href="#capytaine.green_functions.hams.LiangWuNoblesseGF.tabulated_r_range" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="capytaine.green_functions.hams.LiangWuNoblesseGF.tabulated_z_range">
-<span class="sig-name descname"><span class="pre">tabulated_z_range</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([2.03953509e-315])</span></span><a class="headerlink" href="#capytaine.green_functions.hams.LiangWuNoblesseGF.tabulated_z_range" title="Link to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">tabulated_z_range</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">array([1.67343039e-315])</span></span><a class="headerlink" href="#capytaine.green_functions.hams.LiangWuNoblesseGF.tabulated_z_range" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">

@@ -431,6 +431,21 @@ window.runMermaid = runMermaid;</script>
 
 <span class="n">LOG</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_supported_gf_singularities</span><span class="p">(</span><span class="n">gf_singularities</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Raise the same errors as the Fortran core (which stops the whole process with `error stop`),</span>
+<span class="sd">    see `integral_of_wave_part_infinite_depth` in Green_wave.f90.</span>
+<span class="sd">    The overrides in `Delhommeau.evaluate` should already avoid these cases."""</span>
+    <span class="k">if</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="n">gf_singularities</span> <span class="o">==</span> <span class="s2">"high_freq"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"The high_freq Green function is not supported at zero frequency."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="n">gf_singularities</span> <span class="o">!=</span> <span class="s2">"high_freq"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">"Only the high_freq Green function is supported at infinite frequency."</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="mf">0.0</span> <span class="o">&lt;</span> <span class="n">wavenumber</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="n">gf_singularities</span> <span class="o">==</span> <span class="s2">"high_freq"</span>
+            <span class="ow">and</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">)):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+            <span class="s2">"Faces on the free surface are not supported by the high_freq Green function at finite frequency."</span>
+        <span class="p">)</span>
+
 <div class="viewcode-block" id="Delhommeau">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.green_functions.delhommeau.html#capytaine.green_functions.delhommeau.Delhommeau">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">Delhommeau</span><span class="p">(</span><span class="n">AbstractGreenFunction</span><span class="p">):</span>
@@ -721,10 +736,15 @@ window.runMermaid = runMermaid;</script>
             <span class="bp">self</span><span class="p">,</span>
             <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
             <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">diagonal_term_in_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""Construct the matrices between mesh1 (that can also be a list of points)</span>
 <span class="sd">        and mesh2 for a Rankine kernel.</span>
+
+<span class="sd">        Where a point of mesh1 lies on a face of mesh2 (e.g. on the diagonal</span>
+<span class="sd">        when mesh1 is mesh2), the double layer operators include the</span>
+<span class="sd">        self-influence term: K (and the full gradient) is the limit from the</span>
+<span class="sd">        side of the normal of the face (usually the fluid), which adds n/2 with</span>
+<span class="sd">        the normal of that face, and D includes +1/2.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -740,11 +760,6 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        early_dot_product: boolean, optional</span>
 <span class="sd">            if False, return K as a (3, n, m) array storing ∫∇G</span>
 <span class="sd">            if True, return K as a (n, m) array storing ∫∇G·n</span>
-<span class="sd">        diagonal_term_in_double_layer: boolean, optional</span>
-<span class="sd">            if True, add the I/2 term in the double layer operator</span>
-<span class="sd">            It is assumed that mesh1 == mesh2, or at least that</span>
-<span class="sd">            the `n := min(mesh1.nb_faces, mesh2.nb_faces)` first faces</span>
-<span class="sd">            of each mesh are identical.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -767,12 +782,6 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">adjoint_double_layer</span><span class="p">,</span>
                 <span class="n">S</span><span class="p">,</span> <span class="n">K</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">diagonal_term_in_double_layer</span><span class="p">:</span>
-            <span class="n">n</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">K</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">K</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">add_diagonal_term</span><span class="p">(</span>
-                    <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:</span><span class="n">n</span><span class="p">,</span> <span class="p">:],</span> <span class="n">early_dot_product_normals</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span>
-                    <span class="p">)</span>
-
         <span class="n">S</span><span class="p">,</span> <span class="n">K</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">S</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">K</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">S</span><span class="p">))</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">K</span><span class="p">)):</span>
@@ -793,9 +802,17 @@ window.runMermaid = runMermaid;</script>
             <span class="bp">self</span><span class="p">,</span> <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span>
             <span class="n">free_surface</span><span class="o">=</span><span class="mf">0.0</span><span class="p">,</span> <span class="n">water_depth</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">,</span> <span class="n">wavenumber</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
             <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">early_dot_product</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-            <span class="n">diagonal_term_in_double_layer</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">):</span>
 <span class="w">        </span><span class="sa">r</span><span class="sd">"""The main method of the class, called by the engine to assemble the influence matrices.</span>
+
+<span class="sd">        Where a point of mesh1 lies on a face of mesh2 (e.g. on the diagonal</span>
+<span class="sd">        when mesh1 is mesh2), the double layer operators include the</span>
+<span class="sd">        self-influence term: K (and the full gradient) is the limit from the</span>
+<span class="sd">        side of the normal of the face (usually the fluid), which adds n/2 with</span>
+<span class="sd">        the normal of that face, and D includes +1/2. Faces on the free surface</span>
+<span class="sd">        and on the sea bottom get 1 instead of 1/2, from the image of the</span>
+<span class="sd">        Rankine term (except faces on the free surface with</span>
+<span class="sd">        ``finite_depth_method="legacy"``, which are not supported and get 1/2).</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -815,11 +832,6 @@ window.runMermaid = runMermaid;</script>
 <span class="sd">        early_dot_product: boolean, optional</span>
 <span class="sd">            if False, return K as a (3, n, m) array storing ∫∇G</span>
 <span class="sd">            if True, return K as a (n, m) array storing ∫∇G·n</span>
-<span class="sd">        diagonal_term_in_double_layer: boolean, optional</span>
-<span class="sd">            if True, add the I/2 term in the double layer operator.</span>
-<span class="sd">            It is assumed that mesh1 == mesh2, or at least that</span>
-<span class="sd">            the `n := min(mesh1.nb_faces, mesh2.nb_faces)` first faces</span>
-<span class="sd">            of each mesh are identical.</span>
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
@@ -838,7 +850,6 @@ window.runMermaid = runMermaid;</script>
                 <span class="n">mesh1</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">,</span>
                 <span class="n">adjoint_double_layer</span><span class="o">=</span><span class="n">adjoint_double_layer</span><span class="p">,</span>
                 <span class="n">early_dot_product</span><span class="o">=</span><span class="n">early_dot_product</span><span class="p">,</span>
-                <span class="n">diagonal_term_in_double_layer</span><span class="o">=</span><span class="n">diagonal_term_in_double_layer</span><span class="p">,</span>
             <span class="p">)</span>
 
         <span class="c1"># Main case:</span>
@@ -852,20 +863,23 @@ window.runMermaid = runMermaid;</script>
         <span class="n">wavenumber</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">wavenumber</span><span class="p">)</span>
 
         <span class="c1"># Overrides gf_singularities setting in some specific cases, else use the class one.</span>
-        <span class="k">if</span> <span class="n">water_depth</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_method</span> <span class="o">==</span> <span class="s1">'legacy'</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">==</span> <span class="s1">'low_freq'</span><span class="p">:</span>
+        <span class="c1"># The limit frequencies come first: they are only supported by one variant of the Fortran core.</span>
+        <span class="k">if</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="mf">0.0</span><span class="p">:</span>
+            <span class="n">gf_singularities</span> <span class="o">=</span> <span class="s2">"low_freq"</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">!=</span> <span class="n">gf_singularities</span><span class="p">:</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Overriding gf_singularities='</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span><span class="si">}</span><span class="s2">' because of wavenumber==0.0"</span>
+                <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
+            <span class="n">gf_singularities</span> <span class="o">=</span> <span class="s2">"high_freq"</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">!=</span> <span class="n">gf_singularities</span><span class="p">:</span>
+                <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">"Overriding gf_singularities='</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span><span class="si">}</span><span class="s2">' because of wavenumber==np.inf"</span>
+                <span class="p">)</span>
+        <span class="k">elif</span> <span class="n">water_depth</span> <span class="o">&lt;</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">finite_depth_method</span> <span class="o">==</span> <span class="s1">'legacy'</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">==</span> <span class="s1">'low_freq'</span><span class="p">:</span>
             <span class="n">gf_singularities</span> <span class="o">=</span> <span class="s2">"low_freq"</span>  <span class="c1"># Reproduce legacy method behavior</span>
             <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
                 <span class="sa">f</span><span class="s2">"Overriding gf_singularities='</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span><span class="si">}</span><span class="s2">' because of finite_depth_method=='legacy'"</span>
-            <span class="p">)</span>
-        <span class="k">elif</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="mf">0.0</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">==</span> <span class="s1">'low_freq'</span><span class="p">:</span>
-            <span class="n">gf_singularities</span> <span class="o">=</span> <span class="s2">"low_freq"</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Overriding gf_singularities='</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span><span class="si">}</span><span class="s2">' because of wavenumber==0.0"</span>
-            <span class="p">)</span>
-        <span class="k">elif</span> <span class="n">wavenumber</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">==</span> <span class="s1">'high_freq'</span><span class="p">:</span>
-            <span class="n">gf_singularities</span> <span class="o">=</span> <span class="s2">"high_freq"</span>
-            <span class="n">LOG</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">"Overriding gf_singularities='</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span><span class="si">}</span><span class="s2">' because of wavenumber==np.inf"</span>
             <span class="p">)</span>
         <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span> <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span> <span class="o">==</span> <span class="s1">'low_freq'</span><span class="p">:</span>
             <span class="n">gf_singularities</span> <span class="o">=</span> <span class="s2">"low_freq"</span>
@@ -875,6 +889,7 @@ window.runMermaid = runMermaid;</script>
             <span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">gf_singularities</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities</span>
+        <span class="n">_check_supported_gf_singularities</span><span class="p">(</span><span class="n">gf_singularities</span><span class="p">,</span> <span class="n">wavenumber</span><span class="p">,</span> <span class="n">mesh2</span><span class="p">)</span>
         <span class="n">gf_singularities_index</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">gf_singularities_fortran_enum</span><span class="p">[</span><span class="n">gf_singularities</span><span class="p">]</span>
 
         <span class="k">if</span> <span class="n">water_depth</span> <span class="o">==</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">:</span>
@@ -895,12 +910,6 @@ window.runMermaid = runMermaid;</script>
             <span class="n">gf_singularities_index</span><span class="p">,</span> <span class="n">adjoint_double_layer</span><span class="p">,</span>
             <span class="n">S</span><span class="p">,</span> <span class="n">K</span>
         <span class="p">)</span>
-
-        <span class="k">if</span> <span class="n">diagonal_term_in_double_layer</span><span class="p">:</span>
-            <span class="n">n</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">K</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">K</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">fortran_core</span><span class="o">.</span><span class="n">matrices</span><span class="o">.</span><span class="n">add_diagonal_term</span><span class="p">(</span>
-                    <span class="n">mesh2</span><span class="o">.</span><span class="n">faces_centers</span><span class="p">[:</span><span class="n">n</span><span class="p">,</span> <span class="p">:],</span> <span class="n">early_dot_product_normals</span><span class="p">,</span> <span class="n">free_surface</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span>
-                    <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">early_dot_product</span><span class="p">:</span>
             <span class="n">K</span> <span class="o">=</span> <span class="n">K</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">collocation_points</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">mesh2</span><span class="o">.</span><span class="n">nb_faces</span><span class="p">))</span>
