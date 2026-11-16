@@ -439,7 +439,7 @@ window.runMermaid = runMermaid;</script>
     <span class="n">vedo_mesh</span><span class="p">:</span> <span class="s2">"vedo.Mesh"</span>  <span class="c1"># The mesh to be animated</span>
     <span class="n">vertices_motion</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Complex array of shape (n_vertices, 3) representing the motion of each vertex as a function of time</span>
     <span class="n">vertices_colors</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Complex array of shape (n_vertices,) representing the color of each vertex as a function of time</span>
-    <span class="n">cmap</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">cmap</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>  <span class="c1"># Name of a colormap, a matplotlib colormap or a list of colors, as accepted by vedo.Mesh.cmap</span>
     <span class="n">vmin</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
     <span class="n">vmax</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">float</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span></div>
 
@@ -457,9 +457,31 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">components</span> <span class="o">=</span> <span class="p">[]</span>
 
 
+    <span class="k">def</span><span class="w"> </span><span class="nf">_time_steps</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># The end of the loop is excluded, since it would be the same frame as the first one.</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loop_duration</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loop_duration</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">fps</span><span class="p">),</span> <span class="n">endpoint</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
 <div class="viewcode-block" id="Animation.add_body">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.ui.vedo_animations.html#capytaine.ui.vedo_animations.Animation.add_body">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_body</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">vertices_pressure</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertices_motion</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_body</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">body</span><span class="p">,</span> <span class="n">vertices_pressure</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vertices_motion</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">"RdBu_r"</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Add a body to the animation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        body: FloatingBody</span>
+<span class="sd">            The body to be displayed</span>
+<span class="sd">        vertices_pressure: array of complex of shape (n_vertices,), optional</span>
+<span class="sd">            Complex amplitude of a scalar field displayed with a colormap on the body.</span>
+<span class="sd">        vertices_motion: array of complex of shape (n_vertices, 3), optional</span>
+<span class="sd">            Complex amplitude of the motion of each vertex of the mesh.</span>
+<span class="sd">        color: optional</span>
+<span class="sd">            Uniform color of the body (any color accepted by vedo, e.g. ``"#21355d"``).</span>
+<span class="sd">            Ignored if ``vertices_pressure`` is given.</span>
+<span class="sd">        edge_color: optional</span>
+<span class="sd">            If given, the edges of the faces of the mesh are drawn with this color.</span>
+<span class="sd">        cmap: optional</span>
+<span class="sd">            Colormap used for ``vertices_pressure``: name of a colormap, a matplotlib colormap object or a list of colors.</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">vertices_pressure</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">pressure_amplitude</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vertices_pressure</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
             <span class="n">cmap_bounds</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"vmin"</span><span class="p">:</span> <span class="o">-</span><span class="n">pressure_amplitude</span><span class="p">,</span> <span class="s2">"vmax"</span><span class="p">:</span> <span class="n">pressure_amplitude</span><span class="p">}</span>
@@ -468,10 +490,10 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">AnimationComponent</span><span class="p">(</span>
                     <span class="n">mean_mesh</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span>
-                    <span class="n">vedo_mesh</span><span class="o">=</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">"vedo"</span><span class="p">),</span>
+                    <span class="n">vedo_mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_vedo_mesh</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">mesh</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="n">edge_color</span><span class="p">),</span>
                     <span class="n">vertices_colors</span><span class="o">=</span><span class="n">vertices_pressure</span><span class="p">,</span>
                     <span class="n">vertices_motion</span><span class="o">=</span><span class="n">vertices_motion</span><span class="p">,</span>
-                    <span class="n">cmap</span><span class="o">=</span><span class="s2">"RdBu_r"</span><span class="p">,</span>
+                    <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
                     <span class="o">**</span><span class="n">cmap_bounds</span>
                     <span class="p">)</span>
                 <span class="p">)</span></div>
@@ -479,7 +501,24 @@ window.runMermaid = runMermaid;</script>
 
 <div class="viewcode-block" id="Animation.add_free_surface">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.ui.vedo_animations.html#capytaine.ui.vedo_animations.Animation.add_free_surface">[docs]</a>
-    <span class="k">def</span><span class="w"> </span><span class="nf">add_free_surface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">free_surface_mesh</span><span class="p">,</span> <span class="n">vertices_elevation</span><span class="p">):</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_free_surface</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">free_surface_mesh</span><span class="p">,</span> <span class="n">vertices_elevation</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s2">"Blues_r"</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">"""Add a free surface to the animation.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        free_surface_mesh: Mesh</span>
+<span class="sd">            The mesh of the free surface</span>
+<span class="sd">        vertices_elevation: array of complex of shape (n_vertices,) or None</span>
+<span class="sd">            Complex amplitude of the free surface elevation at each vertex.</span>
+<span class="sd">            It is used both for the vertical motion and for the colors.</span>
+<span class="sd">        color: optional</span>
+<span class="sd">            Uniform color of the free surface (any color accepted by vedo).</span>
+<span class="sd">            Ignored if ``vertices_elevation`` is given.</span>
+<span class="sd">        edge_color: optional</span>
+<span class="sd">            If given, the edges of the faces of the mesh are drawn with this color.</span>
+<span class="sd">        cmap: optional</span>
+<span class="sd">            Colormap used for the elevation: name of a colormap, a matplotlib colormap object or a list of colors.</span>
+<span class="sd">        """</span>
         <span class="k">if</span> <span class="n">vertices_elevation</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">elevation_amplitude</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">vertices_elevation</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
             <span class="n">cmap_bounds</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"vmin"</span><span class="p">:</span> <span class="o">-</span><span class="n">elevation_amplitude</span><span class="p">,</span> <span class="s2">"vmax"</span><span class="p">:</span> <span class="n">elevation_amplitude</span><span class="p">}</span>
@@ -495,14 +534,23 @@ window.runMermaid = runMermaid;</script>
         <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
                 <span class="n">AnimationComponent</span><span class="p">(</span>
                     <span class="n">mean_mesh</span><span class="o">=</span><span class="n">free_surface_mesh</span><span class="p">,</span>
-                    <span class="n">vedo_mesh</span><span class="o">=</span><span class="n">free_surface_mesh</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">"vedo"</span><span class="p">),</span>
+                    <span class="n">vedo_mesh</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_vedo_mesh</span><span class="p">(</span><span class="n">free_surface_mesh</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">color</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="n">edge_color</span><span class="p">),</span>
                     <span class="n">vertices_motion</span><span class="o">=</span><span class="n">elevation_as_motion</span><span class="p">,</span>
                     <span class="n">vertices_colors</span><span class="o">=</span><span class="n">vertices_elevation</span><span class="p">,</span>
-                    <span class="n">cmap</span><span class="o">=</span><span class="s2">"Blues_r"</span><span class="p">,</span>
+                    <span class="n">cmap</span><span class="o">=</span><span class="n">cmap</span><span class="p">,</span>
                     <span class="o">**</span><span class="n">cmap_bounds</span>
                     <span class="p">)</span>
                 <span class="p">)</span></div>
 
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_vedo_mesh</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">vedo_mesh</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="s2">"vedo"</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">color</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vedo_mesh</span><span class="o">.</span><span class="n">color</span><span class="p">(</span><span class="n">color</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">edge_color</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">vedo_mesh</span><span class="o">.</span><span class="n">linecolor</span><span class="p">(</span><span class="n">edge_color</span><span class="p">)</span><span class="o">.</span><span class="n">linewidth</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">vedo_mesh</span>
 
 <div class="viewcode-block" id="Animation.update">
 <a class="viewcode-back" href="../../../developer_manual/api/capytaine.ui.vedo_animations.html#capytaine.ui.vedo_animations.Animation.update">[docs]</a>
@@ -527,13 +575,14 @@ window.runMermaid = runMermaid;</script>
         <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">_default_camera</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="n">camera</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
         <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"size"</span><span class="p">,</span> <span class="n">resolution</span><span class="p">)</span>
-        <span class="n">plt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vedo</span><span class="o">.</span><span class="n">Plotter</span><span class="p">(</span><span class="n">axes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"axes"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">plt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vedo</span><span class="o">.</span><span class="n">Plotter</span><span class="p">(</span><span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
             <span class="o">*</span><span class="p">[</span><span class="n">comp</span><span class="o">.</span><span class="n">vedo_mesh</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">],</span>
             <span class="o">*</span><span class="n">lights</span><span class="p">,</span>
             <span class="n">camera</span><span class="o">=</span><span class="n">camera</span>
         <span class="p">)</span>
-        <span class="n">t_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loop_duration</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loop_duration</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">fps</span><span class="p">))</span>
+        <span class="n">t_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_steps</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">t_range</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
             <span class="n">plt</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
@@ -551,13 +600,14 @@ window.runMermaid = runMermaid;</script>
             <span class="n">camera</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span>
         <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"size"</span><span class="p">,</span> <span class="n">resolution</span><span class="p">)</span>
         <span class="n">video</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vedo</span><span class="o">.</span><span class="n">Video</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">loop_duration</span><span class="p">,</span> <span class="n">fps</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">fps</span><span class="p">)</span>
-        <span class="n">plt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vedo</span><span class="o">.</span><span class="n">Plotter</span><span class="p">(</span><span class="n">axes</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s2">"axes"</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">plt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">vedo</span><span class="o">.</span><span class="n">Plotter</span><span class="p">(</span><span class="n">interactive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">(</span>
             <span class="o">*</span><span class="p">[</span><span class="n">comp</span><span class="o">.</span><span class="n">vedo_mesh</span> <span class="k">for</span> <span class="n">comp</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">],</span>
             <span class="o">*</span><span class="n">lights</span><span class="p">,</span>
             <span class="n">camera</span><span class="o">=</span><span class="n">camera</span>
         <span class="p">)</span>
-        <span class="n">t_range</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">loop_duration</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">loop_duration</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">fps</span><span class="p">))</span>
+        <span class="n">t_range</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time_steps</span><span class="p">()</span>
         <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">t_range</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
             <span class="n">video</span><span class="o">.</span><span class="n">add_frame</span><span class="p">()</span>

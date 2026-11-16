@@ -370,6 +370,13 @@ downloaded from: <a class="reference external" href="https://raw.githubuserconte
 <span class="kn">from</span><span class="w"> </span><span class="nn">capytaine.ui.vedo_animations</span><span class="w"> </span><span class="kn">import</span> <span class="n">Animation</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">vedo</span><span class="w"> </span><span class="kn">import</span> <span class="n">Light</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.colors</span><span class="w"> </span><span class="kn">import</span> <span class="n">LinearSegmentedColormap</span>
+
+<span class="c1"># Colors of the Capytaine logo</span>
+<span class="n">NAVY</span><span class="p">,</span> <span class="n">GOLD</span> <span class="o">=</span> <span class="s2">"#21355d"</span><span class="p">,</span> <span class="s2">"#fbc02d"</span>
+<span class="c1"># Lighter colormap for the waves, inspired by the logo colors, such that the</span>
+<span class="c1"># dark boat stands out. The warm grey avoids going through green between blue and gold.</span>
+<span class="n">WAVES_CMAP</span> <span class="o">=</span> <span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span><span class="s2">"capytaine_waves"</span><span class="p">,</span> <span class="p">[</span><span class="s2">"#5a7aa6"</span><span class="p">,</span> <span class="s2">"#4dbde0"</span><span class="p">,</span> <span class="s2">"#c4bfb6"</span><span class="p">,</span> <span class="s2">"#f2cf6a"</span><span class="p">])</span>
 
 
 <span class="n">bem_solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
@@ -412,8 +419,9 @@ downloaded from: <a class="reference external" href="https://raw.githubuserconte
 
     <span class="c1"># Set up scene</span>
     <span class="n">animation</span> <span class="o">=</span> <span class="n">Animation</span><span class="p">(</span><span class="n">loop_duration</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">pi</span><span class="o">/</span><span class="n">omega</span><span class="p">)</span>
-    <span class="n">animation</span><span class="o">.</span><span class="n">add_body</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">vertices_motion</span><span class="o">=</span><span class="n">wave_amplitude</span><span class="o">*</span><span class="n">rao_vertices_motion</span><span class="p">)</span>
-    <span class="n">animation</span><span class="o">.</span><span class="n">add_free_surface</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">wave_amplitude</span> <span class="o">*</span> <span class="p">(</span><span class="n">incoming_waves_elevation</span> <span class="o">+</span> <span class="n">diffraction_elevation</span> <span class="o">+</span> <span class="n">radiation_elevation</span><span class="p">))</span>
+    <span class="n">animation</span><span class="o">.</span><span class="n">add_body</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">vertices_motion</span><span class="o">=</span><span class="n">wave_amplitude</span><span class="o">*</span><span class="n">rao_vertices_motion</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="n">NAVY</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="n">GOLD</span><span class="p">)</span>
+    <span class="n">animation</span><span class="o">.</span><span class="n">add_free_surface</span><span class="p">(</span><span class="n">fs</span><span class="p">,</span> <span class="n">wave_amplitude</span> <span class="o">*</span> <span class="p">(</span><span class="n">incoming_waves_elevation</span> <span class="o">+</span> <span class="n">diffraction_elevation</span> <span class="o">+</span> <span class="n">radiation_elevation</span><span class="p">),</span>
+                               <span class="n">cmap</span><span class="o">=</span><span class="n">WAVES_CMAP</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">animation</span>
 
 
@@ -426,10 +434,11 @@ downloaded from: <a class="reference external" href="https://raw.githubuserconte
     <span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span>
         <span class="n">camera</span><span class="o">=</span><span class="p">{</span><span class="s2">"pos"</span><span class="p">:</span> <span class="p">(</span><span class="mi">70</span><span class="p">,</span> <span class="mi">70</span><span class="p">,</span> <span class="mi">100</span><span class="p">)},</span>
         <span class="n">lights</span><span class="o">=</span><span class="p">[</span><span class="n">Light</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">],</span> <span class="n">intensity</span><span class="o">=</span><span class="mf">0.8</span><span class="p">)],</span>
-        <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">800</span><span class="p">,</span> <span class="mi">600</span><span class="p">)</span>
+        <span class="n">resolution</span><span class="o">=</span><span class="p">(</span><span class="mi">960</span><span class="p">,</span> <span class="mi">720</span><span class="p">),</span>  <span class="c1"># Multiple of 16 to avoid resizing by the video encoder</span>
+        <span class="n">axes</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="c1"># anim.run(**params)</span>
-    <span class="n">anim</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"animated_boat.mp4"</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span>
+    <span class="n">anim</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="s2">"animated_boat.mp4"</span><span class="p">,</span> <span class="o">**</span><span class="n">params</span><span class="p">)</span>  <span class="c1"># Used as docs/_static/front_page_animation.mp4</span>
 </pre></div>
 </div>
 </section>
