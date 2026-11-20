@@ -62,10 +62,9 @@ More examples files can be found in the <a class="reference internal" href="../e
             <span class="n">mesh</span><span class="o">=</span><span class="n">mesh_1</span><span class="p">,</span>
             <span class="n">lid_mesh</span><span class="o">=</span><span class="n">mesh_1</span><span class="o">.</span><span class="n">generate_lid</span><span class="p">(</span><span class="n">faces_max_radius</span><span class="o">=</span><span class="mf">1.0</span><span class="p">),</span>  <span class="c1"># Adjust to the desired mesh resolution or remove lid entirely</span>
             <span class="n">dofs</span><span class="o">=</span><span class="n">cpt</span><span class="o">.</span><span class="n">rigid_body_dofs</span><span class="p">(</span><span class="n">rotation_center</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
-            <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># Optional, only for hydrostatics</span>
+            <span class="n">center_of_mass</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>  <span class="c1"># Required for hydrostatics only</span>
+            <span class="n">name</span><span class="o">=</span><span class="s2">"boat_1"</span>  <span class="c1"># Required for multiple bodies only</span>
         <span class="p">)</span>
-<span class="n">body_1</span><span class="o">.</span><span class="n">inertia_matrix</span> <span class="o">=</span> <span class="n">body_1</span><span class="o">.</span><span class="n">compute_rigid_body_inertia</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="mi">1025</span><span class="p">)</span>
-<span class="n">body_1</span><span class="o">.</span><span class="n">hydrostatic_stiffness</span> <span class="o">=</span> <span class="n">body_1</span><span class="o">.</span><span class="n">compute_hydrostatic_stiffness</span><span class="p">(</span><span class="n">rho</span><span class="o">=</span><span class="mi">1025</span><span class="p">)</span>
 
 <span class="c1"># If you have several rigid bodies, copy the code above to define "body_2", "body_3", etc.</span>
 
@@ -73,7 +72,7 @@ More examples files can be found in the <a class="reference internal" href="../e
 
 <span class="c1"># Set up parameters</span>
 <span class="n">test_matrix</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">Dataset</span><span class="p">({</span>
-        <span class="s2">"omega"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>  <span class="c1"># Can also specify "freq" (in Hz), "period", "wavelength" or "wavenumber"</span>
+        <span class="s2">"omega"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mf">1.5</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>  <span class="c1"># Can also specify "freq" (in Hz), "period", "wavelength" or "wavenumber"</span>
         <span class="s2">"wave_direction"</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
         <span class="s2">"radiating_dof"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="n">all_bodies</span><span class="o">.</span><span class="n">dofs</span><span class="p">),</span>
         <span class="s2">"water_depth"</span><span class="p">:</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">],</span>
@@ -82,7 +81,8 @@ More examples files can be found in the <a class="reference internal" href="../e
 
 <span class="c1"># Do the resolution</span>
 <span class="n">solver</span> <span class="o">=</span> <span class="n">cpt</span><span class="o">.</span><span class="n">BEMSolver</span><span class="p">()</span>
-<span class="n">dataset</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">all_bodies</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">())</span>
+<span class="n">dataset</span> <span class="o">=</span> <span class="n">solver</span><span class="o">.</span><span class="n">fill_dataset</span><span class="p">(</span><span class="n">test_matrix</span><span class="p">,</span> <span class="n">all_bodies</span><span class="o">.</span><span class="n">immersed_part</span><span class="p">(),</span> <span class="n">keep_details</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="c1"># Change keep_details to True for bigger dataset with pressure and sources on each panels.</span>
 
 <span class="c1"># Export to netcdf file</span>
 <span class="n">cpt</span><span class="o">.</span><span class="n">export_dataset</span><span class="p">(</span><span class="s2">"capy_dataset.nc"</span><span class="p">,</span> <span class="n">dataset</span><span class="p">)</span>
